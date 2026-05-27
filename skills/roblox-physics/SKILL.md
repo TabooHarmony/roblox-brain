@@ -5,6 +5,9 @@ description: >
   Use when building anything that moves physically: cars, doors, ragdolls, cannons,
   elevators, swinging platforms, or custom character controllers.
 last_reviewed: 2026-05-27
+sources:
+  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/physics/mechanical-constraints.md
+  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/physics/mover-constraints.md
 ---
 
 # Roblox Physics & Constraints

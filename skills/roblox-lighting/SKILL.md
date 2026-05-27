@@ -5,6 +5,10 @@ description: >
   Lighting properties, Atmosphere, ColorCorrection, Bloom, DepthOfField, SunRays.
   Use when setting up environment visuals or creating mood/atmosphere.
 last_reviewed: 2026-05-27
+sources:
+  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/environment/lighting.md
+  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/environment/atmosphere.md
+  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/environment/post-processing-effects.md
 ---
 
 # Roblox Lighting & Atmosphere
