@@ -16,7 +16,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (23)
+## Skills (25)
 
 ### Core Language & Architecture
 
@@ -59,6 +59,8 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-physics` | Constraints, vehicles, ragdoll, projectiles, elevators, network ownership |
 | `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraints |
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
+| `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, day/night cycle, zone transitions |
+| `roblox-audio` | SoundService, spatial audio, music systems, SFX patterns, ambient layering, volume management |
 
 ### MCP & Cloud
 
