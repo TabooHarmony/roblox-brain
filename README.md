@@ -16,25 +16,39 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills
+## Skills (20)
 
-### Core
+### Core Language & Architecture
 
 | Skill | What it does |
 |-------|-------------|
 | `roblox-luau-mastery` | Luau language fundamentals, type system, OOP, deprecation table, error patterns |
 | `roblox-architecture` | Service hierarchy, 7 foundational patterns, client-server architecture, module patterns |
 | `roblox-sharp-edges` | 12 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf |
-| `roblox-runtime` | StreamingEnabled, performance optimization, memory management, object pooling, mobile targets |
 
-### Systems
+### Game Design & Economy
+
+| Skill | What it does |
+|-------|-------------|
+| `roblox-game-design` | Genre patterns (simulator, tycoon, obby, horror, RPG, BR), core loops, session design, FTUE |
+| `roblox-economy` | Currencies, faucets/sinks, inflation control, time-to-earn, trading, monetization integration |
+| `roblox-monetization` | ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction |
+
+### Systems & Networking
 
 | Skill | What it does |
 |-------|-------------|
 | `roblox-networking` | Server-authoritative networking, RemoteEvent validation, rate limiting, exploit prevention |
+| `roblox-security` | Anti-exploit design, movement/remote/economy exploits, audit checklist, hardening patterns |
 | `roblox-data` | DataStores, ProfileStore, session locking, data persistence patterns |
-| `roblox-monetization` | ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction |
 | `roblox-analytics` | AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy |
+
+### Performance & Runtime
+
+| Skill | What it does |
+|-------|-------------|
+| `roblox-performance` | Profiling tools, optimization patterns, object pooling, mobile optimization, budgets |
+| `roblox-runtime` | StreamingEnabled, memory management, object pooling, mobile targets |
 
 ### Building & UI
 
@@ -44,7 +58,7 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraints |
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
 
-### MCP & Tooling
+### MCP & Cloud
 
 | Skill | What it does |
 |-------|-------------|
