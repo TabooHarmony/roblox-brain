@@ -16,7 +16,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (25)
+## Skills (23)
 
 ### Core Language & Architecture
 
@@ -26,11 +26,10 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-architecture` | Service hierarchy, 7 foundational patterns, client-server architecture, module patterns |
 | `roblox-sharp-edges` | 12 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf |
 
-### Game Design & Economy
+### Economy & Monetization
 
 | Skill | What it does |
 |-------|-------------|
-| `roblox-game-design` | Genre patterns (simulator, tycoon, obby, horror, RPG, BR), core loops, session design, FTUE |
 | `roblox-economy` | Currencies, faucets/sinks, inflation control, time-to-earn, trading, monetization integration |
 | `roblox-monetization` | ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction |
 
@@ -43,7 +42,6 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-data` | DataStores, ProfileStore, session locking, data persistence patterns |
 | `roblox-analytics` | AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy |
 | `roblox-npc-ai` | Pathfinding, state machines, detection (LOS/FOV), spawn systems, network ownership |
-| `roblox-inventory` | Item schemas, slot management, stacking, loot tables, crafting, equip/unequip |
 
 ### Performance & Runtime
 
