@@ -36,13 +36,21 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-monetization` | ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction |
 | `roblox-analytics` | AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy |
 
-### Building
+### Building & UI
 
 | Skill | What it does |
 |-------|-------------|
-| `roblox-building` | Build 3D objects and maps via MCP. CSG patterns, spatial coordination, player scale, platform quirks, validation |
-| `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraint-based design |
+| `roblox-building` | Build 3D objects and maps via MCP. CSG patterns, spatial coordination, player scale, platform quirks |
+| `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraints |
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
+
+### MCP & Tooling
+
+| Skill | What it does |
+|-------|-------------|
+| `roblox-studio-mcp` | Official Studio MCP server: all 20 tools, reliability patterns, workflows for scripting/building/testing |
+| `roblox-cloud` | Open Cloud REST APIs, API keys, webhooks, HttpService constraints, rate limits |
+| `roblox-oauth` | OAuth 2.0 flows, PKCE, token lifecycle, scope selection, app registration |
 
 ### Workflow
 
@@ -54,16 +62,15 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 
 ## Recommended MCP Servers
 
-These aren't required but they make the AI significantly better at Roblox work:
-
-- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)** — Execute Luau in Studio, inspect instance trees, read/write properties. The AI can directly interact with your game.
-- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)** — Roblox API reference at runtime. The AI queries class docs instead of guessing at stale properties. `uvx mcp-roblox-docs`
-- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)** — Code analysis, dependency graphs, symbol search. Structural understanding of your project without reading every file.
-- **[duckduckgo-mcp-server](https://github.com/nickclyde/duckduckgo-mcp-server)** — Web search + content fetch. DevForum solutions, asset references, code patterns. `uvx duckduckgo-mcp-server`
+- **[Official Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp)** — Built into Studio. 20 tools: script editing, code execution, asset generation, playtesting, input simulation. See `roblox-studio-mcp` skill for full reference.
+- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)** — Community fork with per-peer execute_luau and additional tools.
+- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)** — Roblox API reference at runtime. `uvx mcp-roblox-docs`
+- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)** — Code analysis, dependency graphs, symbol search.
+- **[duckduckgo-mcp-server](https://github.com/nickclyde/duckduckgo-mcp-server)** — Web search for DevForum solutions and patterns. `uvx duckduckgo-mcp-server`
 
 ## What this is NOT
 
-This is not a plugin, not a package manager, not a framework. It's just markdown files that teach AI agents how to write good Roblox code. The skills contain patterns, rules, references, and .luau examples that the AI loads on demand.
+This is not a plugin, not a package manager, not a framework. It's markdown files that teach AI agents how to write good Roblox code. The skills contain patterns, rules, references, and examples that the AI loads on demand.
 
 ## Contributing
 
