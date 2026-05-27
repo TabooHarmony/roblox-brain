@@ -197,6 +197,19 @@ Mobile is 60%+ of Roblox players. Optimize for it specifically:
 - **Shadows**: Consider disabling GlobalShadows on mobile or reducing ShadowSoftness.
 - **Draw distance**: Reduce via StreamingEnabled MinRadius/TargetRadius.
 
+### StreamingEnabled
+
+StreamingEnabled is **on by default** for new places. Only `BaseParts` and their descendants stream in/out. Other instances (Folders, ValueObjects, RemoteEvents, ModuleScripts) load during initial join and never stream.
+
+When instances stream out, they are **parented to nil** (not destroyed). Luau references persist if they stream back in. Removal signals fire, but local-only property changes may be lost.
+
+Configuration:
+- `StreamingTargetRadius` — radius (studs) engine keeps loaded. Start at 256, tune down for mobile.
+- `StreamingMinRadius` — guaranteed radius. Set ~64 for nearby content.
+- `StreamingPauseMode` — what happens during load (Default, Disabled, ClientPhysicsPause).
+
+**Gotcha**: `workspace:FindFirstChild("DistantPart")` returns nil if the part is streamed out. Use `WaitForChild` with timeout, or design systems that don't depend on distant parts existing on the client.
+
 ### Detect Platform
 
 ```luau
