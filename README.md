@@ -16,7 +16,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (22)
+## Skills (23)
 
 ### Core Language & Architecture
 
@@ -49,14 +49,14 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 
 | Skill | What it does |
 |-------|-------------|
-| `roblox-performance` | Profiling tools, optimization patterns, object pooling, mobile optimization, budgets |
-| `roblox-runtime` | StreamingEnabled, memory management, object pooling, mobile targets |
+| `roblox-performance` | Profiling tools, optimization patterns, object pooling, StreamingEnabled, mobile optimization, budgets |
 
 ### Building & UI
 
 | Skill | What it does |
 |-------|-------------|
 | `roblox-building` | Build 3D objects and maps via MCP. CSG patterns, spatial coordination, player scale, platform quirks |
+| `roblox-physics` | Constraints, vehicles, ragdoll, projectiles, elevators, network ownership |
 | `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraints |
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
 
