@@ -16,7 +16,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (21)
+## Skills (22)
 
 ### Core Language & Architecture
 
@@ -43,6 +43,7 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-data` | DataStores, ProfileStore, session locking, data persistence patterns |
 | `roblox-analytics` | AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy |
 | `roblox-npc-ai` | Pathfinding, state machines, detection (LOS/FOV), spawn systems, boss patterns |
+| `roblox-inventory` | Item schemas, slot management, stacking, loot tables, crafting, equip/unequip |
 
 ### Performance & Runtime
 
