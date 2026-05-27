@@ -23,20 +23,19 @@ Load this reference when the task involves:
 
 Luau is Roblox's fork of Lua 5.1 with gradual typing, performance improvements, and additional built-in functions. It is NOT standard Lua 5.1 - it has its own type system, generics, `continue` keyword, compound assignment operators (`+=`, `-=`, etc.), string interpolation, and other extensions.
 
-### Helper Modules (vendored in this harness)
+### Recommended Libraries
 
-The harness ships vendored copies of these libraries. Use them instead of raw Roblox equivalents:
+These open-source libraries are commonly used in production Roblox games. Install via Wally, Pesde, or manually:
 
-- **Promise** (evaera/roblox-lua-promise) - async control flow, retry, chaining. Use instead of raw coroutines for async work.
-- **Trove** (Sleitnick/RbxUtil) - cleanup/lifecycle management. Use instead of manually tracking connections and instances.
-- **Signal** (Sleitnick/RbxUtil) - typed custom signals. Use instead of BindableEvent for module-to-module communication.
-- **Comm** (Sleitnick/RbxUtil) - typed client-server remotes. Use instead of raw RemoteEvent/RemoteFunction.
-- **Component** (Sleitnick/RbxUtil) - CollectionService tag binding with lifecycle. Use instead of manual tag listeners.
-- **ProfileStore** (loleris/MadStudioRoblox) - session-locked DataStore with retry. Use instead of raw DataStoreService.
-- **t** (osyrisrblx/t) - runtime type checking for RemoteEvent validation, function arguments, DataStore schemas. Use instead of manual typeof() chains.
-- **TestEZ** (Roblox/testez) - BDD testing framework. Use to write .spec files for your modules.
+- **Promise** (evaera/roblox-lua-promise) — async control flow, retry, chaining. Use instead of raw coroutines.
+- **Trove** (Sleitnick/RbxUtil) — cleanup/lifecycle management. Use instead of manually tracking connections.
+- **Signal** (Sleitnick/RbxUtil) — typed custom signals. Use instead of BindableEvent for module-to-module communication.
+- **Comm** (Sleitnick/RbxUtil) — typed client-server remotes. Use instead of raw RemoteEvent/RemoteFunction.
+- **Component** (Sleitnick/RbxUtil) — CollectionService tag binding with lifecycle.
+- **ProfileStore** (loleris/MadStudioRoblox) — session-locked DataStore with retry. Use instead of raw DataStoreService.
+- **t** (osyrisrblx/t) — runtime type checking for RemoteEvent validation, function arguments, DataStore schemas.
 
-The agent will recommend these when relevant. You can veto by saying "use my own" or having an existing equivalent in your project.
+The AI will recommend these when relevant. If the project already has equivalents or uses different libraries, follow the existing patterns.
 
 ---
 
@@ -53,7 +52,7 @@ Key rules:
 - Methods: use `:` (implicit self) for instance methods, `.` (explicit self) for constructors/static methods. Prefix private methods with `_`.
 - Type system: gradual typing, `typeof()` for narrowing, `::` for casting, `export type` for cross-module
 - Prefer backtick interpolation over `..` concatenation
-- Use vendored libs (Promise, Trove, Signal, Comm, Component, ProfileStore) over raw equivalents
+- Use libraries like Promise, Trove, Signal, Comm, Component, ProfileStore over raw equivalents when available in the project
 - Local function order: callees above callers (no hoisting). Forward-declare for mutual recursion.
 
 ---

@@ -37,7 +37,7 @@ Key rules:
 - Never use absolute pixel sizes for main containers. UISizeConstraint for min/max bounds.
 - ScrollingFrame: set CanvasSize or AutomaticCanvasSize. UIListLayout inside for content.
 - Common AI mistake: forgetting to set LayoutOrder on children when using layout modifiers.
-- For complex stateful UI (shops, inventories, settings), see the `roblox-gui-fusion` skill.
+- For complex stateful UI (shops, inventories, settings), consider reactive frameworks like Fusion (dphfox/Fusion, MIT) or React-Lua (jsdotlua/react).
 
 ---
 

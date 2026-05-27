@@ -1,6 +1,6 @@
 --[[
     EventBatcher — Server-side analytics batching for high-frequency events
-    Source: roblox-opencode/skills/roblox-analytics (authored for this harness)
+    Source: roblox-brain/skills/roblox-analytics
     
     Use this for events that fire many times per player per session (kills, pickups,
     damage dealt). Instead of calling AnalyticsService on every occurrence, accumulate

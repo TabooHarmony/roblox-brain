@@ -11,7 +11,7 @@ Curated skills that make AI assistants competent at Roblox/Luau game development
 npx skills add TabooHarmony/roblox-brain
 
 # one skill
-npx skills add TabooHarmony/roblox-brain --skill roblox-gui-fusion
+npx skills add TabooHarmony/roblox-brain --skill roblox-building
 ```
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
@@ -36,21 +36,18 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-monetization` | ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction |
 | `roblox-analytics` | AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy |
 
-### UI
+### Building
 
 | Skill | What it does |
 |-------|-------------|
+| `roblox-building` | Build 3D objects and maps via MCP. CSG patterns, spatial coordination, player scale, platform quirks, validation |
 | `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraint-based design |
-| `roblox-gui-fusion` | Fusion 0.3 game UI (shop, inventory, settings). Reactive declarative patterns. Includes reference .luau files |
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
 
 ### Workflow
 
 | Skill | What it does |
 |-------|-------------|
-| `roblox-sync` | Studio Script Sync setup, troubleshooting, mode detection |
-| `roblox-tooling` | Studio MCP orchestration, luau-lsp integration, mcp-roblox-docs usage |
-| `roblox-testing` | TestEZ BDD testing, mocks, test patterns, coverage strategies |
 | `roblox-debug` | Iterative debug loop for Luau/Roblox issues |
 | `roblox-code-review` | Code review with security, performance, and monetization lenses |
 | `roblox-publish-checklist` | Pre-publish verification gauntlet |
@@ -59,9 +56,9 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 
 These aren't required but they make the AI significantly better at Roblox work:
 
-- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)** — Roblox API reference at runtime. The AI queries class docs instead of guessing at stale properties. `uvx mcp-roblox-docs`
 - **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)** — Execute Luau in Studio, inspect instance trees, read/write properties. The AI can directly interact with your game.
-- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)** — Code analysis, dependency graphs, symbol search. Gives the AI structural understanding of your project without reading every file.
+- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)** — Roblox API reference at runtime. The AI queries class docs instead of guessing at stale properties. `uvx mcp-roblox-docs`
+- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)** — Code analysis, dependency graphs, symbol search. Structural understanding of your project without reading every file.
 - **[duckduckgo-mcp-server](https://github.com/nickclyde/duckduckgo-mcp-server)** — Web search + content fetch. DevForum solutions, asset references, code patterns. `uvx duckduckgo-mcp-server`
 
 ## What this is NOT

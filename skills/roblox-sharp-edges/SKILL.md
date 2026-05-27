@@ -58,7 +58,7 @@ Every `:Connect()` returns an `RBXScriptConnection`. If you never `:Disconnect()
 
 ### Solution
 
-Use the vendored **Trove** module (`vendor/rbxutil/trove/`) to group connections per-player and clean them all on `PlayerRemoving`:
+Use the **Trove** module (Sleitnick/RbxUtil, install via Wally) to group connections per-player and clean them all on `PlayerRemoving`:
 
 ```luau
 local Players = game:GetService("Players")
@@ -278,7 +278,7 @@ CRITICAL (fix before shipping):
   SE-3  ProcessReceipt order             → Grant THEN PurchaseGranted
 
 HIGH (fix in current sprint):
-  SE-4  Undisconnected events            → Trove pattern (vendored)
+  SE-4  Undisconnected events            → Trove pattern (RbxUtil)
   SE-5  RemoteEvent flooding             → Per-player rate limiter
   SE-6  BindToClose 30s timeout          → Parallel saves with task.spawn
 

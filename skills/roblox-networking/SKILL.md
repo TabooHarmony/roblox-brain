@@ -66,7 +66,7 @@ A useful mental model: treat every `RemoteEvent:FireServer()` call as if it were
 
 ### RemoteEvent Validation Patterns
 
-> **For runtime type checking, the `t` library is vendored** at `vendor/t/t.lua` (osyrisrblx/t v3.1.1, MIT). It provides composable type checks (`t.string`, `t.number`, `t.interface({...})`) that are cleaner than manual typeof() chains. The agent can place it when relevant.
+> **For runtime type checking, the `t` library (osyrisrblx/t v3.1.1, MIT) provides composable type checks (`t.string`, `t.number`, `t.interface({...})`) that are cleaner than manual typeof() chains. Install via Wally or copy the module directly.
 
 ### The Problem
 

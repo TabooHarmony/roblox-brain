@@ -1,6 +1,6 @@
 --[[
     RemoteValidator — Production-ready server-side validation module
-    Source: roblox-opencode/skills/roblox-networking (authored for this harness)
+    Source: roblox-brain/skills/roblox-networking
     
     Drop this into ServerScriptService/Modules/. Require it in every remote handler.
     Covers: type checking, range validation, cooldowns, existence checks, distance,
