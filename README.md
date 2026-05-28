@@ -16,13 +16,15 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (23)
+## Skills (25)
 
 ### Core Language & Architecture
 
 | Skill | What it does |
 |-------|-------------|
-| `roblox-luau-mastery` | Luau language fundamentals, type system, OOP, deprecation table, error patterns |
+| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, idioms, scope, closures, sharp edges, JS→Luau translation |
+| `roblox-luau-types` | Type system, generics, narrowing, inference philosophy, sealed/unsealed tables, exports, Roblox-aware typing |
+| `roblox-luau-patterns` | OOP with metatables, inheritance, async (Promises, pcall, coroutines), module structure, service pattern, Roblox idioms |
 | `roblox-architecture` | Service hierarchy, 7 foundational patterns, client-server architecture, module patterns |
 | `roblox-sharp-edges` | 12 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf |
 
