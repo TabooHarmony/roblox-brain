@@ -82,7 +82,7 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 
 - **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)**: Community Roblox Studio MCP fork with per-peer execute_luau and additional tools.
 - **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
-- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
+- **[mcp-server-tree-sitter](https://github.com/wrale/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
 - **[luau-lsp](https://github.com/JohnnyMorganz/luau-lsp)**: Expose Luau type checking, diagnostics, and completions to your AI agent via MCP. Catches type errors before runtime.
 
 ## Contributors
