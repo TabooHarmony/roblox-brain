@@ -80,9 +80,12 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 
 ## Recommended MCP Servers
 
-- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)**: Community fork with per-peer execute_luau and additional tools.
-- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
-- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
+- **[Official Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp)** — Built into Studio. 20 tools: script editing, code execution, asset generation, playtesting, input simulation. See `roblox-studio-mcp` skill for full reference.
+- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)** — Community fork with per-peer execute_luau and additional tools.
+- **[lsp-mcp-server](https://github.com/nzrsky/lsp-mcp-server)** + **[luau-lsp](https://github.com/JohnnyMorganz/luau-lsp)** — Expose Luau type checking, diagnostics, and completions to your AI agent via MCP. Catches type errors before runtime.
+- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)** — Roblox API reference at runtime. `uvx mcp-roblox-docs`
+- **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)** — Code analysis, dependency graphs, symbol search.
+- **[duckduckgo-mcp-server](https://github.com/nickclyde/duckduckgo-mcp-server)** — Web search for DevForum solutions and patterns. `uvx duckduckgo-mcp-server`
 
 ## What this is NOT
 
