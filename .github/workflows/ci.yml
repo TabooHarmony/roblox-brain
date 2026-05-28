@@ -22,9 +22,10 @@ jobs:
               errors=$((errors + 1))
               continue
             fi
-            # Check YAML frontmatter exists (starts with ---)
-            if ! head -1 "$file" | grep -q "^---$"; then
-              echo "ERROR: $file missing YAML frontmatter"
+            # Strip BOM if present before checking frontmatter
+            first_line=$(sed '1s/^\xEF\xBB\xBF//' "$file" | head -1)
+            if [ "$first_line" != "---" ]; then
+              echo "ERROR: $file missing YAML frontmatter (got: '$first_line')"
               errors=$((errors + 1))
               continue
             fi
@@ -67,31 +68,23 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install skills from repo
-        run: npx -y skills add TabooHarmony/roblox-brain
+        run: npx -y skills add TabooHarmony/roblox-brain --yes
 
       - name: Verify skills installed
         shell: bash
         run: |
-          # Find where skills were installed
-          SKILLS_DIR=""
-          for dir in .agents/skills .claude/skills .cursor/skills; do
-            if [ -d "$dir" ]; then
-              SKILLS_DIR="$dir"
-              break
-            fi
-          done
+          # skills CLI installs to .agents/skills/
+          SKILLS_DIR=".agents/skills"
 
-          if [ -z "$SKILLS_DIR" ]; then
-            echo "ERROR: No skills directory found"
+          if [ ! -d "$SKILLS_DIR" ]; then
+            echo "ERROR: $SKILLS_DIR not found"
             echo "Listing current directory:"
-            find . -name "SKILL.md" 2>/dev/null || true
-            ls -la
+            find . -maxdepth 3 -type f 2>/dev/null | head -30
             exit 1
           fi
 
-          echo "Skills installed to: $SKILLS_DIR"
           count=$(find "$SKILLS_DIR" -name "SKILL.md" | wc -l)
-          echo "Found $count skills"
+          echo "Found $count skills in $SKILLS_DIR"
 
           if [ "$count" -lt 20 ]; then
             echo "ERROR: Expected at least 20 skills, got $count"

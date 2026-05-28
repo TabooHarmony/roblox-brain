@@ -1,4 +1,4 @@
-﻿---
+---
 name: roblox-oauth
 description: "Use for Roblox OAuth 2.0 work: registering an OAuth app, choosing confidential versus public client flows, implementing authorization code flow with PKCE, handling authorization callbacks and token refresh safely, selecting minimal scopes for Open Cloud access, and troubleshooting OAuth-specific auth failures."
 ---
