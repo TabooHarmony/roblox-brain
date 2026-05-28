@@ -1,7 +1,7 @@
 ---
 name: roblox-code-review
 description: "Code review with security, performance, and monetization lenses for Roblox projects"
-tags: [roblox, code-review, security, performance, monetization, networking, data-persistence]
+last_reviewed: 2026-05-27
 ---
 
 # /code-review - Code Quality Review

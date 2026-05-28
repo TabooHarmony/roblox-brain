@@ -1,7 +1,7 @@
 ---
 name: roblox-debug
 description: "Iterative debug loop for Luau/Roblox issues"
-tags: [roblox, debug, luau, troubleshooting]
+last_reviewed: 2026-05-27
 ---
 
 # /debug - Iterative Debug Loop

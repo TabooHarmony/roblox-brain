@@ -1,6 +1,7 @@
 ---
 name: roblox-cloud
 description: "Use for Roblox Open Cloud and external integration work: choosing API-key-based authentication for server-to-server automation, constructing and troubleshooting Open Cloud REST requests, checking scopes and rate limits, determining whether HttpService can call an endpoint, setting up webhook receivers, and using Roblox OpenAPI and reference JSON artifacts for tooling or client generation."
+last_reviewed: 2026-05-27
 ---
 
 # roblox-cloud

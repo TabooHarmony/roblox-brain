@@ -1,7 +1,7 @@
 ---
 name: roblox-publish-checklist
 description: "Pre-publish verification gauntlet for Roblox games"
-tags: [roblox, publish, checklist, verification]
+last_reviewed: 2026-05-27
 ---
 
 # /publish-checklist - Pre-Publish Verification
