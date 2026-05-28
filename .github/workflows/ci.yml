@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          errors=0
+          for file in skills/*/SKILL.md; do
+            # Check file exists and is non-empty
+            if [ ! -s "$file" ]; then
+              echo "ERROR: $file is empty"
+              errors=$((errors + 1))
+              continue
+            fi
+            # Check YAML frontmatter exists (starts with ---)
+            if ! head -1 "$file" | grep -q "^---$"; then
+              echo "ERROR: $file missing YAML frontmatter"
+              errors=$((errors + 1))
+              continue
+            fi
+            # Check frontmatter has name field
+            if ! sed -n '/^---$/,/^---$/p' "$file" | grep -q "^name:"; then
+              echo "ERROR: $file missing 'name' in frontmatter"
+              errors=$((errors + 1))
+            fi
+            # Check frontmatter has description field
+            if ! sed -n '/^---$/,/^---$/p' "$file" | grep -q "^description:"; then
+              echo "ERROR: $file missing 'description' in frontmatter"
+              errors=$((errors + 1))
+            fi
+          done
+          echo "Checked $(find skills -name SKILL.md | wc -l) skills"
+          if [ $errors -gt 0 ]; then
+            echo "FAILED: $errors errors found"
+            exit 1
+          fi
+          echo "All skills valid"
+
+      - name: Check for empty skills directories
+        run: |
+          for dir in skills/*/; do
+            if [ ! -f "${dir}SKILL.md" ]; then
+              echo "ERROR: $dir has no SKILL.md"
+              exit 1
+            fi
+          done
+
+  install-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install skills from repo
+        run: npx -y skills add TabooHarmony/roblox-brain
+
+      - name: Verify skills installed
+        shell: bash
+        run: |
+          # Find where skills were installed
+          SKILLS_DIR=""
+          for dir in .agents/skills .claude/skills .cursor/skills; do
+            if [ -d "$dir" ]; then
+              SKILLS_DIR="$dir"
+              break
+            fi
+          done
+
+          if [ -z "$SKILLS_DIR" ]; then
+            echo "ERROR: No skills directory found"
+            echo "Listing current directory:"
+            find . -name "SKILL.md" 2>/dev/null || true
+            ls -la
+            exit 1
+          fi
+
+          echo "Skills installed to: $SKILLS_DIR"
+          count=$(find "$SKILLS_DIR" -name "SKILL.md" | wc -l)
+          echo "Found $count skills"
+
+          if [ "$count" -lt 20 ]; then
+            echo "ERROR: Expected at least 20 skills, got $count"
+            exit 1
+          fi
+
+          echo "Install test passed ($count skills)"
