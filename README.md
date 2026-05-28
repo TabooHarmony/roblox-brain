@@ -80,14 +80,14 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 
 ## Recommended MCP Servers
 
-- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)**: Community fork with per-peer execute_luau and additional tools.
-- **[lsp-mcp-server](https://github.com/nzrsky/lsp-mcp-server)** + **[luau-lsp](https://github.com/JohnnyMorganz/luau-lsp)**: Expose Luau type checking, diagnostics, and completions to your AI agent via MCP. Catches type errors before runtime.
-- **[mcp-roblox-docs](https://github.com/BusyCityGuy/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
+- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)**: Community Roblox Studio MCP fork with per-peer execute_luau and additional tools.
+- **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
 - **[mcp-server-tree-sitter](https://github.com/nicobailon/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
+- **[luau-lsp](https://github.com/JohnnyMorganz/luau-lsp)**: Expose Luau type checking, diagnostics, and completions to your AI agent via MCP. Catches type errors before runtime.
 
-## What this is NOT
+## Contributors
 
-This is not a plugin, not a package manager, not a framework. It's markdown files that teach AI agents how to write good Roblox code. The skills contain patterns, rules, references, and examples that the AI loads on demand.
+- **[MrFearTick](https://github.com/MrFearTick)**: Code references, networking + monetization expansion
 
 ## Contributing
 
