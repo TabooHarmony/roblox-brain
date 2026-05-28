@@ -16,7 +16,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (25)
+## Skills (27)
 
 ### Core Language & Architecture
 
@@ -77,6 +77,8 @@ Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills
 | `roblox-debug` | Iterative debug loop for Luau/Roblox issues |
 | `roblox-code-review` | Code review with security, performance, and monetization lenses |
 | `roblox-publish-checklist` | Pre-publish verification gauntlet |
+| `roblox-testing` | TestEZ, mocking Roblox services, dependency injection, CI/CD with Lune |
+| `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman. Filesystem-based workflows and editor setup |
 
 ## Recommended MCP Servers
 
