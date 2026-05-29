@@ -24,7 +24,7 @@ This skill has been split into three focused skills for better context efficienc
 - "How should I type this?" → `roblox-luau-types`
 - "How should I structure this?" → `roblox-luau-patterns`
 
-## Key Rules (always apply)
+## Quick Reference
 
 - Luau is NOT Lua 5.1. Has: generics, `continue`, `+=`, string interpolation (backticks), floor division `//`
 - Arrays are 1-based. `#tbl` for length. Generalized iteration: `for k, v in tbl do`

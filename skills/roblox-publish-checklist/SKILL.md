@@ -4,125 +4,40 @@ description: "Pre-publish verification gauntlet for Roblox games"
 last_reviewed: 2026-05-27
 ---
 
-# /publish-checklist - Pre-Publish Verification
+## When to Load
 
-You are verifying a Roblox game is ready to publish. Work through every category below. For each item, check it and note PASS/FAIL/SKIP with a brief explanation.
+Load when preparing to publish or update a Roblox game. Provides a structured checklist covering data persistence, security, performance, monetization, mobile, gameplay, metadata, social, and analytics. Use to catch blockers before going live.
 
----
+## Quick Reference
 
-## 1. Data & Persistence
+### 1. Data & Persistence
+DataStore save/load ✓ · Session locking (ProfileStore) ✓ · BindToClose ✓ · Data migration plan ✓ · Disconnect-during-save edge case ✓ · No parallel save race conditions ✓
 
-- [ ] **DataStore save/load tested** - Player data saves on leave and loads on rejoin correctly
-- [ ] **Session locking verified** - Using ProfileStore or equivalent; no concurrent data corruption
-- [ ] **BindToClose implemented** - Server saves data before shutdown (game close, server hop)
-- [ ] **Data migration plan** - If updating an existing game, schema migration handles old data formats
-- [ ] **Edge case: disconnect during save** - Data not lost if player disconnects mid-save
-- [ ] **Edge case: multiple DataStore calls** - No race conditions from parallel saves
+### 2. Security
+All remotes validated server-side (types, ranges, ownership) ✓ · No secrets in ReplicatedStorage/StarterPlayer ✓ · Rate limiting on remotes ✓ · Logic server-side only (currency, inventory, damage) ✓ · ProcessReceipt: grant THEN PurchaseGranted ✓ · Anti-cheat basics (speed, teleport, inventory) ✓
 
----
+### 3. Performance
+Mobile tested ✓ · Part count reasonable ✓ · No memory leaks (events disconnected) ✓ · MicroProfiler: no scripts >1ms/frame ✓ · StreamingEnabled if large map ✓ · Signal cleanup ✓
 
-## 2. Security
+### 4. Monetization
+GamePasses idempotent on rejoin ✓ · DevProducts deliver correctly ✓ · Premium payout configured ✓ · Prices competitive ✓ · No pay-to-win ✓
 
-- [ ] **All remotes validated server-side** - Every RemoteEvent/RemoteFunction checks argument types, ranges, and ownership
-- [ ] **No sensitive data exposed** - ReplicatedStorage, StarterPlayer have no server-only logic or secrets
-- [ ] **Rate limiting on all remotes** - Per-player throttling prevents flooding/exploitation
-- [ ] **No client-trusted game logic** - Currency, inventory, damage, positions calculated server-side only
-- [ ] **ProcessReceipt handled correctly** - Grant item THEN return PurchaseGranted; NotProcessedYet on failure
-- [ ] **Anti-cheat basics** - Speed checks, teleport detection, inventory validation
+### 5. Mobile
+Touch controls work ✓ · UI uses Scale not Offset ✓ · ContextActionService ✓ · Small screen tested ✓ · Orientation handled ✓ · Low-end device tested ✓
 
----
+### 6. Gameplay
+Core loop 10+ min test ✓ · Edge cases: disconnect during trade, death during cutscene, rapid pressing, rejoin mid-game ✓ · Tutorial/FTUE ✓ · Difficulty curve ✓ · Fun check ✓
 
-## 3. Performance
+### 7. Metadata
+Icon 512x512 ✓ · 3+ thumbnails ✓ · Description ✓ · Genre ✓ · Max players ✓ · Badges ✓ · Rating ✓
 
-- [ ] **Mobile tested** - Game runs on mobile devices without crashes or severe lag
-- [ ] **Part count within limits** - Workspace part count reasonable for target devices
-- [ ] **No memory leaks** - Events disconnected on cleanup, no orphaned instances accumulating
-- [ ] **MicroProfiler reviewed** - No scripts consistently over budget (>1ms per frame)
-- [ ] **StreamingEnabled considered** - If large map, StreamingEnabled is enabled and tested
-- [ ] **Signal cleanup** - No undisconnected BindableEvent/RemoteEvent connections leaking
+### 8. Social
+Private servers ✓ · Party/chat/friend ✓ · Report/block safe ✓ · Tags correct ✓ · Team assignment ✓
 
----
+### 9. Analytics
+Events: join/leave, purchases, completions, session length, errors ✓ · Funnel tracking ✓ · Dashboard configured ✓
 
-## 4. Monetization
+### Output Format
+1. READY / NOT READY  2. Critical blockers  3. Warnings  4. Pass count/%  5. Failed items + fixes
 
-- [ ] **GamePasses work correctly** - Purchasing grants the correct benefit, idempotent on rejoin
-- [ ] **DevProducts grant properly** - Consumables delivered, ProcessReceipt handles edge cases
-- [ ] **Premium benefits functional** - Premium payout optimized, exclusive perks work
-- [ ] **Prices reviewed** - Competitive with similar games, clear value proposition
-- [ ] **No pay-to-win concerns** - Free players have reasonable experience
-- [ ] **Premium Payouts enabled** - Game is eligible and configured for Premium Payouts
-
----
-
-## 5. Mobile Compatibility
-
-- [ ] **Touch controls work** - All interactions accessible via tap
-- [ ] **UI scales properly** - Using Scale not Offset for UI elements; tested on small screens
-- [ ] **ContextActionService for input** - Game actions bound properly for mobile
-- [ ] **Small screen tested** - UI doesn't overlap, buttons are tappable, text is readable
-- [ ] **Landscape and portrait** - Orientation handled if applicable
-- [ ] **Performance on low-end devices** - Tested on minimum spec mobile device
-
----
-
-## 6. Gameplay
-
-- [ ] **Core loop tested end-to-end** - Play for 10+ minutes, full loop works
-- [ ] **Edge cases handled:**
-  - [ ] Disconnect during trade/transaction
-  - [ ] Death during cutscene
-  - [ ] Player leaves during multiplayer event
-  - [ ] Rapid button pressing
-  - [ ] Backfill/rejoin during active game
-- [ ] **Tutorial/FTUE works** - New player can learn the game without confusion
-- [ ] **Difficulty curve** - Early game engaging, progression feels rewarding
-- [ ] **Fun check** - Core loop is actually enjoyable to play repeatedly
-
----
-
-## 7. Metadata
-
-- [ ] **Game icon set** - 512x512, clear and representative
-- [ ] **Thumbnails uploaded** - At least 3 images showing gameplay
-- [ ] **Description written** - Clear, compelling, includes key features
-- [ ] **Genre selected** - Correct category for discovery
-- [ ] **Max players configured** - Appropriate for game type
-- [ ] **Game badges** - Achievement badges set up for milestones
-- [ ] **Game rating** - Age-appropriate settings configured
-
----
-
-## 8. Social
-
-- [ ] **Private servers configured** - Available and priced if applicable
-- [ ] **Social features tested** - Party system, chat, friending all work
-- [ ] **Report/block doesn't break game** - Reporting a player doesn't crash or corrupt game state
-- [ ] **Server browser** - Game appears in search with correct tags
-- [ ] **Team play** - If multiplayer, team assignment and switching work
-
----
-
-## 9. Analytics
-
-- [ ] **Key events instrumented:**
-  - [ ] Player joins / leaves
-  - [ ] Purchases (GamePass and DevProduct)
-  - [ ] Level/zone completions
-  - [ ] Session length tracking
-  - [ ] Error/crash reporting
-- [ ] **Basic funnel tracking** - New player → tutorial complete → first purchase → retention
-- [ ] **Dashboard configured** - Analytics visible in Roblox Creator Dashboard
-
----
-
-## Summary
-
-After checking all items, output:
-
-1. **Overall status:** READY / NOT READY
-2. **Critical blockers** (must fix before publish)
-3. **Warnings** (should fix, not blocking)
-4. **Passed items** - Count and percentage
-5. **Failed items** - List each with the fix needed
-
-If NOT READY, provide specific fixes for every failed item before the user publishes.
+📖 Full reference: `references/full.md`
