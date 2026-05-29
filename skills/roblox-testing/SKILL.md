@@ -76,3 +76,4 @@ if results.failureCount > 0 then os.exit(1) end
 
 - `beforeEach` to reset state; never `game:GetService()` in logic
 - Tests must be order-independent; CI needs mocks; commit `wally.lock`
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

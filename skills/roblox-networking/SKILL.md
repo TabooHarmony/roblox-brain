@@ -40,3 +40,4 @@ Key rules:
 - Use `t` library for composable type checks on remote args.
 - Suspicion scoring: accumulate violations, kick/ban at threshold. Don't instant-kick on first offense.
 - Exploiters can: fire any remote, read all client code, modify any client state, speed/fly/teleport.
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

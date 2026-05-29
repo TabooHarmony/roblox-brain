@@ -38,3 +38,4 @@ Key rules:
 - ScrollingFrame: set CanvasSize or AutomaticCanvasSize. UIListLayout inside for content.
 - Common AI mistake: forgetting to set LayoutOrder on children when using layout modifiers.
 - For complex stateful UI (shops, inventories, settings), consider reactive frameworks like Fusion (dphfox/Fusion, MIT) or React-Lua (jsdotlua/react).
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

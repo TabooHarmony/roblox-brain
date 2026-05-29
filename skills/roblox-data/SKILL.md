@@ -49,3 +49,4 @@ Key rules:
 - Data migration: version field in schema, migrate on load if version < current.
 - Never store Instances or functions in DataStores. Serialize to primitives.
 - Cross-server: MessagingService for real-time, GlobalDataStore for shared state.
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

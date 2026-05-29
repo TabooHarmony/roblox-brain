@@ -39,3 +39,4 @@ Key rules:
 - TweenService: create TweenInfo once, reuse. Chain with Completed event, don't nest.
 - Post-processing: keep subtle. Bloom + ColorCorrection + DepthOfField cover most moods.
 - Clean up: Destroy() particles/beams when done. Use Trove for lifecycle.
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

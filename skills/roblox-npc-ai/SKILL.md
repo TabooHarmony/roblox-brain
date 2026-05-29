@@ -76,3 +76,4 @@ Without this, exploiters fling NPCs. Server = safe but 30Hz tick.
 - Forget `SetNetworkOwner(nil)` → exploiters fling NPCs
 - Dead corpses not destroyed → memory leak
 - 50 NPCs pathfinding same frame → server lag spike
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

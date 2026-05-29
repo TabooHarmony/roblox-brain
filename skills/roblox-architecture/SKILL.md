@@ -39,3 +39,4 @@ Key rules:
 - Module pattern: return a table of functions. One module = one responsibility.
 - Avoid circular requires. Use events/signals for cross-module communication.
 - Single entry point per side: one server Script requires service modules, one LocalScript requires controllers.
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

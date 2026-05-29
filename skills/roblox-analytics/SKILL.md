@@ -38,3 +38,4 @@ Key rules:
 - Server-side logging preferred for accuracy. Client-side only for UI interaction tracking.
 
 ---
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

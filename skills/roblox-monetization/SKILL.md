@@ -45,5 +45,4 @@ Key rules:
 - Immersive Ads: AdService image/portal/video ad units. Earn via ad views, separate from Rewarded Video Ads.
 - PolicyService: must-check for compliance (age/region restrictions on subscriptions, random items, ads).
 - Commerce Products: sell physical merchandise through Roblox.
-- Creator Store: sell plugins ($4.99+) and models ($2.99+) for USD. 30-day escrow hold.
-- Never store purchase state only in DataStore without session locking (use ProfileStore).
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

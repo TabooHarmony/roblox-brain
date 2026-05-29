@@ -53,3 +53,4 @@ end
 ### Mobile Quick Wins
 - Keep < 5000 visible parts. Textures max 512x512. Cap particles at 50 emitters.
 - Use CanvasGroup for UI batching. Consider disabling GlobalShadows.
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

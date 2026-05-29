@@ -52,3 +52,4 @@ Params: `grant_type=authorization_code`, `code`, `client_id`, `code_verifier` (p
 - Refresh tokens: server-side only.
 - PKCE even for confidential clients.
 - Don't mix API keys and OAuth.
+**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
