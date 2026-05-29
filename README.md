@@ -27,23 +27,9 @@ skills/roblox-gui/
     └── full.md           (~8,000 tokens — complete documentation)
 ```
 
-**How agents consume this:**
-
-1. **Level 1 — Index**: Agent reads `skill_index.md` (all 28 skills, ~2,800 tokens) to know what's available
-2. **Level 2 — Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
-3. **Level 3 — Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
-
-**Why this matters:** Loading 3 skills costs ~1,800 tokens instead of ~25,000 tokens. No more 3x slowdown.
-
-### Validation
-
-Run `python validate_skills.py` to check all skills comply with the size contract:
-
-- SKILL.md under 3,000 chars
-- Description under 150 chars
-- Required frontmatter fields (name, description, last_reviewed)
-- `## Quick Reference` section present
-- No `## Full Reference` in SKILL.md (must be in references/)
+1. **Level 1: Index**: Agent reads `skill_index.md` (all 28 skills, ~2,800 tokens) to know what's available
+2. **Level 2: Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
+3. **Level 3: Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
 
 ## Skills (28)
 
@@ -115,7 +101,6 @@ Run `python validate_skills.py` to check all skills comply with the size contrac
 - **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)**: Community Roblox Studio MCP fork with per-peer execute_luau and additional tools.
 - **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
 - **[mcp-server-tree-sitter](https://github.com/wrale/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
-- **[luau-lsp](https://github.com/JohnnyMorganz/luau-lsp)**: Expose Luau type checking, diagnostics, and completions to your AI agent via MCP. Catches type errors before runtime.
 
 ## Contributors
 
@@ -127,8 +112,7 @@ PRs welcome. Good contributions:
 - Fix incorrect API references or deprecated patterns
 - Add high-value patterns from production games
 - Expand reference code (must be MIT/Apache sourced or original)
-
-Keep skills focused, non-overlapping, and practical. All skills must pass `validate_skills.py`.
+- Keep skills focused, non-overlapping, and practical. All skill submissions must pass `validate_skills.py`.
 
 ## License
 
