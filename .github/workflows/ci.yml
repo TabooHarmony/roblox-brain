@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate skill sizes and structure
+        run: python3 validate_skills.py
+
       - name: Validate SKILL.md frontmatter
         run: |
           errors=0
@@ -91,4 +94,13 @@ jobs:
             exit 1
           fi
 
-          echo "Install test passed ($count skills)"
+          # Verify references/ directories are installed
+          ref_count=$(find "$SKILLS_DIR" -name "full.md" -path "*/references/*" | wc -l)
+          echo "Found $ref_count reference files"
+
+          if [ "$ref_count" -lt 20 ]; then
+            echo "ERROR: Expected at least 20 reference files, got $ref_count"
+            exit 1
+          fi
+
+          echo "Install test passed ($count skills, $ref_count references)"

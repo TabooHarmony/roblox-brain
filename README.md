@@ -2,7 +2,7 @@
 
 Give your AI coding agent a Roblox brain.
 
-Curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+28 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
 
 ## Install
 
@@ -16,17 +16,47 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
 
-## Skills (27)
+## Architecture
+
+Each skill uses a **progressive disclosure** design to keep context lean:
+
+```
+skills/roblox-gui/
+├── SKILL.md              (~600 tokens — quick reference only)
+└── references/
+    └── full.md           (~8,000 tokens — complete documentation)
+```
+
+**How agents consume this:**
+
+1. **Level 1 — Index**: Agent reads `skill_index.md` (all 28 skills, ~2,800 tokens) to know what's available
+2. **Level 2 — Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
+3. **Level 3 — Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
+
+**Why this matters:** Loading 3 skills costs ~1,800 tokens instead of ~25,000 tokens. No more 3x slowdown.
+
+### Validation
+
+Run `python validate_skills.py` to check all skills comply with the size contract:
+
+- SKILL.md under 3,000 chars
+- Description under 150 chars
+- Required frontmatter fields (name, description, last_reviewed)
+- `## Quick Reference` section present
+- No `## Full Reference` in SKILL.md (must be in references/)
+
+## Skills (28)
 
 ### Core Language & Architecture
 
 | Skill | What it does |
 |-------|-------------|
+| `roblox-luau-mastery` | Router to the three Luau skills below |
 | `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, idioms, scope, closures, sharp edges, JS→Luau translation |
 | `roblox-luau-types` | Type system, generics, narrowing, inference philosophy, sealed/unsealed tables, exports, Roblox-aware typing |
 | `roblox-luau-patterns` | OOP with metatables, inheritance, async (Promises, pcall, coroutines), module structure, service pattern, Roblox idioms |
 | `roblox-architecture` | Service hierarchy, 7 foundational patterns, client-server architecture, module patterns |
-| `roblox-sharp-edges` | 12 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf |
+| `roblox-sharp-edges` | 13 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf |
 
 ### Economy & Monetization
 
@@ -98,7 +128,7 @@ PRs welcome. Good contributions:
 - Add high-value patterns from production games
 - Expand reference code (must be MIT/Apache sourced or original)
 
-Keep skills focused, non-overlapping, and practical.
+Keep skills focused, non-overlapping, and practical. All skills must pass `validate_skills.py`.
 
 ## License
 
