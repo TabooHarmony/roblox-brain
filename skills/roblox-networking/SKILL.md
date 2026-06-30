@@ -4,13 +4,17 @@ description: >
   Server-authoritative networking, RemoteEvent validation, rate limiting, exploit prevention,
   security hardening.
 last_reviewed: 2026-05-22
+sources:
+  - https://github.com/brockmartin/roblox-game-skill (MIT)
 ---
-
-<!-- Source: brockmartin/roblox-game-skill (MIT) -->
 
 # Roblox Networking & Security Reference
 
 ---
+
+## When to Load
+
+Load when validating RemoteEvent/RemoteFunction args, implementing rate limiting, designing server-authoritative systems, or hardening against exploits.
 
 ## Overview
 

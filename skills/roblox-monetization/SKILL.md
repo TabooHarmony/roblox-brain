@@ -2,24 +2,21 @@
 name: roblox-monetization
 description: ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction.
 last_reviewed: 2026-05-26
+sources:
+  - https://github.com/brockmartin/roblox-game-skill (MIT)
 ---
 
-<!-- Source: brockmartin/roblox-game-skill (MIT) -->
-
 # Roblox Monetization Systems Reference
+
+## When to Load
+
+Load when adding in-game purchases (GamePasses, Developer Products), designing monetization strategy, implementing Premium payouts, or reviewing policy compliance.
 
 ## 1. Overview
 
 **Load this reference when:**
 
-- Adding in-game purchases (GamePasses, Developer Products)
-- Designing or revising a monetization strategy
-- Optimizing revenue (pricing, placement, conversion funnels)
-- Implementing Premium Payouts or Rewarded Video Ads
-- Calculating DevEx projections
-- Reviewing monetization ethics and Roblox policy compliance
-
-Roblox provides four primary monetization channels: **GamePasses** (one-time permanent unlocks), **Developer Products** (consumable/repeatable purchases), **Premium Payouts** (revenue from Premium subscribers playing your game), and **Rewarded Video Ads** (ad-based revenue). Each channel serves a different purpose and should be combined strategically.
+Roblox provides four primary monetization channels: **GamePasses**, **Developer Products**, **Premium Payouts**, **Rewarded Video Ads**. Each serves a different purpose; combine strategically.
 
 **Key principle:** All purchase granting MUST happen on the server. Never trust the client to determine what a player owns or has purchased.
 

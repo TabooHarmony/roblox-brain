@@ -10,7 +10,9 @@ sources:
 
 # Roblox Lighting & Atmosphere
 
-Use this skill when configuring lighting, atmosphere, time of day, post-processing effects, or creating visual mood for a game.
+## When to Load
+
+Load when configuring lighting, atmosphere, time-of-day cycles, or post-processing effects (Bloom, ColorCorrection, DepthOfField).
 
 ## Quick Reference
 
