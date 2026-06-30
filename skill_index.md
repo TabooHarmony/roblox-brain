@@ -46,6 +46,7 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 | `roblox-animation-vfx` | Animation tracks, Animator API, ParticleEmitter, Beam, TweenService, Highlight, visual juice |
 | `roblox-lighting` | Lighting service, Atmosphere, post-processing (Bloom, ColorCorrection), day/night cycle |
 | `roblox-audio` | SoundService, SoundGroup mixer, spatial audio, 3D positioned sound, music systems, SFX patterns |
+| `roblox-input` | UserInputService, ContextActionService, keyboard/mouse/gamepad/touch, cross-platform input binding |
 
 ## MCP & Cloud
 

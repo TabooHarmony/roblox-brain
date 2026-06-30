@@ -2,7 +2,7 @@
 
 Give your AI coding agent a Roblox brain.
 
-28 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+29 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
 
 ## Install
 
@@ -45,7 +45,7 @@ Run `python validate_skills.py` to check all skills comply with the size contrac
 - `## Quick Reference` section present
 - No `## Full Reference` in SKILL.md (must be in references/)
 
-## Skills (28)
+## Skills (29)
 
 ### Core Language & Architecture
 
@@ -91,6 +91,7 @@ Run `python validate_skills.py` to check all skills comply with the size contrac
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
 | `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, day/night cycle, zone transitions |
 | `roblox-audio` | SoundService, spatial audio, music systems, SFX patterns, ambient layering, volume management |
+| `roblox-input` | UserInputService, ContextActionService, keyboard/mouse/gamepad/touch, cross-platform input binding |
 
 ### MCP & Cloud
 
