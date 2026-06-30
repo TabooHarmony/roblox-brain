@@ -8,7 +8,7 @@ last_reviewed: 2026-05-27
 
 ## When to Load
 
-Load this skill when the task involves Roblox Open Cloud REST APIs, API-key authentication, webhook setup, or HttpService calls to Open Cloud endpoints. Skip it for OAuth flows (use roblox-oauth), persistent data design (use roblox-data), gameplay networking (use roblox-networking), or pure engine API lookups (use roblox-api).
+Load this skill when the task involves Roblox Open Cloud REST APIs, API-key authentication, webhook setup, or HttpService calls to Open Cloud endpoints. Skip it for OAuth flows (use roblox-oauth), persistent data design (use roblox-data), gameplay networking (use roblox-networking), or pure engine API lookups (use roblox-studio-mcp).
 
 ## Quick Reference
 
@@ -45,7 +45,7 @@ Load this skill when the task involves Roblox Open Cloud REST APIs, API-key auth
 - OAuth / user consent → `roblox-oauth`
 - Data schema / DataStore design → `roblox-data`
 - Remotes / networking → `roblox-networking`
-- Engine API lookup only → `roblox-api`
+- Engine API lookup only → `roblox-studio-mcp`
 
 ### References
 - `references/full.md` — complete instructions, decision rules, checklist, common mistakes, examples
