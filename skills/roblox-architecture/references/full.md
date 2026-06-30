@@ -443,7 +443,7 @@ Instead of calling directly into another module, fire a BindableEvent that the o
 
 ### OOP Module Pattern (Class-based)
 
-For metatable-based classes, type annotations, inheritance, and the `.` vs `:` conventions, see **roblox-luau-mastery** → OOP Patterns.
+For metatable-based classes, type annotations, inheritance, and the `.` vs `:` conventions, see **roblox-luau-patterns** → OOP Patterns.
 
 The architecture-specific pattern: modules that return a class table. The class is defined in a ModuleScript, required by whoever needs it, and instances are created via `ClassName.new()`.
 
@@ -797,7 +797,7 @@ return Constants
 
 ### Polling Instead of Events
 
-For polling vs event-driven patterns, see **roblox-luau-mastery** → Anti-Patterns.
+For polling vs event-driven patterns, see **roblox-luau-patterns** → Anti-Patterns.
 
 **Core rule:** Use events (`.Changed`, `GetPropertyChangedSignal()`, `Died`, etc.) instead of `while true do task.wait()` loops.
 
@@ -809,7 +809,7 @@ For polling vs event-driven patterns, see **roblox-luau-mastery** → Anti-Patte
 
 ### Ignoring `task` Library
 
-For deprecated `wait()`/`spawn()`/`delay()` vs the `task` library, see **roblox-luau-mastery** → Task Library.
+For deprecated `wait()`/`spawn()`/`delay()` vs the `task` library, see **roblox-luau-patterns** → Task Library.
 
 ### Instance.new with Parent Argument
 

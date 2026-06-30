@@ -2,7 +2,7 @@
 
 Give your AI coding agent a Roblox brain.
 
-28 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+30 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
 
 ## Install
 
@@ -27,11 +27,21 @@ skills/roblox-gui/
     └── full.md           (~8,000 tokens — complete documentation)
 ```
 
-1. **Level 1: Index**: Agent reads `skill_index.md` (all 28 skills, ~2,800 tokens) to know what's available
+1. **Level 1: Index**: Agent reads `skill_index.md` (all 30 skills, ~2,800 tokens) to know what's available
 2. **Level 2: Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
 3. **Level 3: Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
 
-## Skills (28)
+Run `python3 validate_skills.py` to check all skills comply:
+
+- SKILL.md under 3,000 chars
+- Description under 150 chars
+- Required frontmatter fields (name, description, last_reviewed, sources)
+- `## When to Load` and `## Quick Reference` sections present
+- No `## Full Reference` in SKILL.md (must be in references/)
+- `references/full.md` exists (router skills exempt)
+- Cross-references to other skills (`roblox-name` and `roblox-name →`) point to existing skills
+
+## Skills (30)
 
 ### Core Language & Architecture
 
@@ -77,6 +87,8 @@ skills/roblox-gui/
 | `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
 | `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, day/night cycle, zone transitions |
 | `roblox-audio` | SoundService, spatial audio, music systems, SFX patterns, ambient layering, volume management |
+| `roblox-input` | UserInputService, ContextActionService, keyboard/mouse/gamepad/touch, cross-platform input binding |
+| `roblox-camera` | Camera object, CameraType, CFrame math, custom controllers, first/third person, cutscenes, screen shake |
 
 ### MCP & Cloud
 

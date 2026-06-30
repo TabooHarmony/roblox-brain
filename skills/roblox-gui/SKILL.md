@@ -2,11 +2,15 @@
 name: roblox-gui
 description: GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraint-based design.
 last_reviewed: 2026-05-22
+sources:
+  - https://github.com/brockmartin/roblox-game-skill (MIT)
 ---
 
-<!-- Source: brockmartin/roblox-game-skill (MIT) -->
-
 # Roblox GUI/UI Systems Reference
+
+## When to Load
+
+Load when building any 2D/3D-attached UI: menus, HUDs, shops, notifications, dialogs. Covers ScreenGui setup, layout, responsiveness, cross-platform scaling.
 
 ## 1. Overview
 

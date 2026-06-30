@@ -4,9 +4,14 @@ description: >
   Router skill. Luau language mastery has been split into three focused skills
   for better context efficiency. Load the specific one you need.
 last_reviewed: 2026-05-27
+sources: []
 ---
 
 # Luau Language Mastery (Index)
+
+## When to Load
+
+Load to route Luau questions to the right sub-skill (core syntax, types, or patterns). Always pair with one of `roblox-luau-core`, `roblox-luau-types`, or `roblox-luau-patterns`.
 
 This skill has been split into three focused skills for better context efficiency. Load the one that matches your task:
 

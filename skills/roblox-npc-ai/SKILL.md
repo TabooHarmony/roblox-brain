@@ -9,7 +9,9 @@ sources:
 
 # Roblox NPC & AI
 
-Use this skill when creating NPCs, enemies, bosses, or autonomous characters that navigate, detect players, or make decisions.
+## When to Load
+
+Load when creating NPCs/enemies: pathfinding, state machines, detection (LOS/FOV), spawn systems, AI update loops, network ownership.
 
 ## Quick Reference
 

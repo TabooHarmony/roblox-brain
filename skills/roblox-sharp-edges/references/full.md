@@ -122,7 +122,7 @@ end)
 
 Mobile devices struggle above ~10,000 visible parts. Enable **StreamingEnabled** and configure `StreamingMinRadius`/`StreamingTargetRadius`. Use `ModelStreamingMode` to mark distant models as Opportunistic and gameplay-critical models as Persistent.
 
-See **roblox-runtime → StreamingEnabled** for configuration details.
+See **roblox-performance → StreamingEnabled** for configuration details.
 
 ---
 
@@ -171,7 +171,7 @@ Bootstrap script calls `:Init()` on all modules, then `:Start()` on all modules.
 
 ## SE-10 | Low | Deprecated wait()/spawn()/delay()
 
-**See roblox-luau-mastery → Task Library for full details.**
+**See roblox-luau-patterns → Task Library for full details.**
 
 Replace `wait()` → `task.wait()`, `spawn()` → `task.spawn()`, `delay()` → `task.delay()`. Legacy functions have minimum yield issues, unpredictable timing, and swallow errors.
 

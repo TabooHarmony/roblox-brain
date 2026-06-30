@@ -25,7 +25,7 @@ Do not use this skill when the task is mainly about:
 - Hand off to roblox-oauth when the integration needs user-granted access, OAuth registration, refresh tokens, or per-user delegated authorization.
 - Hand off to roblox-data when the question becomes about persistent schema, contention, caching, or store-system design instead of request mechanics.
 - Hand off to roblox-networking for gameplay networking, remotes, or trust-boundary questions.
-- Hand off to roblox-api if the task is only an engine API lookup rather than a cloud integration.
+- Hand off to roblox-studio-mcp if the task is only an engine API lookup rather than a cloud integration.
 - Use the machine-readable artifacts when you need exact path templates, schemas, scopes, rate limits, or HttpService usability metadata.
 - If a request mixes cloud integration with out-of-scope architecture, answer only the Open Cloud portion and explicitly exclude the rest.
 

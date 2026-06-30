@@ -4,6 +4,8 @@ description: >
   Luau type system: annotations, generics, narrowing, inference philosophy,
   sealed/unsealed tables, exports, and Roblox-aware typing.
 last_reviewed: 2026-05-27
+sources:
+  - https://luau-lang.org/typecheck
 ---
 
 # Luau Type System

@@ -4,6 +4,9 @@ description: >
   Luau language fundamentals: syntax, tables, control flow, string patterns, math,
   idioms, scope, closures, sharp edges, and JS-to-Luau translation.
 last_reviewed: 2026-05-27
+sources:
+  - https://luau-lang.org/
+  - https://create.roblox.com/docs/luau
 ---
 
 # Luau Core Language

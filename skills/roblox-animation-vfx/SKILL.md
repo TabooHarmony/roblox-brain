@@ -3,11 +3,15 @@ name: roblox-animation-vfx
 description: >
   Animations, particles, tweens, ContentProvider, visual effects.
 last_reviewed: 2026-05-25
+sources:
+  - https://github.com/brockmartin/roblox-game-skill (MIT)
 ---
 
-<!-- Source: brockmartin/roblox-game-skill (MIT) -->
-
 # Animation & VFX Reference
+
+## When to Load
+
+Load when implementing character animations, particle/beam/trail effects, TweenService feedback, or other visual juice (camera shake, lighting pulses).
 
 ## Overview
 
