@@ -2,6 +2,9 @@
 name: roblox-studio-mcp
 description: Studio MCP server tools, execute_luau, script_read/multi_edit, reliability patterns, workflows.
 last_reviewed: 2026-05-27
+sources:
+  - https://github.com/MaximumADHD/Roblox-Client-Tracker
+  - https://github.com/Roblox/creator-docs
 ---
 
 # Roblox Studio MCP

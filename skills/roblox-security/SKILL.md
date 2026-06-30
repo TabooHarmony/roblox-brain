@@ -2,6 +2,8 @@
 name: roblox-security
 description: Anti-exploit design, server authority, RemoteEvent validation, rate limiting, audit checklist.
 last_reviewed: 2026-05-27
+sources:
+  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/security
 ---
 
 ## When to Load

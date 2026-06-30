@@ -2,6 +2,7 @@
 name: roblox-publish-checklist
 description: "Pre-publish verification gauntlet for Roblox games"
 last_reviewed: 2026-05-27
+sources: []
 ---
 
 ## When to Load

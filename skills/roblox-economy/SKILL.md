@@ -2,6 +2,7 @@
 name: roblox-economy
 description: Currency design, faucets/sinks, inflation control, time-to-earn, trading systems.
 last_reviewed: 2026-05-27
+sources: []
 ---
 
 ## When to Load

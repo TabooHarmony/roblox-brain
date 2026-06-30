@@ -2,6 +2,8 @@
 name: roblox-cloud
 description: Open Cloud REST API, API keys, webhooks, HttpService constraints, scope selection.
 last_reviewed: 2026-05-27
+sources:
+  - https://create.roblox.com/docs/reference/cloud/open-cloud
 ---
 
 # roblox-cloud

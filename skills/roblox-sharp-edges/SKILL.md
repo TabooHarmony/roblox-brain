@@ -3,9 +3,9 @@ name: roblox-sharp-edges
 description: >
   13 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf.
 last_reviewed: 2026-05-22
+sources:
+  - https://github.com/brockmartin/roblox-game-skill (MIT)
 ---
-
-<!-- Source: brockmartin/roblox-game-skill (MIT) -->
 
 ## When to Load
 
