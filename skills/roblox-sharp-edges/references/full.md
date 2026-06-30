@@ -122,7 +122,7 @@ end)
 
 Mobile devices struggle above ~10,000 visible parts. Enable **StreamingEnabled** and configure `StreamingMinRadius`/`StreamingTargetRadius`. Use `ModelStreamingMode` to mark distant models as Opportunistic and gameplay-critical models as Persistent.
 
-See **roblox-runtime → StreamingEnabled** for configuration details.
+See **roblox-performance → StreamingEnabled** for configuration details.
 
 ---
 
