@@ -171,7 +171,7 @@ Bootstrap script calls `:Init()` on all modules, then `:Start()` on all modules.
 
 ## SE-10 | Low | Deprecated wait()/spawn()/delay()
 
-**See roblox-luau-mastery → Task Library for full details.**
+**See roblox-luau-patterns → Task Library for full details.**
 
 Replace `wait()` → `task.wait()`, `spawn()` → `task.spawn()`, `delay()` → `task.delay()`. Legacy functions have minimum yield issues, unpredictable timing, and swallow errors.
 
