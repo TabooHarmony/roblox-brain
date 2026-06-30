@@ -29,7 +29,7 @@ skills/roblox-gui/
 
 **How agents consume this:**
 
-1. **Level 1 — Index**: Agent reads `skill_index.md` (all 28 skills, ~2,800 tokens) to know what's available
+1. **Level 1 — Index**: Agent reads `skill_index.md` (all 30 skills, ~2,800 tokens) to know what's available
 2. **Level 2 — Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
 3. **Level 3 — Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
 
@@ -37,13 +37,15 @@ skills/roblox-gui/
 
 ### Validation
 
-Run `python validate_skills.py` to check all skills comply with the size contract:
+Run `python3 validate_skills.py` to check all skills comply with the size contract:
 
 - SKILL.md under 3,000 chars
 - Description under 150 chars
-- Required frontmatter fields (name, description, last_reviewed)
-- `## Quick Reference` section present
+- Required frontmatter fields (name, description, last_reviewed, sources)
+- `## When to Load` and `## Quick Reference` sections present
 - No `## Full Reference` in SKILL.md (must be in references/)
+- `references/full.md` exists (router skills exempt)
+- Cross-references to other skills (`roblox-name` and `roblox-name →`) point to existing skills
 
 ## Skills (30)
 
