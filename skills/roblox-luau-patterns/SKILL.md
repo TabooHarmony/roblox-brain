@@ -2,6 +2,8 @@
 name: roblox-luau-patterns
 description: OOP with metatables, inheritance, async (Promises, pcall), module structure, service pattern.
 last_reviewed: 2026-05-27
+sources:
+  - https://luau-lang.org/
 ---
 
 ## When to Load

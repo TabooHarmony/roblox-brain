@@ -2,13 +2,17 @@
 name: roblox-architecture
 description: Service hierarchy, 7 foundational patterns, cross-platform input. Client-server architecture, module patterns, framework options.
 last_reviewed: 2026-05-26
+sources:
+  - https://github.com/brockmartin/roblox-game-skill (MIT)
 ---
-
-<!-- Source: brockmartin/roblox-game-skill (MIT) -->
 
 # Roblox Game Architecture Reference
 
 ---
+
+## When to Load
+
+Load when starting a new project, organizing/refactoring an existing codebase, choosing module/folder structure, or making service-hierarchy decisions.
 
 ## 1. Overview
 

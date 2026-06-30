@@ -2,6 +2,8 @@
 name: roblox-performance
 description: Profiler, microprofiler, optimization patterns, object pooling, StreamingEnabled, memory.
 last_reviewed: 2026-05-27
+sources:
+  - https://create.roblox.com/docs/performance/optimization
 ---
 
 # Roblox Performance

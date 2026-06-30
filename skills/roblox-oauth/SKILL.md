@@ -2,6 +2,8 @@
 name: roblox-oauth
 description: OAuth 2.0 flows, PKCE, authorization code, token lifecycle, scope selection, Open Cloud auth.
 last_reviewed: 2026-05-27
+sources:
+  - https://create.roblox.com/docs/reference/cloud/oauth-2
 ---
 
 # roblox-oauth
