@@ -99,7 +99,7 @@ local result = workspace:Raycast(unitRay.Origin, unitRay.Direction * 500)
 | `CFrame.new(x, y, z)` | Position only. |
 | `CFrame.new(x, y, z, qX, qY, qZ, qW)` | Position + quaternion rotation. |
 | `CFrame.new(x, y, z, R00, R01, ..., R22)` | Position + raw 3x3 rotation matrix. |
-| `CFrame.new(pos, lookAt)` | **Deprecated** — use `CFrame.lookAt`. |
+| `CFrame.new(pos, lookAt)` | **Legacy** (back-compat) — use `CFrame.lookAt`. |
 | `CFrame.lookAt(at, lookAt, up?)` | Construct at `at` oriented toward `lookAt`. Optional `up` defaults to `(0,1,0)`. Fails if `lookAt` directly above `at` (use `lookAlong`). |
 | `CFrame.lookAlong(at, direction, up?)` | Construct at `at` oriented along `direction`. |
 | `CFrame.fromRotationBetweenVectors(from, to)` | Rotation that maps `from` to `to`. |
@@ -398,7 +398,7 @@ For non-Play testing (Edit mode), `CurrentCamera` exists but the perspective doe
 - **Setting `CameraSubject = nil` "expecting it to detach".** It reverts to previous value.
 - **Reading `Camera.CFrame` in VR for gameplay math.** Use `GetRenderCFrame()` for true view (includes head rotation).
 - **Using `SetRoll` because it's convenient.** It's outdated; apply roll via `CFrame.Angles(0, 0, roll)` on CFrame.
-- **`CFrame.new(pos, lookAt)` because old tutorials say so.** Deprecated. Use `CFrame.lookAt(at, lookAt)`.
+- **`CFrame.new(pos, lookAt)` because old tutorials say so.** Legacy/back-compat. Use `CFrame.lookAt(at, lookAt)`.
 - **Confusing `ScreenPointToRay` with `ViewportPointToRay`.** GUI inset handling differs. Use `ScreenPointToRay` for mouse input.
 - **Forgetting to restore `CameraType` after a cutscene.** Player is stuck.
 - **Trying to `Raycast` with the unit Ray directly.** It's only 1 stud long. Multiply `Direction` by the actual distance.

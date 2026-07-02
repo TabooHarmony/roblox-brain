@@ -50,7 +50,7 @@ end)
 - `Camera.CFrame` lacks VR head rotation — use `GetRenderCFrame()` for true view.
 - `SetRoll` is outdated — apply roll via `CFrame.Angles(0, 0, roll)` on CFrame.
 - `CameraSubject = nil` reverts to previous.
-- `CFrame.new(pos, lookAt)` is deprecated — use `CFrame.lookAt(at, lookAt)`.
+- `CFrame.new(pos, lookAt)` is legacy (back-compat only) — use `CFrame.lookAt(at, lookAt)` for new code.
 - `ScreenPointToRay` ≠ `ViewportPointToRay` (GUI inset). Use `ScreenPointToRay` for mouse input.
 
 See `references/full.md` for first/third-person recipes, cutscenes, screen shake, mouse-look, full API.
