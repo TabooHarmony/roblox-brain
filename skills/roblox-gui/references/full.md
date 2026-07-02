@@ -23,8 +23,8 @@ container.Parent = screenGui
 <!-- Source: uiuxartist (Roblox Staff), DevForum -->
 
 - **Scale** = percentage of parent (responsive). Use for Size and Position.
-- **Offset** = fixed pixels. Use for pixel-perfect icons, small graphics, UIStroke.
-- **UIStroke** does NOT support Scale - only Offset.
+- **Offset** = fixed pixels. Use for pixel-perfect icons, small graphics.
+- **UIStroke** supports Offset (default, `StrokeSizingMode.FixedSize`) or Scale (`StrokeSizingMode.ScaledSize`, relative to the parent's shortest axis).
 - **UICorner** DOES support Scale (`UDim.new(0.5, 0)` = 50% radius).
 - **Hybrid pattern**: start pure Scale, add Offset for minimum size, reduce Scale.
 
@@ -32,8 +32,10 @@ container.Parent = screenGui
 -- Scale for responsive sizing
 frame.Size = UDim2.new(0.5, 0, 0, 40)  -- 50% width, 40px height
 
--- Offset for UIStroke (Scale not supported)
-stroke.Thickness = 2  -- always Offset
+-- UIStroke thickness: Offset (default) or Scale
+stroke.Thickness = 2  -- FixedSize pixels
+-- OR: stroke.StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize
+--     stroke.Thickness = 0.1  -- 10% of parent's shortest axis
 
 -- UICorner supports Scale
 corner.CornerRadius = UDim.new(0, 8)    -- Offset
@@ -254,6 +256,10 @@ stroke.Color = Color3.fromRGB(255, 255, 255)
 stroke.Thickness = 2
 stroke.Transparency = 0.5
 stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+-- Optional newer stroke controls:
+-- stroke.StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize
+-- stroke.BorderStrokePosition = Enum.BorderStrokePosition.Center
+-- stroke.BorderOffset = UDim.new(0, 4)
 stroke.Parent = frame
 
 -- Gradient
@@ -605,7 +611,7 @@ ContextActionService:UnbindAction("Interact")
 **Structure:**
 - Frame (anchored off-screen right)
   - TextLabel (message)
-  - UICorner + UIStroke
+  - UICorner + UIStroke (supports scale sizing, border position, and border offset)
 
 **Key logic:** Tween Position from off-screen to visible, task.delay(3), tween back out, Destroy. Queue multiple toasts with vertical offset.
 

@@ -1,0 +1,104 @@
+# API Drift Watch Registry
+# Maps factual API claims in roblox-brain skills to verifiable facts in
+# Roblox/creator-docs engine reference YAML files.
+#
+# Run `python3 verify_api_drift.py` before external review or release.
+
+entries:
+  - id: uistroke-sizing-mode
+    claim: "UIStroke supports scale-based thickness via StrokeSizingMode"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: UIStroke
+      property: StrokeSizingMode
+    verified: 2026-07-02
+
+  - id: uistroke-border-position
+    claim: "UIStroke supports BorderStrokePosition"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: UIStroke
+      property: BorderStrokePosition
+    verified: 2026-07-02
+
+  - id: uistroke-border-offset
+    claim: "UIStroke supports BorderOffset"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: UIStroke
+      property: BorderOffset
+    verified: 2026-07-02
+
+  - id: cframe-lookat-constructor-replaced
+    claim: "CFrame.new(pos, lookAt) is legacy/replaced; use CFrame.lookAt"
+    files:
+      - path: skills/roblox-camera/SKILL.md
+      - path: skills/roblox-camera/references/full.md
+    check:
+      type: constructor_description_contains
+      datatype: CFrame
+      constructor: new
+      parameters:
+        - pos
+        - lookAt
+      contains: "replaced by"
+    verified: 2026-07-02
+
+  - id: camera-setroll-deprecated
+    claim: "Camera:SetRoll is outdated/deprecated"
+    files:
+      - path: skills/roblox-camera/SKILL.md
+      - path: skills/roblox-camera/references/full.md
+    check:
+      type: member_deprecation_status
+      class: Camera
+      member: SetRoll
+      expected: deprecated
+    verified: 2026-07-02
+
+  - id: camera-getroll-deprecated
+    claim: "Camera:GetRoll is outdated/deprecated"
+    files:
+      - path: skills/roblox-camera/references/full.md
+    check:
+      type: member_deprecation_status
+      class: Camera
+      member: GetRoll
+      expected: deprecated
+    verified: 2026-07-02
+
+  - id: bodyvelocity-deprecated
+    claim: "BodyVelocity is deprecated; use LinearVelocity"
+    files:
+      - path: skills/roblox-architecture/references/combat-systems.md
+    check:
+      type: class_deprecation_status
+      class: BodyVelocity
+      expected: deprecated
+    verified: 2026-07-02
+
+  - id: textlabel-fontface-exists
+    claim: "TextLabel.FontFace exists for newer fonts beyond Enum.Font"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: TextLabel
+      property: FontFace
+    verified: 2026-07-02
+
+  - id: textbutton-fontface-exists
+    claim: "TextButton.FontFace exists for newer fonts beyond Enum.Font"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: TextButton
+      property: FontFace
+    verified: 2026-07-02

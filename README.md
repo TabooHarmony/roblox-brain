@@ -110,9 +110,19 @@ Run `python3 validate_skills.py` to check all skills comply:
 
 ## Recommended MCP Servers
 
-- **[robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp)**: Community Roblox Studio MCP fork with per-peer execute_luau and additional tools.
+- **Roblox Studio MCP bridge**: Use the official Studio MCP or your preferred community bridge. `roblox-brain` does not require a specific bridge.
 - **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
 - **[mcp-server-tree-sitter](https://github.com/wrale/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
+
+## API Drift Maintenance
+
+The repo makes specific claims about Roblox engine APIs that can become outdated as Roblox ships updates. To catch drift:
+
+1. Run `python3 verify_api_drift.py` to check registry entries against live Roblox creator-docs YAML files on GitHub.
+2. If drift is detected, fix the skill file and update the registry entry's `verified:` date.
+3. When adding new factual API claims to skills, add a matching entry to `api_drift_registry.yaml`.
+
+The registry currently checks property existence and deprecation status against `github.com/Roblox/creator-docs`. Run it before external review or release.
 
 ## Contributors
 
