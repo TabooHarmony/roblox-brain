@@ -44,16 +44,6 @@ skills/roblox-gui/
 2. **Level 2: Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
 3. **Level 3: Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
 
-Run `python3 validate_skills.py` to check all skills comply:
-
-- SKILL.md under 3,000 chars
-- Description under 150 chars
-- Required frontmatter fields (name, description, last_reviewed, sources)
-- `## When to Load` and `## Quick Reference` sections present
-- No `## Full Reference` in SKILL.md (must be in references/)
-- `references/full.md` exists (router skills exempt)
-- Cross-references to other skills (`roblox-name` and `roblox-name ->`) point to existing skills
-
 ## Skills (30)
 
 ### Core Language & Architecture
@@ -123,19 +113,9 @@ Run `python3 validate_skills.py` to check all skills comply:
 
 ## Recommended MCP Servers
 
-- **Roblox Studio MCP bridge**: Use the official Studio MCP or your preferred community bridge. `roblox-brain` does not require a specific bridge.
+- **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp)**: Use the official Studio MCP or your preferred community bridge. `roblox-brain` does not require a specific MCP server.
 - **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
-- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)**: Local codebase memory and structural search. Indexes projects into a persistent knowledge graph for fast architecture, symbol, and dependency queries.
-
-## API Drift Maintenance
-
-The repo makes specific claims about Roblox engine APIs that can become outdated as Roblox ships updates. To catch drift:
-
-1. Run `python3 verify_api_drift.py` to check registry entries against live Roblox creator-docs YAML files on GitHub.
-2. If drift is detected, fix the skill file and update the registry entry's `verified:` date.
-3. When adding new factual API claims to skills, add a matching entry to `api_drift_registry.yaml`.
-
-The registry currently checks property existence and deprecation status against `github.com/Roblox/creator-docs`. Run it before external review or release.
+- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)**: Local codebase memory and structural search.
 
 ## Contributors
 
@@ -148,6 +128,7 @@ PRs welcome. Good contributions:
 - Add high-value patterns from production games
 - Expand reference code (must be MIT/Apache sourced or original)
 - Keep skills focused, non-overlapping, and practical. All skill submissions must pass `validate_skills.py`.
+
 
 ## License
 
