@@ -1,8 +1,21 @@
 # roblox-brain
 
+[![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Skills](https://img.shields.io/badge/skills-30-blue.svg)](skills)
+[![Roblox](https://img.shields.io/badge/Roblox-Luau-red.svg)](https://create.roblox.com/docs/luau)
+[![Agent Skills](https://img.shields.io/badge/agent_skills-compatible-purple.svg)](skill_index.md)
+
 Give your AI coding agent a Roblox brain.
 
 30 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+
+## What you get
+
+- 30 focused skills covering Luau, architecture, networking, UI, physics, data, monetization, testing, tooling, and publishing.
+- Compact `SKILL.md` files for quick context, with deeper `references/full.md` files when the agent needs examples or API tables.
+- Source-tracked guidance from Roblox creator-docs, MIT/Apache repos, and production patterns.
+- Local validation plus API drift checks so stale Roblox API advice gets caught before release.
 
 ## Install
 
@@ -22,9 +35,9 @@ Each skill uses a **progressive disclosure** design to keep context lean:
 
 ```
 skills/roblox-gui/
-├── SKILL.md              (~600 tokens — quick reference only)
+├── SKILL.md              (~600 tokens, quick reference only)
 └── references/
-    └── full.md           (~8,000 tokens — complete documentation)
+    └── full.md           (~8,000 tokens, complete documentation)
 ```
 
 1. **Level 1: Index**: Agent reads `skill_index.md` (all 30 skills, ~2,800 tokens) to know what's available
@@ -39,7 +52,7 @@ Run `python3 validate_skills.py` to check all skills comply:
 - `## When to Load` and `## Quick Reference` sections present
 - No `## Full Reference` in SKILL.md (must be in references/)
 - `references/full.md` exists (router skills exempt)
-- Cross-references to other skills (`roblox-name` and `roblox-name →`) point to existing skills
+- Cross-references to other skills (`roblox-name` and `roblox-name ->`) point to existing skills
 
 ## Skills (30)
 
@@ -48,7 +61,7 @@ Run `python3 validate_skills.py` to check all skills comply:
 | Skill | What it does |
 |-------|-------------|
 | `roblox-luau-mastery` | Router to the three Luau skills below |
-| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, idioms, scope, closures, sharp edges, JS→Luau translation |
+| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, idioms, scope, closures, sharp edges, JS to Luau translation |
 | `roblox-luau-types` | Type system, generics, narrowing, inference philosophy, sealed/unsealed tables, exports, Roblox-aware typing |
 | `roblox-luau-patterns` | OOP with metatables, inheritance, async (Promises, pcall, coroutines), module structure, service pattern, Roblox idioms |
 | `roblox-architecture` | Service hierarchy, 7 foundational patterns, client-server architecture, module patterns |
@@ -112,7 +125,7 @@ Run `python3 validate_skills.py` to check all skills comply:
 
 - **Roblox Studio MCP bridge**: Use the official Studio MCP or your preferred community bridge. `roblox-brain` does not require a specific bridge.
 - **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
-- **[mcp-server-tree-sitter](https://github.com/wrale/mcp-server-tree-sitter)**: Code analysis, dependency graphs, symbol search.
+- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)**: Local codebase memory and structural search. Indexes projects into a persistent knowledge graph for fast architecture, symbol, and dependency queries.
 
 ## API Drift Maintenance
 
