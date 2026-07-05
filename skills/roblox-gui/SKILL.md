@@ -12,21 +12,6 @@ sources:
 
 Load when building any 2D/3D-attached UI: menus, HUDs, shops, notifications, dialogs. Covers ScreenGui setup, layout, responsiveness, cross-platform scaling.
 
-## 1. Overview
-
-Load this reference when working on any UI-related task in Roblox:
-
-- Building menus (main menu, pause menu, settings)
-- HUDs (health bars, minimaps, ammo counters, score displays)
-- Shops and inventory screens
-- Notification and toast systems
-- Dialog and popup windows
-- Any 2D or 3D-attached interface elements
-
-All GUI code runs on the **client** (LocalScripts). UI objects live under `StarterGui` at edit time and are cloned into each player's `PlayerGui` at runtime.
-
----
-
 ## Quick Reference
 
 **Load Full Reference below only when you need specific layout examples or implementation patterns.**

@@ -13,6 +13,9 @@ sources:
 
 # Roblox Lighting & Atmosphere
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 Use this skill when configuring lighting, atmosphere, time of day, post-processing effects, or creating visual mood for a game.
 
 ## Lighting Service Properties

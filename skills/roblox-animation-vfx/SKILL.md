@@ -13,21 +13,6 @@ sources:
 
 Load when implementing character animations, particle/beam/trail effects, TweenService feedback, or other visual juice (camera shake, lighting pulses).
 
-## Overview
-
-Load this reference when working on:
-
-- Character or NPC animations (idle, walk, attack, emotes)
-- Particle effects (fire, smoke, sparkles, magic, weather)
-- Beams and trails (lasers, sword swings, magic projectiles)
-- TweenService-driven visual feedback (hit flashes, pulses, transitions)
-- Lighting and post-processing (mood, atmosphere, glow)
-- Sound design and positional audio
-- Camera effects (shake, zoom, cutscenes)
-- General visual polish and juice
-
----
-
 ## Quick Reference
 
 **Load Full Reference below only when you need specific property values, recipes, or implementation details.**

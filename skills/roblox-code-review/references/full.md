@@ -6,6 +6,9 @@ last_reviewed: 2026-05-27
 
 # /code-review - Code Quality Review
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 You are performing a code quality review on a Roblox project. Follow these 8 steps. Apply the relevant lens based on what changed. Don't apply all lenses every time.
 
 ---

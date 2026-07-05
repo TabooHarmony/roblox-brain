@@ -3,7 +3,8 @@ name: roblox-analytics
 description: >
   Roblox AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy.
 last_reviewed: 2026-05-24
-sources: []
+sources:
+  - https://create.roblox.com/docs/reference/engine/classes/AnalyticsService
 ---
 
 # Roblox Analytics Reference
@@ -11,20 +12,6 @@ sources: []
 ## When to Load
 
 Load when tracking player behavior, economy events, or funnels; building custom event instrumentation; or understanding AnalyticsService rate limits and batching.
-
-## Overview
-
-Load this reference when the task involves:
-
-- Tracking player behavior, feature adoption, or engagement metrics
-- Implementing economy event logging (currency sources/sinks)
-- Building funnel tracking (onboarding, shop conversion, progression)
-- Custom event instrumentation for A/B testing or feature flags
-- Understanding rate limits and batching strategies
-
-Roblox provides a first-party analytics system via `AnalyticsService`. No third-party SDK needed. Events feed directly into the Creator Hub analytics dashboard with 24-hour processing delay.
-
----
 
 ## Quick Reference
 

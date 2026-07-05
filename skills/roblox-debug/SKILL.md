@@ -2,7 +2,7 @@
 name: roblox-debug
 description: "Iterative debug loop for Luau/Roblox issues"
 last_reviewed: 2026-05-27
-sources: []
+sources: [original]
 ---
 
 ## When to Load

@@ -12,7 +12,7 @@ sources:
 
 ## When to Load
 
-Load this skill when working with Luau type annotations, generics, union types, type narrowing, or sealed/unsealed table behavior. Also load when choosing strictness modes (`--!strict` vs `--!nonstrict`), designing module type exports, or typing metatable-backed objects.
+Load for Luau type system work: annotations, generics, union types, type narrowing, sealed/unsealed tables, strictness modes (`--!strict` vs `--!nonstrict`), module type exports, and metatable-backed object typing. For syntax questions, use `roblox-luau-core`. For OOP/async/modules, use `roblox-luau-patterns`.
 
 ## Quick Reference
 

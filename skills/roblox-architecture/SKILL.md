@@ -14,20 +14,6 @@ sources:
 
 Load when starting a new project, organizing/refactoring an existing codebase, choosing module/folder structure, or making service-hierarchy decisions.
 
-## 1. Overview
-
-**Load this reference when:**
-
-- Starting a new Roblox game from scratch and need to decide where code and assets go
-- Organizing or refactoring an existing codebase that has grown unwieldy
-- Answering architecture questions: "Where should this script go?", "How should client talk to server?", "How do I structure modules?"
-- Onboarding onto a Roblox project and need to understand the standard conventions
-- Choosing between a flat script layout and a modular loader pattern
-
-This document covers the Roblox data model, service hierarchy, script types, client-server communication, module patterns, framework options, folder organization, best practices, and anti-patterns.
-
----
-
 ## Quick Reference
 
 **Load Full Reference below only when you need specific folder layouts or framework comparisons.**

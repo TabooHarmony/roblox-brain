@@ -1,5 +1,8 @@
 ## Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## Design Guidelines
 
 <!-- Guidelines sourced from Roblox DevForum, official docs, and community standards -->

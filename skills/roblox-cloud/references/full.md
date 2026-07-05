@@ -1,5 +1,8 @@
 # roblox-cloud — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## When to Use
 
 Use this skill when the task is mainly about Roblox Open Cloud or HTTP-based integration work outside normal gameplay scripting:

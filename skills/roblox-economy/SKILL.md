@@ -2,7 +2,7 @@
 name: roblox-economy
 description: Currency design, faucets/sinks, inflation control, time-to-earn, trading systems.
 last_reviewed: 2026-05-27
-sources: []
+sources: [original]
 ---
 
 ## When to Load
@@ -11,7 +11,7 @@ Load when designing currency systems, balancing rewards, creating trading/market
 
 ## Quick Reference
 
-### Currencies (max 3)
+### Currencies (max 3) — design heuristic, not an engine limit
 - **Soft** (Gold): gameplay-earned, primary transactions
 - **Premium** (Gems): rare/purchased with Robux, exclusive items
 - **Tokens** (Event Points): limited-time, expires per event
@@ -31,10 +31,10 @@ Load when designing currency systems, balancing rewards, creating trading/market
 | Long-term | 10-50 hrs |
 | Prestige | 100+ hrs |
 
-**Rule:** meaningful progress every 30-60 seconds.
+**Rule:** meaningful progress every 30-60 seconds (design heuristic).
 
 ### Inflation Control
-Hard sinks, variable pricing, seasonal resets, luxury goods, 10-20% trade tax, durability costs, prestige/rebirth resets.
+Hard sinks, variable pricing, seasonal resets, luxury goods, 10-20% trade tax (design heuristic), durability costs, prestige/rebirth resets.
 
 ### Trading Rules
 - **Atomic**: both sides complete or neither does (server-side)
@@ -49,6 +49,9 @@ Hard sinks, variable pricing, seasonal resets, luxury goods, 10-20% trade tax, d
 - 2x Gold passes = inflation accelerators; cap or scale prices
 - Cosmetic-only passes = safest (zero economy impact)
 - Battle pass: unconverted premium currency expires end-of-season (sink)
+
+### Monetization Implementation
+For purchase APIs (ProcessReceipt, GamePass, prompts, DevEx rates), see `roblox-monetization`.
 
 ### Health Metrics
 Track: earn rate by level, sink participation %, currency stockpile distribution, time-to-first-purchase, trade volume.

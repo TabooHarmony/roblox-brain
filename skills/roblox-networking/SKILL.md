@@ -16,19 +16,6 @@ sources:
 
 Load when validating RemoteEvent/RemoteFunction args, implementing rate limiting, designing server-authoritative systems, or hardening against exploits.
 
-## Overview
-
-**Load this reference when:**
-
-- Validating RemoteEvent/RemoteFunction input on the server
-- Implementing rate limiting or anti-exploit measures
-- Designing server-authoritative systems (damage, currency, inventory)
-- Hardening existing networking code against exploiters
-
-This document covers server-side validation, rate limiting, suspicion scoring, and server-authoritative design patterns. For player lifecycle (PlayerAdded/Removing), see **roblox-architecture**.
-
----
-
 ## Quick Reference
 
 **Load Full Reference below only when you need specific validation module code or rate limiting implementations.**
@@ -44,4 +31,5 @@ Key rules:
 - Use `t` library for composable type checks on remote args.
 - Suspicion scoring: accumulate violations, kick/ban at threshold. Don't instant-kick on first offense.
 - Exploiters can: fire any remote, read all client code, modify any client state, speed/fly/teleport.
+- For exploit vector catalog and audit checklist, see `roblox-security`.
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

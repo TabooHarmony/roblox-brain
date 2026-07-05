@@ -8,6 +8,9 @@ last_reviewed: 2026-05-27
 
 # Luau Patterns & Architecture
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## When to Use
 
 Load this skill when the task involves:
@@ -809,7 +812,7 @@ end
 
 ### Trusting Client Input
 
-For server-authoritative validation patterns (type checking, range checking, ownership, rate limiting), see **roblox-networking** → Client Validation.
+For server-authoritative validation patterns (type checking, range checking, ownership, rate limiting), see `roblox-networking` → Client Validation.
 
 **Core rule:** Never trust client input. Every `OnServerEvent` handler must validate types, ranges, and ownership before processing.
 

@@ -1,5 +1,8 @@
 # Roblox Tooling Ecosystem — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## Decision Rules
 
 - Use Rojo for any project with more than a few scripts; Studio-only development has no version history
@@ -258,7 +261,7 @@ local serde = require("@lune/serde")
 
 ### Example: Simple Test Runner
 
-```lua
+```luau
 -- run-tests.luau
 local function runTest(name, testFn)
     local success, err = pcall(testFn)

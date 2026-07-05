@@ -1,5 +1,8 @@
 # Luau Type System — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## Decision Rules
 
 - Use `--!strict` for new or actively maintained code

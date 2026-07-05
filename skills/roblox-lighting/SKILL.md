@@ -3,9 +3,9 @@ name: roblox-lighting
 description: Lighting service, Atmosphere, post-processing (Bloom, ColorCorrection), day/night cycle.
 last_reviewed: 2026-05-27
 sources:
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/environment/lighting.md
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/environment/atmosphere.md
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/environment/post-processing-effects.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/lighting.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/atmosphere.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/post-processing-effects.md
 ---
 
 # Roblox Lighting & Atmosphere

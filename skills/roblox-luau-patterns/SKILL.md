@@ -8,12 +8,7 @@ sources:
 
 ## When to Load
 
-- Designing classes with metatables (constructors, methods, inheritance)
-- Async control flow (Promises, coroutines, pcall/xpcall, retry patterns)
-- Module structure and organization (service pattern, singletons)
-- Roblox-specific patterns (Instance creation, service access, events, task library)
-- Choosing between architectural approaches (OOP vs modules vs flat functions)
-- Error handling strategy (pcall wrapping, fallbacks, retry logic)
+Load for Luau patterns: classes with metatables (constructors, methods, inheritance), async control flow (Promises, coroutines, pcall/xpcall), module structure (service pattern, singletons), Roblox-specific patterns (Instance creation, service access, events, task library). For syntax questions, use `roblox-luau-core`. For type annotations, use `roblox-luau-types`.
 
 **Hand off when:** Pure syntax → `roblox-luau-core` · Type annotations → `roblox-luau-types` · Networking/data/security → `roblox-networking`, `roblox-data`, `roblox-security` · Performance → `roblox-performance`.
 

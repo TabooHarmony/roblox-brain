@@ -1,5 +1,8 @@
 # Roblox Sharp Edges — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 > Every entry here represents a real production footgun that has caused data loss, exploits,
 > crashes, or hours of debugging in Roblox games.
 >
@@ -92,7 +95,7 @@ RemoteEvents have no built-in rate limiting. Exploiters can fire thousands of ti
 
 ### Solution
 
-Implement per-player, per-remote rate limiting on the server. See **roblox-networking → Rate Limiting** for production patterns.
+Implement per-player, per-remote rate limiting on the server. See `roblox-networking` → Rate Limiting for production patterns.
 
 Minimal inline example:
 
@@ -122,7 +125,7 @@ end)
 
 Mobile devices struggle above ~10,000 visible parts. Enable **StreamingEnabled** and configure `StreamingMinRadius`/`StreamingTargetRadius`. Use `ModelStreamingMode` to mark distant models as Opportunistic and gameplay-critical models as Persistent.
 
-See **roblox-performance → StreamingEnabled** for configuration details.
+See `roblox-performance` → StreamingEnabled for configuration details.
 
 ---
 

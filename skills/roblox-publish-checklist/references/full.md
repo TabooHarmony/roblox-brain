@@ -1,5 +1,8 @@
 # Pre-Publish Verification — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 You are verifying a Roblox game is ready to publish. Work through every category below. For each item, check it and note PASS/FAIL/SKIP with a brief explanation.
 
 ---

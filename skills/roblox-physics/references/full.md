@@ -1,5 +1,8 @@
 # Roblox Physics & Constraints — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## Constraint Types
 
 ### Mechanical Constraints

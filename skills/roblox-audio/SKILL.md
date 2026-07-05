@@ -3,11 +3,11 @@ name: roblox-audio
 description: SoundService, SoundGroup mixer, spatial audio, 3D positioned sound, music systems, SFX patterns.
 last_reviewed: 2026-05-27
 sources:
-  - https://github.com/Roblox/creator-docs/blob/main/en-us/sound/objects.md
-  - https://github.com/Roblox/creator-docs/blob/main/en-us/audio/objects.md
-  - https://github.com/Roblox/creator-docs/blob/main/en-us/sound/groups.md
-  - https://github.com/Roblox/creator-docs/blob/main/en-us/sound/dynamic-effects.md
-  - https://github.com/Roblox/creator-docs/blob/main/en-us/tutorials/use-case-tutorials/audio/play-background-music.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/en-us/sound/objects.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/en-us/audio/objects.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/en-us/sound/groups.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/en-us/sound/dynamic-effects.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/en-us/tutorials/use-case-tutorials/audio/play-background-music.md
 ---
 
 ## When to Load

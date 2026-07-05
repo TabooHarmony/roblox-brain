@@ -2,16 +2,16 @@
 name: roblox-building
 description: 3D builds via MCP, CSG operations, spatial coordination, Part properties, map design.
 last_reviewed: 2026-05-27
-sources: []
+sources: [original]
 ---
 
 ## When to Load
 
-Load when building physical geometry in Roblox Studio via MCP (execute_luau / run_code) — single objects, room-scale structures, or multi-zone maps. Covers CSG operations, spatial coordination, and platform quirks. See `references/full.md` for complete patterns, build process, and validation scripts.
+Load when building physical geometry in Roblox Studio — via MCP or standalone scripts. Covers CSG operations, spatial coordination, and platform quirks. See `references/full.md` for complete patterns, build process, and validation scripts.
 
 ## Quick Reference
 
-### MCP Statelessness (CRITICAL)
+### MCP Mode (if using MCP bridge)
 Every MCP call is a blank slate. Re-acquire refs at start of EVERY call. Never guess coords from chat — READ from workspace first.
 
 ```luau

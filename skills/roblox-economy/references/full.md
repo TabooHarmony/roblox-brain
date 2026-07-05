@@ -1,5 +1,8 @@
 # Roblox Economy Design — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## Currency Types
 
 - **Soft Currency** (e.g. "Gold"): Earned through gameplay. Primary transaction currency.

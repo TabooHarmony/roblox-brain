@@ -1,5 +1,8 @@
 ## Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## 2. Core Concepts
 
 ### The Data Model
@@ -204,7 +207,7 @@ StarterPack/
 - **File convention:** `*.server.lua` in Rojo projects
 - **Access:** Full access to server APIs (`DataStoreService`, `MessagingService`, `HttpService`, etc.)
 
-```lua
+```luau
 -- ServerScriptService/GameManager.server.lua
 local Players = game:GetService("Players")
 
@@ -227,7 +230,7 @@ end)
 
 `RunContext = Client` is powerful for workspace-local effects or anything the client sees but doesn't belong in StarterPlayerScripts:
 
-```lua
+```luau
 -- A Script in Workspace with RunContext = Client
 -- Runs on every client, perfect for local visual effects
 local part = script.Parent
@@ -240,7 +243,7 @@ end)
 
 `RunContext = Server` lets you place server scripts outside the usual server containers:
 
-```lua
+```luau
 -- A Script in ReplicatedStorage with RunContext = Server
 -- Server logic lives alongside shared modules
 local SharedConfig = require(script.Parent.SharedConfig)
@@ -256,7 +259,7 @@ print(`Server running with: {SharedConfig.setting}`)
 - **File convention:** `*.client.lua` in Rojo projects
 - **Access:** Client APIs (`UserInputService`, `ContextActionService`, `Camera`, local player's GUI)
 
-```lua
+```luau
 -- StarterPlayerScripts/InputManager.client.lua
 local UserInputService = game:GetService("UserInputService")
 
@@ -278,7 +281,7 @@ end)
 - **File convention:** `*.lua` (no `.server` or `.client` suffix) in Rojo projects
 - **Returns:** Exactly one value (typically a table/dictionary acting as a module)
 
-```lua
+```luau
 -- ReplicatedStorage/Modules/MathUtils.lua
 local MathUtils = {}
 
@@ -294,7 +297,7 @@ return MathUtils
 ```
 
 **Requiring:**
-```lua
+```luau
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MathUtils = require(ReplicatedStorage.Modules.MathUtils)
 
@@ -305,7 +308,7 @@ local result = MathUtils.lerp(0, 100, 0.5) -- 50
 
 ## 5. Client-Server Communication
 
-For implementation details (RemoteEvent, RemoteFunction, UnreliableRemoteEvent, BindableEvent, validation patterns), see **roblox-networking** → Client-Server Communication.
+For implementation details (RemoteEvent, RemoteFunction, UnreliableRemoteEvent, BindableEvent, validation patterns), see `roblox-networking` → Client-Server Communication.
 
 **Conceptual overview:**
 
@@ -330,7 +333,7 @@ For implementation details (RemoteEvent, RemoteFunction, UnreliableRemoteEvent, 
 
 Every ModuleScript returns a single table. Functions and data are fields on that table.
 
-```lua
+```luau
 -- ReplicatedStorage/Modules/InventoryModule.lua
 local InventoryModule = {}
 
@@ -367,7 +370,7 @@ return InventoryModule
 
 ### The `require()` Pattern
 
-```lua
+```luau
 -- ServerScriptService/Main.server.lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -392,7 +395,7 @@ InventoryModule.init()
 Circular dependencies occur when Module A requires Module B, and Module B requires Module A. This causes an infinite loop or returns `nil`.
 
 **Problem:**
-```lua
+```luau
 -- ModuleA.lua
 local ModuleB = require(script.Parent.ModuleB) -- ModuleB hasn't finished loading
 -- ...
@@ -403,7 +406,7 @@ local ModuleA = require(script.Parent.ModuleA) -- ModuleA hasn't finished loadin
 ```
 
 **Solution 1: Deferred initialization with `init()` pattern**
-```lua
+```luau
 -- ModuleA.lua
 local ModuleA = {}
 local ModuleB -- forward declaration
@@ -419,7 +422,7 @@ end
 return ModuleA
 ```
 
-```lua
+```luau
 -- Main.server.lua (the bootstrapper)
 local ModuleA = require(path.to.ModuleA)
 local ModuleB = require(path.to.ModuleB)
@@ -443,11 +446,11 @@ Instead of calling directly into another module, fire a BindableEvent that the o
 
 ### OOP Module Pattern (Class-based)
 
-For metatable-based classes, type annotations, inheritance, and the `.` vs `:` conventions, see **roblox-luau-patterns** → OOP Patterns.
+For metatable-based classes, type annotations, inheritance, and the `.` vs `:` conventions, see `roblox-luau-patterns` → OOP Patterns.
 
 The architecture-specific pattern: modules that return a class table. The class is defined in a ModuleScript, required by whoever needs it, and instances are created via `ClassName.new()`.
 
-```lua
+```luau
 -- ReplicatedStorage/Modules/Weapon.lua
 local Weapon = {}
 Weapon.__index = Weapon
@@ -481,7 +484,7 @@ end
 return Weapon
 ```
 
-```lua
+```luau
 -- Usage
 local Weapon = require(ReplicatedStorage.Modules.Weapon)
 local sword = Weapon.new("Iron Sword", 25, 0.8)
@@ -499,12 +502,12 @@ end
 
 One Script on the server, one LocalScript on the client. Each requires a "loader" module that initializes all other modules in order.
 
-```lua
+```luau
 -- ServerScriptService/Main.server.lua
 require(game:GetService("ServerStorage").Loader)
 ```
 
-```lua
+```luau
 -- ServerStorage/Loader.lua
 local Loader = {}
 
@@ -695,7 +698,7 @@ The server is the **single source of truth** for all game state. Clients render 
 
 ### Validate All Client Input
 
-For implementation details (type checking, range checking, ownership, rate limiting), see **roblox-networking** → Client Validation.
+For implementation details (type checking, range checking, ownership, rate limiting), see `roblox-networking` → Client Validation.
 
 **Core rules:**
 - Every `OnServerEvent` handler must validate types, ranges, and ownership before processing.
@@ -710,7 +713,7 @@ Avoid putting game logic directly in Scripts or LocalScripts. Instead, keep Scri
 
 Create all RemoteEvents and RemoteFunctions in one place rather than scattering `Instance.new("RemoteEvent")` across multiple scripts.
 
-```lua
+```luau
 -- ServerScriptService/CreateRemotes.server.lua (runs first)
 local remoteFolder = Instance.new("Folder")
 remoteFolder.Name = "Remotes"
@@ -734,7 +737,7 @@ end
 
 Define shared constants and Luau types in `ReplicatedStorage` so both sides use the same definitions.
 
-```lua
+```luau
 -- ReplicatedStorage/Modules/Constants.lua
 local Constants = {
     MAX_HEALTH = 100,
@@ -797,7 +800,7 @@ return Constants
 
 ### Polling Instead of Events
 
-For polling vs event-driven patterns, see **roblox-luau-patterns** → Anti-Patterns.
+For polling vs event-driven patterns, see `roblox-luau-patterns` → Anti-Patterns.
 
 **Core rule:** Use events (`.Changed`, `GetPropertyChangedSignal()`, `Died`, etc.) instead of `while true do task.wait()` loops.
 
@@ -809,7 +812,7 @@ For polling vs event-driven patterns, see **roblox-luau-patterns** → Anti-Patt
 
 ### Ignoring `task` Library
 
-For deprecated `wait()`/`spawn()`/`delay()` vs the `task` library, see **roblox-luau-patterns** → Task Library.
+For deprecated `wait()`/`spawn()`/`delay()` vs the `task` library, see `roblox-luau-patterns` → Task Library.
 
 ### Instance.new with Parent Argument
 
@@ -831,3 +834,31 @@ part.Parent = workspace -- parent last
 ```
 
 **Rule:** Always set `Parent` last. Create the instance, configure all properties, then parent it.
+
+## Combat System Architecture
+
+### Server Authority
+
+All combat math runs server-side. Client sends input (attack button, target selection), server validates range, cooldown, and computes damage. Never accept damage values from client.
+
+### Damage Calculation
+
+Server calculates: `damage = weapon.BaseDamage * multiplier * rangeFactor * critMultiplier`. Apply cooldowns per weapon. Validate target is alive and in range before applying.
+
+### Hit Detection
+
+- **Melee**: server-side distance check + cooldown. Use `.Touched` only for slow projectiles.
+- **Ranged/hitscan**: `workspace:Raycast` from muzzle position in look direction. Validate hit part belongs to a valid target.
+- **Projectiles**: server spawns projectile, validates hits. Set lifetime to prevent leaked instances.
+
+### Combat State Machine
+
+`idle → windup → active → recovery → idle`. Each state has duration (from animation or weapon config). Input buffered during recovery for combo systems. Server tracks state, client plays animation.
+
+### Network Ownership
+
+NPCs in combat: `SetNetworkOwner(nil)` (server-owned). Without this, exploiters can fling NPCs or manipulate physics. See `roblox-npc-ai` for details.
+
+### Deprecated Movers
+
+`BodyVelocity`, `BodyPosition`, `BodyGyro` are deprecated. Use `LinearVelocity`, `AlignPosition`, `AlignOrientation` with attachments. See `roblox-physics` for constraint patterns.

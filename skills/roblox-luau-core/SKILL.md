@@ -13,7 +13,7 @@ sources:
 
 ## When to Load
 
-Load when the task involves: Luau syntax/variables/operators, table operations, string patterns, math helpers, scope/closures, common idioms, porting from JS/Python, or sharp edges (1-based indexing, nil semantics, truthiness).
+Load for Luau syntax questions: variables, operators, tables, string patterns, math helpers, scope/closures, common idioms, porting from JS/Python, and sharp edges (1-based indexing, nil semantics, truthiness). For type annotations, use `roblox-luau-types`. For OOP/async/modules, use `roblox-luau-patterns`.
 
 **Hand off to:** `roblox-luau-types` (type annotations/generics), `roblox-luau-patterns` (OOP/async/modules), `roblox-*` domain skills (engine APIs).
 

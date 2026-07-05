@@ -1,5 +1,18 @@
 ## Full Reference
 
+
+
+## Data Flow
+
+```
+Player Joins  -->  Server loads from DataStore  -->  Populate in-game objects
+Player Plays  -->  Data lives in server memory   -->  Auto-save on interval
+Player Leaves -->  Server saves to DataStore     -->  Data persists for next session
+```
+
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## 2. Raw DataStore API (Reference Only)
 
 > **For production games, skip to section 4 (ProfileStore).** This section exists so you understand what's underneath. Do NOT implement manual auto-save, session locking, BindToClose handlers, or retry logic - ProfileStore handles all of this.
@@ -833,3 +846,41 @@ local dataStore = DataStoreService:GetDataStore(`{PREFIX}PlayerData_v1`)
 - **Empty tables:** An empty table `{}` can deserialize as either an array or a dictionary depending on context. Be consistent.
 - **Key naming:** Keys are case-sensitive. `"Player_123"` and `"player_123"` are different keys. Standardize your key format.
 - **UpdateAsync callback:** The callback passed to `UpdateAsync` must be pure (no yields, no side effects). It may be called multiple times if there is contention. Return `nil` to cancel the update.
+
+## Inventory Systems
+
+### Item Data Architecture
+
+Item definitions are static templates (ModuleScript in ReplicatedStorage). Item instances are player-specific data referencing the definition by `itemId`.
+
+```luau
+-- Item definition (shared, static)
+[1001] = { Id = 1001, Name = "Iron Sword", Category = "Weapon", Stats = { Attack = 10 }, Stackable = false }
+
+-- Item instance (player-specific, stored in profile)
+{ itemId = 1001, quantity = 1, metadata = { durability = 85, uuid = "a1b2c3d4" } }
+```
+
+Key: `itemId` links to definition. `metadata` holds mutable state. Generate `uuid` for non-stackable items (critical for trading/logging).
+
+### Storage Patterns
+
+**Slot-based** (equipment): keyed by slot name (`Weapon`, `Helmet`, `Armor`, `Boots`, `Accessory1`, `Accessory2`).
+
+**List-based** (backpack): sequential slots up to capacity limit. Check capacity BEFORE adding — never silently discard items.
+
+### Equip Flow
+
+1. Validate ownership (item in backpack)
+2. Validate slot compatibility (category matches slot)
+3. Unequip current item if slot occupied (requires backpack space check)
+4. Remove from backpack → place in equip slot
+5. Recalculate stats + update character visuals
+
+### Loot Tables
+
+Weighted random selection by rarity (Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 1%). Use pity system: guarantee rare+ after N attempts without one.
+
+### Trading Atomicity
+
+Trades MUST be atomic — both sides complete or neither does. Server validates both players still own offered items, both have space, then executes swap in a single transaction. Log all trades for rollback.

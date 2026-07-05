@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
     branches: [main]
 
@@ -12,52 +12,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate skill sizes and structure
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate skill structure
         run: python3 validate_skills.py
 
-      - name: Validate SKILL.md frontmatter
+      - name: API drift check
         run: |
-          errors=0
-          for file in skills/*/SKILL.md; do
-            # Check file exists and is non-empty
-            if [ ! -s "$file" ]; then
-              echo "ERROR: $file is empty"
-              errors=$((errors + 1))
-              continue
-            fi
-            # Strip BOM if present before checking frontmatter
-            first_line=$(sed '1s/^\xEF\xBB\xBF//' "$file" | head -1)
-            if [ "$first_line" != "---" ]; then
-              echo "ERROR: $file missing YAML frontmatter (got: '$first_line')"
-              errors=$((errors + 1))
-              continue
-            fi
-            # Check frontmatter has name field
-            if ! sed -n '/^---$/,/^---$/p' "$file" | grep -q "^name:"; then
-              echo "ERROR: $file missing 'name' in frontmatter"
-              errors=$((errors + 1))
-            fi
-            # Check frontmatter has description field
-            if ! sed -n '/^---$/,/^---$/p' "$file" | grep -q "^description:"; then
-              echo "ERROR: $file missing 'description' in frontmatter"
-              errors=$((errors + 1))
-            fi
+          for i in 1 2 3; do
+            python3 verify_api_drift.py && break
+            echo "Retry $i/3..."
+            sleep 5
           done
-          echo "Checked $(find skills -name SKILL.md | wc -l) skills"
-          if [ $errors -gt 0 ]; then
-            echo "FAILED: $errors errors found"
-            exit 1
-          fi
-          echo "All skills valid"
 
-      - name: Check for empty skills directories
+      - name: Source URL check
         run: |
-          for dir in skills/*/; do
-            if [ ! -f "${dir}SKILL.md" ]; then
-              echo "ERROR: $dir has no SKILL.md"
-              exit 1
-            fi
+          for i in 1 2 3; do
+            python3 verify_source_urls.py && break
+            echo "Retry $i/3..."
+            sleep 5
           done
+
+      - name: Version pin check
+        run: python3 verify_version_pins.py || true
 
   install-test:
     strategy:

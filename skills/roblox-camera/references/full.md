@@ -1,5 +1,8 @@
 # Roblox Camera — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 Camera work is **client-only**. `workspace.CurrentCamera`, `CFrame` setters, and `RenderStepped` callbacks must run in a `LocalScript` or `Script` with `RunContext = Client`. Server scripts silently drop camera writes.
 
 ## The Camera Object

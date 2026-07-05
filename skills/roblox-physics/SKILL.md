@@ -3,8 +3,8 @@ name: roblox-physics
 description: Constraints, VehicleSeat, ragdoll, projectiles, Attachment patterns, network ownership.
 last_reviewed: 2026-05-27
 sources:
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/physics/mechanical-constraints.md
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/physics/mover-constraints.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mechanical-constraints.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mover-constraints.md
 ---
 
 ## When to Load

@@ -4,13 +4,17 @@ Validate roblox-brain skills for size and structure compliance.
 
 Checks:
 - SKILL.md under 3,000 chars
+- references/full.md under 35,000 chars
 - Description under 150 chars
 - Frontmatter has name, description, last_reviewed, sources
+- sources field is not empty (use [original] for synthesis)
 - '## When to Load' section exists
 - '## Quick Reference' section exists
+- No '## Overview' or '## 1. Overview' in SKILL.md
 - No '## Full Reference' in SKILL.md (should be in references/)
+- No ```lua code blocks (use ```luau)
 - references/full.md exists (router skills exempt)
-- Cross-references to other skills point to existing skills
+- Cross-references (backtick-enclosed `roblox-X`) point to existing skills
 
 Exit code 0 = all checks pass, 1 = failures found.
 """
@@ -21,6 +25,7 @@ import sys
 
 MAX_SKILL_CHARS = 3000
 MAX_DESC_CHARS = 150
+MAX_REF_CHARS = 35000
 SKILLS_DIR = os.path.join(os.path.dirname(__file__), "skills")
 
 
@@ -116,6 +121,48 @@ def validate_skill(skill_dir: str) -> list[str]:
     if not is_router and not os.path.exists(ref_path):
         errors.append(f"{skill_name}: missing references/full.md")
 
+    # references/full.md size check (router skills exempt)
+    if not is_router and os.path.exists(ref_path):
+        with open(ref_path, encoding="utf-8") as f:
+            ref_content = f.read()
+        if len(ref_content) > MAX_REF_CHARS:
+            errors.append(
+                f"{skill_name}: references/full.md is {len(ref_content)} chars (max {MAX_REF_CHARS})"
+            )
+
+    # No '## Overview' or '## 1. Overview' in SKILL.md
+    if re.search(r"^##\s+(?:1\.\s+)?Overview\s*$", content, re.MULTILINE):
+        errors.append(
+            f"{skill_name}: '## Overview' found in SKILL.md (remove it, use When to Load → Quick Reference)"
+        )
+
+    # No ```lua code blocks (must use ```luau)
+    if re.search(r"```lua\s*$", content, re.MULTILINE):
+        errors.append(
+            f"{skill_name}: found ```lua code block (use ```luau instead)"
+        )
+    # Also check references/full.md
+    if not is_router and os.path.exists(ref_path):
+        with open(ref_path, encoding="utf-8") as f:
+            ref_content = f.read()
+        if re.search(r"```lua\s*$", ref_content, re.MULTILINE):
+            errors.append(
+                f"{skill_name}: found ```lua code block in references/full.md (use ```luau instead)"
+            )
+
+    # sources field must not be empty
+    if "sources" in fm:
+        # Check if sources is empty ([]) or contains no list items
+        fm_match = re.match(r"^---\n(.+?)\n---", content, re.DOTALL)
+        if fm_match:
+            fm_body = fm_match.group(1)
+            # Check for sources: [] or sources: with no list items
+            sources_match = re.search(r"^sources:\s*\[\]?\s*$", fm_body, re.MULTILINE)
+            if sources_match:
+                errors.append(
+                    f"{skill_name}: sources is empty (use [original] for synthesis, or cite real sources)"
+                )
+
     return errors
 
 
@@ -132,13 +179,11 @@ def collect_all_skill_names() -> set[str]:
 def validate_cross_references(all_skill_names: set[str]) -> list[str]:
     """Find `roblox-X` references that don't point to an existing skill.
 
-    Pattern matches cross-refs in the standard forms:
-      `roblox-name` |     (markdown table cell)
-      roblox-name →       (inline pointer)
+    Pattern matches cross-refs enclosed in backticks:
+      `roblox-name`
 
-    Won't match URLs like github.com/brockmartin/roblox-game-skill or
-    asset paths like rbxassetid://roblox-foo because those don't have
-    `→` or `|` after the name.
+    Any `roblox-X` in backticks in the body (not frontmatter) is
+    treated as a cross-reference and must point to an existing skill.
     """
     errors = []
     ref_pattern = re.compile(r"`?(roblox-[a-z]+(?:-[a-z]+)*)`?(?:\s*→|\s*\|)")

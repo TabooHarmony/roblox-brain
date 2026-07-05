@@ -1,5 +1,8 @@
 # Roblox NPC & AI — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 > Moved from SKILL.md. Original: 13,451 chars, 7 sections.
 
 ## PathfindingService

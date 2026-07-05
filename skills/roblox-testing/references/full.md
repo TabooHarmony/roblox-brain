@@ -1,5 +1,8 @@
 # Roblox Testing Patterns — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## Decision Rules
 
 - Test pure logic first (math, data transforms, validators), engine-dependent code second
@@ -253,7 +256,7 @@ jobs:
 
 ### Lune Test Runner Script
 
-```lua
+```luau
 -- tests/run.luau
 local TestEZ = require("@testez")
 local results = TestEZ.TestBootstrap:run(

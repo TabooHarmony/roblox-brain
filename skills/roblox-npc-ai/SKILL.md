@@ -3,7 +3,7 @@ name: roblox-npc-ai
 description: Pathfinding, state machines, NPC detection (LOS/FOV), spawn systems, enemy AI patterns.
 last_reviewed: 2026-05-27
 sources:
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/characters/pathfinding.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
   - https://github.com/Echolewron/rbx-enemy-ai (MIT, FSM + raycasting + A*)
 ---
 

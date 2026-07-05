@@ -1,5 +1,8 @@
 # Roblox Performance — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 Detailed performance targets, profiling guides, optimization patterns, and platform-specific guidance.
 
 ## Performance Targets

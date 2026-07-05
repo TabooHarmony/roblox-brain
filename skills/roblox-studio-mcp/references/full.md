@@ -1,5 +1,8 @@
 # Roblox Studio MCP — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 The official Roblox Studio MCP server is built into Studio. It provides direct access to the data model, script editing, code execution, asset generation, and playtesting.
 
 ## Available Tools

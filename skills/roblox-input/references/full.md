@@ -1,5 +1,8 @@
 # Roblox Input — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 Both `UserInputService` (UIS) and `ContextActionService` (CAS) are client-only. They work in `LocalScript`, `ModuleScript` required by a `LocalScript`, or `Script` with `RunContext` set to `Client`. Server-side calls silently no-op.
 
 ## UserInputService — Properties

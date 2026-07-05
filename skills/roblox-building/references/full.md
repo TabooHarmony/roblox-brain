@@ -1,8 +1,11 @@
-# Building 3D in Roblox via MCP — Full Reference
+# Building 3D in Roblox — Full Reference
 
-Use this skill when the AI is creating physical geometry in Roblox Studio through an MCP connection (execute_luau / run_code). Covers single objects, room-scale structures, and multi-zone maps.
 
-## MCP Statelessness (CRITICAL)
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
+Use this skill when creating physical geometry in Roblox Studio — via MCP or standalone scripts. Covers single objects, room-scale structures, and multi-zone maps.
+
+## MCP Mode (if using MCP bridge)
 
 MCP code execution is stateless. Every call is a blank slate.
 

@@ -3,12 +3,12 @@ name: roblox-security
 description: Anti-exploit design, server authority, RemoteEvent validation, rate limiting, audit checklist.
 last_reviewed: 2026-05-27
 sources:
-  - https://github.com/Roblox/creator-docs/blob/main/content/en-us/security
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/security
 ---
 
 ## When to Load
 
-Load this skill when designing security systems, auditing code for vulnerabilities, or hardening a Roblox game against exploit vectors. Covers movement hacks, remote abuse, economy attacks, DataStore exploits, and server-authority patterns.
+Load this skill when auditing code for vulnerabilities or hardening against exploit vectors. Covers movement hacks, remote abuse, economy attacks, DataStore exploits. For validation implementation patterns and rate limiter code, see `roblox-networking`.
 
 ## Quick Reference
 
@@ -26,23 +26,10 @@ Load this skill when designing security systems, auditing code for vulnerabiliti
 
 ### Key Patterns
 
-```luau
--- Rate limiter
-local function checkRate(player, remote): boolean
-    local now = os.clock(); local lim = rateLimits[player]
-    if not lim then lim = {}; rateLimits[player] = lim end
-    if now - (lim[remote] or 0) < 0.1 then return false end
-    lim[remote] = now; return true
-end
-
--- Server-authoritative damage (never trust client)
-AttackRemote.OnServerEvent:Connect(function(player, targetId)
-    local weapon = getEquippedWeapon(player)
-    local target = resolveTarget(targetId)
-    if not weapon or not target or not isInRange(player, target) then return end
-    target.Humanoid:TakeDamage(weapon.BaseDamage * getMultiplier(player))
-end)
-```
+For rate limiter implementation and validation module code, see `roblox-networking`. Key audit points:
+- Per-player, per-remote cooldown table exists
+- All RemoteEvent handlers validate arg types, ranges, ownership
+- Server computes all game state (damage, currency, movement)
 
 ### Audit Checklist
 

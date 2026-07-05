@@ -1,5 +1,8 @@
 ## Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 ## 1. AnalyticsService API
 
 All methods are called on the server via `game:GetService("AnalyticsService")`.

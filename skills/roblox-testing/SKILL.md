@@ -3,7 +3,7 @@ name: roblox-testing
 description: TestEZ, mocking Roblox services, dependency injection, CI/CD with Lune, test patterns.
 last_reviewed: 2026-05-27
 sources:
-  - https://github.com/brockmartin/roblox-game-skill/blob/main/references/testing-patterns.md (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/testing-patterns.md (MIT)
   - https://github.com/Roblox/testez
 ---
 
@@ -58,7 +58,7 @@ lune = "lune-org/lune@0.8.0"
 
 Pipeline: `selene src/` → `stylua --check src/` → `luau-lsp analyze` → `lune run tests/run.luau`
 
-```lua
+```luau
 -- tests/run.luau
 local TestEZ = require("@testez")
 local results = TestEZ.TestBootstrap:run({game:GetService("ReplicatedStorage")}, TestEZ.Reporters.TextReporter)

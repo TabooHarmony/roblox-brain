@@ -1,5 +1,8 @@
 # roblox-oauth — Full Reference
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 Extended content from the original SKILL.md. See the slimmed SKILL.md for the quick reference.
 
 ---

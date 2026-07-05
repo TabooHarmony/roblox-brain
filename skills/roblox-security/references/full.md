@@ -1,5 +1,8 @@
 # Roblox Security & Anti-Exploit
 
+
+> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+
 Use this skill when designing security systems, auditing existing code for vulnerabilities, or hardening a game against common exploit vectors.
 
 ## Core Principle
