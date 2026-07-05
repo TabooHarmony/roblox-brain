@@ -8,7 +8,7 @@
 
 Give your AI coding agent a Roblox brain.
 
-30 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+31 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
 
 ## What you get
 
