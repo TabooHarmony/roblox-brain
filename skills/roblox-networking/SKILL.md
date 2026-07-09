@@ -1,11 +1,9 @@
 ---
 name: roblox-networking
-description: >
-  Server-authoritative networking, RemoteEvent validation, rate limiting, exploit prevention,
-  security hardening.
+description: "Use when validating RemoteEvent or RemoteFunction arguments, adding rate limits, designing server-authoritative systems, or preventing exploits."
 last_reviewed: 2026-05-22
 sources:
-  - https://github.com/brockmartin/roblox-game-skill (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/multiplayer-networking.md
 ---
 
 # Roblox Networking & Security Reference

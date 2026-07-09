@@ -44,7 +44,7 @@ skills/roblox-gui/
 2. **Level 2: Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
 3. **Level 3: Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
 
-## Skills (30)
+## Skills (31)
 
 ### Core Language & Architecture
 
@@ -97,7 +97,7 @@ skills/roblox-gui/
 
 | Skill | What it does |
 |-------|-------------|
-| `roblox-studio-mcp` | Official Studio MCP server: all 20 tools, reliability patterns, workflows for scripting/building/testing |
+| `roblox-studio-mcp` | Official Studio MCP server tool catalog, reliability patterns, and workflows for scripting, building, and testing |
 | `roblox-cloud` | Open Cloud REST APIs, API keys, webhooks, HttpService constraints, rate limits |
 | `roblox-oauth` | OAuth 2.0 flows, PKCE, token lifecycle, scope selection, app registration |
 

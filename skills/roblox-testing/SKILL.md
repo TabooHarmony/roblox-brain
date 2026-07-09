@@ -1,9 +1,9 @@
 ---
 name: roblox-testing
-description: TestEZ, mocking Roblox services, dependency injection, CI/CD with Lune, test patterns.
+description: "Use when writing Roblox unit or integration tests, mocking services, setting up Lune CI, or designing code for dependency injection and testability."
 last_reviewed: 2026-05-27
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/testing-patterns.md (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/testing-patterns.md
   - https://github.com/Roblox/testez
 ---
 

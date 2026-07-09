@@ -1,6 +1,6 @@
 ---
 name: roblox-debug
-description: "Iterative debug loop for Luau/Roblox issues"
+description: "Use when diagnosing Roblox or Luau errors, crashes, or unexpected behavior with an iterative reproduce, inspect, fix, and verify loop."
 last_reviewed: 2026-05-27
 sources: [original]
 ---

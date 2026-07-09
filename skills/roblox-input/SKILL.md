@@ -1,6 +1,6 @@
 ---
 name: roblox-input
-description: UserInputService, ContextActionService, keyboard/mouse/gamepad/touch, cross-platform input binding.
+description: "Use when handling Roblox keyboard, mouse, gamepad, touch, motion input, or cross-platform action binding."
 last_reviewed: 2026-06-29
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/UserInputService

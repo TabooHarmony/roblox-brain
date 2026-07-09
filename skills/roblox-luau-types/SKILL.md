@@ -1,8 +1,6 @@
 ---
 name: roblox-luau-types
-description: >
-  Luau type system: annotations, generics, narrowing, inference philosophy,
-  sealed/unsealed tables, exports, and Roblox-aware typing.
+description: "Use for Luau annotations, generics, unions, narrowing, strictness, sealed tables, module type exports, or typed metatables."
 last_reviewed: 2026-05-27
 sources:
   - https://luau-lang.org/typecheck

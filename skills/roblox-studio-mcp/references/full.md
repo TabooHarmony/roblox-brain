@@ -21,15 +21,19 @@ The official Roblox Studio MCP server is built into Studio. It provides direct a
 | Tool | What it does |
 |------|-------------|
 | `generate_mesh` | Generate a textured 3D mesh from a description. |
-| `generate_material` | Generate a custom material or texture. |
-| `generate_procedural_model` | Generate procedural models that scale and adapt automatically. |
-| `insert_from_creator_store` | Insert assets, plugins, and models from the Creator Store. |
+| `generate_material` | Generate a custom material variant. |
+| `generate_procedural_model` | Generate primitive-part models with configurable attributes. |
+| `wait_job_finished` | Wait for a procedural generation job to finish. |
+| `search_asset` | Search Creator Store and creator inventory assets. |
+| `insert_asset` | Insert an asset by numeric Roblox asset ID. |
+| `upload_image` | Upload images from HTTP URLs to the Roblox asset server. |
+| `store_image` | Load a local image and return a reference URI. |
 
 ### Data Model Exploration
 
 | Tool | What it does |
 |------|-------------|
-| `explore_subagent` | Investigate the place in parallel, returns a compact summary. |
+| `subagent` | Launch a specialized exploration or playtest subagent. |
 | `search_game_tree` | Explore instance hierarchy as flat JSON. Filter by path, type, keywords. |
 | `inspect_instance` | Detailed info about a specific instance: properties, attributes, children summary. |
 
@@ -43,18 +47,18 @@ The official Roblox Studio MCP server is built into Studio. It provides direct a
 
 | Tool | What it does |
 |------|-------------|
+| `get_studio_state` | Get Studio play state and available data-model contexts. |
 | `start_stop_play` | Start or stop playtesting. |
-| `console_output` | Retrieve output logs while the game is running. |
+| `get_console_output` | Retrieve output logs while the game is running. |
 | `screen_capture` | Capture the current Studio viewport in Play mode. |
-| `playtest_subagent` | Spawn a test character that runs through gameplay scenarios. |
 
 ### Player Input Simulation
 
 | Tool | What it does |
 |------|-------------|
 | `character_navigation` | Move the player character to a position or instance. |
-| `keyboard_input` | Simulate key presses, holds, and text input. |
-| `mouse_input` | Simulate mouse clicks, movement, and scrolling. |
+| `user_keyboard_input` | Simulate key presses, holds, and text input. |
+| `user_mouse_input` | Simulate mouse clicks, movement, and scrolling. |
 
 ### Session Management
 
@@ -62,6 +66,13 @@ The official Roblox Studio MCP server is built into Studio. It provides direct a
 |------|-------------|
 | `list_roblox_studios` | List all connected Studio instances (name, ID, active status). |
 | `set_active_studio` | Set which Studio instance receives subsequent tool calls. |
+
+### Documentation and Skills
+
+| Tool | What it does |
+|------|-------------|
+| `http_get` | Fetch allowed Roblox documentation pages. |
+| `skill` | Retrieve detailed guidance for supported Roblox skills. |
 
 ## MCP Reliability Patterns
 
@@ -145,7 +156,7 @@ end
 2. **Read** — Use `script_read` to understand existing code before modifying
 3. **Write** — Use `multi_edit` to create or modify scripts
 4. **Verify** — Use `script_read` to confirm the write succeeded
-5. **Test** — Use `start_stop_play` + `console_output` to test
+5. **Test** — Use `start_stop_play` + `get_console_output` to test
 
 ### Building Geometry
 
@@ -157,7 +168,7 @@ end
 ### Debugging
 
 1. **Reproduce** — `start_stop_play` to enter play mode
-2. **Observe** — `console_output` to read errors/warnings
+2. **Observe** — `get_console_output` to read errors/warnings
 3. **Inspect** — `inspect_instance` or `execute_luau` to check runtime state
 4. **Fix** — `multi_edit` to patch the script
 5. **Retest** — `start_stop_play` again
@@ -166,16 +177,16 @@ end
 
 1. Start play mode with `start_stop_play`
 2. Navigate with `character_navigation`
-3. Interact with `keyboard_input` / `mouse_input`
-4. Observe with `console_output` and `screen_capture`
+3. Interact with `user_keyboard_input` / `user_mouse_input`
+4. Observe with `get_console_output` and `screen_capture`
 5. Stop with `start_stop_play`
 
 ## MCP Mode Detection
 
 Different MCP servers provide different tool sets. Detect what's available:
 
-- **Official Roblox MCP** (built into Studio): `execute_luau`, `multi_edit`, `script_read`, `search_game_tree`, `start_stop_play`, `generate_mesh`, etc.
-- **Community MCP** (Chrrxs/robloxstudio-mcp): `execute_luau`, `get_file_tree`, `grep_scripts`, `create_build`, plus per-peer execution.
+- **Official Roblox MCP** (built into Studio): `execute_luau`, `multi_edit`, `script_read`, `search_game_tree`, `start_stop_play`, `generate_mesh`, and the current tools documented by Roblox.
+- **Other MCP servers**: inspect the exposed tool list and adapt. Tool names and capabilities vary.
 - **No MCP**: Pure code generation only. Provide copy-paste-ready scripts.
 
 Adapt your approach based on what tools are actually available. If a tool call fails with "not found", fall back gracefully.
@@ -210,4 +221,4 @@ Adapt your approach based on what tools are actually available. If a tool call f
 2. Click ... > Manage MCP Servers
 3. Turn on "Enable Studio as MCP server"
 
-Quick connect supports: Codex CLI, Claude Code, Claude Desktop, Cursor, Gemini CLI, VS Code.
+Quick connect supports: Antigravity, Codex CLI, Claude Code, Claude Desktop, Cursor, Gemini CLI, and Visual Studio Code.

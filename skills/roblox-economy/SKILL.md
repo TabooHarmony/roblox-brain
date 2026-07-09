@@ -1,6 +1,6 @@
 ---
 name: roblox-economy
-description: Currency design, faucets/sinks, inflation control, time-to-earn, trading systems.
+description: "Use when designing Roblox currencies, rewards, faucets, sinks, trading, marketplaces, or inflation controls."
 last_reviewed: 2026-05-27
 sources: [original]
 ---

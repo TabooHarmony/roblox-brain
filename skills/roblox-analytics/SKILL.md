@@ -1,7 +1,6 @@
 ---
 name: roblox-analytics
-description: >
-  Roblox AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy.
+description: "Use when tracking player behavior, economy events, or funnels with AnalyticsService, including event taxonomy, rate limits, and batching."
 last_reviewed: 2026-05-24
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/AnalyticsService

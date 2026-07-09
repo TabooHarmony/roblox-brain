@@ -1,10 +1,9 @@
 ---
 name: roblox-animation-vfx
-description: >
-  Animations, particles, tweens, ContentProvider, visual effects.
+description: "Use when implementing Roblox character animations, particles, beams, trails, tweens, camera shake, or other visual effects."
 last_reviewed: 2026-05-25
 sources:
-  - https://github.com/brockmartin/roblox-game-skill (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/animation-vfx.md
 ---
 
 # Animation & VFX Reference

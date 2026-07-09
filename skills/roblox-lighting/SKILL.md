@@ -1,6 +1,6 @@
 ---
 name: roblox-lighting
-description: Lighting service, Atmosphere, post-processing (Bloom, ColorCorrection), day/night cycle.
+description: "Use when configuring Roblox lighting, Atmosphere, time-of-day cycles, or post-processing effects."
 last_reviewed: 2026-05-27
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/lighting.md

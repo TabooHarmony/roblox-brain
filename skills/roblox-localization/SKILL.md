@@ -1,6 +1,6 @@
 ---
 name: roblox-localization
-description: LocalizationService, translation tables, locale detection, auto-translation, country/region handling.
+description: "Use when implementing Roblox multi-language support, translation tables, auto-translation, locale-specific content, or region detection."
 last_reviewed: 2026-07-04
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/LocalizationService

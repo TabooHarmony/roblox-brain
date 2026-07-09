@@ -1,6 +1,6 @@
 ---
 name: roblox-code-review
-description: "Code review with security, performance, and monetization lenses for Roblox projects"
+description: "Use when reviewing Roblox or Luau code for security, performance, monetization, data persistence, or architecture risks."
 last_reviewed: 2026-07-04
 sources: [original]
 ---

@@ -1,9 +1,9 @@
 ---
 name: roblox-monetization
-description: ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction.
+description: "Use when implementing Roblox GamePasses, Developer Products, Premium payouts, purchase reconciliation, or monetization policy checks."
 last_reviewed: 2026-05-26
 sources:
-  - https://github.com/brockmartin/roblox-game-skill (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/monetization-systems.md
 ---
 
 # Roblox Monetization Systems Reference

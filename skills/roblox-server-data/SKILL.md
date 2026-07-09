@@ -1,6 +1,6 @@
 ---
 name: roblox-server-data
-description: OrderedDataStore, MessagingService, GlobalDataStore, cross-server state, persistent world data.
+description: "Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds."
 last_reviewed: 2026-07-04
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/OrderedDataStore

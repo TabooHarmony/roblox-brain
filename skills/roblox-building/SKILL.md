@@ -1,6 +1,6 @@
 ---
 name: roblox-building
-description: 3D builds via MCP, CSG operations, spatial coordination, Part properties, map design.
+description: "Use when building Roblox geometry or maps with MCP or scripts, including CSG, spatial coordination, scale, and platform quirks."
 last_reviewed: 2026-05-27
 sources: [original]
 ---

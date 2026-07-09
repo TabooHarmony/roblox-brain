@@ -1,9 +1,9 @@
 ---
 name: roblox-data
-description: DataStores, ProfileStore, session locking, data persistence patterns.
+description: "Use when implementing player data persistence with DataStore or ProfileStore, session locking, schemas, migrations, or save and load flows."
 last_reviewed: 2026-05-21
 sources:
-  - https://github.com/brockmartin/roblox-game-skill (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/datastore-persistence.md
 ---
 
 # Roblox Data Persistence Reference

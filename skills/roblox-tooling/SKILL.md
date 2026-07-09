@@ -1,9 +1,9 @@
 ---
 name: roblox-tooling
-description: Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, filesystem workflows, CI pipeline.
+description: "Use when configuring Roblox tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, or CI/CD."
 last_reviewed: 2026-05-27
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/tooling-ecosystem.md (MIT)
+  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/tooling-ecosystem.md
   - https://rojo.space/docs
   - https://wally.run
 ---

@@ -1,6 +1,6 @@
 ---
 name: roblox-camera
-description: Camera object, CameraType enum, CFrame math, custom controllers, first/third person, cutscenes, screen shake.
+description: "Use when scripting Roblox camera behavior, CFrame placement, screen raycasts, first or third-person views, or cutscenes."
 last_reviewed: 2026-06-29
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/Camera

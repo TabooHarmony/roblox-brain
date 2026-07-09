@@ -1,9 +1,9 @@
 ---
 name: roblox-performance
-description: Profiler, microprofiler, optimization patterns, object pooling, StreamingEnabled, memory.
+description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems, including MicroProfiler and optimization."
 last_reviewed: 2026-05-27
 sources:
-  - https://create.roblox.com/docs/performance/optimization
+  - https://create.roblox.com/docs/performance-optimization
 ---
 
 # Roblox Performance

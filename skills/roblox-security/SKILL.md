@@ -1,9 +1,10 @@
 ---
 name: roblox-security
-description: Anti-exploit design, server authority, RemoteEvent validation, rate limiting, audit checklist.
+description: "Use when auditing Roblox code for exploit vectors or hardening movement, remotes, economy, and DataStore flows."
 last_reviewed: 2026-05-27
 sources:
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/security
+  - https://create.roblox.com/docs/scripting/security/security-tactics
+  - https://create.roblox.com/docs/scripting/security/client-server-boundary
 ---
 
 ## When to Load

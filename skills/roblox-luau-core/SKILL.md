@@ -1,8 +1,6 @@
 ---
 name: roblox-luau-core
-description: >
-  Luau language fundamentals: syntax, tables, control flow, string patterns, math,
-  idioms, scope, closures, sharp edges, and JS-to-Luau translation.
+description: "Use for Luau syntax, tables, control flow, string patterns, math, scope, closures, idioms, or porting code from JavaScript or Python."
 last_reviewed: 2026-05-27
 sources:
   - https://luau-lang.org/

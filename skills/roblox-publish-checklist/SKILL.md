@@ -1,6 +1,6 @@
 ---
 name: roblox-publish-checklist
-description: "Pre-publish verification gauntlet for Roblox games"
+description: "Use before publishing or updating a Roblox game to check data, security, performance, monetization, mobile, metadata, social, and analytics."
 last_reviewed: 2026-05-27
 sources: [original]
 ---

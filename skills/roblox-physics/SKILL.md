@@ -1,6 +1,6 @@
 ---
 name: roblox-physics
-description: Constraints, VehicleSeat, ragdoll, projectiles, Attachment patterns, network ownership.
+description: "Use when building Roblox vehicles, ragdolls, projectiles, elevators, constraints, forces, or other physics-driven gameplay."
 last_reviewed: 2026-05-27
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mechanical-constraints.md
