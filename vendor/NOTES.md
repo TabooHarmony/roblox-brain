@@ -2,9 +2,9 @@
 
 Snapshotted on 2026-07-04 for provenance preservation.
 
-Content in 9 roblox-brain skills was derived from this repo:
+Content in 8 roblox-brain skills was derived from this repo:
 - roblox-architecture, roblox-sharp-edges, roblox-networking, roblox-data
-- roblox-monetization, roblox-gui, roblox-animation-vfx, roblox-testing, roblox-tooling
+- roblox-monetization, roblox-gui, roblox-animation-vfx, roblox-tooling
 
 ## License Note
 

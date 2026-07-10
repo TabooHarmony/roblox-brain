@@ -10,7 +10,7 @@ sources:
 
 ## When to Load
 
-Load when the task involves Rojo setup or `default.project.json`, Wally package management, Selene/StyLua linting/formatting, Lune scripting, Aftman toolchain config, CI/CD pipelines, or `.server.luau`/`.client.luau` file naming. Hand off to domain skills for game code, `roblox-luau-core` for language questions, `roblox-testing` for test patterns.
+Load when the task involves Rojo setup or `default.project.json`, Wally package management, Selene/StyLua linting/formatting, Lune scripting, Aftman toolchain config, CI/CD pipelines, or `.server.luau`/`.client.luau` file naming. Hand off to domain skills for game code or `roblox-luau-core` for language questions.
 
 ## Quick Reference
 

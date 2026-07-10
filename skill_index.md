@@ -64,7 +64,6 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 | `roblox-debug` | Use when diagnosing Roblox or Luau errors, crashes, or unexpected behavior with an iterative reproduce, inspect, fix, and verify loop. |
 | `roblox-code-review` | Use when reviewing Roblox or Luau code for security, performance, monetization, data persistence, or architecture risks. |
 | `roblox-publish-checklist` | Use before publishing or updating a Roblox game to check data, security, performance, monetization, mobile, metadata, social, and analytics. |
-| `roblox-testing` | Use when writing Roblox unit or integration tests, mocking services, setting up Lune CI, or designing code for dependency injection and testability. |
 | `roblox-tooling` | Use when configuring Roblox tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, or CI/CD. |
 
 ## Localization

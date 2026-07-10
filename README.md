@@ -44,7 +44,7 @@ skills/roblox-gui/
 2. **Level 2: Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
 3. **Level 3: Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
 
-## Skills (31)
+## Skills (30)
 
 ### Core Language & Architecture
 
@@ -108,7 +108,6 @@ skills/roblox-gui/
 | `roblox-debug` | Iterative debug loop for Luau/Roblox issues |
 | `roblox-code-review` | Code review with security, performance, and monetization lenses |
 | `roblox-publish-checklist` | Pre-publish verification gauntlet |
-| `roblox-testing` | TestEZ, mocking Roblox services, dependency injection, CI/CD with Lune |
 | `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman. Filesystem-based workflows and editor setup |
 
 ### Localization

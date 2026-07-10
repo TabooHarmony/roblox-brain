@@ -62,7 +62,6 @@ CATEGORIES = [
         "roblox-debug",
         "roblox-code-review",
         "roblox-publish-checklist",
-        "roblox-testing",
         "roblox-tooling",
     ]),
     ("Localization", [
