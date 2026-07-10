@@ -2,17 +2,17 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-31-blue.svg)](skills)
+[![Skills](https://img.shields.io/badge/skills-30-blue.svg)](skills)
 [![Roblox](https://img.shields.io/badge/Roblox-Luau-red.svg)](https://create.roblox.com/docs/luau)
 [![Agent Skills](https://img.shields.io/badge/agent_skills-compatible-purple.svg)](skill_index.md)
 
 Give your AI coding agent a Roblox brain.
 
-31 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+30 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
 
 ## What you get
 
-- 31 focused skills covering Luau, architecture, networking, UI, physics, data, monetization, localization, testing, tooling, and publishing.
+- 30 focused skills covering Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
 - Compact `SKILL.md` files for quick context, with deeper `references/full.md` files when the agent needs examples or API tables.
 - Source-tracked guidance from Roblox creator-docs, MIT/Apache repos, and production patterns.
 - Local validation plus API drift checks for high-risk claims (deprecations, property existence) against live Roblox creator-docs. The registry is curated, not comprehensive — expand it when adding new API claims to skills.

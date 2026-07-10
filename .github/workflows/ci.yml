@@ -21,18 +21,24 @@ jobs:
       - name: API drift check
         run: |
           for i in 1 2 3; do
-            python3 verify_api_drift.py && break
+            if python3 verify_api_drift.py; then
+              exit 0
+            fi
             echo "Retry $i/3..."
             sleep 5
           done
+          exit 1
 
       - name: Source URL check
         run: |
           for i in 1 2 3; do
-            python3 verify_source_urls.py && break
+            if python3 verify_source_urls.py; then
+              exit 0
+            fi
             echo "Retry $i/3..."
             sleep 5
           done
+          exit 1
 
       - name: Version pin check
         run: python3 verify_version_pins.py || true
@@ -44,12 +50,13 @@ jobs:
         node: [20, 22]
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install skills from repo
-        run: npx -y skills add TabooHarmony/roblox-brain --yes
+      - name: Install skills from checked-out repo
+        run: npx -y skills add . --yes
 
       - name: Verify skills installed
         shell: bash
@@ -67,8 +74,8 @@ jobs:
           count=$(find "$SKILLS_DIR" -name "SKILL.md" | wc -l)
           echo "Found $count skills in $SKILLS_DIR"
 
-          if [ "$count" -lt 20 ]; then
-            echo "ERROR: Expected at least 20 skills, got $count"
+          if [ "$count" -ne 30 ]; then
+            echo "ERROR: Expected exactly 30 skills, got $count"
             exit 1
           fi
 
@@ -76,8 +83,8 @@ jobs:
           ref_count=$(find "$SKILLS_DIR" -name "full.md" -path "*/references/*" | wc -l)
           echo "Found $ref_count reference files"
 
-          if [ "$ref_count" -lt 20 ]; then
-            echo "ERROR: Expected at least 20 reference files, got $ref_count"
+          if [ "$ref_count" -ne 30 ]; then
+            echo "ERROR: Expected exactly 30 reference files, got $ref_count"
             exit 1
           fi
 
