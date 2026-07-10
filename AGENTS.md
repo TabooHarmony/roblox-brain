@@ -86,11 +86,11 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 
 ## Sourcing Rules
 
-- All skill content must trace to a real source: official Roblox creator-docs, MIT/Apache licensed repos, or original work
+- All skill content must trace to a real source: official Roblox creator-docs, repositories with a compatible license or explicit reuse permission, or original work
 - Training-data-only content is unacceptable. Verify API references against current docs
 - Track sources in the `sources:` frontmatter field
 - Use `sources: [original]` for synthesis/opinion/design heuristics
-- When lifting from MIT repos, preserve attribution and note the repo URL
+- When lifting from external repos, preserve attribution and record the license or reuse terms in the relevant vendor note
 - Use `raw.githubusercontent.com` URLs (not `github.com/blob/`) for source links
 - Mark temporal claims with event dates: `<!-- temporal: 2026-06 -->`
 

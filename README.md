@@ -14,7 +14,7 @@ Give your AI coding agent a Roblox brain.
 
 - 30 focused skills covering Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
 - Compact `SKILL.md` files for quick context, with deeper `references/full.md` files when the agent needs examples or API tables.
-- Source-tracked guidance from Roblox creator-docs, MIT/Apache repos, and production patterns.
+- Source-tracked guidance from Roblox creator-docs, attributed external references, and original patterns.
 - Local validation plus API drift checks for high-risk claims (deprecations, property existence) against live Roblox creator-docs. The registry is curated, not comprehensive — expand it when adding new API claims to skills.
 
 ## Install
@@ -137,7 +137,7 @@ roblox-brain does not cover:
 PRs welcome. Good contributions:
 - Fix incorrect API references or deprecated patterns
 - Add high-value patterns from production games
-- Expand reference code (must be MIT/Apache sourced or original)
+- Expand reference code (must come from a compatible license or explicit reuse permission, or be original)
 - Keep skills focused, non-overlapping, and practical. All skill submissions must pass `validate_skills.py`.
 
 

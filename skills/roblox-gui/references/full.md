@@ -1066,4 +1066,4 @@ Source: Roblox Scrolling Frames docs (create.roblox.com/docs/ui/scrolling-frames
 - DevForum: Modern UI Colour Schemes - dark palette guidelines
 - Fusion: github.com/dphfox/Fusion (MIT)
 - Vide: github.com/centau/vide (MIT)
-- brockmartin/roblox-game-skill (MIT) - base content
+- brockmartin/roblox-game-skill (external reference, reuse terms recorded in `vendor/NOTES.md`)
