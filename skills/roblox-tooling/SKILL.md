@@ -17,11 +17,11 @@ Load when the task involves Rojo setup or `default.project.json`, Wally package 
 **Aftman** (toolchain pinning): `aftman.toml` — all tools installed via `aftman install`.
 ```
 [tools]
-rojo = "rojo-rbx/rojo@7.4.4"
+rojo = "rojo-rbx/rojo@7.7.0"
 wally = "UpliftGames/wally@0.3.2"
-selene = "kampfkarren/selene@0.27.1"
-stylua = "JohnnyMorganz/StyLua@2.0.2"
-lune = "lune-org/lune@0.8.0"
+selene = "kampfkarren/selene@0.31.0"
+stylua = "JohnnyMorganz/StyLua@2.5.2"
+lune = "lune-org/lune@0.10.5"
 ```
 
 **Rojo** (filesystem → Studio): `default.project.json` maps dirs to services.

@@ -218,12 +218,14 @@ end)
 
 ---
 
-## CI/CD with Lune — Extended
+## CI/CD with Lune
 
-### GitHub Actions Pipeline
+`roblox-tooling` owns toolchain installation and general CI setup. This section defines the testing-specific contract without duplicating the Aftman installer, lint, formatter, or type-check setup.
+
+### GitHub Actions Test Job
 
 ```yaml
-name: CI
+name: tests
 on: [push, pull_request]
 
 jobs:
@@ -231,30 +233,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-
-      - name: Install Aftman
-        run: |
-          curl -LsSf https://raw.githubusercontent.com/nicbarker/aftman/main/install.sh | sh
-          echo "$HOME/.aftman/bin" >> $GITHUB_PATH
-
-      - name: Install tools
+      - name: Install project tools
         run: aftman install
-
-      - name: Lint with Selene
-        run: selene src/
-
-      - name: Format check with StyLua
-        run: stylua --check src/
-
-      - name: Type check with luau-lsp
-        run: luau-lsp analyze --settings .luaurc src/
-
       - name: Run tests
         run: lune run tests/run.luau
 ```
 
-### Lune Test Runner Script
+### Lune Test Runner
 
 ```luau
 -- tests/run.luau
@@ -277,7 +262,7 @@ Use Studio MCP tools to automate basic smoke tests:
 
 1. `start_stop_play` → enter play mode
 2. Wait for initialization
-3. `console_output` → scan for errors ("Infinite yield", "HTTP 429", "attempt to index nil")
+3. `get_console_output` → scan for errors ("Infinite yield", "HTTP 429", "attempt to index nil")
 4. `screen_capture` → visual verification
 5. `start_stop_play` → stop play mode
 

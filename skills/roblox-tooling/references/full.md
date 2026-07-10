@@ -43,11 +43,11 @@ Managed via [Aftman](https://github.com/nicbarker/aftman) (toolchain manager):
 ```toml
 # aftman.toml
 [tools]
-rojo = "rojo-rbx/rojo@7.4.4"
+rojo = "rojo-rbx/rojo@7.7.0"
 wally = "UpliftGames/wally@0.3.2"
-selene = "kampfkarren/selene@0.27.1"
-stylua = "JohnnyMorganz/StyLua@2.0.2"
-lune = "lune-org/lune@0.8.0"
+selene = "kampfkarren/selene@0.31.0"
+stylua = "JohnnyMorganz/StyLua@2.5.2"
+lune = "lune-org/lune@0.10.5"
 ```
 
 ---
@@ -134,7 +134,7 @@ Trove = "sleitnick/trove@0.5.1"
 Signal = "sleitnick/signal@1.2.1"
 
 [dev-dependencies]
-TestEZ = "roblox/testez@0.4.1"
+TestEZ = "roblox/testez@0.4.2"
 ```
 
 ### Popular Packages
@@ -142,7 +142,7 @@ TestEZ = "roblox/testez@0.4.1"
 | Package | Purpose |
 |---------|---------|
 | `evaera/promise` | Async control flow with Promises |
-| `sleitnick/knit` | Lightweight game framework |
+| `sleitnick/knit` | Legacy framework, for existing projects only |
 | `loleris/profileservice` | DataStore wrapper with session locking |
 | `sleitnick/trove` | Cleanup/lifecycle management |
 | `sleitnick/signal` | Typed custom signals |

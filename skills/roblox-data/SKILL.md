@@ -10,7 +10,7 @@ sources:
 
 ## When to Load
 
-Load when implementing player data persistence (DataStore, ProfileStore, session locking), designing save schemas, or wiring cross-server messaging.
+Load when implementing player data persistence with DataStore or ProfileStore, including session locking, schemas, migrations, and save/load flows. Use `roblox-server-data` for leaderboards, MessagingService, and shared world state.
 
 ## Quick Reference
 

@@ -15,7 +15,7 @@ Load when writing unit/integration tests, mocking Roblox services, setting up CI
 
 ### TestEZ (BDD framework)
 
-- Install: `[dev-dependencies] TestEZ = "roblox/testez@0.4.1"` in `wally.toml`
+- Install: `[dev-dependencies] TestEZ = "roblox/testez@0.4.2"` in `wally.toml`
 - Files: `*.spec.luau`, co-located with source
 - Blocks: `describe` → `it` → `beforeEach`/`afterEach`
 - Assertions: `expect(x).to.equal(y)`, `.to.be.near(n, ε)`, `.to.throw()`
@@ -53,7 +53,7 @@ function M:GetDataStore() return self end
 ```toml
 # aftman.toml
 [tools]
-lune = "lune-org/lune@0.8.0"
+lune = "lune-org/lune@0.10.5"
 ```
 
 Pipeline: `selene src/` → `stylua --check src/` → `luau-lsp analyze` → `lune run tests/run.luau`
