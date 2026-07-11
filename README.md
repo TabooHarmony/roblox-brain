@@ -122,12 +122,6 @@ skills/roblox-gui/
 - **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
 - **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)**: Local codebase memory and structural search.
 
-## Known Gaps
-
-roblox-brain does not cover:
-- **Accessibility**: limited Roblox platform support for screen readers, colorblind modes, subtitle systems. Consult the [Roblox creator docs](https://create.roblox.com/docs) for current accessibility features.
-- **Character customization**: HumanoidDescription, accessories, BodyColors, avatar scaling. Consult the [Roblox creator docs](https://create.roblox.com/docs/reference/engine/classes/HumanoidDescription).
-
 ## Contributors
 
 - **[MrFearTick](https://github.com/MrFearTick)**: Code references, networking + monetization expansion
