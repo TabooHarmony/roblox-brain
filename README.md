@@ -7,10 +7,8 @@
 Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support agent skills.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-31-blue.svg)](skills)
-[![Roblox](https://img.shields.io/badge/Roblox-Luau-red.svg)](https://create.roblox.com/docs/luau)
-[![Agent Skills](https://img.shields.io/badge/agent_skills-compatible-purple.svg)](skill_index.md)
+[![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=semver)](https://github.com/TabooHarmony/roblox-brain/releases)
+[![License](https://img.shields.io/github/license/TabooHarmony/roblox-brain)](LICENSE)
 [![skills.sh](https://skills.sh/b/TabooHarmony/roblox-brain)](https://skills.sh/TabooHarmony/roblox-brain)
 
 </div>
