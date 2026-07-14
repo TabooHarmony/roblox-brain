@@ -1,7 +1,7 @@
 ---
 name: roblox-debug
 description: "Use when diagnosing Roblox or Luau errors, crashes, or unexpected behavior with an iterative reproduce, inspect, fix, and verify loop."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-12
 sources: [original]
 ---
 
@@ -22,6 +22,8 @@ Load when diagnosing errors, crashes, or unexpected behavior in Roblox/Luau code
 **4. Generate Fix** — Produce corrected Luau. Explain what was wrong, why fix works, related code to check. Flag architectural changes.
 
 **5. Apply & Test** — Write fix to file. MCP verify if available. In offline mode: before/after diff + manual test instructions.
+
+**MCP evidence:** discover/select Studio, inspect before editing, read back the fix, run playtest when relevant, and report console/screenshot limitations explicitly.
 
 **6. Verify** — Resolved → Step 7. New errors → back to Step 1. Same error → new hypothesis, back to Step 3. Iteration 5 → escalate with full diagnosis.
 

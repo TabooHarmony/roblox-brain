@@ -1,145 +1,155 @@
-# roblox-brain
+<div align="center">
+
+# roblox-brain 🧠
+
+**A practical skill library for Roblox Studio coding agents.**
+
+Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support agent skills.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-30-blue.svg)](skills)
+[![Skills](https://img.shields.io/badge/skills-31-blue.svg)](skills)
 [![Roblox](https://img.shields.io/badge/Roblox-Luau-red.svg)](https://create.roblox.com/docs/luau)
 [![Agent Skills](https://img.shields.io/badge/agent_skills-compatible-purple.svg)](skill_index.md)
 
-Give your AI coding agent a Roblox brain.
+</div>
 
-30 curated skills that make AI assistants competent at Roblox/Luau game development. Works with Codex, Claude Code, OpenCode, Cursor, or anything that supports agent skills.
+## What this is
 
-## What you get
+`roblox-brain` gives an AI coding agent focused Roblox Studio knowledge without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details.
 
-- 30 focused skills covering Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
-- Compact `SKILL.md` files for quick context, with deeper `references/full.md` files when the agent needs examples or API tables.
-- Source-tracked guidance from Roblox creator-docs, attributed external references, and original patterns.
-- Local validation plus API drift checks for high-risk claims (deprecations, property existence) against live Roblox creator-docs. The registry is curated, not comprehensive — expand it when adding new API claims to skills.
+- 31 focused skills across Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
+- Compact `SKILL.md` entry points with deeper `references/full.md` material.
+- Guidance grounded in Roblox Creator Hub documentation, compatible external tools, and original synthesis.
+- Local validation, source checks, API-drift checks, version-pin checks, and copy-paste Luau probes.
 
 ## Install
 
 ```bash
-# all skills
+# install the full library
 npx skills add TabooHarmony/roblox-brain
 
-# one skill
+# install one skill
 npx skills add TabooHarmony/roblox-brain --skill roblox-building
 ```
 
-Or just copy any `SKILL.md` into your project's skill directory (`.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, etc).
+You can also copy an individual `SKILL.md` into `.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, or another compatible skill directory.
 
-## Architecture
+## How the content is organized
 
-Each skill uses a **progressive disclosure** design to keep context lean. Skills are designed to be loaded in this order — platforms that respect the SKILL.md entry point will load efficiently; others may load all files at once (content is still correct, just less context-efficient).
+Skills use **progressive disclosure** so an agent can start with a small context window and load detail only when needed:
 
-```
+```text
 skills/roblox-gui/
-├── SKILL.md              (~600 tokens, quick reference only)
+├── SKILL.md              # quick reference
 └── references/
-    └── full.md           (up to ~10,000 tokens, complete documentation)
+    └── full.md           # examples, API notes, and edge cases
 ```
 
-1. **Level 1: Index**: Agent reads `skill_index.md` (all skills, ~2,800 tokens) to know what's available
-2. **Level 2: Quick Reference**: Agent loads `SKILL.md` for the relevant skill (~600 tokens). This is enough for most tasks.
-3. **Level 3: Full Reference**: Agent reads `references/full.md` when it needs detailed code examples, API tables, or edge cases
+1. **Index:** `skill_index.md` shows what is available.
+2. **Quick reference:** the relevant `SKILL.md` gives the default rules and routing.
+3. **Full reference:** `references/full.md` supplies implementation details when the task needs them.
 
-## Skills (30)
+## Skills (31)
 
-### Core Language & Architecture
+### Core language and architecture
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, idioms, scope, closures, sharp edges, JS to Luau translation |
-| `roblox-luau-types` | Type system, generics, narrowing, inference philosophy, sealed/unsealed tables, exports, Roblox-aware typing |
-| `roblox-luau-patterns` | OOP with metatables, inheritance, async (Promises, pcall, coroutines), module structure, service pattern, Roblox idioms |
-| `roblox-architecture` | Service hierarchy, 7 foundational patterns, client-server architecture, module patterns |
-| `roblox-sharp-edges` | 13 production footguns ranked by severity. Data loss, exploits, memory leaks, mobile perf |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, scope, closures, idioms, and sharp edges |
+| `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, and Roblox-aware typing |
+| `roblox-luau-patterns` | Metatables, inheritance, async patterns, module structure, services, and Roblox idioms |
+| `roblox-architecture` | Service hierarchy, client/server boundaries, module contracts, and startup design |
+| `roblox-sharp-edges` | High-impact production footguns involving data, remotes, purchases, lifecycle, and scale |
 
-### Economy & Monetization
+### Economy and monetization
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-economy` | Currencies, faucets/sinks, inflation control, time-to-earn, trading, monetization integration |
-| `roblox-monetization` | ProcessReceipt correctness, prompt APIs, purchase reconciliation, session-lock interaction |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-economy` | Currencies, faucets, sinks, inflation control, time-to-earn, trading, and economy integration |
+| `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, policy checks, and purchase recovery |
 
-### Systems & Networking
+### Systems and networking
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-networking` | Server-authoritative networking, RemoteEvent validation, rate limiting, exploit prevention |
-| `roblox-security` | Anti-exploit design, movement/remote/economy exploits, audit checklist, hardening patterns |
-| `roblox-data` | DataStores, ProfileStore, session locking, data persistence patterns |
-| `roblox-server-data` | OrderedDataStore, MessagingService, GlobalDataStore, cross-server state, persistent world data |
-| `roblox-analytics` | AnalyticsService: custom events, economy tracking, funnels, rate limits, event taxonomy |
-| `roblox-npc-ai` | Pathfinding, state machines, detection (LOS/FOV), spawn systems, network ownership |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-networking` | Server-authoritative networking, remote validation, rate limits, and exploit resistance |
+| `roblox-security` | Anti-exploit design, movement, remote, economy, and data hardening |
+| `roblox-data` | Player persistence, schemas, migrations, retries, and session ownership |
+| `roblox-server-data` | OrderedDataStore, MessagingService, global state, and cross-server coordination |
+| `roblox-analytics` | Custom events, economy tracking, funnels, rate limits, and event taxonomy |
+| `roblox-npc-ai` | Pathfinding, state machines, detection, spawning, and network ownership |
 
-### Performance & Runtime
+### Performance and runtime
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-performance` | Profiling tools, optimization patterns, object pooling, StreamingEnabled, mobile optimization, budgets |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-performance` | Profiling, optimization, pooling, streaming, mobile performance, and budgets |
 
-### Building & UI
+### Building and UI
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-building` | Build 3D objects and maps via MCP. CSG patterns, spatial coordination, player scale, platform quirks |
-| `roblox-physics` | Constraints, vehicles, ragdoll, projectiles, elevators, network ownership |
-| `roblox-gui` | GUI systems, layout, responsiveness, cross-platform UI. ScreenGuis, UIListLayout, constraints |
-| `roblox-animation-vfx` | Animations, particles, tweens, ContentProvider, visual effects |
-| `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, day/night cycle, zone transitions |
-| `roblox-audio` | SoundService, spatial audio, music systems, SFX patterns, ambient layering, volume management |
-| `roblox-input` | UserInputService, ContextActionService, keyboard/mouse/gamepad/touch, cross-platform input binding |
-| `roblox-camera` | Camera object, CameraType, CFrame math, custom controllers, first/third person, cutscenes, screen shake |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-building` | Roblox geometry, maps, props, generated assets, MCP workflows, and acceptance gates |
+| `roblox-physics` | Constraints, vehicles, ragdolls, projectiles, elevators, and network ownership |
+| `roblox-gui` | Screen, surface, and world UI; layout, responsiveness, input, and UI state |
+| `roblox-ui-design` | Visual UI design with simulator defaults, existing-style inheritance, composition, hierarchy, and bounded layout |
+| `roblox-animation-vfx` | Animations, particles, beams, trails, tweens, camera feedback, and cleanup |
+| `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, and day/night cycles |
+| `roblox-audio` | SoundService, spatial audio, music systems, SFX, ambient layers, and volume management |
+| `roblox-input` | UserInputService, ContextActionService, keyboard, mouse, gamepad, and touch |
+| `roblox-camera` | Camera types, CFrame math, custom controllers, cutscenes, and screen shake |
 
-### MCP & Cloud
+### MCP and cloud
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-studio-mcp` | Official Studio MCP server tool catalog, reliability patterns, and workflows for scripting, building, and testing |
-| `roblox-cloud` | Open Cloud REST APIs, API keys, webhooks, HttpService constraints, rate limits |
-| `roblox-oauth` | OAuth 2.0 flows, PKCE, token lifecycle, scope selection, app registration |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-studio-mcp` | Studio MCP capabilities, bridge-neutral routing, reliability, building, and testing workflows |
+| `roblox-cloud` | Open Cloud REST APIs, API keys, webhooks, HttpService, and rate limits |
+| `roblox-oauth` | OAuth 2.0, PKCE, token lifecycle, scopes, and app registration |
 
-### Workflow
+### Workflow and tooling
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-debug` | Iterative debug loop for Luau/Roblox issues |
-| `roblox-code-review` | Code review with security, performance, and monetization lenses |
-| `roblox-publish-checklist` | Pre-publish verification gauntlet |
-| `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman. Filesystem-based workflows and editor setup |
+| Skill | What it covers |
+| --- | --- |
+| `roblox-debug` | Iterative debugging for Luau and Roblox issues |
+| `roblox-code-review` | Reviews through security, performance, correctness, and monetization lenses |
+| `roblox-publish-checklist` | Pre-publish verification and release gates |
+| `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, sourcemaps, and CI |
+| `roblox-localization` | LocalizationService, translation tables, locale handling, and auto-translation |
 
-### Localization
+## Recommended MCP servers
 
-| Skill | What it does |
-|-------|-------------|
-| `roblox-localization` | LocalizationService, translation tables, locale detection, auto-translation, country/region handling |
-
-## Recommended MCP Servers
-
-- **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp)**: Use the official Studio MCP or your preferred community bridge. `roblox-brain` does not require a specific MCP server.
-- **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs)**: Roblox API reference at runtime. `uvx mcp-roblox-docs`
-- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)**: Local codebase memory and structural search.
-
-## Known Gaps
-
-roblox-brain does not cover:
-- **Accessibility**: limited Roblox platform support for screen readers, colorblind modes, subtitle systems. Consult the [Roblox creator docs](https://create.roblox.com/docs) for current accessibility features.
-- **Character customization**: HumanoidDescription, accessories, BodyColors, avatar scaling. Consult the [Roblox creator docs](https://create.roblox.com/docs/reference/engine/classes/HumanoidDescription).
-
-## Contributors
-
-- **[MrFearTick](https://github.com/MrFearTick)**: Code references, networking + monetization expansion
+- **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp):** use the official server or a compatible community bridge. The skills route by capability and do not require one specific bridge.
+- **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs):** runtime Roblox API reference, installable with `uvx mcp-roblox-docs`.
+- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search.
 
 ## Contributing
 
-PRs welcome. Good contributions:
-- Fix incorrect API references or deprecated patterns
-- Add high-value patterns from production games
-- Expand reference code (must come from a compatible license or explicit reuse permission, or be original)
-- Keep skills focused, non-overlapping, and practical. All skill submissions must pass `validate_skills.py`.
+PRs are welcome. Useful contributions include:
 
+- correcting an API reference or deprecated pattern;
+- adding a focused production pattern;
+- expanding examples from a compatible license, explicit permission, or original work;
+- keeping skills small, non-overlapping, and practical.
+
+Before opening a PR, run:
+
+```bash
+python3 validate_skills.py
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 verify_api_drift.py
+python3 verify_source_urls.py
+python3 verify_version_pins.py
+```
+
+## Contributors
+
+- **[MrFearTick](https://github.com/MrFearTick):** code references, networking, and monetization expansion
+
+## Release notes
+
+See [CHANGELOG.md](CHANGELOG.md) for the v1.0.0 release notes.
 
 ## License
 

@@ -47,6 +47,7 @@ CATEGORIES = [
         "roblox-building",
         "roblox-physics",
         "roblox-gui",
+        "roblox-ui-design",
         "roblox-animation-vfx",
         "roblox-lighting",
         "roblox-audio",

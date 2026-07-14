@@ -1,262 +1,125 @@
-# Roblox Sharp Edges — Full Reference
+# roblox sharp edges: full reference
 
+This is a pre-ship review list. The examples are intentionally small; they show the failure boundary, not a full framework.
 
-> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+## 1. Mutable data needs one owner
 
-> Every entry here represents a real production footgun that has caused data loss, exploits,
-> crashes, or hours of debugging in Roblox games.
->
-> **Severity Levels:**
-> - **Critical** - Data loss, security breach, or revenue loss. Fix before shipping.
-> - **High** - Server instability, degraded experience, or exploit surface. Fix in current sprint.
-> - **Medium** - Correctness bugs, performance issues, or dev confusion. Fix before scale.
-> - **Low** - Code quality, maintainability, or minor timing issues. Fix when convenient.
+A player can move between servers while the old server is still saving. Without session ownership, the last writer wins and progress can disappear. Use a well-understood profile wrapper or implement a lock, heartbeat, release, and stale-owner policy together. Do not mix raw writes with a wrapper that already owns the profile.
 
----
+## 2. Client values are proposals
 
-## SE-1 | Critical | DataStore Data Loss from Session Handling
+A client can fire a remote without clicking the expected button. It can also change every local value. Never accept client-supplied currency, damage, price, ownership, or reward as fact. Recompute the result from server state and trusted definitions.
 
-**See roblox-data → Session Locking and ProfileStore for full details.**
+## 3. Receipts must be repeat-safe
 
-When a player server-hops, the old server may still be saving while the new server loads stale data. ProfileStore handles session locking automatically - only one server owns a player's data at a time. Never use raw DataStoreService for player data without session locking.
-
----
-
-## SE-2 | Critical | Client-Side Currency Manipulation
-
-**See roblox-networking → Security Hardening for full details.**
-
-Currency and all authoritative game state must live exclusively on the server. Never accept currency amounts from the client. The server computes all transactions internally and pushes display-only updates to the client. This is the single most common exploit in Roblox games.
-
----
-
-## SE-3 | Critical | ProcessReceipt Mishandling
-
-**See roblox-monetization → ProcessReceipt for full details.**
-
-`MarketplaceService.ProcessReceipt` must return `PurchaseGranted` ONLY after the item is granted AND saved. If you return `PurchaseGranted` before granting, the player loses Robux. If you don't return it, Roblox retries on every join - potentially granting duplicates. Grant first, save second, return third.
-
----
-
-## SE-4 | High | Memory Leaks from Undisconnected Events
-
-### Problem
-
-Every `:Connect()` returns an `RBXScriptConnection`. If you never `:Disconnect()` it, the connection persists for the script's lifetime - even after the object is destroyed. In per-player systems, memory grows linearly with every player who has ever joined.
-
-### Symptoms
-
-- Server memory climbs steadily over time.
-- Server FPS degrades after hours.
-- Callbacks fire for players who left.
-
-### Solution
-
-Use the **Trove** module (Sleitnick/RbxUtil, install via Wally) to group connections per-player and clean them all on `PlayerRemoving`:
+Developer product processing can be retried. The grant operation must be idempotent, and the receipt should be acknowledged only after the server has recorded the grant successfully. If the player is unavailable or the write fails, return the not-yet-processed decision so Roblox can retry.
 
 ```luau
-local Players = game:GetService("Players")
-local Trove = require(game.ReplicatedStorage.Packages.Trove)
-
-local playerTroves: { [Player]: typeof(Trove.new()) } = {}
-
-local function onPlayerAdded(player: Player)
-    local trove = Trove.new()
-    playerTroves[player] = trove
-
-    trove:Connect(player.CharacterAdded, function(character)
-        local humanoid = character:WaitForChild("Humanoid")
-        trove:Connect(humanoid.Died, function()
-            task.wait(3)
-            player:LoadCharacter()
-        end)
-    end)
-end
-
-local function onPlayerRemoving(player: Player)
-    local trove = playerTroves[player]
-    if trove then
-        trove:Clean()
-        playerTroves[player] = nil
+MarketplaceService.ProcessReceipt = function(receipt)
+    local receiptKey = tostring(receipt.PurchaseId)
+    if ReceiptStore:Has(receiptKey) then
+        return Enum.ProductPurchaseDecision.PurchaseGranted
     end
-end
 
-Players.PlayerAdded:Connect(onPlayerAdded)
-Players.PlayerRemoving:Connect(onPlayerRemoving)
+    local player = Players:GetPlayerByUserId(receipt.PlayerId)
+    if not player then
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+
+    local ok = GrantService:GrantProduct(player, receipt.ProductId, receiptKey)
+    if not ok then
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+    return Enum.ProductPurchaseDecision.PurchaseGranted
+end
 ```
 
----
+The store and grant service in this example are project-owned abstractions. Do not install a second receipt callback in another script.
 
-## SE-5 | High | RemoteEvent Flooding
+## 4. Connections have owners
 
-### Problem
-
-RemoteEvents have no built-in rate limiting. Exploiters can fire thousands of times per second, flooding the server with DataStore calls, instance creation, or raycasts.
-
-### Solution
-
-Implement per-player, per-remote rate limiting on the server. See `roblox-networking` → Rate Limiting for production patterns.
-
-Minimal inline example:
+Every `Connect` should have a lifetime. A player connection belongs to that player; a round connection belongs to the round; a UI connection belongs to the screen. Disconnect explicitly or destroy an owning instance that reliably cleans up its descendants.
 
 ```luau
-local lastFire: { [Player]: number } = {}
-local COOLDOWN = 0.1
+local connections = {}
+connections[#connections + 1] = player.CharacterAdded:Connect(onCharacter)
+connections[#connections + 1] = remote.OnServerEvent:Connect(onRequest)
 
-AttackRemote.OnServerEvent:Connect(function(player: Player, targetId: number)
-    local now = os.clock()
-    if lastFire[player] and now - lastFire[player] < COOLDOWN then return end
-    lastFire[player] = now
-    -- process attack
-end)
+local function cleanup()
+    for _, connection in connections do
+        connection:Disconnect()
+    end
+    table.clear(connections)
+end
 ```
 
----
+Do not keep player keys in tables after `PlayerRemoving`. Weak tables can help with auxiliary caches, but they are not a substitute for lifecycle cleanup.
 
-## SE-6 | High | BindToClose Timeout
+## 5. Rate limits do not replace validation
 
-**See roblox-data → Best Practices (BindToClose Handler) for full details.**
+- Reject NaN and infinity before range checks. A comparison-only guard can accept NaN because both `<` and `>` return false.
 
-`game:BindToClose()` gives at most 30 seconds. If using ProfileStore, this is automatic. If using raw DataStore, save all players in parallel with `task.spawn` - sequential saves with 50 players will timeout.
+A cooldown prevents a flood from consuming unlimited work. It does not make an invalid request valid. Apply both a request budget and domain checks. For expensive operations, queue or reject work before creating instances or making service calls.
 
----
+## 6. Shutdown is a deadline
 
-## SE-7 | Medium | Part Count on Mobile
+`BindToClose` is not an unlimited maintenance window. Track pending saves, cap retries, and avoid starting new gameplay work during shutdown. A server that waits forever is no safer than one that exits immediately.
 
-Mobile devices struggle above ~10,000 visible parts. Enable **StreamingEnabled** and configure `StreamingMinRadius`/`StreamingTargetRadius`. Use `ModelStreamingMode` to mark distant models as Opportunistic and gameplay-critical models as Persistent.
+## 7. Scale before detail
 
-See `roblox-performance` → StreamingEnabled for configuration details.
+Large decorative models, particle rates, shadows, and per-frame loops multiply across players and devices. Profile a representative scene on a low-end target. Prefer streaming, batching, pooling, and event-driven updates over a large fixed object budget.
 
----
+## 8. Module loading can yield
 
-## SE-8 | Medium | Yielding in Module Require
+A module that waits for instances or starts work at top level makes every caller wait. Keep module loading declarative. Move connections and loops to an explicit `Init` or `Start` phase. This also makes circular dependencies easier to detect.
 
-### Problem
+## 9. Table length is not a count with holes
 
-`require()` executes the module body synchronously. If it yields (`WaitForChild`, `task.wait`, HTTP), every script requiring that module blocks. Two modules requiring each other with yields = deadlock.
+The `#` operator is not a reliable count for a table with missing numeric keys. If a collection can contain holes, maintain an explicit count or iterate with `pairs` and count what you need. Do not remove an array entry by assigning `nil` when order matters; use `table.remove` or a deliberate swap-delete operation.
 
-### Solution
+## 10. Use the task scheduler APIs
 
-Never yield in a module body. Use Init/Start lifecycle:
+For new code, use `task.wait`, `task.defer`, and `task.spawn` instead of the older global scheduling functions. Still keep ownership and cancellation in mind: spawning work does not make it safe to outlive its player or round.
 
-```luau
-local CombatSystem = {}
+## 11. Bound instance waits
 
-function CombatSystem:Init()
-    -- WaitForChild is safe here (called by bootstrap, not during require)
-    self._remotes = game.ReplicatedStorage:WaitForChild("Remotes", 10)
-end
-
-function CombatSystem:Start()
-    -- Connect events after all modules are Init'd
-end
-
-return CombatSystem
-```
-
-Bootstrap script calls `:Init()` on all modules, then `:Start()` on all modules.
-
----
-
-## SE-9 | Medium | Table Length with Nil Gaps
-
-### Problem
-
-`#` is only reliable for sequence tables (consecutive integer keys, no nil gaps). Setting `tbl[3] = nil` creates a hole; `#tbl` may return any valid boundary.
-
-### Solution
-
-- Never set array elements to `nil`. Use `table.remove()` to shift elements.
-- Use generalized iteration (`for _, v in tbl do`) instead of `for i = 1, #tbl`.
-- For sparse data, use dictionary keys instead of integer indices.
-
----
-
-## SE-10 | Low | Deprecated wait()/spawn()/delay()
-
-**See roblox-luau-patterns → Task Library for full details.**
-
-Replace `wait()` → `task.wait()`, `spawn()` → `task.spawn()`, `delay()` → `task.delay()`. Legacy functions have minimum yield issues, unpredictable timing, and swallow errors.
-
----
-
-## SE-11 | Medium | Infinite Yield Warning
-
-### Problem
-
-`WaitForChild(name)` without a timeout yields forever if the child never appears. Common with renamed instances, StreamingEnabled, or race conditions.
-
-### Solution
-
-Always pass a timeout. Handle `nil` return:
+An unconditional `WaitForChild` can hang a boot path forever when content is missing. Use a timeout at trust boundaries and report the missing dependency with enough context to fix it.
 
 ```luau
-local folder = ReplicatedStorage:WaitForChild("Weapons", 10)
+local folder = ReplicatedStorage:WaitForChild("Shared", 10)
 if not folder then
-    warn("[Init] Weapons folder not found after 10s")
-    return
+    error("Shared folder was not replicated before startup deadline")
 end
 ```
 
----
+Do not put arbitrary short timeouts on dependencies that legitimately load later. Decide whether the caller should wait, retry, or fail closed.
 
-## SE-12 | Low | String Patterns vs Regex
+## 12. Luau patterns are not regular expressions
 
-### Problem
+Luau string patterns use `%d`, `%a`, and `.-` for common cases. They do not implement the full regular-expression syntax used by JavaScript or PCRE. Test the pattern against both valid and invalid inputs, and prefer explicit parsing for security-sensitive formats.
 
-Luau uses Lua string patterns, not regex. `\d` doesn't work - use `%d`. Escape with `%` not `\`. No alternation (`|`), no non-greedy `*?` (use `-` instead), no lookahead.
+## 13. Declaration order matters
 
-### Key Differences
-
-- Digits: `%d` not `\d`
-- Word chars: `%w` not `\w`
-- Whitespace: `%s` not `\s`
-- Escape special chars: `%.` not `\.`
-- Non-greedy: `.-` not `.*?`
-- Literal `%`: `%%`
-
----
-
-## SE-13 | Medium | Local Function Declaration Order
-
-### Problem
-
-Luau has no hoisting. A `local function` is invisible to code above its declaration. AI assistants frequently place helper functions below the functions that call them, causing nil-value runtime errors.
-
-### Rule
-
-**Callees above callers. Always.** If `functionA()` calls `helperB()`, then `helperB` must be declared first.
+A local function is not hoisted like a function declaration in some other languages. Define a local function before code that calls it, or forward-declare the variable and assign the function later.
 
 ```luau
--- BAD: helperB is nil when functionA runs
-local function functionA()
-    helperB() -- ERROR: attempt to call a nil value
+local step: () -> ()
+
+local function run()
+    step()
 end
 
-local function helperB()
-    print("I'm a helper")
-end
-
--- GOOD: helper declared first
-local function helperB()
-    print("I'm a helper")
-end
-
-local function functionA()
-    helperB() -- works
+step = function()
+    print("step")
 end
 ```
 
-### When you need mutual recursion
+## Pre-ship questions
 
-Use forward declaration:
-
-```luau
-local functionB -- forward declare
-local function functionA()
-    functionB()
-end
-function functionB() -- note: no 'local' (already declared above)
-    functionA()
-end
-```
+- Can a client create value without the server checking it?
+- Can two servers write the same mutable profile?
+- Can a receipt be retried without a duplicate grant?
+- Does every connection and task have an owner lifetime?
+- Can a missing instance or service make startup hang forever?
+- Does shutdown finish within a bounded deadline?
+- Have high-volume effects been profiled on a representative low-end device?

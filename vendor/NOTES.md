@@ -1,15 +1,13 @@
-# Vendored Source: brockmartin/roblox-game-skill
+# Historical Source Note: brockmartin/roblox-game-skill
 
-Snapshotted on 2026-07-04 for provenance preservation.
+A reference snapshot was examined on 2026-07-04 while developing eight Roblox skills. The snapshot was removed from this repository after provenance review because the upstream repository has no documented license or reuse permission.
 
-Content in 8 roblox-brain skills was derived from this repo:
-- roblox-architecture, roblox-sharp-edges, roblox-networking, roblox-data
-- roblox-monetization, roblox-gui, roblox-animation-vfx, roblox-tooling
+The affected skills were independently re-authored on 2026-07-12 from Roblox Creator Hub documentation and original examples. The removed snapshot is not part of the release.
 
 ## License Note
 
-roblox-brain attributes this upstream repo as an external reference. The upstream README states that the content is open for use, but the original repo does NOT contain a LICENSE file at the time of snapshot. Treat this as explicit reuse permission, not as a formal MIT license. If the author adds a formal license later, update this note.
+No LICENSE file or explicit reuse permission was found in the upstream repository. This note records why the historical copy was removed; it is not permission to reuse upstream text.
 
 ## Verification
 
-Automated structure, source-URL, API-drift, and version-pin checks run in CI. This snapshot note records provenance and reuse terms; it does not claim that every upstream pattern has been independently re-audited.
+The current skills use official documentation and original synthesis. Automated structure, source-URL, API-drift, version-pin, and fenced-code checks run in CI.

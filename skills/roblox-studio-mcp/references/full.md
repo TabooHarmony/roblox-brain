@@ -20,14 +20,14 @@ The official Roblox Studio MCP server is built into Studio. It provides direct a
 
 | Tool | What it does |
 |------|-------------|
-| `generate_mesh` | Generate a textured 3D mesh from a description. |
-| `generate_material` | Generate a custom material variant. |
-| `generate_procedural_model` | Generate primitive-part models with configurable attributes. |
-| `wait_job_finished` | Wait for a procedural generation job to finish. |
-| `search_asset` | Search Creator Store and creator inventory assets. |
-| `insert_asset` | Insert an asset by numeric Roblox asset ID. |
-| `upload_image` | Upload images from HTTP URLs to the Roblox asset server. |
-| `store_image` | Load a local image and return a reference URI. |
+| `generate_mesh` | Generate a textured 3D mesh from a description. Inspect the returned result before placement. |
+| `generate_material` | Generate a material variant; apply the returned base material and variant name to parts. |
+| `generate_procedural_model` | Generate a configurable primitive-part model, optionally from a reference image URI per the official procedural-models docs. |
+| `wait_job_finished` | Wait on a returned generation ID when a dependent action needs completion. |
+| `search_asset` / `search_creator_store` | Search Creator Store or creator inventory, depending on the bridge. |
+| `insert_asset` / `insert_from_creator_store` | Insert a known asset ID or Creator Store result. |
+| `upload_image` | Upload permitted images from a bridge-supported source, such as documented HTTP URLs, and return asset references. |
+| `store_image` | Convert a permitted local image into a URI for another generation tool. |
 
 ### Data Model Exploration
 
@@ -50,7 +50,7 @@ The official Roblox Studio MCP server is built into Studio. It provides direct a
 | `get_studio_state` | Get Studio play state and available data-model contexts. |
 | `start_stop_play` | Start or stop playtesting. |
 | `get_console_output` | Retrieve output logs while the game is running. |
-| `screen_capture` | Capture the current Studio viewport in Play mode. |
+| `screen_capture` | Capture a Studio viewport. Edit-mode capture was verified on the connected bridge; some bridges may hang or time out in Play mode, so keep a CUA screenshot fallback. |
 
 ### Player Input Simulation
 
@@ -66,6 +66,33 @@ The official Roblox Studio MCP server is built into Studio. It provides direct a
 |------|-------------|
 | `list_roblox_studios` | List all connected Studio instances (name, ID, active status). |
 | `set_active_studio` | Set which Studio instance receives subsequent tool calls. |
+
+## Session and Datamodel Contract
+
+1. Call `list_roblox_studios` before assuming Studio is connected.
+2. Use `set_active_studio` with the returned ID when more than one instance exists or the active flag is not the intended target.
+3. Call `get_studio_state` and record the current mode plus available datamodels.
+4. Select `Edit` for persistent tree/script changes. Use `Client` or `Server` only for operations whose live schema permits them.
+5. Inspect the relevant tree and scripts before mutation. After mutation, read back the script, instance, or asset result.
+
+`datamodel_type` is not universal. The live server requires it for some datamodel-scoped calls, while session management, play control, and some inspection tools expose different schemas. Inspect `tools/list` and the tool description instead of blindly adding or omitting it.
+
+The connected server exposed the official `search_asset`/`insert_asset` names. Other bridges may use `search_creator_store`/`insert_from_creator_store` or another mapping. Treat these as capability mappings, not guaranteed simultaneous tools.
+
+### Observed live schema notes (2026-07-12)
+
+<!-- temporal: 2026-07-12 -->
+
+These were verified against the connected Studio server and must be rechecked when the bridge updates:
+
+- `execute_luau`: `code` plus `datamodel_type` for `Edit`, `Client`, or `Server` where supported.
+- `multi_edit`: `file_path`, optional `className` when creating, and ordered `edits` using `old_string`/`new_string`.
+- `start_stop_play`: `is_start`; it does not use an `action` string.
+- `screen_capture`: `capture_id` is required; camera position/look-at are optional.
+- `wait_job_finished`: `generationId` is required; use it before dependent edits when generation is asynchronous.
+- `search_asset`: query is optional; useful filters include `scope`, `assetType`, `maxResults`, price/source filters, and verified-creator filtering.
+- `insert_asset`: `assetId` is required; `assetName`, `assetType`, and `parentPath` are optional but improve deterministic placement.
+- `get_console_output`, `list_roblox_studios`, and `set_active_studio` expose their own schemas rather than a universal datamodel argument.
 
 ### Documentation and Skills
 
@@ -107,11 +134,11 @@ print(check and "OK" or "FAILED: Floor not created")
 
 ### Script Truncation
 
-When writing scripts via `multi_edit` or `execute_luau` with `script.Source = ...`, long scripts may silently truncate. For scripts over ~300 lines:
+When writing scripts via `multi_edit` or `execute_luau` with `script.Source = ...`, the connected bridge has an observed command-code limit around 4-5 KB as of 2026-07-12. This is bridge-specific, not an official Roblox limit; recheck after bridge updates. For larger modules:
 
-1. Split into logical chunks
-2. Write each chunk separately using string concatenation
-3. After writing, read back the last 10-20 lines to verify no truncation
+1. Split into logical chunks or write the module with `multi_edit`
+2. Execute only a short `require()` or test call
+3. Read back the tail to verify no truncation
 
 ```luau
 -- Chunked write pattern
@@ -148,6 +175,21 @@ if part then
 end
 ```
 
+## Asset Generation Workflow
+
+Use this order for a map or prop:
+
+1. Inspect the project for an existing compatible asset and its conventions.
+2. Search the Creator Store or creator inventory when reuse is appropriate. Record the asset ID, type, source, price, and intended parent. For cross-owner or paid results, surface the creator/source and get explicit consent before insertion.
+3. Use `generate_procedural_model` for configurable primitive-part props, buildings, scenery, or reference-image-driven blockouts. The live tool may insert the model automatically; inspect its returned result and workspace placement.
+4. Use `generate_mesh` for a custom textured prop. Bound the requested size and triangle budget, then inspect the returned asset before using it in a player-facing scene.
+5. Use `generate_material` for a surface variant. Apply its returned base material and variant name to the intended parts, then verify both properties.
+6. Use `store_image` for a permitted local PNG/JPG reference, or `upload_image` for a permitted source accepted by the live schema. Pass the returned URI only to a tool whose live schema accepts it.
+7. If a generation returns a job ID, call `wait_job_finished` with its `generationId` before dependent edits. Follow the tool's live description when it reports that generation is already complete or auto-inserted.
+8. Parent and place the result explicitly, inspect its class, descendants, bounds, pivot, materials, collision, anchoring, and provenance, then capture evidence.
+
+Generated content is a candidate, not an acceptance decision. Keep a native Parts/CSG fallback for unavailable, slow, rejected, or visually unsuitable generation. Never upload or publish an image or asset without permission and never claim a generated asset is production-ready without structural and visual review.
+
 ## Workflows
 
 ### Script Development
@@ -160,10 +202,17 @@ end
 
 ### Building Geometry
 
-1. **Plan** — Use `search_game_tree` to see what exists
-2. **Build** — Use `execute_luau` to create parts (see roblox-building skill)
-3. **Verify** — Use `execute_luau` to count parts and check properties
-4. **Visual check** — Use `screen_capture` in play mode to see the result
+1. **Plan** — Inspect the existing tree, origin, map root, coordinate conventions, and current assets.
+2. **Choose** — Reuse a compatible asset, generate a procedural model/mesh/material, or use native Parts/CSG as fallback.
+3. **Build** — Use the asset tool or `execute_luau` in bounded phases; use `multi_edit` for persistent builder scripts.
+4. **Verify** — Read back the model, counts, bounds, pivots, classes, materials, anchoring, collision, and parent paths.
+5. **Evidence** — Capture a deliberate view when supported; otherwise report structural evidence and the capture limitation.
+
+### Map and Prop Evidence
+
+- **Prop:** named model, pivot, player scale, bounding box, materials, collision, anchoring, no loose parts, and asset provenance.
+- **Map:** root/origin, zones, floors, landmarks, spawns, path widths, connected traversal, and excluded Baseplate/Terrain/SpawnLocation filters in bounds checks.
+- **Runtime:** start play, navigate or interact, inspect console output, then stop play. Do not leave a test session running.
 
 ### Debugging
 
@@ -178,18 +227,18 @@ end
 1. Start play mode with `start_stop_play`
 2. Navigate with `character_navigation`
 3. Interact with `user_keyboard_input` / `user_mouse_input`
-4. Observe with `get_console_output` and `screen_capture`
+4. Observe with `get_console_output` and capture before or after Play when supported. If Play-mode capture times out, use the CUA screenshot fallback.
 5. Stop with `start_stop_play`
 
 ## MCP Mode Detection
 
-Different MCP servers provide different tool sets. Detect what's available:
+Different MCP servers expose different names and schemas. Call `tools/list` and route by capability:
 
-- **Official Roblox MCP** (built into Studio): `execute_luau`, `multi_edit`, `script_read`, `search_game_tree`, `start_stop_play`, `generate_mesh`, and the current tools documented by Roblox.
-- **Other MCP servers**: inspect the exposed tool list and adapt. Tool names and capabilities vary.
-- **No MCP**: Pure code generation only. Provide copy-paste-ready scripts.
+- **Official docs baseline:** session selection, tree/script inspection, `multi_edit`, `execute_luau`, play control, console/visual evidence, input simulation, and generated/searchable assets.
+- **Observed connected server (2026-07-12):** `search_asset`/`insert_asset`; other bridges may expose `search_creator_store`/`insert_from_creator_store`.
+- **No MCP or missing capability:** generate complete offline Luau, identify the intended insertion path, and state exactly what was not inspected or tested.
 
-Adapt your approach based on what tools are actually available. If a tool call fails with "not found", fall back gracefully.
+If a call fails with "not found", an invalid context, a stale session, or an unavailable generation job, stop assuming the workflow succeeded. Re-discover state, choose a supported fallback, or report the blocker with the tool response.
 
 ## Setup Reference
 

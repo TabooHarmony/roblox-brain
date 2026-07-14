@@ -3,7 +3,7 @@
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
-## When to Use
+## When to Load
 
 Use this skill when the task is mainly about Roblox Open Cloud or HTTP-based integration work outside normal gameplay scripting:
 
@@ -81,13 +81,7 @@ Do not use this skill when the task is mainly about:
 
 ## Using References
 
-- Open references/open-cloud-overview.md first when you need the high-level model for Open Cloud versus legacy or in-experience calls.
-- Open references/cloud-guides.md when the task matches a known workflow and you need the best guide starting point.
-- Open references/api-patterns-errors-types-scopes-and-rate-limits.md for request construction, pagination, field masks, errors, scopes, and retry behavior.
-- Open references/webhooks-documentation.md for trigger support, payload shape, signature verification, and delivery expectations.
-- Open references/http-service.md when requests originate from a Roblox experience and endpoint support must be validated.
-- Open references/openapi-documentation.md when you need to inspect or generate against the unified OpenAPI description.
-- Open references/cloud-reference-json-files.md when you need to mine local JSON artifacts directly for operation IDs, schemas, scopes, or engine-usability metadata.
+This skill keeps its complete guidance in this `references/full.md` file. Use the official Creator Hub Open Cloud guides listed in `SKILL.md` when an endpoint, schema, scope, or HttpService support claim needs current verification. Do not infer that a topic-specific local reference file exists unless it is present in this skill directory.
 
 ## Checklist
 

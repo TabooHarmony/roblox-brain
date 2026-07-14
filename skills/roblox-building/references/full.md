@@ -32,6 +32,34 @@ if existing then
 end
 ```
 
+## MCP Build Contract
+
+Use the shared `roblox-studio-mcp` session contract. Before changing a place:
+
+1. List/select the intended Studio and call `get_studio_state`.
+2. Confirm the target datamodel and inspect `Workspace`, existing map roots, coordinate conventions, scripts, and reusable assets.
+3. Declare a build root, origin, named dimensions, asset manifest, and acceptance gates.
+4. Apply one bounded phase at a time. Re-acquire references in every stateless `execute_luau` call.
+5. Read back the tree and properties before starting the next phase.
+6. Start play only when runtime behavior matters. Capture console, navigation, and visual evidence, then stop play.
+
+If a capability is unavailable, switch to the offline Luau path and identify the missing evidence instead of claiming the build was verified.
+
+## Asset-Aware Prop Workflow
+
+Choose the least risky source that satisfies the prop:
+
+1. **Reuse:** inspect and search existing project/Creator Store assets. Record ID, source, type, price/provenance, and intended parent. For cross-owner or paid results, get explicit consent before insertion.
+2. **Procedural:** use `generate_procedural_model` for configurable primitive-part props, buildings, scenery, and image-guided blockouts. Pass meaningful `partNames` and user requirements as the prompt. The tool may auto-insert the result.
+3. **Mesh:** use `generate_mesh` for a custom textured prop. Bound the size and triangle budget; do not treat the returned mesh as accepted until inspected.
+4. **Material:** use `generate_material`, then apply and verify its returned base material and material-variant name on target parts.
+5. **Image:** use `store_image` for permitted local PNG/JPG references or `upload_image` for a permitted source accepted by the live schema. Never upload external content without permission.
+6. **Wait:** if a generation returns a job ID, call `wait_job_finished` with its `generationId` before dependent edits. Follow the live tool schema because some generation tools complete or insert automatically.
+7. **Place:** parent the result under the named build root, set pivot/transform, and read back class, descendants, bounds, materials, collision, anchoring, and asset provenance.
+8. **Fallback:** use native Parts, CSG, primitives, and coherent materials when generation is unavailable, slow, rejected, or visually unsuitable.
+
+Generated assets are candidates. Structural and visual review are still required.
+
 ## Player Scale Reference
 
 - Player height: ~5 studs
@@ -247,3 +275,28 @@ workspace/
     Lighting/               (PointLights, SpotLights)
     Spawns/                 (SpawnLocation instances)
 ```
+
+## Acceptance Gates
+
+Before calling a prop complete, verify:
+
+- exactly one named model under the intended build root
+- pivot and bounding box are sensible at player scale
+- every structural part has deliberate anchoring, collision, material, and color
+- no loose or duplicate parts remain
+- generated or inserted assets have recorded provenance and were read back after placement
+
+Before calling a map phase complete, verify:
+
+- the map root and `Origin` are present
+- zone floors and landmarks are inside the intended bounds
+- spawn points and main paths are reachable and wide enough
+- geometry is connected to the ground or a parent structure
+- bounds calculations exclude `Baseplate`, `Terrain`, and default `SpawnLocation` unless intentionally included
+
+## Evidence Recipes
+
+- **Structural:** return counts, classes, paths, bounds, pivots, materials, anchoring errors, collision errors, and asset IDs from an edit-time inspection.
+- **Visual:** use `screen_capture` with a deliberate camera position when supported. If capture fails or hangs, report that and retain structural evidence rather than inventing visual conclusions.
+- **Runtime:** start play, navigate to the spawn and a representative landmark, exercise the relevant interaction, collect console output, and stop play. A clean console is evidence of no observed errors, not proof of all behavior.
+- **Recovery:** if a phase fails, preserve the last verified phase, remove only the disposable failed output, and retry with a smaller batch or native fallback.

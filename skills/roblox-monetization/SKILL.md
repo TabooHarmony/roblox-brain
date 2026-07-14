@@ -1,38 +1,32 @@
 ---
 name: roblox-monetization
-description: "Use when implementing Roblox GamePasses, Developer Products, Premium payouts, purchase reconciliation, or monetization policy checks."
-last_reviewed: 2026-05-26
+description: "Use when implementing Roblox GamePasses, Developer Products, subscriptions, private servers, Creator Rewards, or purchase policy checks."
+last_reviewed: 2026-07-13
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/monetization-systems.md
+  - https://create.roblox.com/docs/production/monetization/passes
+  - https://create.roblox.com/docs/production/monetization/developer-products
+  - https://create.roblox.com/docs/production/monetization/subscriptions
+  - https://create.roblox.com/docs/production/monetization/paid-random-items
+  - https://create.roblox.com/docs/reference/engine/classes/PolicyService
+  - https://create.roblox.com/docs/creator-rewards
+  - https://devforum.roblox.com/t/creator-rewards-is-live/3838257
+  - original
 ---
 
-# Roblox Monetization Systems Reference
+# roblox monetization
 
 ## When to Load
 
-Load when adding in-game purchases (GamePasses, Developer Products), designing monetization strategy, implementing Premium payouts, or reviewing policy compliance.
+Load when adding a Game Pass, Developer Product, subscription, private server, Creator Rewards-related product decision, or purchase eligibility check.
 
 ## Quick Reference
 
-**Load Full Reference below only when you need specific API implementations or pricing formulas.**
+- Prompt purchases from the client, but grant value only from server-owned code.
+- Passes: durable ownership for an experience. Check ownership server-side and refresh after a purchase.
+- Developer Products: repeatable consumables. `ProcessReceipt` is the grant path; `PromptProductPurchaseFinished` is not purchase confirmation.
+- A receipt that cannot be safely granted must remain unprocessed so Roblox can retry it.
+- Use `PolicyService` and the current monetization documentation for eligibility-sensitive features.
+- Creator Rewards is a platform program, not a grant API. Track eligibility, attribution, engagement, and dashboard reporting separately from purchases and inventory.
+- Test failed grants, duplicate receipts, player absence, and interrupted saves before shipping.
 
-Key rules:
-- GamePasses: one-time purchase, check with UserOwnsGamePassAsync on join + cache.
-- Developer Products: consumable, ProcessReceipt is the ONLY place to grant items.
-- ProcessReceipt contract: grant item THEN return PurchaseGranted. If grant fails, return NotProcessedYet. Never return PurchaseGranted before granting.
-- All purchase logic is SERVER-SIDE. Client only prompts.
-- PromptGamePassPurchase / PromptProductPurchase from client, handle on server.
-- TOS: odds disclosure MANDATORY for random items. Games get removed without it.
-- TOS: no real-world trading, no misleading purchase UI, no pay-to-win that ruins gameplay.
-- DevEx: dual-rate system. New Rate $0.0038/R$ (earned after Sept 5, 2025). Old Rate $0.0035/R$ (earned before). Must clear Old Rate balance first. US 18+ creators get higher rate ~$0.0054/R$ (as of June 2026). <!-- temporal: 2026-06 -->
-- Premium Payouts: engagement-based, detect with player.MembershipType.
-- Subscriptions: recurring monthly revenue via PromptSubscriptionPurchase. Tiered benefits.
-- Private Servers: monetizable via PromptCreatePrivateServer / PromptPurchasePrivateServer.
-- Paid Access: one-time Robux or local currency fee via PromptPurchaseExperience. Common for closed betas.
-- Immersive Ads: AdService image/portal/video ad units. Earn via ad views, separate from Rewarded Video Ads.
-- PolicyService: must-check for compliance (age/region restrictions on subscriptions, random items, ads).
-- Commerce Products: sell physical merchandise through Roblox.
-
-### Economy Design Impact
-For how monetization affects in-game economy (inflation, sinks, currency flow), see `roblox-economy`.
-**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
+**Need the details?** Load `references/full.md` for purchase flows and failure handling.

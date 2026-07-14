@@ -1,9 +1,10 @@
 ---
 name: roblox-luau-patterns
 description: "Use for Luau metatable classes, inheritance, Promises, coroutines, pcall, module structure, services, and Roblox coding patterns."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-13
 sources:
   - https://luau-lang.org/
+  - https://raw.githubusercontent.com/Sleitnick/RbxUtil/master/README.md
 ---
 
 ## When to Load
@@ -40,7 +41,7 @@ Always set `__index`. Constructors use `.`, methods use `:`.
 local ok, result = pcall(fn, args...)       -- one-shot fallible calls
 local ok, result = xpcall(fn, handler)      -- custom error handler + traceback
 ```
-Wrap ALL DataStore/HTTP calls. Use Promise library for async chains (`:andThen`/`:catch`/`:finally`).
+Wrap ALL DataStore/HTTP calls. Use a Promise library for async chains when the project already has one; otherwise use `task` and explicit error handling.
 
 **Naming:** PascalCase (classes/modules/types), camelCase (vars/functions), UPPER_CASE (constants). Prefix `_` for private.
 
@@ -54,6 +55,6 @@ Wrap ALL DataStore/HTTP calls. Use Promise library for async chains (`:andThen`/
 - Props on class table instead of `self` → shared across instances
 - No connection cleanup → use Trove or manual `:Disconnect()`
 
-**Libraries:** Promise · Trove · Signal · Comm (Sleitnick) · ProfileStore · t (runtime checks)
+**Libraries:** Promise · Trove · Signal · Comm · Component · Concur · TypedRemote (Sleitnick) · ProfileStore · t (runtime checks)
 
-**Checklist:** `__index` set · `.`/`:` correct · pcall on fallible · connections cleaned · Parent last · no deprecated · clear API · async error handling · player data cleaned on PlayerRemoving
+**Checklist:** `__index` set · `.`/`:` correct · pcall on fallible · cleanup · Parent last · no deprecated · clear API · player data cleaned on leave

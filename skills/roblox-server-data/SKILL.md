@@ -1,63 +1,60 @@
 ---
 name: roblox-server-data
 description: "Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds."
-last_reviewed: 2026-07-04
+last_reviewed: 2026-07-13
 sources:
-  - https://create.roblox.com/docs/reference/engine/classes/OrderedDataStore
-  - https://create.roblox.com/docs/reference/engine/classes/MessagingService
-  - https://create.roblox.com/docs/reference/engine/classes/GlobalDataStore
+  - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreService
+  - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreQueue
+  - https://devforum.roblox.com/t/partyservice-plus-party-matchmaking-framework/4668883
 ---
 
 # Roblox Server & Shared Data
 
 ## When to Load
 
-Load for server-level or cross-server data: leaderboards (OrderedDataStore), cross-server messaging (MessagingService), shared world state, persistent non-player data, season/guild data. For player data (DataStore, ProfileStore, session locking), use `roblox-data`.
+Load for server-level or cross-server data: leaderboards (OrderedDataStore), cross-server messaging (MessagingService), temporary queues and sorted maps (MemoryStoreService), shared world state, persistent non-player data, season/guild data. For player data (DataStore, ProfileStore, session locking), use `roblox-data`.
 
 ## Quick Reference
 
 ### OrderedDataStore (Leaderboards)
-- Sortable DataStore. Keys must be positive integers (use UserId).
+- Sortable DataStore. Keys are strings; use a stable key such as `tostring(UserId)`.
+- Values are integers used for sorting; choose the sign and ordering intentionally.
 - `GetSortedAsync(ascending, pageSize, minValue, maxValue)` → sorted pages
 - For leaderboards ONLY — not player data
 
 ```luau
-local store = DataStoreService:GetOrderedDataStore("LeaderboardCoins")
-store:SetAsync(player.UserId, playerCoins)
+local D = game:GetService("DataStoreService")
+local store = D:GetOrderedDataStore("LeaderboardCoins")
+store:SetAsync(tostring(player.UserId), playerCoins)
 local top10 = store:GetSortedAsync(false, 10):GetCurrentPage()
 ```
 
 ### MessagingService (Cross-Server)
-- Real-time communication between server instances
-- `SubscribeAsync(topic, callback)` / `PublishAsync(topic, message)`
-- No delivery guarantee — design for idempotency
-
-```luau
-MessagingService:SubscribeAsync("ServerShutdown", function(msg) print(msg.Data) end)
-MessagingService:PublishAsync("ServerShutdown", "server-" .. game.JobId)
-```
+- Real-time server communication: `SubscribeAsync` / `PublishAsync`
+- No delivery or ordering guarantee; design for idempotency.
 
 ### GlobalDataStore (Shared State)
-- Non-player shared state: guild data, season config, global counters
-- Same API as DataStore but different conceptual use
-- Use `UpdateAsync` for atomic read-modify-write (prevents race conditions)
-- Never use for player data — no session locking
+- Persistent non-player state such as guilds, seasons, and counters.
+- Use `UpdateAsync`; never use it for player session data.
+
+### MemoryStoreService (Temporary Coordination)
+- Queues and sorted maps for expiring matchmaking, leases, and coordination.
+- Remove a read batch only after successful, idempotent processing.
+- Use MessagingService or TeleportData for notification and handoff.
 
 ### Persistent World State Patterns
-- **Building/construction games**: serialize player-built structures to DataStore, reload on join
-- **Season/leaderboard data**: OrderedDataStore for rankings, GlobalDataStore for season metadata
-- **Guild/clan data**: GlobalDataStore with guild ID as key, MessagingService for real-time guild chat
-- **Economy counters**: GlobalDataStore for server-wide currency totals, UpdateAsync for atomic increments
+- **Building games**: serialize player-built structures to DataStore and reload on join
+- **Seasons/leaderboards**: OrderedDataStore for rankings, GlobalDataStore for metadata
+- **Guilds**: GlobalDataStore by guild ID, MessagingService for live updates
+- **Economy counters**: GlobalDataStore + `UpdateAsync` for atomic increments
 
 ### Cross-Server Patterns
-- Server registration: publish server info on start, heartbeat on interval
-- Player migration: notify old server to release locks via MessagingService
-- Global events: publish to all servers, each handles locally
+- Register servers with expiring heartbeats; use MessagingService for notifications.
 
 ### Pitfalls
 - MessagingService is fire-and-forget — no delivery guarantee, no ordering
 - GlobalDataStore has same rate limits as player DataStores — don't spam
-- OrderedDataStore keys MUST be positive integers (use UserId)
+- OrderedDataStore keys are strings; values are integers used for sorting
 - Never store Instances — serialize to primitives first
 - UpdateAsync for any shared counter to prevent lost updates
 

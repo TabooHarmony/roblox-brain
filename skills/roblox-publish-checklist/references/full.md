@@ -44,10 +44,10 @@ You are verifying a Roblox game is ready to publish. Work through every category
 
 - [ ] **GamePasses work correctly** - Purchasing grants the correct benefit, idempotent on rejoin
 - [ ] **DevProducts grant properly** - Consumables delivered, ProcessReceipt handles edge cases
-- [ ] **Premium benefits functional** - Premium payout optimized, exclusive perks work
+- [ ] **Premium or subscription benefits functional** - If offered, benefits and entitlement checks work
 - [ ] **Prices reviewed** - Competitive with similar games, clear value proposition
 - [ ] **No pay-to-win concerns** - Free players have reasonable experience
-- [ ] **Premium Payouts enabled** - Game is eligible and configured for Premium Payouts
+- [ ] **Creator Rewards decision documented** - If the game relies on Creator Rewards, eligibility, attribution expectations, dashboard reporting, anti-fraud terms, and the 60-day holding period were reviewed
 
 ---
 

@@ -1,16 +1,19 @@
 ---
 name: roblox-input
 description: "Use when handling Roblox keyboard, mouse, gamepad, touch, motion input, or cross-platform action binding."
-last_reviewed: 2026-06-29
+last_reviewed: 2026-07-13
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/UserInputService
   - https://create.roblox.com/docs/reference/engine/classes/ContextActionService
   - https://create.roblox.com/docs/reference/engine/enums/UserInputType
+  - https://create.roblox.com/docs/reference/engine/classes/GuiService
+  - https://create.roblox.com/docs/reference/engine/classes/GuiObject
+  - https://raw.githubusercontent.com/Roblox/focus-navigation/main/README.md
 ---
 
 ## When to Load
 
-Load when handling keyboard, mouse, gamepad, touch, accelerometer, or gyroscope input; binding actions across platforms; or detecting what input devices the player has. Client-only — both services require `LocalScript` or client `RunContext`.
+Load for keyboard, mouse, gamepad, touch, motion, or cross-platform action binding. Client-side only.
 
 ## Quick Reference
 
@@ -44,11 +47,11 @@ CAS:BindAction("Jump", onAction, true,
 
 `BindAction(name, handler, createTouchButton, ...inputTypes)`. Handler returns `ContextActionResult.Sink` to consume, `.Pass` to fall through.
 
-**Touch buttons**: `createTouchButton=true` auto-creates an `ImageButton` under `PlayerGui.ContextActionGui.ContextButtonFrame` (max 7). Customize via `CAS:GetButton(name)` → `SetTitle`/`SetImage`/`SetPosition`/`SetDescription`.
+**Gamepad UI focus:** gameplay bindings and menu selection are separate. Set `GuiService.SelectedObject`, mark controls `Selectable`, and test nested/modal navigation. Use Focus Navigation only when native selection is insufficient.
 
 **Gamepad**: `GetConnectedGamepads()` → `Gamepad1`..`Gamepad8`. Listen to `GamepadConnected`/`Disconnected`.
 
-**Touch gestures**: `TouchTap`, `TouchTapInWorld` (world pos), `TouchPan`, `TouchPinch`, `TouchRotate`, `TouchSwipe`, `TouchLongPress`, `TouchDrag`. Raw: `TouchStarted`/`TouchMoved`/`TouchEnded`.
+**Touch gestures**: `TouchTap`, `TouchPan`, `TouchPinch`, `TouchRotate`, `TouchSwipe`, `TouchLongPress`, `TouchDrag`. Raw: `TouchStarted`/`TouchMoved`/`TouchEnded`.
 
 **Pitfalls**:
 - `gameProcessedEvent=true` in InputBegan → UI consumed it. Filter for gameplay.
@@ -57,4 +60,4 @@ CAS:BindAction("Jump", onAction, true,
 - `JumpRequest` fires multiple times per jump — debounce.
 - Mouse wheel only fires `InputChanged`.
 
-See `references/full.md` for full event tables, `ContextActionResult`, mobile buttons, sensors.
+Full event tables: `references/full.md`.

@@ -130,7 +130,10 @@ function EventBatcher:flush()
             continue
         end
         for eventName, value in events do
-            AnalyticsService:LogCustomEvent(player, eventName, value)
+            local success, err = pcall(function()
+                AnalyticsService:LogCustomEvent(player, eventName, value)
+            end)
+            if not success then warn("Analytics event failed:", err) end
         end
     end
     batches = {}
@@ -156,6 +159,8 @@ end)
 
 return EventBatcher
 ```
+
+For a maintained batching module with failure retention, see [`references/event-batcher.luau`](references/event-batcher.luau).
 
 ---
 
@@ -227,7 +232,19 @@ AnalyticsService:LogCustomEvent(player, "EnemyKill_Magic")
 
 ---
 
-## 5. Best Practices
+## 5. Creator Rewards and analytics
+
+Creator Rewards is not an `AnalyticsService` event and should not be reconstructed from client telemetry. The platform determines qualifying users, attribution, and reward amounts. Use server-side analytics to measure the product signals you control:
+
+- session duration and the 10-minute engagement milestone;
+- onboarding and first-session completion;
+- referral or share-link landing flows when your product exposes them;
+- retention and return behavior;
+- economy sources and sinks separately from platform rewards.
+
+Use Creator Dashboard as the authority for Creator Rewards eligibility, rewarded active spenders, signups, reactivations, and estimated payout. Do not label a local event as “Creator Reward Granted” or promise a Robux amount based on it.
+
+## 6. Best Practices
 
 - Log from server, not client. Client events can be spoofed.
 - Log AFTER the action succeeds, not when attempted.

@@ -1,7 +1,7 @@
 ---
 name: roblox-physics
 description: "Use when building Roblox vehicles, ragdolls, projectiles, elevators, constraints, forces, or other physics-driven gameplay."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-12
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mechanical-constraints.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mover-constraints.md
@@ -23,6 +23,9 @@ All constraints connect via `Attachment` objects, not Parts directly. Create Att
 
 ### Vehicles
 Wheel = `HingeConstraint` (ActuatorType.Motor) + `SpringConstraint` for suspension. Steer = Hinge with ActuatorType.Servo. Rear wheels get throttle AngularVelocity, front wheels get servo TargetAngle. Use `CustomPhysicalProperties` on wheels for friction tuning.
+
+### MCP Verification
+Inspect existing constraints and network ownership before editing. After mutation, read back attachments/properties and exercise the mechanism in play mode; report console or navigation evidence.
 
 ### Ragdoll
 Replace Motor6Ds with `BallSocketConstraint`: create Attachments from motor.C0/C1, set `LimitsEnabled=true`, `UpperAngle=45`. Keep Root Motor6D for HRP. Set humanoid state to `Physics`. Re-enable motors to recover.

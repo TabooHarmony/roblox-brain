@@ -196,6 +196,20 @@ CAS:BindAction("MoveUp", handleMoveUp, true,
 
 For movement bindings, prefer `Enum.PlayerActions` (e.g. `MoveForward`, `Jump`) — they automatically bind to WASD, arrows, left stick, and d-pad across platforms.
 
+## UI Focus and Directional Selection
+
+`ContextActionService` maps gameplay actions. It does not design the focus graph for menus. For native UI navigation:
+
+```luau
+local GuiService = game:GetService("GuiService")
+
+firstButton.Selectable = true
+secondButton.Selectable = true
+GuiService.SelectedObject = firstButton
+```
+
+Set `SelectedObject` when a menu opens or a modal takes control, and clear or restore it when that owner closes. For ambiguous layouts, use selection groups and explicit directional behavior where the current UI API supports them. Test gamepad, keyboard arrows, covered elements, nested containers, and dynamic list updates. The Roblox `focus-navigation` repository provides a richer optional focus model with React integration; it is not required for native selection.
+
 ## Gamepad Deep Dive
 
 ### Detection

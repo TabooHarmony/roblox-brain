@@ -1,31 +1,33 @@
 ---
 name: roblox-sharp-edges
 description: "Use before shipping or reviewing Roblox code involving player data, remotes, monetization, or memory to catch high-impact production footguns."
-last_reviewed: 2026-05-22
+last_reviewed: 2026-07-12
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/sharp-edges.md
+  - https://create.roblox.com/docs/cloud-services/data-stores
+  - https://create.roblox.com/docs/scripting/security/security-tactics
+  - https://create.roblox.com/docs/production/monetization/developer-products
+  - https://create.roblox.com/docs/scripting/scripts
+  - original
 ---
+
+# roblox sharp edges
 
 ## When to Load
 
-When writing or reviewing Roblox Luau code that handles player data, remote events, monetization, or memory management. Consult before shipping to catch the most common production footguns before they cause data loss or exploits. Full details for each edge case are in `references/full.md`.
+Load before shipping or reviewing code that handles persistence, remotes, purchases, lifecycle cleanup, or high-volume instances.
 
 ## Quick Reference
 
-| # | Sev | Problem | Fix |
-|---|-----|---------|-----|
-| SE-1 | 🔴 | DataStore session conflict on server-hop | Use ProfileStore (session locking) |
-| SE-2 | 🔴 | Client sends currency amount | Server-authoritative state only |
-| SE-3 | 🔴 | ProcessReceipt returns before grant | Grant → save → return PurchaseGranted |
-| SE-4 | 🟠 | Events never disconnected | Trove pattern (RbxUtil) per player |
-| SE-5 | 🟠 | RemoteEvent spam from exploiters | Per-player rate limiter on server |
-| SE-6 | 🟠 | BindToClose 30s timeout | Parallel saves with task.spawn |
-| SE-7 | 🟡 | >10K parts kills mobile FPS | StreamingEnabled + model streaming |
-| SE-8 | 🟡 | require() yields/blocks callers | Init/Start lifecycle pattern |
-| SE-9 | 🟡 | #table wrong with nil gaps | table.remove, not tbl[i]=nil |
-| SE-10 | 🔵 | wait()/spawn()/delay() deprecated | Use task.wait/spawn/delay |
-| SE-11 | 🟡 | WaitForChild no timeout → hang | Always pass timeout, handle nil |
-| SE-12 | 🔵 | Regex syntax doesn't work in Luau | Lua patterns: %d not \\d, .- not .*? |
-| SE-13 | 🟡 | Functions used before declared | Callees above callers (no hoisting) |
+| Risk | Failure mode | First check |
+| --- | --- | --- |
+| Shared player data | two servers overwrite one profile | session ownership and release path |
+| Remote handlers | client manufactures a reward | validate against server state |
+| Receipts | a purchase is acknowledged without a grant | idempotent grant before acknowledgement |
+| Connections | old players retain callbacks | disconnect on removal or destroy the owner |
+| Shutdown | saves exceed the close window | bounded, observable flush |
+| Instances | mobile frame time collapses | profile and stream before adding detail |
+| Yields | startup hangs or deadlocks | explicit lifecycle phases and timeouts |
+| Tables | length or mutation assumptions break | use explicit counts and constructors |
+| Async work | abandoned tasks keep running | cancellation or an owner lifetime |
 
-**Legend:** 🔴 Critical &nbsp; 🟠 High &nbsp; 🟡 Medium &nbsp; 🔵 Low
+**Need the details?** Load `references/full.md` for the review checklist and small corrective patterns.

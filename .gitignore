@@ -1,0 +1,4 @@
+.hermes/
+__pycache__/
+*.py[cod]
+

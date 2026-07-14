@@ -126,6 +126,20 @@ The navigation mesh is auto-generated from geometry. Debug it in Studio:
 
 Colored areas = walkable. Small arrows = jump connections. Uncolored = impassable.
 
+## Pathfinding performance and improved search
+
+Roblox has shipped an improved pathfinding search algorithm behind `Workspace.PathfindingUseImprovedSearch`. Test it against representative maps and NPC agent parameters before enabling it in a live place. A path that succeeds is not automatically a cheap path.
+
+Keep path requests bounded and event-driven:
+
+- do not compute every NPC path every frame;
+- stagger requests across frames and cache a path until the target or world meaningfully changes;
+- avoid very long searches, especially requests on the order of 1000 studs or more;
+- avoid continuously moving `CanCollide` geometry when it is not needed, because navigation-mesh regeneration can become the bottleneck;
+- capture a MicroProfiler trace when pathfinding slows down instead of assuming the state machine is at fault.
+
+If `Path.Blocked` fires, recompute from the NPC's current position with a bounded retry policy. Do not allow a blocked-path callback to recursively create unlimited overlapping `ComputeAsync` calls.
+
 ## State Machine Pattern
 
 The most reliable NPC AI architecture. Each NPC has a current state and transitions based on conditions.
@@ -353,23 +367,21 @@ end
 
 ## Network Ownership
 
-**Critical**: By default, the nearest player "owns" the physics of unanchored parts. This means exploiters can fling your NPCs.
+For unanchored NPC assemblies, decide deliberately whether physics should be server-authoritative. Server ownership can prevent client-owned physics from producing unexpected motion, but it is not a complete anti-exploit boundary and it costs server simulation work.
 
 ```luau
--- Keep NPC physics server-authoritative
 local function setServerOwned(model: Model)
     for _, part in model:GetDescendants() do
         if part:IsA("BasePart") then
-            part:SetNetworkOwner(nil) -- server owns physics
+            part:SetNetworkOwner(nil)
         end
     end
 end
 
--- Call after spawning
 setServerOwned(enemy)
 ```
 
-**Trade-off**: Server ownership means NPC movement is limited to server tick rate (30Hz). For smooth visual movement, replicate position to clients and interpolate.
+Measure the trade-off at the intended NPC count. If visual motion becomes too coarse, replicate authoritative state and interpolate on the client instead of handing gameplay authority to the client.
 
 ## Update Loop
 

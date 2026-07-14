@@ -76,7 +76,7 @@ entries:
   - id: bodyvelocity-deprecated
     claim: "BodyVelocity is deprecated; use LinearVelocity"
     files:
-      - path: skills/roblox-architecture/references/combat-systems.md
+      - path: skills/roblox-architecture/references/full.md
     check:
       type: class_deprecation_status
       class: BodyVelocity
@@ -102,3 +102,50 @@ entries:
       class: TextButton
       property: FontFace
     verified: 2026-07-02
+
+  - id: lighting-style-exists
+    claim: "Lighting.LightingStyle is the current artistic-intent property"
+    files:
+      - path: skills/roblox-lighting/SKILL.md
+      - path: skills/roblox-lighting/references/full.md
+    check:
+      type: property_exists
+      class: Lighting
+      property: LightingStyle
+    verified: 2026-07-12
+
+  - id: lighting-prioritize-quality-exists
+    claim: "Lighting.PrioritizeLightingQuality is the current quality-distance preference property"
+    files:
+      - path: skills/roblox-lighting/SKILL.md
+      - path: skills/roblox-lighting/references/full.md
+    check:
+      type: property_exists
+      class: Lighting
+      property: PrioritizeLightingQuality
+    verified: 2026-07-12
+
+  - id: lighting-technology-deprecated
+    claim: "Lighting.Technology is deprecated and superseded by LightingStyle and PrioritizeLightingQuality"
+    files:
+      - path: skills/roblox-lighting/SKILL.md
+      - path: skills/roblox-lighting/references/full.md
+    check:
+      type: property_deprecation_status
+      class: Lighting
+      property: Technology
+      expected: deprecated
+    verified: 2026-07-12
+
+  - id: ordered-datastore-key-string
+    claim: "GlobalDataStore:SetAsync takes a string key, including for OrderedDataStore usage"
+    files:
+      - path: skills/roblox-server-data/SKILL.md
+      - path: skills/roblox-server-data/references/full.md
+    check:
+      type: method_parameter_type
+      class: GlobalDataStore
+      method: SetAsync
+      parameter: key
+      expected: string
+    verified: 2026-07-12

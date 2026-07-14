@@ -7,7 +7,7 @@ Extended content from the original SKILL.md. See the slimmed SKILL.md for the qu
 
 ---
 
-## When to Use (Expanded)
+## When to Load (Expanded)
 
 Use this skill when the task is mainly about Roblox OAuth 2.0 delegated authorization for Open Cloud:
 
@@ -89,14 +89,7 @@ Do not use this skill when the task is mainly about:
 
 ## Using References
 
-- Open `references/oauth-overview.md` first for roles, grant type choice, and OIDC basics.
-- Open `references/oauth-registration.md` when the task is about Creator Dashboard setup, redirect URL rules, private mode limits, or app review.
-- Open `references/oauth-development-guide.md` when implementing PKCE, the authorization URL, callback handling, or token storage.
-- Open `references/oauth-reference.md` for exact OAuth endpoints, token lifetimes, token validation helpers, and discovery metadata.
-- Open `references/oauth-sample-app.md` for localhost setup, environment-variable patterns, and how the sample app wires the flow together.
-- Open `references/scopes-reference.md` when mapping app behavior to the minimum required scopes.
-- Open `references/risk-level-reference.md` when you need to reason about endpoint sensitivity before requesting powerful scopes.
-- Open `references/cloud-auth-related-error-guidance.md` when triaging OAuth and token-related failures against Open Cloud error patterns.
+This skill keeps its complete guidance in this `references/full.md` file. Use the official OAuth 2.0 overview listed in `SKILL.md` for current endpoint, scope, redirect, and app-registration details. Do not infer that topic-specific local reference files exist unless they are present in this skill directory.
 
 ## Checklist
 
@@ -142,6 +135,6 @@ Do not use this skill when the task is mainly about:
 
 ### Local development
 
-- Add `http://localhost:<port>/oauth/callback` as a redirect URL.
+- Register the exact callback URL your app serves, such as `http://localhost:<port>/redirect` for local testing.
 - Store client ID and secret in environment variables.
 - Test the full login, callback, token exchange, refresh, and logout or revoke path before requesting more scopes or review.

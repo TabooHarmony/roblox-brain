@@ -44,6 +44,13 @@ def extract_source_urls(content: str) -> list[str]:
     return urls
 
 
+def source_url_policy_error(url: str) -> str | None:
+    """Return a policy error for a reachable but disallowed source URL."""
+    if "github.com/" in url and not url.startswith("https://raw.githubusercontent.com/"):
+        return "GitHub source URLs must use raw.githubusercontent.com"
+    return None
+
+
 def check_url(url: str) -> tuple[str, str]:
     """HEAD request a URL, return (status, message)."""
     try:
@@ -88,6 +95,15 @@ def main() -> int:
             all_urls.append((entry, url))
 
     print(f"Checking {len(all_urls)} source URLs...\n")
+
+    policy_errors = [(skill, url, source_url_policy_error(url)) for skill, url in all_urls]
+    policy_errors = [(skill, url, error) for skill, url, error in policy_errors if error]
+    for skill_name, url, message in policy_errors:
+        print(f"  ❌ {skill_name}: {url}")
+        print(f"     {message}")
+    if policy_errors:
+        print("❌ Source URL policy violations detected")
+        return 1
 
     counts = {"pass": 0, "fail": 0, "error": 0}
     for skill_name, url in all_urls:

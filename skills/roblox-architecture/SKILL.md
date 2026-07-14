@@ -1,32 +1,28 @@
 ---
 name: roblox-architecture
 description: "Use when starting or refactoring a Roblox project, choosing service or module structure, or making client-server architecture decisions."
-last_reviewed: 2026-05-26
+last_reviewed: 2026-07-12
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/architecture-patterns.md
+  - https://create.roblox.com/docs/projects/data-model
+  - https://create.roblox.com/docs/projects/client-server
+  - https://create.roblox.com/docs/scripting/locations
+  - https://create.roblox.com/docs/scripting/security/access-control
+  - original
 ---
 
-# Roblox Game Architecture Reference
-
----
+# roblox architecture
 
 ## When to Load
 
-Load when starting a new project, organizing/refactoring an existing codebase, choosing module/folder structure, or making service-hierarchy decisions.
+Load when deciding where code and assets belong, introducing service or controller modules, or changing the client/server boundary.
 
 ## Quick Reference
 
-**Load Full Reference below only when you need specific folder layouts or framework comparisons.**
+- Put authoritative game rules in `ServerScriptService`; keep server-only templates and secrets in `ServerStorage`.
+- Put only genuinely shared modules, remotes, and public assets in `ReplicatedStorage`.
+- Treat `LocalScript` code and replicated contents as observable and modifiable by the player.
+- Give each module one owner and one clear contract. Use signals or a coordinator for cross-system communication instead of circular `require` calls.
+- Use one small bootstrap on each side, then initialize feature modules in an explicit order.
+- Keep UI and input controllers on the client. Keep rewards, inventory, combat outcomes, and persistence on the server.
 
-Key rules:
-- ServerScriptService: server logic (never visible to client)
-- ServerStorage: server-only assets/data
-- ReplicatedStorage: shared modules, RemoteEvents, assets both sides need
-- StarterPlayerScripts: client controllers (run once per player)
-- StarterGui: ScreenGuis (cloned to PlayerGui on spawn)
-- Script types: Script (server), LocalScript (client), ModuleScript (shared, returns one table)
-- Communication: RemoteEvent (fire-and-forget), RemoteFunction (request-response, avoid for client→server)
-- Module pattern: return a table of functions. One module = one responsibility.
-- Avoid circular requires. Use events/signals for cross-module communication.
-- Single entry point per side: one server Script requires service modules, one LocalScript requires controllers.
-**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
+**Need the details?** Load `references/full.md` for layouts, lifecycle code, and boundary checks.

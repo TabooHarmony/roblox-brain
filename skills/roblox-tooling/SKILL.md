@@ -1,49 +1,32 @@
 ---
 name: roblox-tooling
 description: "Use when configuring Roblox tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, or CI/CD."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-12
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/tooling-ecosystem.md
-  - https://rojo.space/docs
-  - https://wally.run
+  - https://rojo.space/docs/
+  - https://wally.run/
+  - https://kampfkarren.github.io/selene/
+  - https://raw.githubusercontent.com/JohnnyMorganz/StyLua/master/README.md
+  - https://lune-org.github.io/docs/
+  - https://raw.githubusercontent.com/LPGhatguy/aftman/main/README.md
+  - https://raw.githubusercontent.com/rojo-rbx/rokit/main/README.md
+  - https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/README.md
+  - original
 ---
+
+# roblox tooling
 
 ## When to Load
 
-Load when the task involves Rojo setup or `default.project.json`, Wally package management, Selene/StyLua linting/formatting, Lune scripting, Aftman toolchain config, CI/CD pipelines, or `.server.luau`/`.client.luau` file naming. Hand off to domain skills for game code or `roblox-luau-core` for language questions.
+Load when setting up a filesystem workflow, pinning tools, adding packages, configuring lint or format checks, generating a sourcemap, or building CI for a Roblox project.
 
 ## Quick Reference
 
-**Aftman** (toolchain pinning): `aftman.toml` — all tools installed via `aftman install`.
-```
-[tools]
-rojo = "rojo-rbx/rojo@7.7.0"
-wally = "UpliftGames/wally@0.3.2"
-selene = "kampfkarren/selene@0.31.0"
-stylua = "JohnnyMorganz/StyLua@2.5.2"
-lune = "lune-org/lune@0.10.5"
-```
+- Use Rojo when the source of truth should live in files and sync or build into Studio.
+- Use Wally only when the project wants package manifests and a lockfile; keep package scope and server/client placement explicit.
+- Pin tools with Aftman only when maintaining an existing Aftman project. Aftman is archived; for a new project, evaluate a maintained manager such as Rokit.
+- Run Selene and StyLua in check mode in CI. Do not let a formatter rewrite a contributor's branch silently.
+- Use Lune for standalone Luau scripts or test helpers when its standard libraries fit the task.
+- Generate a Rojo sourcemap for editor tooling when the project needs Roblox-aware navigation.
 
-**Rojo** (filesystem → Studio): `default.project.json` maps dirs to services.
-- File suffixes: `.server.luau` (Script), `.client.luau` (LocalScript), `.luau` (ModuleScript), `init.luau` (folder-as-ModuleScript)
-- Commands: `rojo serve` (live sync), `rojo build -o game.rbxl`, `rojo sourcemap ... -o sourcemap.json`
-
-**Wally** (package manager): `wally.toml` with realms `shared`/`server`/`dev`.
-- `wally install` → `/Packages/` (never commit this dir; do commit `wally.lock`)
-- Format: `scope/package@version` e.g. `evaera/promise@4.0.0`
-
-**Selene** (linter): Needs `std = "roblox"` in `selene.toml`.
-- `selene src/` (lint), `--no-color` for CI, `-- selene: allow(rule)` inline
-
-**StyLua** (formatter): `stylua.toml` — enforce style across team.
-- `stylua src/` (format), `--check src/` (CI verify), `-- stylua: ignore` inline
-
-**Lune** (headless Luau): `lune run script.luau` — built-ins: `@lune/fs`, `@lune/net`, `@lune/process`, `@lune/serde`
-
-**luau-lsp**: Generate sourcemap for IntelliSense. VS Code: enable `luau-lsp.sourcemap.autogenerate`.
-
-**CI pipeline**: Aftman install → selene → stylua --check → luau-lsp analyze → lune test → rojo build.
-
-**Gitignore essentials**: `/Packages/`, `*.rbxl`, `sourcemap.json`, `/.aftman/`, `/build/`
-
-**Full reference**: `references/full.md`
+**Need the details?** Load `references/full.md` for setup, file layout, and CI examples.

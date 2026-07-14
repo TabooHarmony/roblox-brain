@@ -29,32 +29,44 @@ end
 
 --- Flush all accumulated events to AnalyticsService.
 function EventBatcher:flush()
+    local remaining: { [Player]: { [string]: number } } = {}
+
     for player, events in batches do
         if not player:IsDescendantOf(Players) then
-            batches[player] = nil
             continue
         end
+
+        local pending: { [string]: number } = {}
         for eventName, value in events do
             local success, err = pcall(function()
                 AnalyticsService:LogCustomEvent(player, eventName, value)
             end)
             if not success then
                 warn(`[EventBatcher] Failed to log {eventName}: {err}`)
+                pending[eventName] = value
             end
         end
+
+        if next(pending) ~= nil then
+            remaining[player] = pending
+        end
     end
-    batches = {}
+
+    batches = remaining
 end
 
---- Flush a single player's events (call on PlayerRemoving).
+--- Flush a single player's events (call on PlayerRemoving). The player cannot be retried after removal, so surface failures before dropping this best-effort batch.
 function EventBatcher:flushPlayer(player: Player)
     local events = batches[player]
     if not events then return end
 
     for eventName, value in events do
-        pcall(function()
+        local success, err = pcall(function()
             AnalyticsService:LogCustomEvent(player, eventName, value)
         end)
+        if not success then
+            warn(`[EventBatcher] Dropping {eventName} for leaving player: {err}`)
+        end
     end
     batches[player] = nil
 end

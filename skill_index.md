@@ -17,7 +17,7 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 | Skill | Description |
 |-------|-------------|
 | `roblox-economy` | Use when designing Roblox currencies, rewards, faucets, sinks, trading, marketplaces, or inflation controls. |
-| `roblox-monetization` | Use when implementing Roblox GamePasses, Developer Products, Premium payouts, purchase reconciliation, or monetization policy checks. |
+| `roblox-monetization` | Use when implementing Roblox GamePasses, Developer Products, subscriptions, private servers, Creator Rewards, or purchase policy checks. |
 
 ## Systems & Networking
 
@@ -25,7 +25,7 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 |-------|-------------|
 | `roblox-networking` | Use when validating RemoteEvent or RemoteFunction arguments, adding rate limits, designing server-authoritative systems, or preventing exploits. |
 | `roblox-security` | Use when auditing Roblox code for exploit vectors or hardening movement, remotes, economy, and DataStore flows. |
-| `roblox-data` | Use when implementing player data persistence with DataStore or ProfileStore, session locking, schemas, migrations, or save and load flows. |
+| `roblox-data` | Use when implementing player data persistence with DataStore, session ownership, schemas, migrations, or save and load flows. |
 | `roblox-server-data` | Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds. |
 | `roblox-analytics` | Use when tracking player behavior, economy events, or funnels with AnalyticsService, including event taxonomy, rate limits, and batching. |
 | `roblox-npc-ai` | Use when creating Roblox NPCs or enemies with pathfinding, state machines, line-of-sight or FOV detection, spawns, or AI update loops. |
@@ -40,11 +40,12 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 
 | Skill | Description |
 |-------|-------------|
-| `roblox-building` | Use when building Roblox geometry or maps with MCP or scripts, including CSG, spatial coordination, scale, and platform quirks. |
+| `roblox-building` | Use when building Roblox geometry, maps, props, or generated assets with MCP or standalone Luau. |
 | `roblox-physics` | Use when building Roblox vehicles, ragdolls, projectiles, elevators, constraints, forces, or other physics-driven gameplay. |
 | `roblox-gui` | Use when building Roblox menus, HUDs, shops, notifications, dialogs, or responsive cross-platform UI. |
+| `roblox-ui-design` | Roblox UI design with simulator default and existing-style inheritance. Use with `roblox-gui`. |
 | `roblox-animation-vfx` | Use when implementing Roblox character animations, particles, beams, trails, tweens, camera shake, or other visual effects. |
-| `roblox-lighting` | Use when configuring Roblox lighting, Atmosphere, time-of-day cycles, or post-processing effects. |
+| `roblox-lighting` | Use for Roblox lighting, atmosphere, day/night, or post-processing effects. |
 | `roblox-audio` | Use when implementing Roblox audio playback, spatial sound, music, sound effects, SoundGroups, or dynamic audio effects. |
 | `roblox-input` | Use when handling Roblox keyboard, mouse, gamepad, touch, motion input, or cross-platform action binding. |
 | `roblox-camera` | Use when scripting Roblox camera behavior, CFrame placement, screen raycasts, first or third-person views, or cutscenes. |
@@ -53,7 +54,7 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 
 | Skill | Description |
 |-------|-------------|
-| `roblox-studio-mcp` | Use when working with Roblox Studio through built-in MCP for scripts, data-model inspection, Luau, assets, input, or playtesting. |
+| `roblox-studio-mcp` | Use when working with Roblox Studio through built-in MCP for scripts, scenes, generated assets, input, or playtesting. |
 | `roblox-cloud` | Use when working with Roblox Open Cloud REST APIs, API keys, webhooks, or HttpService calls to cloud endpoints. |
 | `roblox-oauth` | Use when implementing Roblox OAuth 2.0 for Open Cloud, including app registration, PKCE, token exchange, refresh, revocation, or scopes. |
 

@@ -1,17 +1,9 @@
----
-name: roblox-luau-patterns
-description: >
-  Luau architectural patterns: OOP with metatables, inheritance, async (promises,
-  coroutines, pcall), module structure, service pattern, and Roblox-specific idioms.
-last_reviewed: 2026-05-27
----
-
 # Luau Patterns & Architecture
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
-## When to Use
+## When to Load
 
 Load this skill when the task involves:
 
@@ -33,7 +25,7 @@ Load this skill when the task involves:
 
 - Use metatable OOP when you need multiple instances with shared behavior
 - Use module singletons (flat table with functions) for services that exist once
-- Use Promises for async chains with error propagation; use raw pcall for one-shot fallible calls
+- Use a Promise library for async chains when the project already has one; otherwise use `task` and explicit error handling.
 - Prefer `task.*` over deprecated globals (`wait`, `spawn`, `delay`) unconditionally
 - Set `Instance.Parent` last after configuring all properties
 - Clean up connections and instances when no longer needed (memory leaks are silent killers)
@@ -50,17 +42,22 @@ Roblox games are long-running, stateful applications. Patterns should optimize f
 
 ### Recommended Libraries
 
-These open-source libraries are commonly used in production Roblox games. Install via Wally, Pesde, or manually:
+These open-source libraries are common options, not requirements. If the project already has an equivalent or uses different conventions, follow the existing patterns. Prefer vanilla `task`, `pcall`, `RBXScriptConnection`, `RemoteEvent`, and explicit tables when adding a dependency would not pay for itself.
 
-- **Promise** (evaera/roblox-lua-promise) — async control flow, retry, chaining. Use instead of raw coroutines.
-- **Trove** (Sleitnick/RbxUtil) — cleanup/lifecycle management. Use instead of manually tracking connections.
-- **Signal** (Sleitnick/RbxUtil) — typed custom signals. Use instead of BindableEvent for module-to-module communication.
-- **Comm** (Sleitnick/RbxUtil) — typed client-server remotes. Use instead of raw RemoteEvent/RemoteFunction.
+- **Promise** (evaera/roblox-lua-promise) — async control flow, retry, chaining.
+- **Trove** ([Sleitnick/RbxUtil](https://github.com/Sleitnick/RbxUtil)) — cleanup/lifecycle management.
+- **Signal** (Sleitnick/RbxUtil) — typed custom signals.
+- **Comm** (Sleitnick/RbxUtil) — typed client-server remotes and middleware.
+- **TypedRemote** (Sleitnick/RbxUtil) — typed RemoteEvent, RemoteFunction, and UnreliableRemoteEvent builders.
 - **Component** (Sleitnick/RbxUtil) — CollectionService tag binding with lifecycle.
-- **ProfileStore** (loleris/MadStudioRoblox) — session-locked DataStore with retry. Use instead of raw DataStoreService.
-- **t** (osyrisrblx/t) — runtime type checking for RemoteEvent validation, function arguments, DataStore schemas.
+- **Concur** (Sleitnick/RbxUtil) — cancellable concurrent task handling.
+- **BufferUtil** (Sleitnick/RbxUtil) — buffer-oriented serialization helpers.
+- **ProfileStore** (loleris/MadStudioRoblox) — session-locked DataStore with retry.
+- **t** (osyrisrblx/t) — runtime type checking for remote validation and schemas.
 
-The AI will recommend these when relevant. If the project already has equivalents or uses different libraries, follow the existing patterns.
+RbxUtil is a useful maintained specimen because its repository includes tests, CI, generated API docs, and small modules that can be adopted independently. Do not import the whole collection by default. Read the module's current API and use only the piece that pays for its dependency and learning cost.
+
+Do not treat archived frameworks as current defaults. Knit and Warp are useful historical references only; Jolt is a newer networking specimen that explicitly needs more testing. Prefer vanilla Luau and Roblox APIs when the project does not need a framework.
 
 ---
 
@@ -579,7 +576,7 @@ end
 
 ### Promise Pattern (roblox-lua-promise)
 
-The `Promise` library is the community-standard for async control flow in Roblox. It must be installed as a module (e.g., via Wally or manually).
+A Promise library is a common option for async control flow in Roblox. If your project uses one, install it as a module (for example via Wally or manually); otherwise use native `task`/`pcall` patterns.
 
 ```luau
 local Promise = require(ReplicatedStorage.Packages.Promise)

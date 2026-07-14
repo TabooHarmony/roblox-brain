@@ -73,6 +73,20 @@ def expected_bool(expected: str) -> bool:
     raise ValueError(f"unsupported expected value: {expected}")
 
 
+def validate_file_paths(entry: dict[str, Any]) -> list[str]:
+    """Validate repository paths attached to a registry claim."""
+    missing = []
+    for file_ref in entry.get("files") or []:
+        relative = str(file_ref.get("path", "")).strip()
+        if not relative:
+            missing.append("missing path")
+            continue
+        path = ROOT / relative
+        if not path.is_file():
+            missing.append(relative)
+    return missing
+
+
 def verify(entry: dict[str, Any]) -> tuple[str, str]:
     check = entry["check"]
     check_type = check["type"]
@@ -85,6 +99,43 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
         if prop:
             return "pass", f"{class_name}.{prop_name} exists"
         return "fail", f"{class_name}.{prop_name} missing"
+
+    if check_type == "property_deprecation_status":
+        class_name = check["class"]
+        prop_name = check["property"]
+        doc = fetch_doc("classes", class_name)
+        prop = find_named(doc.get("properties") or [], f"{class_name}.{prop_name}")
+        if not prop:
+            return "fail", f"{class_name}.{prop_name} missing"
+        deprecated = nonempty(prop.get("deprecation_message")) or "Deprecated" in (prop.get("tags") or [])
+        expected = expected_bool(check["expected"])
+        if deprecated == expected:
+            return "pass", f"{class_name}.{prop_name} deprecated={deprecated}"
+        return "fail", f"{class_name}.{prop_name} deprecated={deprecated}, expected {expected}"
+
+    if check_type == "method_parameter_type":
+        class_name = check["class"]
+        method_name = check["method"]
+        parameter_name = check["parameter"]
+        expected_type = check["expected"]
+        doc = fetch_doc("classes", class_name)
+        method = next(
+            (
+                item
+                for item in doc.get("methods") or []
+                if item.get("name") in {f"{class_name}:{method_name}", f"{class_name}.{method_name}"}
+            ),
+            None,
+        )
+        if not method:
+            return "fail", f"{class_name}:{method_name} missing"
+        parameter = next((p for p in method.get("parameters") or [] if p.get("name") == parameter_name), None)
+        if not parameter:
+            return "fail", f"{class_name}:{method_name} parameter {parameter_name} missing"
+        actual_type = parameter.get("type")
+        if actual_type == expected_type:
+            return "pass", f"{class_name}:{method_name}.{parameter_name} type={actual_type}"
+        return "fail", f"{class_name}:{method_name}.{parameter_name} type={actual_type}, expected {expected_type}"
 
     if check_type == "class_deprecation_status":
         class_name = check["class"]
@@ -154,7 +205,12 @@ def main() -> int:
     counts = {"pass": 0, "fail": 0, "error": 0}
     for entry in entries:
         try:
-            status, message = verify(entry)
+            missing_paths = validate_file_paths(entry)
+            if missing_paths:
+                status = "error"
+                message = "missing repository path(s): " + ", ".join(missing_paths)
+            else:
+                status, message = verify(entry)
         except Exception as exc:  # noqa: BLE001, surface exact failing entry
             status, message = "error", str(exc)
         counts[status] += 1

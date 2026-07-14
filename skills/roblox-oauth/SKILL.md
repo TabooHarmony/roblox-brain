@@ -1,7 +1,7 @@
 ---
 name: roblox-oauth
 description: "Use when implementing Roblox OAuth 2.0 for Open Cloud, including app registration, PKCE, token exchange, refresh, revocation, or scopes."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-12
 sources:
   - https://create.roblox.com/docs/cloud/auth/oauth2-overview
 ---

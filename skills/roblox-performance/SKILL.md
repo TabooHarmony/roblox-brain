@@ -1,9 +1,11 @@
 ---
 name: roblox-performance
 description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems, including MicroProfiler and optimization."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-13
 sources:
   - https://create.roblox.com/docs/performance-optimization
+  - https://devforum.roblox.com/t/full-release-of-parallel-luau-v1/1836187
+  - https://devforum.roblox.com/t/best-uses-of-parallel-luau/3530516
 ---
 
 # Roblox Performance
@@ -33,6 +35,11 @@ Use when profiling, diagnosing lag, optimizing hot paths, or setting performance
 - **Spatial partitioning** — Distance-based activation instead of checking all entities
 - **Lazy loading** — Stream content from ServerStorage as player approaches
 
+### Parallel Luau
+- Use Actors only after profiling identifies isolatable CPU work.
+- Workers compute; synchronize before restricted DataModel writes.
+- SharedTable and mutexes add coordination cost; they do not replace ownership boundaries.
+
 ### Object Pooling
 ```luau
 -- Core pattern: pre-clone, reuse, avoid GC pressure
@@ -55,4 +62,6 @@ end
 ### Mobile Quick Wins
 - Keep < 5000 visible parts. Textures max 512x512. Cap particles at 50 emitters.
 - Use CanvasGroup for UI batching. Consider disabling GlobalShadows.
+
+**MCP verification:** collect a baseline and inspect runtime counters after changes.
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

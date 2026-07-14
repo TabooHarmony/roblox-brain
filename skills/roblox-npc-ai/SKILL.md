@@ -1,10 +1,10 @@
 ---
 name: roblox-npc-ai
 description: "Use when creating Roblox NPCs or enemies with pathfinding, state machines, line-of-sight or FOV detection, spawns, or AI update loops."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-13
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
-  - https://github.com/Echolewron/rbx-enemy-ai
+  - https://devforum.roblox.com/t/improving-pathfinding-quality-with-new-algorithm/3258657
 ---
 
 # Roblox NPC & AI
@@ -31,7 +31,9 @@ for _, wp in path:GetWaypoints() do
 end
 ```
 
-- Connect `path.Blocked` to recompute when world changes
+- Recompute on blocked.
+- Test the improved search algorithm in a test place before enabling `Workspace.PathfindingUseImprovedSearch` in production.
+- Avoid long path requests and repeated recomputation. Moving collidable geometry can trigger navigation-mesh work.
 - Region modifiers: Anchored part + `PathfindingModifier` with Label → Costs
 - `PassThrough = true` for doors; `PathfindingLink` for disconnected navmesh
 - `math.huge` cost = non-traversable
@@ -56,14 +58,8 @@ end
 - Clone → `PivotTo` → parent; `task.delay(3, Destroy)` for death anim
 - Wave: `{enemies={{template, count}}, spawnDelay, waveDelay}`
 
-### Network Ownership — MUST DO
-
-```luau
-for _, part in model:GetDescendants() do
-    if part:IsA("BasePart") then part:SetNetworkOwner(nil) end
-end
-```
-Without this, exploiters fling NPCs. Server = safe but 30Hz tick.
+### Network Ownership
+- `SetNetworkOwner(nil)` can suit physics-sensitive NPCs, but it is not complete security.
 
 ### Update Loop
 
@@ -75,7 +71,7 @@ Without this, exploiters fling NPCs. Server = safe but 30Hz tick.
 - No `path.Blocked` handler → stale paths
 - No `ComputeAsync` fallback → frozen NPCs
 - `MoveTo` 8-sec timeout; handle `reached = false`
-- Forget `SetNetworkOwner(nil)` → exploiters fling NPCs
+- `SetNetworkOwner(nil)` is a physics-authority decision, not complete security
 - Dead corpses not destroyed → memory leak
-- 50 NPCs pathfinding same frame → server lag spike
+- 50 NPCs pathfinding same frame → server lag
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

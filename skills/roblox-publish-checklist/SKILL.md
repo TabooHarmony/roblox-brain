@@ -1,8 +1,11 @@
 ---
 name: roblox-publish-checklist
 description: "Use before publishing or updating a Roblox game to check data, security, performance, monetization, mobile, metadata, social, and analytics."
-last_reviewed: 2026-05-27
-sources: [original]
+last_reviewed: 2026-07-13
+sources:
+  - https://create.roblox.com/docs/creator-rewards
+  - https://create.roblox.com/docs/production/monetization/developer-products
+  - https://devforum.roblox.com/t/creator-rewards-is-live/3838257
 ---
 
 ## When to Load
@@ -21,7 +24,7 @@ All remotes validated server-side (types, ranges, ownership) ✓ · No secrets i
 Mobile tested ✓ · Part count reasonable ✓ · No memory leaks (events disconnected) ✓ · MicroProfiler: no scripts >1ms/frame ✓ · StreamingEnabled if large map ✓ · Signal cleanup ✓
 
 ### 4. Monetization
-GamePasses idempotent on rejoin ✓ · DevProducts deliver correctly ✓ · Premium payout configured ✓ · Prices competitive ✓ · No pay-to-win ✓
+GamePasses idempotent on rejoin ✓ · DevProducts deliver correctly ✓ · Creator Rewards decision and eligibility reviewed if relevant ✓ · Prices competitive ✓ · No pay-to-win ✓
 
 ### 5. Mobile
 Touch controls work ✓ · UI uses Scale not Offset ✓ · ContextActionService ✓ · Small screen tested ✓ · Orientation handled ✓ · Low-end device tested ✓
@@ -40,5 +43,7 @@ Events: join/leave, purchases, completions, session length, errors ✓ · Funnel
 
 ### Output Format
 1. READY / NOT READY  2. Critical blockers  3. Warnings  4. Pass count/%  5. Failed items + fixes
+
+When Studio MCP is available, attach evidence for each claimed pass: inspection/readback, runtime console, screenshot, or an explicit unavailable-capability note.
 
 📖 Full reference: `references/full.md`

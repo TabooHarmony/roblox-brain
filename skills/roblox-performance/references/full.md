@@ -44,6 +44,31 @@ Per-frame breakdown of time spent in scripts, physics, rendering. The primary to
 - Per-script CPU usage and heap allocations
 - Identifies which scripts are hot
 
+## Parallel Luau
+
+Parallel Luau is a worker model, not a switch that makes an existing script faster. An `Actor` provides an isolation boundary for scripts that can run concurrently. The useful shape is usually:
+
+1. the serial coordinator gathers small, immutable inputs;
+2. workers perform expensive math, visibility tests, or simulation calculations;
+3. workers return raw results;
+4. the coordinator synchronizes and applies Roblox instance changes.
+
+```luau
+local bindable = script.Parent:WaitForChild("Work")
+
+bindable.Event:ConnectParallel(function(input)
+    local result = expensivePureCalculation(input)
+
+    -- DataModel writes and other restricted operations belong back in serial.
+    task.synchronize()
+    script.Parent.Result.Value = result
+end)
+```
+
+The code above is illustrative. Keep the parallel section free of instance writes unless the current API explicitly permits the operation. Avoid moving a large mutable object graph between the coordinator and workers. Actor setup, synchronization, and contention can cost more than the work being offloaded.
+
+The practical rule is: profile first, isolate a pure or read-heavy calculation, compare against the serial version, and keep the parallel path only if the MicroProfiler shows a real win on target hardware.
+
 ## Common Performance Issues
 
 ### Scripts

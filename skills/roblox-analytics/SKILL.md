@@ -1,9 +1,11 @@
 ---
 name: roblox-analytics
 description: "Use when tracking player behavior, economy events, or funnels with AnalyticsService, including event taxonomy, rate limits, and batching."
-last_reviewed: 2026-05-24
+last_reviewed: 2026-07-13
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/AnalyticsService
+  - https://create.roblox.com/docs/creator-rewards
+  - https://devforum.roblox.com/t/creator-rewards-is-live/3838257
 ---
 
 # Roblox Analytics Reference
@@ -27,6 +29,7 @@ Key rules:
 - Funnel events must fire steps in order. Skipped steps break the funnel.
 - Events appear on Creator Hub dashboard after ~24 hours. Use "View Events" for real-time validation.
 - Server-side logging preferred for accuracy. Client-side only for UI interaction tracking.
+- Creator Rewards has no AnalyticsService grant event. Use analytics for leading indicators such as session duration, onboarding, and referral-flow milestones; use Creator Dashboard for reward attribution and payout data.
 
 ---
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

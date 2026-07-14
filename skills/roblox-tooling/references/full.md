@@ -1,47 +1,80 @@
-# Roblox Tooling Ecosystem — Full Reference
+# roblox tooling: full reference
 
+Tooling should make the source tree reproducible without forcing every project into the same framework. Keep the repository's chosen tools visible in its manifest and CI.
 
-> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+## 1. Decide what the project needs
 
-## Decision Rules
+| Need | Useful tool | Keep in mind |
+| --- | --- | --- |
+| file-to-Studio sync or build | Rojo | define the data-model mapping in a project file |
+| third-party packages | Wally | commit the manifest and lockfile; choose realms intentionally |
+| Luau linting | Selene | configure the Roblox standard and project exceptions |
+| formatting | StyLua | pin the formatter and run a check in CI |
+| standalone scripts | Lune | use only where its runtime libraries are appropriate |
+| tool versions | Aftman or an existing manager | one source of truth for versions |
+| editor navigation | luau-lsp plus a sourcemap | regenerate the map when the tree changes |
 
-- Use Rojo for any project with more than a few scripts; Studio-only development has no version history
-- Use Wally for dependencies; never commit `/Packages/` to Git
-- Use `aftman.toml` to pin tool versions across the team
-- Run Selene + StyLua in CI to enforce code quality automatically
-- Generate sourcemaps for luau-lsp to provide accurate IntelliSense
-- Always commit `wally.lock` for reproducible installs
+If the project already has a working toolchain, extend it before introducing another manager.
 
-## Philosophy
+## 2. Rojo project mapping
 
-The modern Roblox dev stack moves code from Studio to the filesystem. This enables:
+A Rojo project file maps filesystem paths to Roblox services. Keep the mapping small and obvious.
 
-1. **Version control.** Git tracks every change. Rollbacks, branches, PRs all work.
-2. **Collaboration.** Multiple developers can work on the same project with standard merge workflows.
-3. **Automation.** Linting, formatting, type checking, and testing run in CI.
-4. **Reproducibility.** `aftman.toml` + `wally.lock` = identical toolchain for everyone.
+```json
+{
+  "name": "ExampleGame",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$path": "src/ReplicatedStorage"
+    },
+    "ServerScriptService": {
+      "$path": "src/ServerScriptService"
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    }
+  }
+}
+```
 
-Studio becomes a visual editor and playtester. Code lives on disk.
+File suffixes communicate the Roblox instance type in the usual Rojo workflow:
 
----
+- `.server.luau` maps to a server `Script`;
+- `.client.luau` maps to a client `LocalScript`;
+- `.luau` maps to a `ModuleScript`;
+- `init.luau` can represent a module at a folder boundary.
 
-## Core Toolchain
+Use the exact conventions documented by the project's Rojo version. Test both `rojo serve` for development and `rojo build` for a reproducible artifact.
 
-Managed via [Aftman](https://github.com/nicbarker/aftman) (toolchain manager):
+## 3. Packages with Wally
 
-| Tool | Purpose | Install |
-|------|---------|---------|
-| [Rojo](https://rojo.space) | Syncs filesystem code to Roblox Studio | `aftman install` |
-| [Wally](https://wally.run) | Package manager for Luau libraries | `aftman install` |
-| [Selene](https://kampfkarren.github.io/selene/) | Static analysis and linting | `aftman install` |
-| [StyLua](https://github.com/JohnnyMorganz/StyLua) | Opinionated code formatter | `aftman install` |
-| [Lune](https://github.com/lune-org/lune) | Standalone Luau runtime for scripts/CI | `aftman install` |
-| [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) | Language server for editor IntelliSense | binary download |
-
-### Aftman Configuration
+A package manifest should state whether a dependency is shared, server-only, client-only, or development-only. Keep the lockfile under version control so CI resolves the same graph.
 
 ```toml
-# aftman.toml
+[package]
+name = "team/example-game"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+Promise = "evaera/promise@4.0.0"
+
+[dev-dependencies]
+TestEZ = "roblox/testez@0.4.2"
+```
+
+The names and versions above are examples, not recommendations. Verify package ownership, license, compatibility, and the project's existing conventions before adding a dependency. Do not copy a package into the repository just to avoid documenting it.
+
+## 4. Pin the toolchain
+
+Aftman is archived and should be treated as legacy compatibility. If an existing repository already uses `aftman.toml`, keep its versions pinned and avoid an unrelated migration during feature work. For a new project, evaluate a maintained manager such as Rokit or another toolchain that the team can support.
+
+An existing Aftman manifest can look like this:
+```toml
 [tools]
 rojo = "rojo-rbx/rojo@7.7.0"
 wally = "UpliftGames/wally@0.3.2"
@@ -50,355 +83,93 @@ stylua = "JohnnyMorganz/StyLua@2.5.2"
 lune = "lune-org/lune@0.10.5"
 ```
 
----
+Use versions tested by the repository. Update them deliberately, review generated lockfile changes, and record compatibility failures rather than silently floating to the newest release.
 
-## Rojo: Filesystem Sync
+## 5. Selene
 
-Rojo maps local directories to Roblox services using a `default.project.json` file.
-
-### File Naming Conventions
-
-Rojo determines the Roblox class based on file suffixes:
-
-| Suffix | Roblox Class | Example |
-|--------|--------------|---------|
-| `*.server.luau` | Script (server) | `Game.server.luau` |
-| `*.client.luau` | LocalScript (client) | `Input.client.luau` |
-| `*.luau` | ModuleScript | `Utils.luau` |
-| `init.luau` | Folder becomes ModuleScript | `Combat/init.luau` |
-| `*.model.json` | Rojo model file | `Tree.model.json` |
-
-### Project File
-
-```json
-{
-  "name": "MyGame",
-  "tree": {
-    "$path": "src",
-    "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
-      "Shared": {
-        "$path": "shared"
-      }
-    },
-    "ServerScriptService": {
-      "$className": "ServerScriptService",
-      "$path": "server"
-    },
-    "StarterPlayer": {
-      "StarterPlayerScripts": {
-        "$className": "StarterPlayerScripts",
-        "$path": "client"
-      }
-    }
-  }
-}
-```
-
-### Key Commands
-
-```bash
-rojo serve                            # Start live sync server
-rojo build -o game.rbxl              # Build binary place file
-rojo sourcemap default.project.json -o sourcemap.json  # For LSP support
-```
-
----
-
-## Wally: Package Management
-
-Wally manages Luau library dependencies using **realms** to determine where code is accessible.
-
-### Realms
-
-| Realm | Destination | Use for |
-|-------|-------------|---------|
-| `shared` | ReplicatedStorage | Code used by both server and client |
-| `server` | ServerScriptService | Server-only libraries |
-| `dev` | Dev dependencies | Testing frameworks, linters |
-
-### Configuration
+Configure the Roblox standard and keep suppressions narrow.
 
 ```toml
-# wally.toml
-[package]
-name = "my-game"
-version = "0.1.0"
-registry = "https://github.com/UpliftGames/wally-index"
-realm = "shared"
-
-[dependencies]
-Promise = "evaera/promise@4.0.0"
-ProfileService = "loleris/profileservice@1.4.2"
-Trove = "sleitnick/trove@0.5.1"
-Signal = "sleitnick/signal@1.2.1"
-
-[dev-dependencies]
-TestEZ = "roblox/testez@0.4.2"
-```
-
-### Popular Packages
-
-| Package | Purpose |
-|---------|---------|
-| `evaera/promise` | Async control flow with Promises |
-| `sleitnick/knit` | Legacy framework, for existing projects only |
-| `loleris/profileservice` | DataStore wrapper with session locking |
-| `sleitnick/trove` | Cleanup/lifecycle management |
-| `sleitnick/signal` | Typed custom signals |
-| `sleitnick/comm` | Typed client-server remotes |
-| `roblox/testez` | BDD-style testing framework |
-
----
-
-## Selene: Linter
-
-Catches bugs and style issues. Requires `std = "roblox"` in config to recognize Roblox globals.
-
-### Configuration
-
-```toml
-# selene.toml
 std = "roblox"
 
 [rules]
 unused_variable = "warn"
 shadowing = "warn"
-incorrect_standard_library_use = "error"
+
+[config]
+allow_defined_top = true
 ```
 
-### Commands
+Run `selene src` locally and in CI. Prefer a named configuration or a small inline suppression with a reason over disabling a rule for the whole project.
 
-```bash
-selene src/                    # Lint all source files
-selene --no-color src/         # Lint without color (for CI)
-```
+## 6. StyLua
 
-### Inline Suppression
-
-```luau
--- selene: allow(unused_variable)
-local _unused = computeSomething()
-```
-
----
-
-## StyLua: Formatter
-
-Ensures consistent code style across the team.
-
-### Configuration
+Formatting is a repository convention. Keep the configuration short and run the formatter in check mode in automation.
 
 ```toml
-# stylua.toml
-column_width = 120
-line_endings = "Unix"
+column_width = 100
 indent_type = "Spaces"
 indent_width = 4
 quote_style = "AutoPreferDouble"
 call_parentheses = "Always"
 ```
 
-### Commands
+Use `stylua --check .` in CI and `stylua .` only as an explicit developer action. Do not mix formatter changes with a gameplay change unless the repository expects format-on-save commits.
 
-```bash
-stylua src/                    # Format all source files
-stylua --check src/            # Check formatting (for CI, exits 1 if not formatted)
-```
+## 7. Lune and standalone scripts
 
-### Inline Ignore
-
-```luau
--- stylua: ignore
-local x = {a=1,b=2,c=3}
-```
-
----
-
-## luau-lsp: Editor IntelliSense
-
-Provides type checking, autocompletion, and diagnostics in editors.
-
-### Sourcemap Generation
-
-luau-lsp needs a sourcemap to understand the Roblox instance hierarchy:
-
-```bash
-rojo sourcemap default.project.json -o sourcemap.json
-```
-
-### VS Code Setup
-
-Install the `luau-lsp` extension. In `.vscode/settings.json`:
-
-```json
-{
-  "luau-lsp.sourcemap.enabled": true,
-  "luau-lsp.sourcemap.autogenerate": true,
-  "luau-lsp.sourcemap.rojoProjectFile": "default.project.json",
-  "luau-lsp.fflags.enableByDefault": true
-}
-```
-
-### Roblox Studio Companion Plugin
-
-Optional: the [Luau Language Server Companion](https://www.roblox.com/library/10913122509) sends the Studio DataModel to the language server for non-Rojo projects.
-
----
-
-## Lune: Standalone Luau Runtime
-
-Runs Luau scripts outside Studio for automation, CI, and tooling.
-
-### Built-in Libraries
+Lune is useful for file transforms, test orchestration, and small repository utilities. Keep Roblox-only code out of scripts that must run without Studio.
 
 ```luau
 local fs = require("@lune/fs")
-local net = require("@lune/net")
-local process = require("@lune/process")
 local serde = require("@lune/serde")
+
+local manifest = serde.decode("json", fs.readFile("manifest.json"))
+print(manifest.name)
 ```
 
-### Example: Simple Test Runner
+A Lune script is not automatically a Roblox runtime script. Document which APIs it expects and make its inputs and outputs testable from CI.
 
-```luau
--- run-tests.luau
-local function runTest(name, testFn)
-    local success, err = pcall(testFn)
-    if success then
-        print("PASS: " .. name)
-    else
-        warn("FAIL: " .. name .. ": " .. err)
-    end
-end
+## 8. Sourcemaps and editor support
 
-runTest("addition", function()
-    assert(1 + 1 == 2)
-end)
-```
+If the editor needs Roblox-aware type information, generate a sourcemap from the same Rojo project file used for development. Treat the generated map as disposable build output unless the repository explicitly versions it.
 
----
+Regenerate it after adding services, moving modules, or changing suffixes. A stale map can make correct code look broken and can hide incorrect paths.
 
-## .gitignore Essentials
+## 9. CI sequence
 
-Never commit these:
+A small pipeline can use this order:
+
+1. install the pinned tools;
+2. restore or install Wally dependencies;
+3. run Selene;
+4. run StyLua in check mode;
+5. generate a sourcemap if luau-lsp analysis is enabled;
+6. run standalone Lune tests or project tests;
+7. run `rojo build` and inspect the artifact boundary.
+
+Keep credentials out of project files and CI logs. If a build needs a Roblox API credential, inject it through the CI secret store and use the narrowest scope available.
+
+## 10. Ignore generated output
+
+The exact list depends on the project, but commonly generated paths include:
 
 ```gitignore
-# Build artifacts
-*.rbxl
-*.rbxlx
-
-# Wally packages (install, don't commit)
 /Packages/
-
-# Sourcemap (regenerated)
-sourcemap.json
-
-# Aftman binaries
 /.aftman/
-
-# Rojo build output
 /build/
+sourcemap.json
+*.rbxl
 ```
 
----
+Do not ignore source, lockfiles, configuration, or test fixtures by accident. Check `git status` after installing tools and packages.
 
-## CI/CD Pipeline
+## Tooling checklist
 
-A standard GitHub Actions pipeline should:
-
-1. **Lint** with Selene
-2. **Format check** with StyLua
-3. **Type check** with `luau-lsp analyze`
-4. **Test** with Lune or TestEZ
-5. **Build** a `.rbxl` artifact
-
-```yaml
-name: CI
-on: [push, pull_request]
-
-jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Aftman
-        run: |
-          curl -LsSf https://raw.githubusercontent.com/nicbarker/aftman/main/install.sh | sh
-          echo "$HOME/.aftman/bin" >> $GITHUB_PATH
-
-      - name: Install tools
-        run: aftman install
-
-      - name: Lint
-        run: selene --no-color src/
-
-      - name: Format check
-        run: stylua --check src/
-
-      - name: Type check
-        run: |
-          rojo sourcemap default.project.json -o sourcemap.json
-          luau-lsp analyze --settings .luaurc src/
-
-      - name: Test
-        run: lune run tests/run.luau
-
-      - name: Build
-        run: rojo build -o build/game.rbxl
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: game-build
-          path: build/game.rbxl
-```
-
----
-
-## VS Code Recommended Setup
-
-Install these extensions:
-
-- **luau-lsp** — Type checking, IntelliSense, diagnostics
-- **Rojo** — Live sync to Studio
-- **Selene** — Inline linting
-- **StyLua** — Format on save
-
-Enable in `.vscode/settings.json`:
-
-```json
-{
-  "luau-lsp.sourcemap.enabled": true,
-  "luau-lsp.sourcemap.autogenerate": true,
-  "editor.formatOnSave": true,
-  "[luau]": {
-    "editor.defaultFormatter": "JohnnyMorganz.stylua"
-  }
-}
-```
-
----
-
-## Common Pitfalls
-
-1. **Committing `/Packages/`.** Bloats the repo and creates noisy diffs. Let Wally install them.
-2. **Not committing `wally.lock`.** Without it, different developers may get different package versions.
-3. **Missing `selene.toml` with `std = "roblox"`.** Selene won't recognize Roblox globals and will flag false positives.
-4. **Stale sourcemap.** Regenerate after adding/removing instances in Studio: `rojo sourcemap ...`
-5. **Running `rojo serve` without Studio plugin.** The Rojo Studio plugin must be installed and connected.
-6. **Using `init.server.luau` or `init.client.luau`.** Rojo doesn't support these — only `init.luau` (ModuleScript).
-7. **Not pinning tool versions in `aftman.toml`.** Different team members get different tool versions.
-8. **Forgetting `luau-lsp` binary in CI.** It's not a Wally package; download it separately or via Aftman.
-
-## Quality Checklist
-
-- [ ] `aftman.toml` exists with pinned tool versions
-- [ ] `default.project.json` maps all source directories correctly
-- [ ] `wally.toml` declares all dependencies; `wally.lock` is committed
-- [ ] `selene.toml` has `std = "roblox"`
-- [ ] `.gitignore` excludes `/Packages/`, `*.rbxl`, `sourcemap.json`
-- [ ] CI runs lint, format check, type check, and tests
-- [ ] `rojo sourcemap` is generated for luau-lsp
-- [ ] VS Code extensions installed: luau-lsp, Rojo, Selene, StyLua
+- [ ] The project has one documented source-to-Studio workflow.
+- [ ] Tool versions are pinned and tested.
+- [ ] Dependencies have explicit realms and licenses.
+- [ ] Lint and format checks run without rewriting files in CI.
+- [ ] Sourcemaps and build artifacts have a clear ownership policy.
+- [ ] Standalone scripts declare their runtime assumptions.
+- [ ] CI produces a reproducible build or reports why it cannot.

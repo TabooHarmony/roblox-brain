@@ -1,30 +1,36 @@
 ---
 name: roblox-gui
 description: "Use when building Roblox menus, HUDs, shops, notifications, dialogs, or responsive cross-platform UI."
-last_reviewed: 2026-05-22
+last_reviewed: 2026-07-13
 sources:
-  - https://raw.githubusercontent.com/brockmartin/roblox-game-skill/main/references/gui-systems.md
+  - https://create.roblox.com/docs/ui
+  - https://create.roblox.com/docs/ui/position-and-size
+  - https://create.roblox.com/docs/input
+  - https://create.roblox.com/docs/reference/engine/classes/GuiService
+  - https://create.roblox.com/docs/reference/engine/classes/GuiObject
+  - https://create.roblox.com/docs/reference/engine/classes/ScreenGui
+  - https://raw.githubusercontent.com/Roblox/focus-navigation/main/README.md
+  - https://devforum.roblox.com/t/introducing-improvements-to-directional-ui-selection-on-gamepad/3864317
+  - https://devforum.roblox.com/t/what-are-the-best-ui-screeninset-settings-for-buttons/3519333
+  - https://devforum.roblox.com/t/screenguiscreeninsets-topbarinsets-regression/4047230
+  - https://raw.githubusercontent.com/Roblox/react-luau/main/README.md
+  - original
 ---
 
-# Roblox GUI/UI Systems Reference
+# roblox gui
 
 ## When to Load
 
-Load when building any 2D/3D-attached UI: menus, HUDs, shops, notifications, dialogs. Covers ScreenGui setup, layout, responsiveness, cross-platform scaling.
+Load when building a HUD, menu, shop, dialog, notification, or UI attached to a 3D object.
 
 ## Quick Reference
 
-**Load Full Reference below only when you need specific layout examples or implementation patterns.**
+- Use `ScreenGui` for screen overlays, `SurfaceGui` for a surface, and `BillboardGui` for floating world labels.
+- Let `UIListLayout`, `UIGridLayout`, and constraints own repeated layout. Avoid per-frame pixel positioning.
+- Use `Scale` for responsive structure and `Offset` for deliberate padding or fixed-size details.
+- Design for touch and gamepad as well as mouse and keyboard. Bind gameplay actions with `ContextActionService` where it fits.
+- For gamepad UI, define a selected entry point and deliberate directional behavior. `GuiService.SelectedObject` plus `Selectable` is the native baseline; the Roblox Focus Navigation library is an optional reference for richer focus trees.
+- Keep UI state separate from the server state that it displays. A button is not an authority boundary.
+- Make scrolling, text growth, clipping, and safe-area behavior explicit before adding polish.
 
-Key rules:
-- Mobile-first: design for phone, scale up. Touch targets minimum 48x48px.
-- Scale (0-1 proportional) for position/size. Offset only for fixed padding/icons.
-- Container Frame Rule: every logical group gets a Frame with layout modifier inside.
-- UIListLayout/UIGridLayout: set on parent Frame, children auto-arrange. AutomaticSize on parent.
-- ScreenGui.ResetOnSpawn = false for persistent UI. IgnoreGuiInset = true for fullscreen.
-- ZIndex for layering within same ScreenGui. DisplayOrder for ScreenGui priority.
-- Never use absolute pixel sizes for main containers. UISizeConstraint for min/max bounds.
-- ScrollingFrame: set CanvasSize or AutomaticCanvasSize. UIListLayout inside for content.
-- Common AI mistake: forgetting to set LayoutOrder on children when using layout modifiers.
-- For complex stateful UI (shops, inventories, settings), consider reactive frameworks like Fusion (dphfox/Fusion, MIT) or React-Lua (jsdotlua/react).
-**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
+**Need the details?** Load `references/full.md` for layout recipes and UI lifecycle patterns.

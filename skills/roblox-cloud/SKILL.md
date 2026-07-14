@@ -1,7 +1,7 @@
 ---
 name: roblox-cloud
 description: "Use when working with Roblox Open Cloud REST APIs, API keys, webhooks, or HttpService calls to cloud endpoints."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-12
 sources:
   - https://create.roblox.com/docs/cloud/guides
 ---
@@ -50,5 +50,4 @@ Load this skill when the task involves Roblox Open Cloud REST APIs, API-key auth
 - Engine API lookup only → `roblox-studio-mcp`
 
 ### References
-- `references/full.md` — complete instructions, decision rules, checklist, common mistakes, examples
-- `references/` — per-topic docs: open-cloud-overview, api-patterns-errors-types-scopes-and-rate-limits, webhooks-documentation, http-service, openapi-documentation, cloud-reference-json-files
+- `references/full.md` — complete instructions, decision rules, checklist, common mistakes, and examples. Use the official Creator Hub guides in frontmatter for current endpoint details.

@@ -12,9 +12,11 @@ Checks:
 - '## Quick Reference' section exists
 - No '## Overview' or '## 1. Overview' in SKILL.md
 - No '## Full Reference' in SKILL.md (should be in references/)
-- No ```lua code blocks (use ```luau)
+- No unbalanced or nested fenced code blocks
 - references/full.md exists (router skills exempt)
 - Cross-references (backtick-enclosed `roblox-X`) point to existing skills
+- Local `references/...` links point to real files
+- Supporting files under `references/` are linked from the skill
 
 Exit code 0 = all checks pass, 1 = failures found.
 """
@@ -22,12 +24,13 @@ Exit code 0 = all checks pass, 1 = failures found.
 import os
 import re
 import sys
+from pathlib import Path
 
 MAX_SKILL_CHARS = 3000
 MAX_DESC_CHARS = 150
 MAX_REF_CHARS = 35000
+REPO_ROOT = Path(__file__).resolve().parent
 SKILLS_DIR = os.path.join(os.path.dirname(__file__), "skills")
-
 
 def parse_frontmatter(content: str) -> dict:
     """Extract YAML frontmatter from SKILL.md as a flat key→value dict.
@@ -67,6 +70,37 @@ def extract_description(content: str) -> str:
     """Get the description string from frontmatter, handling multi-line form."""
     fm = parse_frontmatter(content)
     return fm.get("description", "")
+
+
+def validate_code_fences(content: str, label: str) -> list[str]:
+    """Reject unclosed fences and language-tagged nested openings."""
+    errors = []
+    fence_pattern = re.compile(r"^ *```([^` ]*)? *$")
+    open_line = None
+    open_language = ""
+
+    for line_number, line in enumerate(content.splitlines(), 1):
+        match = fence_pattern.match(line)
+        if not match:
+            continue
+        language = match.group(1) or ""
+        if open_line is None:
+            open_line = line_number
+            open_language = language
+        elif language:
+            errors.append(
+                f"{label}:{line_number}: nested fenced block '{language}' "
+                f"inside {open_language or 'untyped'} fence opened at line {open_line}"
+            )
+        else:
+            open_line = None
+            open_language = ""
+
+    if open_line is not None:
+        errors.append(
+            f"{label}:{open_line}: unclosed {open_language or 'untyped'} fenced block"
+        )
+    return errors
 
 
 def validate_skill(skill_dir: str) -> list[str]:
@@ -137,18 +171,20 @@ def validate_skill(skill_dir: str) -> list[str]:
         )
 
     # No ```lua code blocks (must use ```luau)
-    if re.search(r"```lua\s*$", content, re.MULTILINE):
+    if re.search(r"```lua *$", content, re.MULTILINE):
         errors.append(
             f"{skill_name}: found ```lua code block (use ```luau instead)"
         )
+    errors.extend(validate_code_fences(content, f"{skill_name}: SKILL.md"))
     # Also check references/full.md
     if not is_router and os.path.exists(ref_path):
         with open(ref_path, encoding="utf-8") as f:
             ref_content = f.read()
-        if re.search(r"```lua\s*$", ref_content, re.MULTILINE):
+        if re.search(r"```lua *$", ref_content, re.MULTILINE):
             errors.append(
                 f"{skill_name}: found ```lua code block in references/full.md (use ```luau instead)"
             )
+        errors.extend(validate_code_fences(ref_content, f"{skill_name}: references/full.md"))
 
     # sources field must not be empty
     if "sources" in fm:
@@ -214,6 +250,80 @@ def validate_cross_references(all_skill_names: set[str]) -> list[str]:
     return errors
 
 
+def _resolve_local_reference(filepath: Path, reference: str) -> Path:
+    """Resolve a reference as written from SKILL.md or references/full.md."""
+    reference = reference.lstrip("./")
+    if filepath.parent.name == "references" and reference.startswith("references/"):
+        return filepath.parent.parent / reference
+    return filepath.parent / reference
+
+
+def _local_reference_matches(filepath: Path, content: str):
+    """Yield (reference, position) for local reference paths in a document."""
+    patterns = [
+        re.compile(r"\]\((?!https?://|mailto:|#)([^)#\s]+)"),
+        re.compile(
+            r"(?<![\w/])references/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.(?:md|luau)(?![\w])"
+        ),
+    ]
+    seen = set()
+    for pattern in patterns:
+        for match in pattern.finditer(content):
+            reference = match.group(1) if pattern is patterns[0] else match.group(0)
+            reference = reference.strip("<>")
+            if not reference.startswith("references/") or reference in seen:
+                continue
+            seen.add(reference)
+            yield reference, match.start()
+
+
+def validate_local_references() -> list[str]:
+    """Ensure local references mentioned by skills actually exist."""
+    errors = []
+    for skill_dir in sorted(Path(SKILLS_DIR).iterdir()):
+        if not skill_dir.is_dir():
+            continue
+        documents = [skill_dir / "SKILL.md"]
+        full_reference = skill_dir / "references" / "full.md"
+        if full_reference.exists():
+            documents.append(full_reference)
+        for filepath in documents:
+            content = filepath.read_text(encoding="utf-8")
+            for reference, position in _local_reference_matches(filepath, content):
+                target = _resolve_local_reference(filepath, reference)
+                if not target.is_file():
+                    line = content[:position].count("\n") + 1
+                    errors.append(
+                        f"{skill_dir.name}: missing local reference '{reference}' "
+                        f"at {filepath.relative_to(REPO_ROOT)}:{line}"
+                    )
+    return errors
+
+
+def validate_reference_resources() -> list[str]:
+    """Reject unlinked resource files under a skill's references directory."""
+    errors = []
+    for skill_dir in sorted(Path(SKILLS_DIR).iterdir()):
+        if not skill_dir.is_dir():
+            continue
+        references_dir = skill_dir / "references"
+        if not references_dir.is_dir():
+            continue
+        documents = [skill_dir / "SKILL.md", references_dir / "full.md"]
+        searchable = "\n".join(
+            path.read_text(encoding="utf-8") for path in documents if path.is_file()
+        )
+        for resource in sorted(references_dir.rglob("*")):
+            if not resource.is_file() or resource.name == "full.md":
+                continue
+            relative = resource.relative_to(skill_dir).as_posix()
+            if relative not in searchable:
+                errors.append(
+                    f"{skill_dir.name}: unlinked reference resource '{relative}'"
+                )
+    return errors
+
+
 def main():
     if not os.path.isdir(SKILLS_DIR):
         print(f"Error: skills directory not found: {SKILLS_DIR}")
@@ -233,6 +343,8 @@ def main():
     # Cross-reference validation runs across all skills
     all_skill_names = collect_all_skill_names()
     all_errors.extend(validate_cross_references(all_skill_names))
+    all_errors.extend(validate_local_references())
+    all_errors.extend(validate_reference_resources())
 
     print(f"Validated {skill_count} skills")
 

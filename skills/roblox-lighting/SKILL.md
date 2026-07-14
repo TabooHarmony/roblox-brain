@@ -1,7 +1,7 @@
 ---
 name: roblox-lighting
-description: "Use when configuring Roblox lighting, Atmosphere, time-of-day cycles, or post-processing effects."
-last_reviewed: 2026-05-27
+description: "Use for Roblox lighting, atmosphere, day/night, or post-processing effects."
+last_reviewed: 2026-07-12
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/lighting.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/atmosphere.md
@@ -12,7 +12,7 @@ sources:
 
 ## When to Load
 
-Load when configuring lighting, atmosphere, time-of-day cycles, or post-processing effects (Bloom, ColorCorrection, DepthOfField).
+Load for Roblox lighting, atmosphere, day/night, or post-processing (Bloom, ColorCorrection, DepthOfField).
 
 ## Quick Reference
 
@@ -24,7 +24,8 @@ Lighting.Ambient = Color3.fromRGB(70, 70, 70)        -- shadow fill
 Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 Lighting.GlobalShadows = true
 Lighting.ShadowSoftness = 0.2      -- 0=sharp, 1=soft
-Lighting.Technology = Enum.Technology.Future  -- or ShadowMap for mobile
+-- Current Studio uses LightingStyle and PrioritizeLightingQuality instead of Technology.
+-- Verify enum values and device behavior against current Creator Hub docs before setting them.
 ```
 
 ### Atmosphere
@@ -67,9 +68,11 @@ end)
 
 **Perf:** Limit shadow-casting lights to 4-6 visible. Use `Shadows=false` on most. Neon material = cheap glow.
 
+**MCP:** Inspect, change minimally, capture, check performance.
+
 ### Common Pitfalls
 - Brightness >3 washes out. Density >0.5 = soup. Max 2-3 post effects.
-- Always set some Ambient (not black). ShadowMap on mobile. One CC only.
+- Ambient should not be black. Use LightingStyle/PrioritizeLightingQuality; never set deprecated Technology.
 
 ### References
 - Mood presets (Day, Golden Hour, Night, Horror, Underwater, Sci-Fi), zone tweens, full examples: `references/full.md`

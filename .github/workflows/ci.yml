@@ -18,6 +18,11 @@ jobs:
       - name: Validate skill structure
         run: python3 validate_skills.py
 
+      - name: Validator regression tests
+        run: |
+          test -f tests/test_validators.py
+          python3 -m unittest discover -s tests -p 'test_*.py'
+
       - name: API drift check
         run: |
           for i in 1 2 3; do
@@ -72,20 +77,31 @@ jobs:
           fi
 
           count=$(find "$SKILLS_DIR" -name "SKILL.md" | wc -l)
-          echo "Found $count skills in $SKILLS_DIR"
+          expected_count=$(find skills -mindepth 2 -maxdepth 2 -name "SKILL.md" | wc -l)
+          echo "Found $count skills in $SKILLS_DIR (expected $expected_count)"
 
-          if [ "$count" -ne 30 ]; then
-            echo "ERROR: Expected exactly 30 skills, got $count"
+          if [ "$count" -ne "$expected_count" ]; then
+            echo "ERROR: Expected $expected_count skills, got $count"
             exit 1
           fi
 
-          # Verify references/ directories are installed
-          ref_count=$(find "$SKILLS_DIR" -name "full.md" -path "*/references/*" | wc -l)
-          echo "Found $ref_count reference files"
+          # Verify every published full reference is installed.
+          ref_count=$(find "$SKILLS_DIR" -path "*/references/full.md" -type f | wc -l)
+          expected_ref_count=$(find skills -path "*/references/full.md" -type f | wc -l)
+          echo "Found $ref_count reference files (expected $expected_ref_count)"
 
-          if [ "$ref_count" -ne 30 ]; then
-            echo "ERROR: Expected exactly 30 reference files, got $ref_count"
+          if [ "$ref_count" -ne "$expected_ref_count" ]; then
+            echo "ERROR: Expected $expected_ref_count reference files, got $ref_count"
             exit 1
           fi
 
-          echo "Install test passed ($count skills, $ref_count references)"
+          resource_count=$(find "$SKILLS_DIR" -path "*/references/*" -type f ! -name "full.md" | wc -l)
+          expected_resource_count=$(find skills -path "*/references/*" -type f ! -name "full.md" | wc -l)
+          echo "Found $resource_count supporting resources (expected $expected_resource_count)"
+
+          if [ "$resource_count" -ne "$expected_resource_count" ]; then
+            echo "ERROR: Expected $expected_resource_count supporting resources, got $resource_count"
+            exit 1
+          fi
+
+          echo "Install test passed ($count skills, $ref_count references, $resource_count resources)"

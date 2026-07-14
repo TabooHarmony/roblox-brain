@@ -6,14 +6,14 @@
 
 ### Overview
 
-OrderedDataStore is a sortable variant of DataStore. Keys must be positive integers (typically UserId). Used primarily for leaderboards.
+OrderedDataStore is a sortable variant of DataStore. Keys are strings, while values are integers used for ordering. Use a stable string key such as `tostring(UserId)` for player leaderboards.
 
 ### API
 
 | Method | Purpose |
 |--------|---------|
 | `GetSortedAsync(ascending, pageSize, minValue, maxValue)` | Get sorted pages of entries |
-| `SetAsync(key, value)` | Set a key's value (key must be positive integer) |
+| `SetAsync(key, value)` | Set a key's value (key is a string; value is an integer) |
 | `IncrementAsync(key, delta)` | Atomically increment a key's value |
 | `RemoveAsync(key)` | Remove an entry |
 | `UpdateAsync(key, transformFunction)` | Atomic read-modify-write |
@@ -27,7 +27,7 @@ local coinStore = DataStoreService:GetOrderedDataStore("LeaderboardCoins")
 -- Update player's score
 local function updateScore(userId: number, coins: number)
     local success, err = pcall(function()
-        coinStore:SetAsync(userId, coins)
+        coinStore:SetAsync(tostring(userId), coins)
     end)
     if not success then warn("Leaderboard update failed:", err) end
 end
@@ -55,8 +55,8 @@ end
 ```
 
 ### Key Rules
-- Keys MUST be positive integers — use `player.UserId`
-- Values must be numbers — no strings, tables, or nested data
+- Keys MUST be strings — use a stable representation such as `tostring(player.UserId)`
+- Values must be integers used for sorting — do not store strings, tables, or nested data
 - Separate from player DataStore — different key space, different purpose
 - `GetSortedAsync` returns pages, not a flat list — use pagination
 - Rate limits apply same as regular DataStores
@@ -198,6 +198,54 @@ end
 - No session locking — don't use for player data
 - Key naming: use prefixes to namespace (`guild_`, `counter_`, `season_`)
 
+## MemoryStoreService
+
+MemoryStore is for temporary, high-throughput coordination. Its values expire, so it is a poor place for authoritative player progress or a permanent leaderboard.
+
+### Queue pattern
+
+```luau
+local MemoryStoreService = game:GetService("MemoryStoreService")
+local queue = MemoryStoreService:GetQueue("Matchmaking", 30)
+
+local function enqueue(request: table)
+    return pcall(function()
+        queue:AddAsync(request, 60, 0)
+    end)
+end
+
+local function drain(maxItems: number)
+    local ok, items, readId = pcall(function()
+        return queue:ReadAsync(maxItems, false, 0)
+    end)
+    if not ok then return end
+
+    local processed = true
+    for _, request in items do
+        local requestOk = pcall(function()
+            processMatchRequest(request)
+        end)
+        if not requestOk then
+            processed = false
+        end
+    end
+
+    if processed and #items > 0 then
+        pcall(function()
+            queue:RemoveAsync(readId)
+        end)
+    end
+end
+```
+
+`ReadAsync` makes items temporarily invisible to other readers. A crashed worker can therefore leave work to reappear later. Make processing idempotent, include a request or match identifier, and remove an item only after the durable or teleport-side effect has succeeded. Keep the invisibility timeout long enough for the work but short enough to recover from a dead server.
+
+### Sorted-map pattern
+
+Use a sorted map for short-lived records keyed by a stable identifier, such as server heartbeats or matchmaking candidates. Set an expiration on every entry and clean stale values when reading. Do not confuse a sorted map with `OrderedDataStore`: MemoryStore entries expire and are intended for coordination, not historical persistence.
+
+The recent `PartyService Plus` DevForum resource is a useful concept specimen for queue cleanup, party leadership transfer, and cross-server matchmaking. It is a commercial community resource, not a canonical API reference. The official MemoryStore API remains the source of truth.
+
 ## Persistent World State
 
 ### Building/Construction Games
@@ -241,7 +289,7 @@ end
 
 - **MessagingService delivery**: not guaranteed. If a server misses a message, it's gone. Design for eventual consistency.
 - **GlobalDataStore rate limits**: same as player DataStores. Don't use for high-frequency updates.
-- **OrderedDataStore key type**: must be positive integer. Using string keys throws an error.
+- **OrderedDataStore key type**: must be a string, such as `tostring(UserId)`. Values must be integers used for sorting.
 - **Lost updates with SetAsync**: always use `UpdateAsync` for shared state. `SetAsync` overwrites without reading.
 - **Serialization**: DataStores only store JSON-compatible types (string, number, boolean, table, nil). No Instances, no functions, no userdata.
 - **Cross-server timing**: MessagingService has latency. Don't rely on it for time-critical operations.

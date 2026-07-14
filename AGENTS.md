@@ -118,7 +118,7 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 | `verify_version_pins.py` | Tool version pin monitor (non-blocking) |
 | `api_drift_registry.yaml` | Registry of API claims to verify |
 | `requirements.txt` | Python dependencies (pyyaml) |
-| `vendor/brockmartin-roblox-game-skill/` | Snapshotted source for 8 skills |
+| `vendor/NOTES.md` | Historical provenance note for removed source |
 | `.github/workflows/ci.yml` | CI: validation + drift + source URLs + install test |
 
 ## What NOT to Do
