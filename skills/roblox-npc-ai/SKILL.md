@@ -5,13 +5,14 @@ last_reviewed: 2026-07-13
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
   - https://devforum.roblox.com/t/improving-pathfinding-quality-with-new-algorithm/3258657
+  - https://create.roblox.com/docs/projects/server-authority
 ---
 
 # Roblox NPC & AI
 
 ## When to Load
 
-Load when creating NPCs/enemies: pathfinding, state machines, detection (LOS/FOV), spawn systems, AI update loops, network ownership.
+Load for NPCs/enemies: pathfinding, state machines, LOS/FOV detection, spawns, AI loops, or physics ownership.
 
 ## Quick Reference
 
@@ -31,10 +32,10 @@ for _, wp in path:GetWaypoints() do
 end
 ```
 
-- Recompute on blocked.
-- Test the improved search algorithm in a test place before enabling `Workspace.PathfindingUseImprovedSearch` in production.
-- Avoid long path requests and repeated recomputation. Moving collidable geometry can trigger navigation-mesh work.
-- Region modifiers: Anchored part + `PathfindingModifier` with Label → Costs
+- Recompute on blocked with a bounded retry or cancellation policy.
+- Test `Workspace.PathfindingUseImprovedSearch` on representative maps before rollout.
+- Avoid long requests and repeated recomputation. Moving collidable geometry can trigger navigation-mesh work.
+- Region modifiers: anchored part + `PathfindingModifier` Label → Costs
 - `PassThrough = true` for doors; `PathfindingLink` for disconnected navmesh
 - `math.huge` cost = non-traversable
 
@@ -43,35 +44,20 @@ end
 `idle → patrol → chase → attack → flee → dead`
 - idle/patrol → chase (player detected) → attack (in range) → idle (lost)
 - any → flee (health low) → idle (safe); any → dead (health ≤ 0)
-- Transition func handles walk speed changes, clears target on idle
+- Transitions own movement changes, target cleanup, and cancellation
 
 ### Detection (distance → FOV → LOS)
 
 1. **Distance** `(a-b).Magnitude` — cheapest, always first
-2. **FOV** `forward:Dot(toTarget)` cosine — ~120° cone
+2. **FOV** `forward:Dot(toTarget)` cosine — use a configured cone for the game, not a universal angle
 3. **LOS** `workspace:Raycast` — expensive, last
-- Skip dead players. Close-range (~30%) bypasses FOV (hearing)
-
-### Spawners
-
-- Track active enemies, cap count, remove on `Humanoid.Died`
-- Clone → `PivotTo` → parent; `task.delay(3, Destroy)` for death anim
-- Wave: `{enemies={{template, count}}, spawnDelay, waveDelay}`
+- If the design includes hearing or proximity detection, make it a separate configured signal rather than a universal FOV bypass.
 
 ### Network Ownership
-- `SetNetworkOwner(nil)` can suit physics-sensitive NPCs, but it is not complete security.
+- Classic projects may use `SetNetworkOwner(nil)` for physics-sensitive NPCs, but it is not complete security. In Server Authority projects, configure the authority model instead of treating network ownership as the security boundary.
 
 ### Update Loop
 
-- Throttle AI to 5-10 ticks/sec, NOT every Heartbeat
-- Stagger large batches (5/frame); ALL NPC logic server-side only
+- Throttle and stagger AI based on NPC count, path cost, and profiler evidence, not a universal tick rate. Keep NPC decisions and movement server-side; client code may handle presentation.
 
-### Pitfalls
-
-- No `path.Blocked` handler → stale paths
-- No `ComputeAsync` fallback → frozen NPCs
-- `MoveTo` 8-sec timeout; handle `reached = false`
-- `SetNetworkOwner(nil)` is a physics-authority decision, not complete security
-- Dead corpses not destroyed → memory leak
-- 50 NPCs pathfinding same frame → server lag
-**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
+For spawners, lifecycle cleanup, timeout handling, and performance budgets, load `references/full.md`.

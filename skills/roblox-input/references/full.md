@@ -5,6 +5,12 @@
 
 Both `UserInputService` (UIS) and `ContextActionService` (CAS) are client-only. They work in `LocalScript`, `ModuleScript` required by a `LocalScript`, or `Script` with `RunContext` set to `Client`. Server-side calls silently no-op.
 
+## Input Action System and Server Authority
+
+For a Server Authority project, inputs that affect the core simulation should use Roblox's Input Action System (`InputAction` and `InputContext`) rather than traditional `UserInputService.InputBegan` or a continuous `RemoteEvent` stream. Store the current action state where the shared simulation can read it, then process synchronized movement or physics through `RunService:BindToSimulation()` so client prediction and server rollback use the same input history.
+
+`ContextActionService` remains useful for UI-only actions and classic projects. Do not use the UI binding choice as a security boundary; the server still validates the resulting action and its game-specific permissions.
+
 ## UserInputService — Properties
 
 | Property | Type | Notes |

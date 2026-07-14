@@ -118,11 +118,11 @@ PurchaseResult.OnClientEvent:Connect(function(ok, message)
 end)
 ```
 
-Do not grant currency, inventory, or ownership because a local button handler ran. The UI is an input surface, not a trust boundary.
+Do not grant currency, inventory, or ownership because a local button handler ran. The UI is an input surface, not a trust boundary. In Server Authority projects, the client may briefly render predicted state that is later corrected by rollback. Keep durable displays tied to confirmed server or synchronized state, and mark optimistic feedback as pending when the distinction matters.
 
 ## 7. Input and interaction
 
-Use `Activated` for buttons when possible. Use `ContextActionService` for actions that should map across keyboard, gamepad, and touch. Use `UserInputService` when you need raw device details or gesture tracking.
+Use `Activated` for buttons when possible. Use `ContextActionService` for UI-only actions that should map across keyboard, gamepad, and touch. For gameplay-affecting input in a Server Authority project, use `InputAction`/`InputContext` and the synchronized simulation path. Use `UserInputService` when you need raw device details or gesture tracking.
 
 Every interactive control needs:
 

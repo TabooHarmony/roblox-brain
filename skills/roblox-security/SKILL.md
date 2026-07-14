@@ -1,47 +1,48 @@
 ---
 name: roblox-security
-description: "Use when auditing Roblox code for exploit vectors or hardening movement, remotes, economy, and DataStore flows."
-last_reviewed: 2026-05-27
+description: "Use when auditing Roblox code for exploit vectors, authority models, remotes, economy, and DataStore flows."
+last_reviewed: 2026-07-13
 sources:
   - https://create.roblox.com/docs/scripting/security/security-tactics
   - https://create.roblox.com/docs/scripting/security/client-server-boundary
+  - https://create.roblox.com/docs/projects/server-authority
+  - https://create.roblox.com/docs/projects/server-authority/techniques
 ---
 
 ## When to Load
 
-Load this skill when auditing code for vulnerabilities or hardening against exploit vectors. Covers movement hacks, remote abuse, economy attacks, DataStore exploits. For validation implementation patterns and rate limiter code, see `roblox-networking`.
+Load for exploit audits and hardening. Covers classic replication, opt-in Server Authority, remote abuse, economy attacks, and DataStore flows. Use `roblox-networking` for validation and rate-limit implementations.
 
 ## Quick Reference
 
-**Core:** Client is always compromised. Server = only source of truth.
+**Core:** Client is always compromised. The server remains the source of truth, but the implementation depends on the authority model.
+
+### Authority Models
+
+- **Classic replication:** validate client requests and custom movement against server state. Never trust client damage, currency, inventory, permissions, or positions.
+- **Server Authority:** with `Workspace.AuthorityMode = Server` and its required settings, the server owns core simulation while clients predict and recover from misprediction. Use `BindToSimulation()`, not blanket `Heartbeat` CFrame correction.
+- **Both:** validate attacks, purchases, teleports, dashes, permissions, and custom remotes at the server boundary.
 
 ### Vectors & Mitigations
 
 | Vector | Attack | Fix |
 |--------|--------|-----|
-| Movement | Speed/teleport/fly/noclip | Server velocity+pos checks per Heartbeat |
+| Movement | Custom dash, teleport, or locomotion abuse | Server state and transition checks; under Server Authority, keep simulation logic in `BindToSimulation()` and do not add blanket CFrame snap-back |
 | Remote | Spam, arg spoof, replay | Rate limiter + validate arg types + idempotency |
 | Economy | Dupe, negative qty | Session lock, atomic ops, qty > 0 |
 | DataStore | Save spam, session hijack | Server-controlled saves, JobId session lock |
 | General | Client trusts values | Server computes ALL game state |
 
-### Key Patterns
-
-For rate limiter implementation and validation module code, see `roblox-networking`. Key audit points:
-- Per-player, per-remote cooldown table exists
-- All RemoteEvent handlers validate arg types, ranges, ownership
-- Server computes all game state (damage, currency, movement)
-
 ### Audit Checklist
 
-**CRITICAL:** Server-authoritative state · Validate all arg types · Rate limit remotes · Session-lock DataStore · No client currency mutations · ProcessReceipt verification · No sensitive LocalScript logic
+**CRITICAL:** Server-authoritative state · Choose and document the authority model · Validate all arg types · Rate limit remotes · Session-lock DataStore · No client currency mutations · ProcessReceipt verification · No secrets in client or replicated code
 
-**HIGH:** Server-validated movement · BindToClose protection · Atomic trading · Never trust client values
+**HIGH:** Validate custom movement and action transitions · BindToClose protection · Atomic trading · Never trust client values · Use InputActions for simulation input in Server Authority projects
 
-**MEDIUM:** Server cooldowns · Server leaderboards · Anti-AFK rewards · TextService filtering
+**MEDIUM:** Server cooldowns · server-computed leaderboards · anti-AFK reward checks · TextService filtering
 
 ### Anti-Patterns
 
-Don't: obfuscate client, use `_G` for security, kick without logging, over-validate movement, rely on client anti-cheat
+Don't obfuscate client code, use `_G` for security, kick without logging, over-validate movement, or rely on client anti-cheat.
 
 See `references/full.md` for detailed examples.

@@ -1,10 +1,11 @@
 ---
 name: roblox-physics
 description: "Use when building Roblox vehicles, ragdolls, projectiles, elevators, constraints, forces, or other physics-driven gameplay."
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-13
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mechanical-constraints.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mover-constraints.md
+  - https://create.roblox.com/docs/projects/server-authority
 ---
 
 ## When to Load
@@ -14,24 +15,25 @@ Use this skill when building physics-driven gameplay: vehicles, ragdolls, projec
 ## Quick Reference
 
 ### Constraint Types
-**Mechanical:** `HingeConstraint` (doors/wheels), `PrismaticConstraint` (elevators/pistons), `CylindricalConstraint` (telescoping), `BallSocketConstraint` (ragdoll/chains), `UniversalConstraint` (steering), `WeldConstraint`/`RigidConstraint` (rigid attach)
+**Mechanical:** `HingeConstraint`, `PrismaticConstraint`, `CylindricalConstraint`, `BallSocketConstraint`, `UniversalConstraint`, `WeldConstraint`/`RigidConstraint`
 **Motion:** `AlignPosition`, `AlignOrientation`, `LinearVelocity`, `AngularVelocity`, `VectorForce`, `Torque`
-**Spring/Rope:** `SpringConstraint` (suspension/trampolines), `RopeConstraint` (grapple, slack), `RodConstraint` (rigid link)
+**Spring/Rope:** `SpringConstraint`, `RopeConstraint`, `RodConstraint`
 
 ### Attachment Pattern
-All constraints connect via `Attachment` objects, not Parts directly. Create Attachment on each part, set `constraint.Attachment0`/`Attachment1`, parent constraint to part0. Actuator types: `None`, `Motor` (constant velocity), `Servo` (target position/angle).
+Constraints connect via `Attachment` objects. Create one on each part, set `Attachment0`/`Attachment1`, and parent the constraint to part0. Actuator types include `None`, `Motor`, and `Servo`.
 
 ### Vehicles
-Wheel = `HingeConstraint` (ActuatorType.Motor) + `SpringConstraint` for suspension. Steer = Hinge with ActuatorType.Servo. Rear wheels get throttle AngularVelocity, front wheels get servo TargetAngle. Use `CustomPhysicalProperties` on wheels for friction tuning.
-
-### MCP Verification
-Inspect existing constraints and network ownership before editing. After mutation, read back attachments/properties and exercise the mechanism in play mode; report console or navigation evidence.
+Vehicles: use motorized `HingeConstraint` wheels, `SpringConstraint` suspension, servo steering, and `CustomPhysicalProperties` for friction tuning.
 
 ### Ragdoll
 Replace Motor6Ds with `BallSocketConstraint`: create Attachments from motor.C0/C1, set `LimitsEnabled=true`, `UpperAngle=45`. Keep Root Motor6D for HRP. Set humanoid state to `Physics`. Re-enable motors to recover.
 
-### Network Ownership
-Default: nearest player owns unanchored physics (exploitable!). `part:SetNetworkOwner(nil)` = server-owned (secure, laggy). `part:SetNetworkOwner(player)` = player-owned (responsive). **Rule:** NPCs/world objects → server. Vehicles → driver player. Always set explicitly on important physics objects.
+### Authority and Network Ownership
+Classic projects: automatic ownership can give an unanchored assembly to a nearby player. `SetNetworkOwner(nil)` keeps it server-owned; `SetNetworkOwner(player)` gives a player simulation ownership. Treat player-owned physics as untrusted and validate gameplay outcomes.
+
+Server Authority: set `Workspace.AuthorityMode = Server` with its required settings. Core objects can remain server-owned while prediction keeps controls responsive, so the classic secure-but-laggy trade-off does not apply. `SetNetworkOwner()` is not a substitute.
+
+**Rule:** choose the model first. Keep NPC and gameplay-critical objects authoritative; give client ownership to non-critical physics only when the resulting behavior is acceptable and tested.
 
 ### Common Gotchas
 - Constraints do nothing on Anchored parts

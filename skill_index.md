@@ -12,11 +12,10 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 | `roblox-architecture` | Use when starting or refactoring a Roblox project, choosing service or module structure, or making client-server architecture decisions. |
 | `roblox-sharp-edges` | Use before shipping or reviewing Roblox code involving player data, remotes, monetization, or memory to catch high-impact production footguns. |
 
-## Economy & Monetization
+## Monetization
 
 | Skill | Description |
 |-------|-------------|
-| `roblox-economy` | Use when designing Roblox currencies, rewards, faucets, sinks, trading, marketplaces, or inflation controls. |
 | `roblox-monetization` | Use when implementing Roblox GamePasses, Developer Products, subscriptions, private servers, Creator Rewards, or purchase policy checks. |
 
 ## Systems & Networking
@@ -24,7 +23,7 @@ Compact index of all roblox-brain skills (~2,800 tokens). Load this at startup t
 | Skill | Description |
 |-------|-------------|
 | `roblox-networking` | Use when validating RemoteEvent or RemoteFunction arguments, adding rate limits, designing server-authoritative systems, or preventing exploits. |
-| `roblox-security` | Use when auditing Roblox code for exploit vectors or hardening movement, remotes, economy, and DataStore flows. |
+| `roblox-security` | Use when auditing Roblox code for exploit vectors, authority models, remotes, economy, and DataStore flows. |
 | `roblox-data` | Use when implementing player data persistence with DataStore, session ownership, schemas, migrations, or save and load flows. |
 | `roblox-server-data` | Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds. |
 | `roblox-analytics` | Use when tracking player behavior, economy events, or funnels with AnalyticsService, including event taxonomy, rate limits, and batching. |

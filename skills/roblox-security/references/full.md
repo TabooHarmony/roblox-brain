@@ -7,46 +7,38 @@ Use this skill when designing security systems, auditing existing code for vulne
 
 ## Core Principle
 
-**The client is compromised. Always.** Exploiters run arbitrary Luau on the client via injection tools. Every LocalScript, every ReplicatedStorage module, every client-side value is readable and writable by attackers. The server is the only source of truth.
+**The client is compromised. Always.** Exploiters run arbitrary Luau on the client via injection tools. Every LocalScript, every ReplicatedStorage module, and every client-side value is readable and writable by attackers. The server is the source of truth, but the implementation depends on the authority model.
+
+## Authority Models
+
+### Classic replication
+
+Validate client requests and custom movement against server-owned state. Do not trust client-reported damage, currency, inventory, permissions, or positions. Network ownership is a physics simulation choice, not a complete security boundary.
+
+### Server Authority
+
+Server Authority is an opt-in Roblox model configured through `Workspace.AuthorityMode = Server` and the required replication, fixed-simulation, streaming, and input settings. The server remains authoritative for core gameplay while clients predict input and recover from misprediction through rollback and resimulation.
+
+For Server Authority projects:
+
+- put synchronized simulation logic in `RunService:BindToSimulation()`;
+- use the Input Action System for inputs that affect the core simulation;
+- do not write simulation-access properties such as `BasePart.CFrame` from a `Heartbeat` handler as a substitute for authoritative simulation;
+- keep validation for custom attacks, dashes, teleports, purchases, permissions, and other game-specific actions at the server boundary;
+- use `RunService:SetPredictionMode()` only when the game's prediction policy needs explicit control.
+
+See the [Server Authority model](https://create.roblox.com/docs/projects/server-authority) and [advanced techniques](https://create.roblox.com/docs/projects/server-authority/techniques).
 
 ## Exploit Vectors & Mitigations
 
-### Movement Exploits
+### Movement and physics exploits
 
 | Attack | How it works | Mitigation |
 |--------|-------------|------------|
-| Speed hack | Client moves faster than WalkSpeed allows | Server-side velocity check per Heartbeat |
-| Teleport | Client sets HumanoidRootPart.CFrame directly | Server tracks last valid position, reject jumps > threshold |
-| Fly hack | Client removes gravity/collision | Server checks if player is grounded or has valid flight state |
-| Noclip | Client passes through CanCollide parts | Server raycasts between positions to detect wall passes |
+| Speed or fly exploit | Client attempts to control movement outside the game's allowed state | In Server Authority, use the engine's server-authoritative simulation and prediction model. In classic projects, validate custom movement transitions with tolerance for seats, respawns, teleports, and correction. |
+| Teleport or noclip | Client requests or produces an impossible game-specific transition | Validate the requested action and the server's state, rather than blindly snapping `CFrame` every frame. Record suspicion and investigate repeated violations instead of punishing one lag spike. |
 
-```luau
--- Server-side movement validation (basic)
-local MAX_SPEED = 16 * 1.5 -- WalkSpeed + tolerance
-local MAX_TELEPORT = 50 -- studs per check
-
-local lastPositions: {[Player]: Vector3} = {}
-
-game:GetService("RunService").Heartbeat:Connect(function()
-    for _, player in Players:GetPlayers() do
-        local char = player.Character
-        if not char then continue end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then continue end
-
-        local pos = root.Position
-        local last = lastPositions[player]
-        if last then
-            local dist = (pos - last).Magnitude
-            if dist > MAX_TELEPORT then
-                -- Snap back to last valid position
-                root.CFrame = CFrame.new(last)
-            end
-        end
-        lastPositions[player] = pos
-    end
-end)
-```
+Do not copy a blanket `Heartbeat` position checker into a Server Authority project. The server already owns the authoritative simulation, and writing simulation-access properties outside the simulation callback can error. If a classic project needs custom movement checks, keep the checker aware of legitimate state transitions and clean all per-player state on `PlayerRemoving`.
 
 ### Remote Exploits
 
@@ -82,6 +74,7 @@ end
 local function validatePurchase(player: Player, itemId: unknown, quantity: unknown): boolean
     if typeof(itemId) ~= "string" then return false end
     if typeof(quantity) ~= "number" then return false end
+    if quantity ~= quantity or math.abs(quantity) == math.huge then return false end
     if quantity ~= math.floor(quantity) then return false end -- must be integer
     if quantity < 1 or quantity > 99 then return false end -- sane range
     if not ITEM_CATALOG[itemId] then return false end -- item must exist
@@ -113,6 +106,7 @@ Run through this for every game before publish:
 ```
 CRITICAL (game-breaking if missing):
 [ ] All game state is server-authoritative
+[ ] The authority model is documented and its required Workspace settings are verified
 [ ] All RemoteEvent handlers validate types of EVERY argument
 [ ] All RemoteEvent handlers have rate limiting
 [ ] DataStore operations use session locking
@@ -121,7 +115,7 @@ CRITICAL (game-breaking if missing):
 [ ] No sensitive logic in LocalScripts or ReplicatedStorage
 
 HIGH (exploitable if missing):
-[ ] Player movement is server-validated
+[ ] Custom movement and action transitions are validated without fighting the selected authority model
 [ ] BindToClose saves protected against data loss
 [ ] Trading system uses atomic operations
 [ ] No trusting client-reported values (damage, position, items)
@@ -179,7 +173,7 @@ end
 
 ### Sanity Checks (Defense in Depth)
 
-Even with server authority, add sanity checks for values that should be bounded:
+Even with server authority, add sanity checks for values that should be bounded. These protect custom state and remote arguments; they are not a replacement for the Server Authority simulation model:
 
 ```luau
 -- Clamp values that should never exceed known bounds
@@ -196,5 +190,5 @@ end
 - **Don't obfuscate client code** — it doesn't stop exploiters and makes debugging harder
 - **Don't use _G for security state** — it's globally readable and writable
 - **Don't kick without logging** — you need data to distinguish false positives from real exploits
-- **Don't over-validate movement** — too strict = legitimate players get false-flagged on lag spikes. Use tolerance.
+- **Don't over-validate movement** — too strict = legitimate players get false-flagged on lag spikes, and blanket checks fight Server Authority prediction. Use the selected model's simulation path and tolerate legitimate corrections.
 - **Don't rely on client-side anti-cheat** — exploiters disable it first

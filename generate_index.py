@@ -28,8 +28,7 @@ CATEGORIES = [
         "roblox-architecture",
         "roblox-sharp-edges",
     ]),
-    ("Economy & Monetization", [
-        "roblox-economy",
+    ("Monetization", [
         "roblox-monetization",
     ]),
     ("Systems & Networking", [
