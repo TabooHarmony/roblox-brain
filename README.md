@@ -11,6 +11,7 @@ Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support ag
 [![Skills](https://img.shields.io/badge/skills-31-blue.svg)](skills)
 [![Roblox](https://img.shields.io/badge/Roblox-Luau-red.svg)](https://create.roblox.com/docs/luau)
 [![Agent Skills](https://img.shields.io/badge/agent_skills-compatible-purple.svg)](skill_index.md)
+[![skills.sh](https://skills.sh/b/TabooHarmony/roblox-brain)](https://skills.sh/TabooHarmony/roblox-brain)
 
 </div>
 
