@@ -113,6 +113,8 @@ end
 
 ### Vehicle Input (server-authoritative)
 
+The `RemoteEvent` pattern below is for classic projects and discrete or low-frequency control. In a Server Authority project, continuous throttle and steering belong in the Input Action System, with input state available to the synchronized simulation through `RunService:BindToSimulation()`. RemoteEvents are still appropriate for discrete requests, not as the continuous prediction path.
+
 ```luau
 -- Server: receive input, apply to constraints
 local DriveRemote = Instance.new("RemoteEvent")
@@ -212,6 +214,8 @@ end
 
 ### Physics Projectile (arcing, grenade-style)
 
+For a Server Authority project, create and update gameplay-critical projectiles inside the synchronized simulation so the client can predict and reconcile them. Keep damage and state transitions in the simulation, not in a presentation-only `Touched` callback that can run again during resimulation. The example below is a classic illustrative projectile and needs that adaptation before use in Server Authority.
+
 ```luau
 local function launchProjectile(origin: CFrame, velocity: Vector3, lifetime: number)
     local projectile = Instance.new("Part")
@@ -307,9 +311,11 @@ local function createSwing(platform: BasePart, pivot: Vector3, maxAngle: number)
 end
 ```
 
-## Network Ownership
+## Network Ownership and Server Authority
 
-**Critical for physics objects**: By default, the nearest player "owns" the physics simulation of unanchored parts. This means exploiters can fling your physics objects.
+### Classic replication
+
+By default in classic replication, Roblox may assign an unanchored assembly to a nearby player. This can make physics responsive but gives that client influence over the simulation, so gameplay-critical outcomes must still be validated.
 
 ```luau
 -- Keep physics server-authoritative
@@ -331,7 +337,13 @@ local function setDriverOwnership(vehicle: Model, player: Player)
 end
 ```
 
-**Trade-off**: Server ownership = secure but laggy (server tick rate). Player ownership = responsive but exploitable. For vehicles, give ownership to the driver. For NPCs and world objects, keep server-owned.
+**Classic trade-off:** Server ownership can be more authoritative but costs server simulation work. Player ownership can be responsive but is not a security boundary. For NPCs and gameplay-critical world objects, prefer server ownership when the project is not using Server Authority. Give a vehicle to its driver only when the resulting behavior is acceptable and validated.
+
+### Server Authority
+
+When `Workspace.AuthorityMode = Server` and the required replication, fixed-simulation, streaming, and input settings are enabled, core gameplay objects can remain server-owned while client prediction keeps controls responsive. The traditional secure-but-laggy trade-off does not apply in the same way. `SetNetworkOwner()` is not a substitute for Server Authority.
+
+Use `InputAction`/`InputContext` and `RunService:BindToSimulation()` for continuous vehicle or character input. Create gameplay-critical predicted instances, such as projectiles, inside the synchronized simulation and make hit or damage transitions idempotent across rollback and resimulation.
 
 ## Common Mistakes
 

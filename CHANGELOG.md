@@ -2,6 +2,13 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- Removed the generic `roblox-economy` skill. Its Roblox-specific material is already covered by monetization, analytics, networking, and security.
+- Refreshed Server Authority guidance across security, networking, physics, NPC AI, animation/VFX, input, and UI references.
+
 ## [1.0.0] - 2026-07-13
 
 Initial public release of the Roblox Studio skill library.

@@ -3,8 +3,6 @@
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
-> Moved from SKILL.md. Original: 13,451 chars, 7 sections.
-
 ## PathfindingService
 
 ### CreatePath Parameters
@@ -52,15 +50,19 @@ local function followPath(destination: Vector3)
 
     local waypoints = path:GetWaypoints()
 
-    -- Handle path blocked mid-traversal
-    local blockedConnection
-    blockedConnection = path.Blocked:Connect(function(blockedWaypointIndex)
-        blockedConnection:Disconnect()
-        -- Recompute from current position
-        followPath(destination)
+    -- Mark the traversal stale. Let the caller retry with a bounded policy.
+    local blocked = false
+    local blockedConnection = path.Blocked:Connect(function()
+        blocked = true
     end)
 
-    for i, waypoint in waypoints do
+    local completed = true
+    for _, waypoint in waypoints do
+        if blocked then
+            completed = false
+            break
+        end
+
         if waypoint.Action == Enum.PathWaypointAction.Jump then
             humanoid.Jump = true
         elseif waypoint.Action == Enum.PathWaypointAction.Custom then
@@ -71,16 +73,18 @@ local function followPath(destination: Vector3)
         humanoid:MoveTo(waypoint.Position)
         local reached = humanoid.MoveToFinished:Wait()
 
-        if not reached then
-            blockedConnection:Disconnect()
-            return false
+        if blocked or not reached then
+            completed = false
+            break
         end
     end
 
     blockedConnection:Disconnect()
-    return true
+    return completed
 end
 ```
+
+If this returns `false`, the caller should recompute from the NPC's current position with a bounded retry or cancellation policy. Do not recursively call `followPath` from `Path.Blocked`; a persistently blocked route can otherwise create overlapping traversals and unbounded work.
 
 ### Pathfinding Modifiers
 
@@ -134,7 +138,7 @@ Keep path requests bounded and event-driven:
 
 - do not compute every NPC path every frame;
 - stagger requests across frames and cache a path until the target or world meaningfully changes;
-- avoid very long searches, especially requests on the order of 1000 studs or more;
+- avoid unnecessarily long searches and choose a destination budget appropriate for the map;
 - avoid continuously moving `CanCollide` geometry when it is not needed, because navigation-mesh regeneration can become the bottleneck;
 - capture a MicroProfiler trace when pathfinding slows down instead of assuming the state machine is at fault.
 
@@ -156,6 +160,9 @@ type NPCConfig = {
     attackCooldown: number,
     walkSpeed: number,
     runSpeed: number,
+    fovDegrees: number,
+    hearingEnabled: boolean,
+    hearingRange: number,
 }
 
 type NPCState = {
@@ -280,9 +287,10 @@ local function canDetectPlayer(npc: NPCState, player: Player): boolean
     if dist > npc.config.detectionRange then return false end
 
     -- 2. Field of view (medium cost)
-    if not isInFOV(npc.rootPart.CFrame, root.Position, 120) then
-        -- Can still detect if very close (hearing range)
-        if dist > npc.config.detectionRange * 0.3 then return false end
+    if not isInFOV(npc.rootPart.CFrame, root.Position, npc.config.fovDegrees) then
+        if not npc.config.hearingEnabled or dist > npc.config.hearingRange then
+            return false
+        end
     end
 
     -- 3. Line of sight (expensive, do last)
@@ -365,9 +373,9 @@ local function spawnWave(wave: WaveConfig, spawnPoints: {BasePart})
 end
 ```
 
-## Network Ownership
+## Network Ownership and Server Authority
 
-For unanchored NPC assemblies, decide deliberately whether physics should be server-authoritative. Server ownership can prevent client-owned physics from producing unexpected motion, but it is not a complete anti-exploit boundary and it costs server simulation work.
+For classic replication, decide deliberately whether an unanchored NPC assembly should be server-owned. Server ownership can prevent client-owned physics from producing unexpected motion, but it is not a complete anti-exploit boundary and it costs server simulation work.
 
 ```luau
 local function setServerOwned(model: Model)
@@ -381,14 +389,16 @@ end
 setServerOwned(enemy)
 ```
 
-Measure the trade-off at the intended NPC count. If visual motion becomes too coarse, replicate authoritative state and interpolate on the client instead of handing gameplay authority to the client.
+In a Server Authority project, configure `Workspace.AuthorityMode = Server` and its required replication, fixed-simulation, streaming, and input settings. Server-owned gameplay physics can remain responsive through client prediction, so `SetNetworkOwner(nil)` is not the authority model and the classic secure-but-laggy trade-off does not apply in the same way.
+
+Measure CPU, pathfinding, and replication cost at the intended NPC count. If visual motion becomes too coarse in a classic project, replicate authoritative state and interpolate on the client instead of handing gameplay authority to the client.
 
 ## Update Loop
 
-Don't run AI logic every frame. Throttle to 5-10 updates per second:
+Don't run AI logic every frame. Use a configured interval based on the behavior's responsiveness and profile it under the intended NPC count:
 
 ```luau
-local AI_TICK_RATE = 1/10 -- 10 updates per second
+local AI_TICK_RATE = 1/10 -- example only; tune and measure for the project
 local accumulated = 0
 
 RunService.Heartbeat:Connect(function(dt)
@@ -402,27 +412,16 @@ RunService.Heartbeat:Connect(function(dt)
 end)
 ```
 
-For large NPC counts, stagger updates so not all NPCs think on the same frame:
-
-```luau
-local npcIndex = 0
-RunService.Heartbeat:Connect(function(dt)
-    -- Process 5 NPCs per frame instead of all at once
-    for i = 1, math.min(5, #activeNPCs) do
-        npcIndex = (npcIndex % #activeNPCs) + 1
-        updateNPC(activeNPCs[npcIndex])
-    end
-end)
-```
+For large NPC counts, keep a rotating work cursor or queue so not all NPCs think on the same frame. Make the per-tick budget a measured project setting.
 
 ## Common Mistakes
 
 - **Client-side NPC logic**: ALL NPC behavior must run on the server. Client only handles animations/visuals.
-- **No path blocked handling**: Paths go stale when the world changes. Always connect `path.Blocked` and recompute.
-- **ComputeAsync with no fallback**: If path computation fails (Status ~= Success), don't freeze. Fall back to direct movement or idle.
-- **Tight detection loops**: Don't check every NPC against every player every frame. Distance check is O(n*m). Throttle to 5-10/sec.
-- **Forgetting SetNetworkOwner(nil)**: Without this, the nearest player owns NPC physics. Exploiters fling them.
+- **No path blocked handling**: Paths go stale when the world changes. Always connect `path.Blocked` and recompute with bounded retries.
+- **ComputeAsync with no fallback**: If path computation fails (`Status ~= Success`), don't freeze. Fall back to direct movement or idle.
+- **Tight detection loops**: Don't check every NPC against every player every frame. Distance checks are O(n*m); throttle and batch based on profiler evidence.
+- **Treating network ownership as security**: In classic projects, choose ownership deliberately. In Server Authority projects, configure the authority model; `SetNetworkOwner(nil)` alone is not the security boundary.
 - **Not cleaning up dead NPCs**: Destroy models after death animation. Corpses accumulate and kill performance.
 - **MoveTo timeout**: `Humanoid:MoveTo()` has an 8-second timeout. If the NPC gets stuck, `MoveToFinished` fires with `reached = false`. Handle it.
 - **Pathfinding on the client**: PathfindingService works on both client and server, but NPC movement must be server-authoritative. Compute paths on the server.
-- **No stagger for large NPC counts**: 50 NPCs all computing paths on the same frame = server lag spike. Stagger updates.
+- **No stagger for large NPC counts**: A large batch of path requests on one frame can spike the server. Stagger updates and measure the actual budget.

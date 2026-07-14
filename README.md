@@ -17,7 +17,7 @@ Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support ag
 
 `roblox-brain` gives an AI coding agent focused Roblox Studio knowledge without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details.
 
-- 31 focused skills across Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
+- 30 focused skills across Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
 - Compact `SKILL.md` entry points with deeper `references/full.md` material.
 - Guidance grounded in Roblox Creator Hub documentation, compatible external tools, and original synthesis.
 - Local validation, source checks, API-drift checks, version-pin checks, and copy-paste Luau probes.
@@ -49,7 +49,7 @@ skills/roblox-gui/
 2. **Quick reference:** the relevant `SKILL.md` gives the default rules and routing.
 3. **Full reference:** `references/full.md` supplies implementation details when the task needs them.
 
-## Skills (31)
+## Skills (30)
 
 ### Core language and architecture
 
@@ -61,11 +61,10 @@ skills/roblox-gui/
 | `roblox-architecture` | Service hierarchy, client/server boundaries, module contracts, and startup design |
 | `roblox-sharp-edges` | High-impact production footguns involving data, remotes, purchases, lifecycle, and scale |
 
-### Economy and monetization
+### Monetization
 
 | Skill | What it covers |
 | --- | --- |
-| `roblox-economy` | Currencies, faucets, sinks, inflation control, time-to-earn, trading, and economy integration |
 | `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, policy checks, and purchase recovery |
 
 ### Systems and networking

@@ -18,9 +18,17 @@ end
 
 Load the track when the character or prop is created, not in a hot input path. A missing or unavailable asset should leave the gameplay state valid and produce a useful warning.
 
+The helper above is a useful classic or local-presentation pattern. In a Server Authority project, do not treat an `AnimationTrack` reference as a permanent identity: rollback or resimulation can stop or replace the visible track. Store the animation ID in state and query the current animator tracks when applying changes, for example with `Animator:GetPlayingAnimationTracks()` or `Animator:GetTrackByAnimationId()`.
+
+## Server Authority animation and effects
+
+When an animation affects synchronized gameplay, mirror its control logic on the client and server in a shared module and run the synchronized part through `RunService:BindToSimulation()`. Keep camera, particles, sounds, and other presentation work outside the simulation callback so it can respond to the current predicted state.
+
+Predicted effects must be reversible. A client can briefly predict an impact, explosion, or sound that the server later rejects. Drive durable presentation from synchronized state or a state machine, and cancel or hide effects when rollback changes that state. Do not let a predicted effect grant damage, rewards, or other gameplay outcomes.
+
 ## 2. Priorities and markers
 
-Use animation priority to define which tracks may override the same joints. Keep locomotion and action tracks separate. Use marker signals for synchronized effects instead of guessing a timestamp that changes when an animation is retuned.
+Use animation priority to define which tracks may override the same joints. Keep locomotion and action tracks separate. Use marker signals for synchronized effects instead of guessing a timestamp that changes when an animation is retuned. In Server Authority, resolve the current track after rollback rather than assuming a cached track handle still represents the visible animation.
 
 ```luau
 local attack = loadTrack(animator, ATTACK_ID, Enum.AnimationPriority.Action)
