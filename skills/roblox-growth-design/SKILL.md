@@ -1,7 +1,7 @@
 ---
 name: roblox-growth-design
 description: "Use for Roblox growth diagnosis, discovery, retention, onboarding, experiments, positioning, LiveOps, and packaging."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-27
 sources:
   - https://create.roblox.com/docs/discovery
   - https://create.roblox.com/docs/production/game-design/analytics-essentials
@@ -27,31 +27,31 @@ sources:
 
 ## When to Load
 
-Load for weak growth, discovery, retention, onboarding, packaging, or LiveOps. Diagnose here, then route implementation to a domain skill.
+Load for weak growth, discovery, retention, onboarding, packaging, or LiveOps. Diagnose here, then route implementation to domain skills.
 
 ## Quick Reference
 
 ### Diagnose before prescribing
 
 1. Ask for dashboard evidence, release dates, acquisition mix, and observed sessions. Never invent metrics.
-2. Find the narrowest broken transition: impression to play, join to control, first action to first payoff, return, or purchase.
+2. Find the narrowest broken transition: impression to play, join to control, first action to payoff, return, or purchase.
 3. Write a falsifiable hypothesis: **If Y changes because evidence Z, X should move without harming G.**
 4. Prefer one interpretable experiment with a primary metric, counter-metrics, MDE, and decision rule.
-5. Stop for safety, severe regressions, or invalid instrumentation. Otherwise avoid significance peeking.
+5. Stop for safety, severe regressions, or invalid instrumentation. Avoid significance peeking.
 
 <!-- temporal: 2026-07 -->
 ### Home diagnosis
 
 - Low QPTR: packaging readability, promise accuracy, or audience mismatch.
-- Bounce under three minutes: join failure, performance, confusing FTUE, or delayed payoff.
+- Bounce under 3 min: join failure, performance, confusing FTUE, or delayed payoff.
 - Low D1: core loop, onboarding, stability, goals, or first payoff.
 - Low D7/D30: progression, variety, social value, LiveOps, endgame, or exhaustion.
-- Low conversion/ARPPU: product fit, value communication, friction, catalog depth, or concentration risk.
+- Low conversion/ARPPU: product fit, value communication, friction, catalog depth, or concentration.
 
-These are hypotheses, not one-to-one causes. Segment and test.
+These are hypotheses, not one-to-one causes. Segment and test. Per-stat tactics in full.md §3–§6.
 
 ### Guardrails
 
-Use accurate metadata. Avoid dark patterns, deceptive odds, coercive scarcity, and "whale" targeting. Treat platform input, moderation, abuse, accessibility, localization, performance, and economy health as design constraints.
+Use accurate metadata. Avoid dark patterns, deceptive odds, coercive scarcity, and "whale" targeting. Treat platform input, moderation, abuse, accessibility, localization, performance, and economy health as constraints.
 
 > Full signal definitions, positioning, FTUE, packaging, social design, and audit workflow: [references/full.md](references/full.md)
