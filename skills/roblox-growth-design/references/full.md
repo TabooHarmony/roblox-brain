@@ -256,9 +256,9 @@ Treat third-party estimates as directional. Public CCU, favorites, visits, revie
 
 **Heuristic:** Roblox trends tend to move through three phases:
 
-1. **First to market** — an original concept captures initial demand with little competition.
-2. **Saturation** — clones and templates flood in; the player base disperses; most copies die.
-3. **Mutation** — survivors re-package: new title, custom thumbnail, or altered core loop. Straight copies of the original's title and thumbnail format fail and can trigger metadata penalties (§6).
+1. **First to market:** an original concept captures initial demand with little competition.
+2. **Saturation:** clones and templates flood in; the player base disperses; most copies die.
+3. **Mutation:** survivors re-package with a new title, custom thumbnail, or altered core loop. Straight copies of the original's title and thumbnail format fail and can trigger metadata penalties (§6).
 
 If you are entering a trend in phase 2 or 3, a straight clone is the worst position. You need a meaningful twist or an underserved sub-audience.
 
@@ -389,11 +389,11 @@ Use these as starting points, not ranking rules:
 - Tease a mechanic over the title: text like "Steal at Night" or "Cure the Survivors" gives context and intrigue; the game's name alone usually does not.
 
 **Proven thumbnail formats (heuristic):**
-1. **Before & after** — noob vs. pro, cheap vs. expensive split. Works for tycoons and progression games.
-2. **First-person perspective** — viewer inside the action. Works for PVP, shooters, RP.
-3. **Two-character scene** — conflict or interaction, someone getting outplayed.
-4. **One character + action** — maximally readable and simple.
-5. **Entirely new concept** — unique to your game's mechanic; highest risk, highest differentiation.
+1. **Before & after:** noob vs. pro, cheap vs. expensive split. Works for tycoons and progression games.
+2. **First-person perspective:** viewer inside the action. Works for PVP, shooters, RP.
+3. **Two-character scene:** conflict or interaction, someone getting outplayed.
+4. **One character + action:** maximally readable and simple.
+5. **Entirely new concept:** unique to your game's mechanic; highest risk, highest differentiation.
 
 **Creation workflow (heuristic):**
 1. Research genre tropes in top games of the niche (e.g., hacker games: masks, green binary, brand rivalries).
