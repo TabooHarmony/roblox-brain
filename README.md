@@ -18,9 +18,7 @@ Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support ag
 `roblox-brain` gives an AI coding agent focused Roblox Studio knowledge without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details.
 
 - 28 focused skills across Luau, architecture, game design, networking, UI, physics, data, monetization, localization, tooling, and publishing.
-- Compact `SKILL.md` entry points with deeper `references/full.md` material.
 - Guidance grounded in Roblox Creator Hub documentation, compatible external tools, and original synthesis.
-- Local validation, source checks, API-drift checks, version-pin checks, and copy-paste Luau probes.
 
 ## Install
 
@@ -32,22 +30,7 @@ npx skills add TabooHarmony/roblox-brain
 npx skills add TabooHarmony/roblox-brain --skill roblox-building
 ```
 
-You can also copy an individual `SKILL.md` into `.claude/skills/`, `.opencode/skills/`, `.cursor/skills/`, or another compatible skill directory.
-
-## How the content is organized
-
-Skills use **progressive disclosure** so an agent can start with a small context window and load detail only when needed:
-
-```text
-skills/roblox-gui/
-├── SKILL.md              # quick reference
-└── references/
-    └── full.md           # examples, API notes, and edge cases
-```
-
-1. **Discovery:** the host reads skill names and descriptions from `SKILL.md` frontmatter.
-2. **Quick reference:** the selected `SKILL.md` gives default rules and routing.
-3. **Full reference:** linked `references/full.md` material is loaded only when the task needs it.
+You can also copy an individual `SKILL.md` into `.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, or another compatible skill directory.
 
 ## Skills (28)
 
@@ -120,10 +103,25 @@ skills/roblox-gui/
 | `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, sourcemaps, and CI |
 | `roblox-localization` | LocalizationService, translation tables, locale handling, and auto-translation |
 
+## How the content is organized
+
+Skills use **progressive disclosure** so an agent can start with a small context window and load detail only when needed:
+
+```text
+skills/roblox-gui/
+├── SKILL.md              # quick reference
+└── references/
+    └── full.md           # examples, API notes, and edge cases
+```
+
+1. **Discovery:** the host reads skill names and descriptions from `SKILL.md` frontmatter.
+2. **Quick reference:** the selected `SKILL.md` gives default rules and routing.
+3. **Full reference:** linked `references/full.md` material is loaded only when the task needs it.
+
 ## Recommended MCP servers
 
-- **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp):** use the official server or a compatible community bridge. The skills route by capability and do not require one specific bridge.
-- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search.
+- **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp):** use the official server or a [community fork with additional features](https://github.com/Chrrxs/robloxstudio-mcp).
+- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search, saves a lot of tokens.
 
 ## Contributing
 
@@ -146,11 +144,9 @@ python3 verify_version_pins.py
 
 ## Contributors
 
-- **[MrFearTick](https://github.com/MrFearTick):** code references, networking, and monetization expansion
+- **[MrFearTick](https://www.roblox.com/users/1880599950/profile):** code references, networking, and monetization expansion
+- **[eeyq](https://www.roblox.com/users/192217155/profile):**: content and references for roblox-growth-design skill
 
-## Release notes
-
-See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
