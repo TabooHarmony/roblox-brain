@@ -1,7 +1,7 @@
 ---
 name: roblox-input
 description: "Use when handling Roblox keyboard, mouse, gamepad, touch, motion input, or cross-platform action binding."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/UserInputService
   - https://create.roblox.com/docs/reference/engine/classes/ContextActionService
@@ -12,6 +12,8 @@ sources:
   - https://create.roblox.com/docs/input/input-action-system
   - https://raw.githubusercontent.com/Roblox/focus-navigation/main/README.md
 ---
+
+# Roblox Input
 
 ## When to Load
 
@@ -38,7 +40,7 @@ CAS:BindAction("Jump", onAction, true,
 
 `BindAction(name, handler, createTouchButton, ...inputTypes)`. Handler returns `ContextActionResult.Sink` to consume, `.Pass` to fall through.
 
-**Server Authority:** use `InputAction`/`InputContext` for inputs that affect the core simulation, store the input state where the synchronized simulation can read it, and process it through `RunService:BindToSimulation()`. `ContextActionService` remains appropriate for UI-only or classic-project actions.
+**Server Authority:** use `InputAction`/`InputContext` for inputs that affect the core simulation, store the input state where the synchronized simulation can read it, and process it through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio). `ContextActionService` remains appropriate for UI-only or classic-project actions.
 
 **Gamepad UI focus:** separate gameplay bindings from menu selection. Set `GuiService.SelectedObject`, mark controls `Selectable`, and test nested/modal navigation.
 

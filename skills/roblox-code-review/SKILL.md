@@ -3,11 +3,12 @@ name: roblox-code-review
 description: "Use when reviewing Roblox or Luau code for security, performance, monetization, data persistence, or architecture risks."
 last_reviewed: 2026-07-04
 sources: [original]
+kind: router
 ---
 
-# Code Review
+# Roblox Code Review
 
-Review Roblox projects with security, performance, and monetization lenses. Apply relevant lenses based on what changed — not all every time.
+Route a Roblox code review to the right domain skills and produce a structured report. Apply relevant lenses based on what changed, not all every time.
 
 ## When to Load
 
@@ -17,33 +18,25 @@ Review Roblox projects with security, performance, and monetization lenses. Appl
 
 ## Quick Reference
 
-### 8-Step Review
-1. **Project Scan** — scripts, folders, naming, Rojo/Wally/Studio
-2. **Organization** — correct services, PascalCase modules, no orphans
-3. **Code Quality** — `wait()`→`task.wait()`, `spawn()`→`task.spawn()`, globals
-4. **Architecture** — single responsibility, no circular requires, server/client split
-5. **Security** — validate remotes server-side, no client-trusted state, rate-limit
-6. **Performance** — consolidate Heartbeat, cache services, disconnect events
-7. **Report** — Grade A-F. Severity: Critical/High/Medium/Low
-8. **Refactor** — Immediate → Short-term → Long-term
-
 ### Routing — Load These Skills for Each Lens
 
 | Lens | Load |
 |------|------|
-| Gotchas & footguns | `roblox-sharp-edges` |
 | Security audit | `roblox-security` |
 | Remote validation | `roblox-networking` |
 | Data persistence | `roblox-data` |
+| Cross-server state | `roblox-server-data` |
 | Monetization | `roblox-monetization` |
 | Performance | `roblox-performance` |
 | Luau correctness | `roblox-luau-core`, `roblox-luau-types` |
+| Architecture | `roblox-architecture` |
 
 ### Output Format
-1. READY / NOT READY
-2. Critical blockers
-3. Warnings
-4. Pass count/%
-5. Failed items + fixes
 
-📖 Full reference: `references/full.md`
+1. **READY / NOT READY**
+2. Critical blockers (security, data loss, crashes)
+3. Warnings (leaks, bottlenecks, deprecated APIs)
+4. Unverified risks and unavailable evidence
+5. Findings with specific fixes
+
+Severity: Critical / High / Medium / Low. For each finding: file + line, what's wrong, impact, and the smallest correct fix. The routed domain skill owns detailed checks.

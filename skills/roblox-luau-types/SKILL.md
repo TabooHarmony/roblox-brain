@@ -1,9 +1,10 @@
 ---
 name: roblox-luau-types
 description: "Use for Luau annotations, generics, unions, narrowing, strictness, sealed tables, module type exports, or typed metatables."
-last_reviewed: 2026-05-27
+last_reviewed: 2026-07-26
 sources:
   - https://luau-lang.org/typecheck
+  - https://devforum.roblox.com/t/general-release-luau%E2%80%99s-new-type-solver/4084991
 ---
 
 # Luau Type System
@@ -14,7 +15,7 @@ Load for Luau type system work: annotations, generics, union types, type narrowi
 
 ## Quick Reference
 
-**Strictness:** `--!strict` (new code), `--!nonstrict` (transitional), `--!nocheck` (legacy only). The New Type Solver (GA Nov 2025) is faster/more accurate.
+**Strictness:** Use `--!strict` for maintained code, `--!nonstrict` while transitioning, and `--!nocheck` only for legacy/generated code. Project settings and directives select the mode; do not assume one global default.
 
 **Inference philosophy:** Infer first, annotate boundaries (params, returns, exports). Don't annotate every local — noise hides signal.
 
@@ -37,9 +38,13 @@ type State<T> = {kind:"loading"} | {kind:"ready", value:T} | {kind:"fail", msg:s
 
 **Narrowing:**
 ```luau
-if typeof(x) == "string" then ... end          -- primitive narrowing
-if inst:IsA("BasePart") then ... end           -- Instance narrowing
-assert(val, "missing")                          -- non-nil narrowing
+if typeof(value) == "string" then
+    print(string.upper(value)) -- primitive narrowing
+end
+if instance:IsA("BasePart") then
+    print(instance.Position) -- Instance narrowing
+end
+assert(optionalValue, "missing") -- non-nil narrowing
 ```
 
 **Generics:** Use when input→output type matters. `function first<T>(list: {T}): T?`. Generic aliases: `type Result<T> = {success: boolean, value: T?}`. Never replace with `any`.

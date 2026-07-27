@@ -1,5 +1,7 @@
 # roblox tooling: full reference
 
+> Code examples are illustrative. Adapt them to your project and verify in Studio before production use.
+
 Tooling should make the source tree reproducible without forcing every project into the same framework. Keep the repository's chosen tools visible in its manifest and CI.
 
 ## 1. Decide what the project needs

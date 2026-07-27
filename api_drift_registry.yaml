@@ -5,41 +5,14 @@
 # Run `python3 verify_api_drift.py` before external review or release.
 
 entries:
-  - id: uistroke-sizing-mode
-    claim: "UIStroke supports scale-based thickness via StrokeSizingMode"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: UIStroke
-      property: StrokeSizingMode
-    verified: 2026-07-02
-
-  - id: uistroke-border-position
-    claim: "UIStroke supports BorderStrokePosition"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: UIStroke
-      property: BorderStrokePosition
-    verified: 2026-07-02
-
-  - id: uistroke-border-offset
-    claim: "UIStroke supports BorderOffset"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: UIStroke
-      property: BorderOffset
-    verified: 2026-07-02
-
   - id: cframe-lookat-constructor-replaced
     claim: "CFrame.new(pos, lookAt) is legacy/replaced; use CFrame.lookAt"
     files:
       - path: skills/roblox-camera/SKILL.md
       - path: skills/roblox-camera/references/full.md
+    teaching_needles:
+      - CFrame.new
+      - CFrame.lookAt
     check:
       type: constructor_description_contains
       datatype: CFrame
@@ -56,7 +29,7 @@ entries:
       - path: skills/roblox-camera/SKILL.md
       - path: skills/roblox-camera/references/full.md
     check:
-      type: member_deprecation_status
+      type: method_deprecation_status
       class: Camera
       member: SetRoll
       expected: deprecated
@@ -67,46 +40,15 @@ entries:
     files:
       - path: skills/roblox-camera/references/full.md
     check:
-      type: member_deprecation_status
+      type: method_deprecation_status
       class: Camera
       member: GetRoll
       expected: deprecated
     verified: 2026-07-02
 
-  - id: bodyvelocity-deprecated
-    claim: "BodyVelocity is deprecated; use LinearVelocity"
-    files:
-      - path: skills/roblox-architecture/references/full.md
-    check:
-      type: class_deprecation_status
-      class: BodyVelocity
-      expected: deprecated
-    verified: 2026-07-02
-
-  - id: textlabel-fontface-exists
-    claim: "TextLabel.FontFace exists for newer fonts beyond Enum.Font"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: TextLabel
-      property: FontFace
-    verified: 2026-07-02
-
-  - id: textbutton-fontface-exists
-    claim: "TextButton.FontFace exists for newer fonts beyond Enum.Font"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: TextButton
-      property: FontFace
-    verified: 2026-07-02
-
   - id: lighting-style-exists
     claim: "Lighting.LightingStyle is the current artistic-intent property"
     files:
-      - path: skills/roblox-lighting/SKILL.md
       - path: skills/roblox-lighting/references/full.md
     check:
       type: property_exists
@@ -117,7 +59,6 @@ entries:
   - id: lighting-prioritize-quality-exists
     claim: "Lighting.PrioritizeLightingQuality is the current quality-distance preference property"
     files:
-      - path: skills/roblox-lighting/SKILL.md
       - path: skills/roblox-lighting/references/full.md
     check:
       type: property_exists
@@ -125,8 +66,30 @@ entries:
       property: PrioritizeLightingQuality
     verified: 2026-07-12
 
+  - id: lighting-style-not-script-writable
+    claim: "Lighting.LightingStyle must be configured in Studio"
+    files:
+      - path: skills/roblox-lighting/references/full.md
+    check:
+      type: property_write_security
+      class: Lighting
+      property: LightingStyle
+      expected: RobloxScriptSecurity
+    verified: 2026-07-26
+
+  - id: lighting-prioritize-quality-not-script-writable
+    claim: "Lighting.PrioritizeLightingQuality must be configured in Studio"
+    files:
+      - path: skills/roblox-lighting/references/full.md
+    check:
+      type: property_write_security
+      class: Lighting
+      property: PrioritizeLightingQuality
+      expected: RobloxScriptSecurity
+    verified: 2026-07-26
+
   - id: lighting-technology-deprecated
-    claim: "Lighting.Technology is deprecated and superseded by LightingStyle and PrioritizeLightingQuality"
+    claim: "Lighting.Technology is deprecated (superseded by LightingStyle/PrioritizeLightingQuality) and non-scriptable"
     files:
       - path: skills/roblox-lighting/SKILL.md
       - path: skills/roblox-lighting/references/full.md
@@ -135,7 +98,7 @@ entries:
       class: Lighting
       property: Technology
       expected: deprecated
-    verified: 2026-07-12
+    verified: 2026-07-23
 
   - id: ordered-datastore-key-string
     claim: "GlobalDataStore:SetAsync takes a string key, including for OrderedDataStore usage"
@@ -149,3 +112,240 @@ entries:
       parameter: key
       expected: string
     verified: 2026-07-12
+
+  # --- Added 2026-07-23 grill: coverage for skills verified against live docs ---
+
+  - id: networking-unreliable-remote-event-exists
+    claim: "UnreliableRemoteEvent is a real class for loss-tolerant ephemeral events"
+    files:
+      - path: skills/roblox-networking/references/full.md
+    check:
+      type: member_exists
+      class: UnreliableRemoteEvent
+      member: FireAllClients
+    verified: 2026-07-23
+
+  - id: input-touchmoved-exists
+    claim: "UserInputService.TouchMoved is the real touch-move event (not TouchChanged)"
+    files:
+      - path: skills/roblox-input/references/full.md
+    check:
+      type: member_exists
+      class: UserInputService
+      member: TouchMoved
+    verified: 2026-07-23
+
+  - id: input-getmousedelta-exists
+    claim: "UserInputService:GetMouseDelta exists and returns Vector2"
+    files:
+      - path: skills/roblox-input/references/full.md
+    check:
+      type: method_return_type
+      class: UserInputService
+      method: GetMouseDelta
+      expected: Vector2
+    verified: 2026-07-26
+
+  - id: server-data-getsortedasync-exists
+    claim: "OrderedDataStore:GetSortedAsync returns sorted DataStorePages"
+    files:
+      - path: skills/roblox-server-data/SKILL.md
+      - path: skills/roblox-server-data/references/full.md
+    check:
+      type: member_exists
+      class: OrderedDataStore
+      member: GetSortedAsync
+    verified: 2026-07-23
+
+  - id: server-data-messaging-publish-exists
+    claim: "MessagingService:PublishAsync exists for cross-server messaging"
+    files:
+      - path: skills/roblox-server-data/SKILL.md
+      - path: skills/roblox-server-data/references/full.md
+    check:
+      type: member_exists
+      class: MessagingService
+      member: PublishAsync
+    verified: 2026-07-23
+
+  - id: analytics-logcustomevent-exists
+    claim: "AnalyticsService:LogCustomEvent exists"
+    files:
+      - path: skills/roblox-analytics/references/full.md
+    check:
+      type: member_exists
+      class: AnalyticsService
+      member: LogCustomEvent
+    verified: 2026-07-23
+
+  - id: analytics-logfunnelstepevent-exists
+    claim: "AnalyticsService:LogFunnelStepEvent exists for recurring funnels"
+    files:
+      - path: skills/roblox-analytics/references/full.md
+    check:
+      type: member_exists
+      class: AnalyticsService
+      member: LogFunnelStepEvent
+    verified: 2026-07-26
+
+  - id: analytics-logonboardingfunnelstepevent-exists
+    claim: "AnalyticsService:LogOnboardingFunnelStepEvent exists for onboarding"
+    files:
+      - path: skills/roblox-analytics/references/full.md
+    check:
+      type: member_exists
+      class: AnalyticsService
+      member: LogOnboardingFunnelStepEvent
+    verified: 2026-07-26
+
+  - id: localization-formatbykey-exists
+    claim: "Translator:FormatByKey exists (FormatTranslate does NOT)"
+    files:
+      - path: skills/roblox-localization/SKILL.md
+      - path: skills/roblox-localization/references/full.md
+    check:
+      type: member_exists
+      class: Translator
+      member: FormatByKey
+    verified: 2026-07-23
+
+  - id: localization-autolocalize-exists
+    claim: "GuiBase2d.AutoLocalize must be true for auto-translation"
+    files:
+      - path: skills/roblox-localization/references/full.md
+    check:
+      type: property_exists
+      class: GuiBase2d
+      property: AutoLocalize
+    verified: 2026-07-23
+
+  - id: performance-streamingenabled-exists
+    claim: "Workspace.StreamingEnabled exists (ReadOnly, set in Studio)"
+    files:
+      - path: skills/roblox-performance/SKILL.md
+      - path: skills/roblox-performance/references/full.md
+    check:
+      type: property_exists
+      class: Workspace
+      property: StreamingEnabled
+    verified: 2026-07-23
+
+  - id: performance-streaming-integrity-mode-exists
+    claim: "Workspace.StreamingIntegrityMode replaces removed StreamingPauseMode guidance"
+    files:
+      - path: skills/roblox-performance/SKILL.md
+      - path: skills/roblox-performance/references/full.md
+    check:
+      type: property_has_tag
+      class: Workspace
+      property: StreamingIntegrityMode
+      tag: NotScriptable
+    verified: 2026-07-26
+
+  - id: audio-default-listener-location-exists
+    claim: "SoundService.DefaultListenerLocation controls default advanced-audio listener placement"
+    files:
+      - path: skills/roblox-audio/SKILL.md
+      - path: skills/roblox-audio/references/full.md
+    check:
+      type: property_write_security
+      class: SoundService
+      property: DefaultListenerLocation
+      expected: PluginSecurity
+    verified: 2026-07-26
+
+  - id: bind-to-simulation-requires-fixed-simulation
+    claim: "RunService:BindToSimulation requires Workspace.UseFixedSimulation"
+    files:
+      - path: skills/roblox-animation-vfx/SKILL.md
+      - path: skills/roblox-animation-vfx/references/full.md
+      - path: skills/roblox-input/SKILL.md
+      - path: skills/roblox-input/references/full.md
+      - path: skills/roblox-networking/SKILL.md
+      - path: skills/roblox-networking/references/full.md
+      - path: skills/roblox-physics/references/full.md
+      - path: skills/roblox-security/SKILL.md
+      - path: skills/roblox-security/references/full.md
+    teaching_needles:
+      - BindToSimulation
+      - UseFixedSimulation
+    check:
+      type: method_description_contains
+      class: RunService
+      method: BindToSimulation
+      contains: UseFixedSimulation
+    verified: 2026-07-26
+
+  - id: pathfinding-improved-search-not-scriptable
+    claim: "Workspace.PathfindingUseImprovedSearch is a Studio-only setting"
+    files:
+      - path: skills/roblox-npc-ai/SKILL.md
+      - path: skills/roblox-npc-ai/references/full.md
+    check:
+      type: property_has_tag
+      class: Workspace
+      property: PathfindingUseImprovedSearch
+      tag: NotScriptable
+    verified: 2026-07-26
+
+  - id: ui-design-core-ui-safe-insets-exists
+    claim: "Enum.ScreenInsets.CoreUISafeInsets exists"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    check:
+      type: enum_item_exists
+      enum: ScreenInsets
+      item: CoreUISafeInsets
+    verified: 2026-07-26
+
+  - id: monetization-process-receipt-exists
+    claim: "MarketplaceService.ProcessReceipt exists"
+    files:
+      - path: skills/roblox-monetization/SKILL.md
+      - path: skills/roblox-monetization/references/full.md
+    check:
+      type: member_exists
+      class: MarketplaceService
+      member: ProcessReceipt
+    verified: 2026-07-26
+
+  - id: monetization-bind-receipt-handler-exists
+    claim: "MarketplaceService:BindReceiptHandler exists"
+    files:
+      - path: skills/roblox-monetization/SKILL.md
+      - path: skills/roblox-monetization/references/full.md
+    check:
+      type: member_exists
+      class: MarketplaceService
+      member: BindReceiptHandler
+    verified: 2026-07-26
+
+  - id: ui-design-reduced-motion-enabled-exists
+    claim: "GuiService.ReducedMotionEnabled exposes the player's reduced-motion preference"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    check:
+      type: property_exists
+      class: GuiService
+      property: ReducedMotionEnabled
+    verified: 2026-07-26
+
+  - id: ui-design-screen-insets-property-exists
+    claim: "ScreenGui.ScreenInsets accepts Enum.ScreenInsets values"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    check:
+      type: property_exists
+      class: ScreenGui
+      property: ScreenInsets
+    verified: 2026-07-26
+
+  - id: analytics-custom-field-key-exists
+    claim: "Enum.AnalyticsCustomFieldKeys.CustomField01 exists for analytics custom fields"
+    files:
+      - path: skills/roblox-analytics/references/full.md
+    check:
+      type: enum_item_exists
+      enum: AnalyticsCustomFieldKeys
+      item: CustomField01
+    verified: 2026-07-26

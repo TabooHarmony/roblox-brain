@@ -1,5 +1,7 @@
 # roblox animation and vfx: full reference
 
+> Code examples are illustrative. Adapt them to your project and verify in Studio before production use.
+
 Visual effects are a budgeted part of gameplay, not decoration added after performance work. Build them around an owner, a trigger, a duration, and a cleanup path.
 
 ## 1. Animation loading
@@ -22,7 +24,7 @@ The helper above is a useful classic or local-presentation pattern. In a Server 
 
 ## Server Authority animation and effects
 
-When an animation affects synchronized gameplay, mirror its control logic on the client and server in a shared module and run the synchronized part through `RunService:BindToSimulation()`. Keep camera, particles, sounds, and other presentation work outside the simulation callback so it can respond to the current predicted state.
+When an animation affects synchronized gameplay, mirror its control logic on the client and server in a shared module and run the synchronized part through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio). Keep camera, particles, sounds, and other presentation work outside the simulation callback so it can respond to the current predicted state.
 
 Predicted effects must be reversible. A client can briefly predict an impact, explosion, or sound that the server later rejects. Drive durable presentation from synchronized state or a state machine, and cancel or hide effects when rollback changes that state. Do not let a predicted effect grant damage, rewards, or other gameplay outcomes.
 

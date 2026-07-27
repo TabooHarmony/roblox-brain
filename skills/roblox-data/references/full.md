@@ -1,5 +1,7 @@
 # roblox data persistence: full reference
 
+> Code examples are illustrative. Adapt them to your project and verify in Studio before production use.
+
 This guide uses raw `DataStoreService` concepts and does not require a particular profile library. If the project already uses a session-locking wrapper, keep its lifecycle and failure semantics instead of mixing two ownership systems.
 
 ## 1. Choose the storage primitive
@@ -212,7 +214,7 @@ Players.PlayerRemoving:Connect(releasePlayer)
 
 The important behavior is the failure path. `StartSessionAsync()` can return `nil`; never treat that as a new empty profile. `Steal = true` bypasses session protection and belongs only in controlled debugging, not normal joins. Use `ProfileStore.Mock` in Studio when live API access is enabled but writes must remain ephemeral.
 
-Use `profile:MessageAsync()` only for critical profile-targeted delivery, such as an offline paid gift that must be delivered later. For best-effort live announcements, use MessagingService instead. Profiles also expose critical-state and error signals; route them to observability rather than silently continuing as if saves were healthy.
+Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-targeted delivery, such as an offline paid gift that must be delivered later, and receive it with `profile:MessageHandler(...)`. For best-effort live announcements, use MessagingService instead. Profiles also expose critical-state and error signals; route them to observability rather than silently continuing as if saves were healthy.
 
 ## 9. Data safety checklist
 

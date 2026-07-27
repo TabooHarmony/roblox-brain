@@ -5,26 +5,28 @@
 
 Detailed performance targets, profiling guides, optimization patterns, and platform-specific guidance.
 
-## Performance Targets
+## Starting Performance Targets
+
+These are investigation thresholds, not Roblox platform limits. Replace them
+with measurements from representative devices and your experience's workload.
 
 ### Server
-| Metric | Target | Hard Limit |
-|--------|--------|-----------|
-| Heartbeat time | < 16ms (60Hz) | < 33ms (30Hz) |
-| Script time | < 10ms/frame | < 20ms |
-| Memory | < 2GB typical | ~3.5GB available |
-| Network out | < 50KB/s per player | — |
-| DataStore budget | 60 + (players × 10) req/min | per Get/Set type |
+| Metric | Starting target | Investigate at |
+|--------|-----------------|----------------|
+| Heartbeat time | < 16ms (60Hz) | > 33ms (below 30Hz) |
+| Script time | < 10ms/frame | > 20ms |
+| Memory | stable baseline | sustained growth |
+| Network out | measured baseline | congestion or latency |
+| DataStore budget | query `GetRequestBudgetForRequestType()` | low budget per request type |
 
 ### Client
-| Metric | Target | Minimum |
-|--------|--------|---------|
-| FPS (desktop) | 60 | 30 |
-| FPS (mobile) | 45 | 30 |
-| Memory (mobile) | < 800MB | < 1.2GB (crash zone) |
-| Memory (desktop) | < 1.5GB | < 3GB |
-| Load time | < 10s to playable | < 20s |
-| Input latency | < 100ms | < 200ms |
+| Metric | Starting target | Investigate at |
+|--------|-----------------|----------------|
+| FPS (desktop) | 60 | < 30 |
+| FPS (mobile) | 45 | < 30 |
+| Memory | stable device-tier baseline | sustained growth or OS termination |
+| Load time | < 10s to playable | > 20s |
+| Input latency | < 100ms | > 200ms |
 
 ## Profiling Tools
 
@@ -32,7 +34,7 @@ Detailed performance targets, profiling guides, optimization patterns, and platf
 Per-frame breakdown of time spent in scripts, physics, rendering. The primary tool for finding what's actually slow.
 
 - Server: View → MicroProfiler
-- Client: Ctrl+Alt+F6 during playtest
+- Client: Ctrl+F6 toggles the profiler; Ctrl+Alt+F6 opens its detailed timeline
 - Look for: long bars in "Script" category, physics spikes, render thread stalls
 
 ### Developer Console (F9)
@@ -169,11 +171,10 @@ RunService.Heartbeat:Connect(function(dt)
 end)
 ```
 
-### Spatial Partitioning
+### Distance-Based Relevance Filtering
 
 ```luau
--- Don't check all entities against all entities
--- Use distance-based activation
+-- This reduces expensive updates after discovery; the scan itself remains O(n).
 local ACTIVATION_RANGE = 100
 
 local function getActiveEntities(playerPosition: Vector3): {Instance}
@@ -186,6 +187,10 @@ local function getActiveEntities(playerPosition: Vector3): {Instance}
     return active
 end
 ```
+
+For large populations or frequent queries, use a real spatial index such as a
+grid or spatial hash. Choose its cell size from the query radius and movement
+pattern; this linear filter is not spatial partitioning.
 
 ### Lazy Loading
 
@@ -207,14 +212,14 @@ end
 
 ## Mobile-Specific Optimization
 
-Mobile is 60%+ of Roblox players. Optimize for it specifically:
+Optimize for representative low-end mobile devices, not universal object caps:
 
-- **Part count**: Keep under 5000 visible parts. Use StreamingEnabled.
-- **Textures**: Max 512x512 for most textures. 1024 only for hero assets.
-- **Particles**: Cap at 50 total active emitters. Reduce Rate on mobile.
-- **UI**: Use CanvasGroup to batch UI rendering. Avoid deep nesting.
-- **Shadows**: Consider disabling GlobalShadows on mobile or reducing ShadowSoftness.
-- **Draw distance**: Reduce via StreamingEnabled MinRadius/TargetRadius.
+- **Geometry**: Profile visible parts and triangles; use StreamingEnabled where appropriate.
+- **Textures**: Match resolution to on-screen size and inspect texture memory.
+- **Particles**: Measure active particle cost and reduce rate/lifetime on constrained devices.
+- **UI**: Profile hierarchy and `CanvasGroup` use; CanvasGroup itself has rendering cost.
+- **Shadows**: Profile lighting and shadow settings on each target tier.
+- **Streaming**: Tune radii in Studio against pop-in, memory, and bandwidth.
 
 ### StreamingEnabled
 
@@ -223,9 +228,12 @@ StreamingEnabled is **on by default** for new places. Only `BaseParts` and their
 When instances stream out, they are **parented to nil** (not destroyed). Luau references persist if they stream back in. Removal signals fire, but local-only property changes may be lost.
 
 Configuration:
-- `StreamingTargetRadius` — radius (studs) engine keeps loaded. Start at 256, tune down for mobile.
-- `StreamingMinRadius` — guaranteed radius. Set ~64 for nearby content.
-- `StreamingPauseMode` — what happens during load (Default, Disabled, ClientPhysicsPause).
+- `StreamingTargetRadius` — maximum target distance; Studio default is 1024 studs.
+- `StreamingMinRadius` — highest-priority radius; Studio default is 64 studs.
+- `StreamingIntegrityMode` — behavior when a player enters an incompletely streamed region.
+
+These settings are not scriptable. Tune them in Studio from measurements on
+representative devices; do not assume a smaller radius is automatically better.
 
 **Gotcha**: `workspace:FindFirstChild("DistantPart")` returns nil if the part is streamed out. Use `WaitForChild` with timeout, or design systems that don't depend on distant parts existing on the client.
 
@@ -238,15 +246,15 @@ local isMobile = UserInputService.TouchEnabled
     and not UserInputService.KeyboardEnabled
 
 if isMobile then
-    -- Reduce quality settings
-    workspace.StreamingEnabled = true
+    -- StreamingEnabled is set in Studio (ReadOnly from scripts).
     -- Reduce particle counts, disable expensive effects
 end
 ```
 
 ## Performance Budget Template
 
-Set these before building, enforce during development:
+Illustrative allocation for a 60 FPS target. Replace every number with measured
+project budgets before enforcing it:
 
 ```
 SERVER BUDGET (per Heartbeat frame, 16ms total):
@@ -263,10 +271,8 @@ CLIENT BUDGET (per render frame, 16ms for 60fps):
   Overhead:    1ms
 
 MEMORY BUDGET:
-  Mobile:      600MB max (leave headroom for OS)
-  Desktop:     1.5GB max
+  Set per tested device tier; watch sustained growth and OS termination.
 
 NETWORK BUDGET:
-  Per player:  30KB/s average, 100KB/s burst
-  RemoteEvents: max 20 fires/sec per remote
+  Set from measured gameplay traffic and latency; rate-limit per action semantics.
 ```

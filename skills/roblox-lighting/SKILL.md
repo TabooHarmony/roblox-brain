@@ -1,7 +1,7 @@
 ---
 name: roblox-lighting
 description: "Use for Roblox lighting, atmosphere, day/night, or post-processing effects."
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-26
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/lighting.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/atmosphere.md
@@ -24,7 +24,7 @@ Lighting.Ambient = Color3.fromRGB(70, 70, 70)        -- shadow fill
 Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 Lighting.GlobalShadows = true
 Lighting.ShadowSoftness = 0.2      -- 0=sharp, 1=soft
--- Current Studio uses LightingStyle and PrioritizeLightingQuality instead of Technology.
+-- Configure tech/style/quality in Studio; these properties are not script-writable.
 -- Verify enum values and device behavior against current Creator Hub docs before setting them.
 ```
 
@@ -72,7 +72,7 @@ end)
 
 ### Common Pitfalls
 - Brightness >3 washes out. Density >0.5 = soup. Max 2-3 post effects.
-- Ambient should not be black. Use LightingStyle/PrioritizeLightingQuality; never set deprecated Technology.
+- Avoid black Ambient. Technology is deprecated; it and its replacements are Studio-only.
 
 ### References
 - Mood presets (Day, Golden Hour, Night, Horror, Underwater, Sci-Fi), zone tweens, full examples: `references/full.md`

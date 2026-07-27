@@ -7,7 +7,7 @@ Both `UserInputService` (UIS) and `ContextActionService` (CAS) are client-only. 
 
 ## Input Action System and Server Authority
 
-For a Server Authority project, inputs that affect the core simulation should use Roblox's Input Action System (`InputAction` and `InputContext`) rather than traditional `UserInputService.InputBegan` or a continuous `RemoteEvent` stream. Store the current action state where the shared simulation can read it, then process synchronized movement or physics through `RunService:BindToSimulation()` so client prediction and server rollback use the same input history.
+For a Server Authority project, inputs that affect the core simulation should use Roblox's Input Action System (`InputAction` and `InputContext`) rather than traditional `UserInputService.InputBegan` or a continuous `RemoteEvent` stream. Store the current action state where the shared simulation can read it, then process synchronized movement or physics through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio) so client prediction and server rollback use the same input history.
 
 `ContextActionService` remains useful for UI-only actions and classic projects. Do not use the UI binding choice as a security boundary; the server still validates the resulting action and its game-specific permissions.
 
@@ -35,9 +35,9 @@ For a Server Authority project, inputs that affect the core simulation should us
 | `IsKeyDown(KeyCode)` | bool | Held keyboard keys |
 | `IsMouseButtonPressed(UserInputType)` | bool | Held mouse buttons |
 | `IsGamepadButtonDown(UserInputType, KeyCode)` | bool | Held gamepad buttons |
-| `GetKeysPressed()` | {KeyCode, InputObject}[] | All held keys (with `InputObject` for key-up detection) |
+| `GetKeysPressed()` | InputObject[] | All held keyboard inputs |
 | `GetMouseButtonsPressed()` | InputObject[] | All held mouse buttons |
-| `GetMouseDelta()` | (number, number) | Per-frame mouse movement |
+| `GetMouseDelta()` | Vector2 | Per-frame mouse movement |
 | `GetMouseLocation()` | Vector2 | Mouse position in viewport |
 | `GetLastInputType()` | Enum.UserInputType | Last input across all devices |
 | `GetConnectedGamepads()` | UserInputType[] | Currently connected gamepads |
@@ -370,7 +370,7 @@ UIS.TouchStarted:Connect(function(input, gpe)
     lastPos = input.Position
 end)
 
-UIS.TouchChanged:Connect(function(input, gpe)
+UIS.TouchMoved:Connect(function(input, gpe)
     if not dragging or gpe then return end
     local delta = input.Position - lastPos
     -- rotate camera by delta

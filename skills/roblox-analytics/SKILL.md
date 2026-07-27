@@ -1,9 +1,10 @@
 ---
 name: roblox-analytics
 description: "Use when tracking player behavior, economy events, or funnels with AnalyticsService, including event taxonomy, rate limits, and batching."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/AnalyticsService
+  - https://create.roblox.com/docs/production/analytics/custom-fields
   - https://create.roblox.com/docs/creator-rewards
   - https://devforum.roblox.com/t/creator-rewards-is-live/3838257
 ---
@@ -22,7 +23,7 @@ Key rules:
 - Use `AnalyticsService` (built-in). No third-party analytics SDK needed.
 - Three event types: Custom (counters/values), Economy (currency flow), Funnel (step progression)
 - Rate limit: 120 + (20 × CCU) calls per minute. Batch where possible.
-- Max 100 custom events, 10 economy resource types, 10 funnels, 3 custom fields per event.
+- Max 100 custom events, 5 unique currency types, 10 funnels, 3 custom fields per event.
 - Log events AFTER successful operations, not on attempt (avoids inflated metrics).
 - Custom fields (up to 3) let you slice data without burning event cardinality.
 - Economy events track sources (earned) and sinks (spent) separately.
@@ -31,5 +32,4 @@ Key rules:
 - Server-side logging preferred for accuracy. Client-side only for UI interaction tracking.
 - Creator Rewards has no AnalyticsService grant event. Use analytics for leading indicators such as session duration, onboarding, and referral-flow milestones; use Creator Dashboard for reward attribution and payout data.
 
----
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

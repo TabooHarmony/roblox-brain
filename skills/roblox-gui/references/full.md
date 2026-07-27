@@ -1,5 +1,7 @@
 # roblox gui: full reference
 
+> Code examples are illustrative. Adapt them to your project and verify in Studio before production use.
+
 The most reliable Roblox UI is layout-driven, state-aware, and tested at more than one aspect ratio. The examples below use native UI objects and do not require a UI framework.
 
 ## 1. Choose the container

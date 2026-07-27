@@ -3,6 +3,9 @@ name: roblox-server-data
 description: "Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds."
 last_reviewed: 2026-07-13
 sources:
+  - https://create.roblox.com/docs/reference/engine/classes/OrderedDataStore
+  - https://create.roblox.com/docs/reference/engine/classes/MessagingService
+  - https://create.roblox.com/docs/reference/engine/classes/GlobalDataStore
   - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreService
   - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreQueue
   - https://devforum.roblox.com/t/partyservice-plus-party-matchmaking-framework/4668883
@@ -41,12 +44,6 @@ local top10 = store:GetSortedAsync(false, 10):GetCurrentPage()
 - Queues and sorted maps for expiring matchmaking, leases, and coordination.
 - Remove a read batch only after successful, idempotent processing.
 - Use MessagingService or TeleportData for notification and handoff.
-
-### Persistent World State Patterns
-- **Building games**: serialize player-built structures to DataStore and reload on join
-- **Seasons/leaderboards**: OrderedDataStore for rankings, GlobalDataStore for metadata
-- **Guilds**: GlobalDataStore by guild ID, MessagingService for live updates
-- **Economy counters**: GlobalDataStore + `UpdateAsync` for atomic increments
 
 ### Cross-Server Patterns
 - Register servers with expiring heartbeats; use MessagingService for notifications.

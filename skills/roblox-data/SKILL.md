@@ -1,7 +1,7 @@
 ---
 name: roblox-data
 description: "Use when implementing player data persistence with DataStore, session ownership, schemas, migrations, or save and load flows."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/cloud-services/data-stores
   - https://create.roblox.com/docs/cloud-services/data-stores-vs-memory-stores

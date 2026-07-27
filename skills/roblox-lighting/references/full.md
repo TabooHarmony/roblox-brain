@@ -27,7 +27,8 @@ Lighting.ShadowSoftness = 0.2    -- 0 = sharp, 1 = very soft
 -- Environment
 Lighting.EnvironmentDiffuseScale = 1  -- how much skybox colors affect surfaces
 Lighting.EnvironmentSpecularScale = 1 -- skybox reflections on shiny surfaces
--- Current Studio uses LightingStyle and PrioritizeLightingQuality instead of Technology.
+-- Configure Technology/LightingStyle/PrioritizeLightingQuality in Studio.
+-- All three are not script-writable; Technology is also deprecated.
 -- Verify enum values and device behavior against current Creator Hub docs before setting them.
 ```
 
@@ -274,6 +275,6 @@ end
 - **Too many post-processing effects**: Each one costs frame time. Pick 2-3 max.
 - **Bloom on everything**: High bloom + low threshold = everything glows. Use threshold > 0.7.
 - **No Ambient light**: Setting Ambient to black makes shadows pitch black (unrealistic). Always have some fill.
-- **Deprecated Technology guidance**: do not set `Enum.Technology.Future` or `ShadowMap` in new scripts. Use `LightingStyle` and `PrioritizeLightingQuality`, then test desktop and mobile rendering.
+- **Lighting technology settings are Studio-only**: `Technology` is deprecated, and it plus `LightingStyle` and `PrioritizeLightingQuality` are not script-writable. Configure the current properties in Studio, then test desktop and mobile.
 - **Stacking ColorCorrection**: Multiple ColorCorrectionEffects multiply. Use one and tween its properties.
 - **Not testing on mobile**: Lighting that looks great on desktop can be invisible or washed out on mobile screens.

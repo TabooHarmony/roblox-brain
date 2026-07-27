@@ -132,7 +132,7 @@ Colored areas = walkable. Small arrows = jump connections. Uncolored = impassabl
 
 ## Pathfinding performance and improved search
 
-Roblox has shipped an improved pathfinding search algorithm behind `Workspace.PathfindingUseImprovedSearch`. Test it against representative maps and NPC agent parameters before enabling it in a live place. A path that succeeds is not automatically a cheap path.
+Roblox has shipped an improved pathfinding search algorithm behind the Studio-only, non-scriptable `Workspace.PathfindingUseImprovedSearch` setting. Test it against representative maps and NPC agent parameters before enabling it in a live place. A path that succeeds is not automatically a cheap path.
 
 Keep path requests bounded and event-driven:
 
@@ -257,7 +257,7 @@ end
 local canSee = hasLineOfSight(
     npc.rootPart.Position + Vector3.new(0, 2, 0), -- eye height
     targetRoot.Position + Vector3.new(0, 2, 0),   -- target eye height
-    {npc.rootPart.Parent}                          -- ignore NPC's own model
+    {npc.rootPart.Parent, targetRoot.Parent}       -- ignore both endpoint characters
 )
 ```
 

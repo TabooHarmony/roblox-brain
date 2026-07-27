@@ -18,13 +18,20 @@ Checks:
 - Local `references/...` links point to real files
 - Supporting files under `references/` are linked from the skill
 
+
 Exit code 0 = all checks pass, 1 = failures found.
 """
 
+import datetime as dt
 import os
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
+
+import yaml
 
 MAX_SKILL_CHARS = 3000
 MAX_DESC_CHARS = 150
@@ -32,44 +39,72 @@ MAX_REF_CHARS = 35000
 REPO_ROOT = Path(__file__).resolve().parent
 SKILLS_DIR = os.path.join(os.path.dirname(__file__), "skills")
 
-def parse_frontmatter(content: str) -> dict:
-    """Extract YAML frontmatter from SKILL.md as a flat key→value dict.
 
-    Multi-line 'description: >' blocks are joined into one string.
-    List-valued fields like 'sources:' keep only the first list item as
-    a marker; check for field existence with `field in fm`.
-    """
-    match = re.match(r"^---\n(.+?)\n---", content, re.DOTALL)
+
+def parse_frontmatter(content: str) -> dict:
+    """Parse the leading YAML mapping. Invalid YAML is a validation error."""
+    match = re.match(r"^---\r?\n(.+?)\r?\n---(?:\r?\n|$)", content, re.DOTALL)
     if not match:
         return {}
-    fm = {}
-    body = match.group(1)
-    # Multi-line description: collect indented continuation lines
-    desc_match = re.search(
-        r"^description:\s*>\s*\n((?:\s+.+\n?)+)", body, re.MULTILINE
-    )
-    if desc_match:
-        fm["description"] = " ".join(desc_match.group(1).split())
-    for line in body.split("\n"):
-        if ":" not in line:
-            continue
-        key, val = line.split(":", 1)
-        key = key.strip()
-        if key == "description":
-            if "description" not in fm:
-                # Single-line form: "description: foo bar"
-                fm["description"] = val.strip().strip("\"'")
-            continue
-        if key.startswith("  -") or key.startswith("-"):
-            continue  # list item, skip — we only care about field presence
-        fm[key] = val.strip()
-    return fm
+    try:
+        parsed = yaml.safe_load(match.group(1))
+    except yaml.YAMLError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def extract_description(content: str) -> str:
     """Get the description string from frontmatter, handling multi-line form."""
     fm = parse_frontmatter(content)
-    return fm.get("description", "")
+    return str(fm.get("description", ""))
+
+
+def extract_luau_blocks(content: str):
+    """Yield (line, code) for complete Luau fences."""
+    pattern = re.compile(r"^```luau\s*\n(.*?)^```\s*$", re.MULTILINE | re.DOTALL)
+    for match in pattern.finditer(content):
+        yield content.count("\n", 0, match.start()) + 1, match.group(1)
+
+
+def validate_luau_syntax(
+    documents: list[Path], sources: list[Path] | None = None
+) -> list[str]:
+    """Compile Luau fences and standalone source references."""
+    compiler = shutil.which("luau-compile")
+    if compiler is None:
+        return ["luau-compile not found; install the pinned Luau release before validation"]
+
+    errors = []
+    with tempfile.TemporaryDirectory() as temp_dir:
+        for document in documents:
+            content = document.read_text(encoding="utf-8")
+            for index, (line, code) in enumerate(extract_luau_blocks(content)):
+                fixture = Path(temp_dir) / f"block-{len(errors)}-{index}.luau"
+                fixture.write_text(code, encoding="utf-8")
+                result = subprocess.run(
+                    [compiler, str(fixture)], capture_output=True, text=True, check=False
+                )
+                if result.returncode:
+                    detail = (result.stderr or result.stdout).strip().splitlines()[0]
+                    try:
+                        label = document.relative_to(REPO_ROOT)
+                    except ValueError:
+                        label = document
+                    errors.append(
+                        f"{label}:{line}: Luau syntax error: {detail}"
+                    )
+        for source in sources or []:
+            result = subprocess.run(
+                [compiler, str(source)], capture_output=True, text=True, check=False
+            )
+            if result.returncode:
+                detail = (result.stderr or result.stdout).strip().splitlines()[0]
+                try:
+                    label = source.relative_to(REPO_ROOT)
+                except ValueError:
+                    label = source
+                errors.append(f"{label}: Luau syntax error: {detail}")
+    return errors
 
 
 def validate_code_fences(content: str, label: str) -> list[str]:
@@ -127,6 +162,21 @@ def validate_skill(skill_dir: str) -> list[str]:
         if field not in fm:
             errors.append(f"{skill_name}: missing frontmatter field '{field}'")
 
+    if fm.get("name") != skill_name:
+        errors.append(
+            f"{skill_name}: frontmatter name must match directory (got {fm.get('name')!r})"
+        )
+    reviewed = fm.get("last_reviewed")
+    if type(reviewed) is not dt.date:
+        errors.append(f"{skill_name}: last_reviewed must be an unquoted YYYY-MM-DD date")
+    sources = fm.get("sources")
+    if not isinstance(sources, list) or not sources or not all(
+        isinstance(source, str) and source.strip() for source in sources
+    ):
+        errors.append(
+            f"{skill_name}: sources must be a non-empty YAML list (use original for synthesis)"
+        )
+
     # Description length
     desc = extract_description(content)
     if len(desc) > MAX_DESC_CHARS:
@@ -143,15 +193,14 @@ def validate_skill(skill_dir: str) -> list[str]:
         errors.append(f"{skill_name}: missing '## Quick Reference' section")
 
     # Full Reference should NOT be in SKILL.md
-    if "## Full Reference" in content:
+    if re.search(r"^## Full Reference\s*$", content, re.MULTILINE):
         errors.append(
             f"{skill_name}: '## Full Reference' found in SKILL.md (move to references/)"
         )
 
     # references/full.md check (router skills are exempt)
     ref_path = os.path.join(skill_dir, "references", "full.md")
-    desc_lower = desc.lower()
-    is_router = "router" in desc_lower
+    is_router = fm.get("kind") == "router"
     if not is_router and not os.path.exists(ref_path):
         errors.append(f"{skill_name}: missing references/full.md")
 
@@ -165,13 +214,15 @@ def validate_skill(skill_dir: str) -> list[str]:
             )
 
     # No '## Overview' or '## 1. Overview' in SKILL.md
-    if re.search(r"^##\s+(?:1\.\s+)?Overview\s*$", content, re.MULTILINE):
+    if re.search(
+        r"^##\s+(?:1\.\s+)?Overview\s*$", content, re.MULTILINE | re.IGNORECASE
+    ):
         errors.append(
             f"{skill_name}: '## Overview' found in SKILL.md (remove it, use When to Load → Quick Reference)"
         )
 
     # No ```lua code blocks (must use ```luau)
-    if re.search(r"```lua *$", content, re.MULTILINE):
+    if re.search(r"^ *```lua(?:[\s,]|$)", content, re.MULTILINE):
         errors.append(
             f"{skill_name}: found ```lua code block (use ```luau instead)"
         )
@@ -180,24 +231,11 @@ def validate_skill(skill_dir: str) -> list[str]:
     if not is_router and os.path.exists(ref_path):
         with open(ref_path, encoding="utf-8") as f:
             ref_content = f.read()
-        if re.search(r"```lua *$", ref_content, re.MULTILINE):
+        if re.search(r"^ *```lua(?:[\s,]|$)", ref_content, re.MULTILINE):
             errors.append(
                 f"{skill_name}: found ```lua code block in references/full.md (use ```luau instead)"
             )
         errors.extend(validate_code_fences(ref_content, f"{skill_name}: references/full.md"))
-
-    # sources field must not be empty
-    if "sources" in fm:
-        # Check if sources is empty ([]) or contains no list items
-        fm_match = re.match(r"^---\n(.+?)\n---", content, re.DOTALL)
-        if fm_match:
-            fm_body = fm_match.group(1)
-            # Check for sources: [] or sources: with no list items
-            sources_match = re.search(r"^sources:\s*\[\]?\s*$", fm_body, re.MULTILINE)
-            if sources_match:
-                errors.append(
-                    f"{skill_name}: sources is empty (use [original] for synthesis, or cite real sources)"
-                )
 
     return errors
 
@@ -222,7 +260,7 @@ def validate_cross_references(all_skill_names: set[str]) -> list[str]:
     treated as a cross-reference and must point to an existing skill.
     """
     errors = []
-    ref_pattern = re.compile(r"`?(roblox-[a-z]+(?:-[a-z]+)*)`?(?:\s*→|\s*\|)")
+    ref_pattern = re.compile(r"`(roblox-[a-z0-9]+(?:-[a-z0-9]+)*)`")
     for entry in sorted(os.listdir(SKILLS_DIR)):
         skill_dir = os.path.join(SKILLS_DIR, entry)
         if not os.path.isdir(skill_dir):
@@ -345,7 +383,10 @@ def main():
     all_errors.extend(validate_cross_references(all_skill_names))
     all_errors.extend(validate_local_references())
     all_errors.extend(validate_reference_resources())
-
+    documents = sorted(Path(SKILLS_DIR).glob("*/SKILL.md"))
+    documents.extend(sorted(Path(SKILLS_DIR).glob("*/references/full.md")))
+    sources = sorted(Path(SKILLS_DIR).glob("*/references/**/*.luau"))
+    all_errors.extend(validate_luau_syntax(documents, sources))
     print(f"Validated {skill_count} skills")
 
     if all_errors:

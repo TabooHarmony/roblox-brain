@@ -1,127 +1,190 @@
-# roblox-cloud — Full Reference
+# Roblox Open Cloud: Full Reference
 
+> Adapt endpoint paths, scopes, and schemas from the current Open Cloud reference. Never infer them from examples for another resource.
 
-> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+## 1. Classify the integration
 
-## When to Load
+Identify both caller and authority before writing requests:
 
-Use this skill when the task is mainly about Roblox Open Cloud or HTTP-based integration work outside normal gameplay scripting:
+- **Owner automation:** backend, CI, bot, or trusted in-experience call acting with an API key.
+- **Delegated application:** third-party app acting after a user grants OAuth access to selected resources.
+- **Webhook receiver:** public HTTPS endpoint receiving retryable Roblox notifications.
+- **In-experience caller:** `HttpService` calling an endpoint Roblox explicitly supports from an experience.
 
-- Building CI, bots, web backends, scripts, or internal tools that call Roblox web APIs.
-- Choosing API keys for non-user automation and checking the required scopes for an endpoint.
-- Constructing request URLs, bodies, filters, headers, pagination, update masks, or long-running operation polling.
-- Handling Open Cloud errors, quota limits, retries, and rate-limit headers.
-- Deciding whether an endpoint is usable from HttpService inside an experience.
-- Receiving Roblox webhooks on Discord, Slack, or a custom HTTPS endpoint.
-- Reading openapi.json, cloud.docs.json, or service-specific JSON files to generate clients or inspect endpoint metadata.
+Use `roblox-data` for persistence architecture, `roblox-networking` for gameplay remotes, and `roblox-studio-mcp` for Studio control.
 
-Do not use this skill when the task is mainly about:
+## 2. Authentication decision
 
-- OAuth app registration, authorization flows, token exchange, refresh handling, or delegated user consent.
-- DataStore or MemoryStore schema design, save architecture, or cross-server data strategy.
-- Gameplay remotes, replication, or general Roblox engine scripting.
+### API keys
 
-## Decision Rules
+Use an API key when trusted automation acts for its owner and does not need per-user consent.
 
-- Use this skill if the core question is how to call or integrate with Roblox from HTTP.
-- Prefer API keys when the caller is a server, CI job, bot, webhook worker, or in-experience automation that does not need end-user consent.
-- Hand off to roblox-oauth when the integration needs user-granted access, OAuth registration, refresh tokens, or per-user delegated authorization.
-- Hand off to roblox-data when the question becomes about persistent schema, contention, caching, or store-system design instead of request mechanics.
-- Hand off to roblox-networking for gameplay networking, remotes, or trust-boundary questions.
-- Hand off to roblox-studio-mcp if the task is only an engine API lookup rather than a cloud integration.
-- Use the machine-readable artifacts when you need exact path templates, schemas, scopes, rate limits, or HttpService usability metadata.
-- If a request mixes cloud integration with out-of-scope architecture, answer only the Open Cloud portion and explicitly exclude the rest.
+Before implementation:
 
-## Instructions
+1. identify the exact resource and operation;
+2. confirm creator or group permission;
+3. grant only the required key scopes and resources;
+4. store the key in a secret manager or Roblox Secret;
+5. plan rotation and revocation;
+6. keep it out of source, logs, URLs, replicated storage, and client code.
 
-1. Classify the caller and integration surface:
-   - External backend, CLI, CI, or automation worker.
-   - Webhook receiver.
-   - In-experience HttpService.
-2. Choose authentication at the boundary:
-   - Default to API keys for non-user automation.
-   - If the task needs user-specific delegated access, stop and switch to roblox-oauth.
-3. Confirm the endpoint before coding:
-   - Base URL and path template.
-   - Path and query parameters.
-   - Required request body schema.
-   - Required scopes.
-   - Rate limits.
-   - Whether HttpService is supported if the call originates in-experience.
-4. Build requests using the documented patterns:
-   - Insert path parameters exactly.
-   - Keep pagination queries stable across pages.
-   - Add Content-Type: application/json for JSON bodies.
-   - Send x-api-key for API-key-authenticated requests.
-   - Use updateMask only for fields you intend to patch.
-5. Handle Open Cloud response mechanics explicitly:
-   - Read nextPageToken for pagination.
-   - Poll Operation resources with backoff for long-running calls.
-   - Parse Open Cloud JSON types correctly, especially timestamps, durations, bytes, field masks, and decimals.
-6. Handle failure paths as part of the integration:
-   - INVALID_ARGUMENT: verify IDs, filters, headers, and body shape.
-   - PERMISSION_DENIED or INSUFFICIENT_SCOPE: verify scopes and resource access.
-   - RESOURCE_EXHAUSTED or HTTP 429: honor retry-after when present, otherwise use exponential backoff.
-   - UNAVAILABLE and similar transient failures: retry with backoff, not tight loops.
-7. For webhooks, design for secure, idempotent receipt:
-   - Require a public HTTPS POST endpoint.
-   - Return 2XX within 5 seconds.
-   - Verify roblox-signature when a secret is configured.
-   - Deduplicate by NotificationId.
-   - Treat deliveries as retryable and potentially duplicated.
-8. For HttpService, apply the extra platform constraints:
-   - Only supported Open Cloud endpoints are callable.
-   - Only x-api-key and content-type headers are allowed.
-   - x-api-key must come from a Secret.
-   - HTTPS only.
-   - Path parameters cannot contain ..
-9. Keep the answer inside scope:
-   - Focus on cloud requests, auth choice, webhooks, HttpService, rate limits, and tooling artifacts.
-   - Do not drift into OAuth implementation details, gameplay networking, or in-experience data architecture.
+A valid key does not override missing creator permission or an endpoint's resource restrictions.
 
-## Using References
+### OAuth 2.0
 
-This skill keeps its complete guidance in this `references/full.md` file. Use the official Creator Hub Open Cloud guides listed in `SKILL.md` when an endpoint, schema, scope, or HttpService support claim needs current verification. Do not infer that a topic-specific local reference file exists unless it is present in this skill directory.
+Use OAuth when an app needs user-granted access to specific Roblox resources. Roblox supports authorization code flow and its PKCE extension.
 
-## Checklist
+- **Public client:** cannot safely hold a client secret. PKCE is required.
+- **Confidential client:** exchanges codes through a trusted backend and keeps its client secret there. Use PKCE as defense in depth.
 
-- The integration surface is identified as external automation, webhook receiver, or in-experience HttpService.
-- API key usage is chosen only for non-OAuth automation, and OAuth work is handed off when required.
-- Endpoint path, body schema, scopes, and rate limits are confirmed before implementation.
-- Pagination, filtering, and updateMask behavior are understood for the chosen endpoint.
-- Long-running operations are polled instead of assumed synchronous.
-- Error handling covers invalid input, permission failures, and quota exhaustion.
-- Retry logic uses retry-after or exponential backoff.
-- Webhooks are treated as idempotent, signed, and time-bounded.
-- HttpService calls are checked for endpoint support and header limitations.
-- The response stays out of OAuth implementation, data architecture, gameplay networking, and general engine scripting.
+A user must be at least 13 to authorize OAuth apps. App registration and publishing require an ID-verified developer. Verify current quota and review requirements in Creator Dashboard.
 
-## Common Mistakes
+Do not mix API-key and OAuth credentials in one request or treat them as interchangeable fallback credentials.
 
-- Implementing OAuth flows here instead of switching to roblox-oauth.
-- Assuming every Open Cloud endpoint is callable from HttpService.
-- Sending unsupported headers from HttpService or storing the API key as plain text instead of a Secret.
-- Forgetting that API-key scopes and creator permissions both matter.
-- Changing filter parameters while paginating and then hitting 400 errors.
-- Ignoring Operation polling and assuming async endpoints finish immediately.
-- Retrying 429s or 503s in a tight loop instead of backing off.
-- Treating webhook delivery as exactly once and skipping deduplication.
-- Letting webhook handlers do slow work before returning a 2XX response.
-- Expanding a cloud-integration question into save-schema, gameplay, or remote-security design.
+## 3. OAuth implementation
 
-## Examples
+### Register the app
 
-### External automation with an API key
+Record the client ID and store a confidential client secret when it is issued. Configure exact redirect URLs. Request only scopes needed by actual product behavior. Add `openid` when the app needs an ID token and `profile` only for profile claims.
 
-- Use an API key for a CI job that publishes a place, updates a universe, or lists inventory items.
-- Confirm the endpoint scope, build the request URL, and inspect rate-limit headers for safe batching.
+### Start authorization
 
-### In-experience Open Cloud call
+For every attempt:
 
-- Before writing HttpService:RequestAsync, confirm the endpoint is supported for engine use.
-- Put the API key in Secrets, send only x-api-key and content-type, and handle 429s with backoff.
+1. create cryptographically random `state` and store it with the pending session;
+2. create a fresh PKCE verifier and SHA-256 base64url challenge;
+3. send the user to `https://apis.roblox.com/oauth/v1/authorize`;
+4. include `client_id`, exact `redirect_uri`, `scope`, `response_type=code`, and PKCE fields;
+5. use `nonce` when OIDC identity binding requires it.
 
-### Webhook receiver
+Never put a confidential client secret in the authorization URL or frontend bundle.
 
-- Configure a public HTTPS endpoint.
-- Verify roblox-signature, reject stale timestamps, deduplicate by NotificationId, return 2XX quickly, and process the event asynchronously.
+### Handle the callback
+
+Reject callbacks whose `state` does not match the pending attempt. Handle explicit OAuth errors. Treat the authorization code as short-lived and single-use, then exchange it at `POST /oauth/v1/token` using `application/x-www-form-urlencoded`.
+
+The exchange uses the original PKCE verifier for public clients. Confidential clients authenticate from their backend. Do not log codes or token responses.
+
+### Store and rotate tokens
+
+Keep access and refresh tokens in trusted storage. Refresh tokens rotate: after a successful refresh, atomically replace the stored token before using the new session. Concurrent refresh attempts need one owner so an older response cannot overwrite the newest token.
+
+Reauthorize when scopes change. Revoke tokens when the user disconnects the app or credentials are suspected compromised.
+
+Endpoint roles are distinct:
+
+- `userinfo`: OIDC identity claims;
+- `introspect`: token activity and claims, not proof of resource authorization;
+- `token/resources`: resources the user granted to the token;
+- protected endpoint: final enforcement of scope, resource, and operation.
+
+## 4. REST request mechanics
+
+Confirm from the current reference:
+
+- API version and path template;
+- path and query parameter types;
+- request and response schema;
+- required scopes and resource grants;
+- endpoint-specific quotas;
+- whether an Operation resource is returned;
+- whether the endpoint is callable from `HttpService`.
+
+Current resources generally use `https://apis.roblox.com/cloud/v2/...`; some APIs remain on legacy surfaces. Do not rewrite a documented path to match a preferred version.
+
+### Pagination
+
+Read `nextPageToken` and return it as `pageToken` while preserving the other filters and ordering. A token belongs to the original query. Do not reuse it after changing filters.
+
+### Partial updates
+
+Use `updateMask` only for fields intended to change. Match field paths exactly to the endpoint schema. Do not send a broad mask merely because the request body contains defaults.
+
+### Long-running operations
+
+If an endpoint returns an Operation, poll that resource. Use bounded exponential backoff with jitter and a deadline. Surface terminal operation errors rather than reporting the initial request as success.
+
+### Errors and retries
+
+- `INVALID_ARGUMENT`: repair IDs, filters, masks, headers, or body shape.
+- `PERMISSION_DENIED` / `INSUFFICIENT_SCOPE`: inspect creator permission, key scope, OAuth scope, and resource grant separately.
+- `RESOURCE_EXHAUSTED` / HTTP 429: honor `Retry-After` when present and reduce request pressure.
+- `UNAVAILABLE` and transport failures: retry within a bounded policy.
+
+Retry only transient failures. Authentication, authorization, and validation failures need correction, not repetition. Give non-idempotent operations an idempotency boundary before retrying.
+
+## 5. In-experience HttpService
+
+An Open Cloud endpoint is not automatically callable from an experience. Confirm current engine support before coding.
+
+For supported calls:
+
+- use HTTPS;
+- retrieve `x-api-key` from a Roblox Secret rather than a plain string;
+- send only headers supported by the engine and endpoint;
+- validate path parameters and reject traversal-like input;
+- keep the call server-side;
+- bound retries and request volume.
+
+Do not route a request through a client to bypass server-side restrictions.
+
+## 6. Webhooks
+
+Treat delivery as at-least-once and potentially delayed:
+
+1. expose a public HTTPS POST endpoint;
+2. verify the "roblox-signature" header when a webhook secret is configured;
+3. validate the delivery timestamp and reject stale requests according to the integration policy;
+4. deduplicate by notification ID in durable or shared state;
+5. persist or enqueue accepted work;
+6. return a success response quickly;
+7. process slow side effects asynchronously.
+
+The exact signature algorithm and headers belong to the current webhook documentation. Do not invent verification from a generic webhook provider.
+
+Deduplication must survive process restarts if repeating the side effect would be harmful. A memory-only set is insufficient for durable grants or destructive actions.
+
+## 7. Security review
+
+Before shipping, verify:
+
+- no credential or token appears in source, URLs, browser bundles, replicated instances, analytics, or ordinary logs;
+- redirect URLs are exact and controlled by the app owner;
+- `state` is bound to one pending authorization attempt;
+- PKCE verifier and challenge are fresh per attempt;
+- requested scopes match user-visible behavior;
+- token rotation is atomic and concurrency-safe;
+- API keys are resource-scoped and revocable;
+- webhook verification happens before side effects;
+- retries cannot duplicate non-idempotent work;
+- permission failures are not hidden by fallback credentials.
+
+## 8. Diagnostic workflow
+
+When a request fails, record the endpoint, request ID, status, Roblox error code, and safe response details. Never record secrets or full tokens.
+
+Diagnose in this order:
+
+1. correct domain, version, path, method, and content type;
+2. valid credential type for this endpoint;
+3. creator or group permission;
+4. key scopes or OAuth scopes;
+5. OAuth resource grants;
+6. request schema and update mask;
+7. quota and retry headers;
+8. operation status for asynchronous calls.
+
+Do not broaden scopes until the failing permission boundary is identified.
+
+## 9. Completion checklist
+
+- Caller and authority model are explicit.
+- Authentication choice matches the use case.
+- Endpoint path, schema, scopes, resources, and quotas came from current documentation.
+- Secrets remain in trusted storage.
+- OAuth callback, PKCE, token rotation, and revocation paths are covered when applicable.
+- Pagination and long-running operations are handled.
+- Retry policy is bounded and limited to safe/transient cases.
+- HttpService support is confirmed for in-experience calls.
+- Webhook verification, deduplication, and fast acknowledgment are covered.
+- Failure reports distinguish authentication, permission, resource grant, schema, and quota errors.

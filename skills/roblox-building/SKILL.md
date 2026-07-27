@@ -7,6 +7,8 @@ sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/mcp.md
 ---
 
+# Roblox Building
+
 ## When to Load
 
 Load when building physical geometry, maps, props, or environment assets in Roblox Studio through MCP or standalone scripts. Covers spatial planning, CSG, generated/reused assets, scale, and verification. See `references/full.md` for complete patterns.

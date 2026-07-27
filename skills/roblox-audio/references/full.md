@@ -186,8 +186,9 @@ wire.SourceInstance = player
 wire.TargetInstance = emitter
 wire.Parent = workspace.CampfirePart
 
--- AudioListener is auto-created by SoundService.ListenerLocation setting
--- AudioDeviceOutput is auto-created when ListenerLocation is Character or Camera
+-- Studio/plugin-only SoundService.DefaultListenerLocation controls whether
+-- Roblox creates and wires the default AudioListener and AudioDeviceOutput.
+-- For runtime custom placement, create and wire an explicit AudioListener.
 
 player:Play()
 ```

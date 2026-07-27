@@ -2,17 +2,22 @@
 
 ## What This Repo Is
 
-`roblox-brain` is a skills-only repository for AI coding agents working with Roblox Studio. 30 curated skills covering Luau language, Roblox engine APIs, architecture, security, monetization, localization, and workflow. Distributed via `npx skills add TabooHarmony/roblox-brain`.
+`roblox-brain` is a skills-only repository for AI coding agents working with Roblox Studio. 28 curated skills covering Luau language, Roblox engine APIs, architecture, growth design, security, monetization, localization, and workflow. Distributed via `npx skills add TabooHarmony/roblox-brain`.
 
 No plugin code. No build system. No npm package. Just SKILL.md files.
 
 ## Architecture: Progressive Disclosure
 
-Each skill follows a 3-level disclosure pattern. Skills are designed to be loaded in this order — platforms that respect the SKILL.md entry point will load efficiently; others may load all files at once (content is still correct, just less context-efficient).
+Each skill follows progressive disclosure. Compatible hosts discover skill names and descriptions, then load the selected entry point and references as needed.
 
-1. **skill_index.md** (~2,800 tokens) — agent loads this first, knows what's available
+1. **Skill metadata** — the host discovers names and descriptions from each `SKILL.md`
 2. **SKILL.md** (~600 tokens, max 3,000 chars) — quick reference, enough for most tasks
-3. **references/full.md** (up to ~10,000 tokens, max 35,000 chars) — complete reference with code examples, API tables
+3. **references/full.md** (max 35,000 chars) — detailed guidance and examples for full skills
+
+Thin routing skills declare `kind: router` and may omit `references/full.md` when
+their entire job is selecting the right domain skills.
+
+The README is the human-facing catalogue. Skill hosts discover the individual `SKILL.md` files directly.
 
 ```
 skills/roblox-gui/
@@ -55,11 +60,9 @@ Dense table or list format. The most useful info inline. Code examples in ```lua
 
 1. Create `skills/roblox-<name>/SKILL.md` following the structure above
 2. Create `skills/roblox-<name>/references/full.md` with complete reference (under 35,000 chars)
-3. Add the skill to a category in `generate_index.py` (CATEGORIES dict)
-4. Run `python3 generate_index.py` to regenerate `skill_index.md`
-5. Add a row to `README.md` in the appropriate skills table, update the skill count badge
-6. Run `python3 validate_skills.py` — must pass
-7. If the skill makes API claims, add entries to `api_drift_registry.yaml`
+3. Add a row to `README.md` in the appropriate skills table and update the skill count badge
+4. Run `python3 validate_skills.py` — must pass
+5. If the skill makes API claims, add focused entries to `api_drift_registry.yaml`
 
 ## Validation
 
@@ -74,7 +77,7 @@ Run `python3 validate_skills.py` before committing. Checks:
 - No `## Overview` or `## 1. Overview` in SKILL.md
 - No `## Full Reference` in SKILL.md
 - No ```lua code blocks (use ```luau)
-- references/full.md exists
+- references/full.md exists unless `kind: router`
 - Cross-references (`` `roblox-X` `` in backticks) point to existing skills
 
 Additional CI checks:
@@ -101,7 +104,7 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - Cross-skill references in backticks: `` `roblox-networking` ``, `` `roblox-data` ``
 - Last reviewed date: update when you verify content against current docs
 - Keep SKILL.md lean — if it hits 2,500+ chars, move detail to references/full.md
-- Reference code is illustrative — all reference files have a disclaimer at top
+- Mark illustrative reference code as illustrative and require project-specific verification
 - No orphaned reference files — all content goes in `references/full.md`
 
 ## Key Files
@@ -109,10 +112,8 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 | File | Purpose |
 |------|---------|
 | `skills/*/SKILL.md` | Quick reference for each skill |
-| `skills/*/references/full.md` | Full reference for each skill |
-| `skill_index.md` | Auto-generated index (run `generate_index.py`) |
+| `skills/*/references/full.md` | Full reference for each non-router skill |
 | `validate_skills.py` | Validation script for skill structure |
-| `generate_index.py` | Auto-generates `skill_index.md` from frontmatter |
 | `verify_api_drift.py` | API drift checker against live creator-docs |
 | `verify_source_urls.py` | Source URL reachability checker |
 | `verify_version_pins.py` | Tool version pin monitor (non-blocking) |

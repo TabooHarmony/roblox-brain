@@ -134,7 +134,7 @@ end)
 ### Key Rules
 - Messages are fire-and-forget — design for idempotency
 - No ordering guarantee — handle out-of-order messages gracefully
-- Rate limit: ~10 + 150 * (CCU + 1) messages per minute
+- Rate limit: 600 + 240 * (players in server) messages per minute
 - Message size limited — keep payloads small
 - `message.Data` contains the published payload
 - Subscribe callbacks run in a separate thread — use pcall

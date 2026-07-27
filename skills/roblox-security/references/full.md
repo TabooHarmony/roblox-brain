@@ -21,7 +21,7 @@ Server Authority is an opt-in Roblox model configured through `Workspace.Authori
 
 For Server Authority projects:
 
-- put synchronized simulation logic in `RunService:BindToSimulation()`;
+- put synchronized simulation logic in `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio);
 - use the Input Action System for inputs that affect the core simulation;
 - do not write simulation-access properties such as `BasePart.CFrame` from a `Heartbeat` handler as a substitute for authoritative simulation;
 - keep validation for custom attacks, dashes, teleports, purchases, permissions, and other game-specific actions at the server boundary;
@@ -49,38 +49,7 @@ Do not copy a blanket `Heartbeat` position checker into a Server Authority proje
 | Remote sniffing | Read remote names to reverse-engineer API | Doesn't matter if validation is solid |
 | Replay attack | Re-fire a valid remote call | Idempotency checks, transaction IDs |
 
-```luau
--- Rate limiter pattern
-local rateLimits: {[Player]: {[string]: number}} = {}
-local RATE_LIMIT = 10 -- calls per second
-
-local function checkRate(player: Player, remoteName: string): boolean
-    local now = os.clock()
-    local playerLimits = rateLimits[player]
-    if not playerLimits then
-        playerLimits = {}
-        rateLimits[player] = playerLimits
-    end
-
-    local lastCall = playerLimits[remoteName] or 0
-    if now - lastCall < 1 / RATE_LIMIT then
-        return false -- rate limited
-    end
-    playerLimits[remoteName] = now
-    return true
-end
-
--- Argument validation pattern
-local function validatePurchase(player: Player, itemId: unknown, quantity: unknown): boolean
-    if typeof(itemId) ~= "string" then return false end
-    if typeof(quantity) ~= "number" then return false end
-    if quantity ~= quantity or math.abs(quantity) == math.huge then return false end
-    if quantity ~= math.floor(quantity) then return false end -- must be integer
-    if quantity < 1 or quantity > 99 then return false end -- sane range
-    if not ITEM_CATALOG[itemId] then return false end -- item must exist
-    return true
-end
-```
+For the rate limiter and argument validation implementations, see `roblox-networking`.
 
 ### Economy Exploits
 
@@ -154,22 +123,11 @@ end)
 
 ### Session Locking
 
-```luau
--- Prevent data duplication across servers
-local function acquireSessionLock(player: Player, data): boolean
-    local lockKey = "SessionLock_" .. player.UserId
-    local currentLock = data:GetMetadata().SessionLock
-
-    if currentLock and currentLock ~= game.JobId then
-        -- Another server owns this data
-        -- Either wait for expiry or kick
-        return false
-    end
-
-    data:SetMetadata({SessionLock = game.JobId})
-    return true
-end
-```
+Do not implement session ownership as a bare `game.JobId` field. A lock without
+expiry, heartbeat, stale-owner handling, and crash recovery can block a profile
+forever. Use a maintained profile library, or implement the complete protocol
+described in `roblox-data`. Do not layer a second lock over a library that
+already owns the profile lifecycle.
 
 ### Sanity Checks (Defense in Depth)
 

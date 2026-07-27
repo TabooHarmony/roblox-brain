@@ -2,6 +2,29 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [1.2.0] - 2026-07-26
+
+### Added
+
+- Added `roblox-growth-design` for evidence-backed discovery, positioning, onboarding, retention, experiments, packaging, and LiveOps diagnosis.
+- Added Luau compilation, claim-to-teaching-file tethering, negative validator tests, and exact installed-content comparison to the release contract.
+
+### Changed
+
+- Reworked architecture around feature ownership, explicit dependencies, bounded startup, and client/server authority instead of service/controller hierarchy.
+- Rewrote Luau core and patterns to remove generic tutorials, framework defaults, inheritance catalogues, and misleading lifecycle advice.
+- Replaced the universal publish checklist with change-scoped, evidence-backed release gates.
+- Consolidated Roblox OAuth guidance into `roblox-cloud` and production footguns into their owning domain skills.
+- Converted `roblox-code-review` to a thin router and made the README the human-facing catalogue.
+- Corrected current analytics, networking, localization, lighting, camera, pathfinding, streaming, monetization, and Server Authority claims.
+
+### Removed
+
+- Removed the generic `roblox-debug` skill. Debugging methodology belongs to the host agent rather than a Roblox-specific knowledge package.
+- Removed `roblox-oauth` after its Roblox-specific material moved into `roblox-cloud`.
+- Removed `roblox-sharp-edges` after its concrete hazards moved into networking, data, monetization, architecture, performance, and Luau skills.
+- Removed the generated `skill_index.md`, its generator, the duplicated code-review reference, and the hidden-loop analytics batcher example.
+
 ## [1.1.0] - 2026-07-14
 
 ### Changed

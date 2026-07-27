@@ -3,7 +3,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import generate_index
 import validate_skills
 import verify_api_drift
 import verify_source_urls
@@ -34,6 +33,150 @@ class ValidatorRegressionTests(unittest.TestCase):
         )
         self.assertEqual(missing, ["skills/does-not-exist/references/full.md"])
 
+    def test_api_registry_rejects_checks_detached_from_teaching_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            document = root / "skills" / "roblox-example" / "SKILL.md"
+            document.parent.mkdir(parents=True)
+            document.write_text("No API claim here.")
+            entry = {
+                "files": [{"path": "skills/roblox-example/SKILL.md"}],
+                "check": {
+                    "type": "member_exists",
+                    "class": "ExampleService",
+                    "member": "DoThingAsync",
+                },
+            }
+            self.assertEqual(
+                verify_api_drift.validate_claim_tether(entry, root),
+                ["skills/roblox-example/SKILL.md:DoThingAsync"],
+            )
+            document.write_text("Call `ExampleService:DoThingAsync()`.")
+            self.assertEqual(verify_api_drift.validate_claim_tether(entry, root), [])
+
+    def assert_api_check_passes(self, check, doc):
+        original = verify_api_drift.fetch_doc
+        verify_api_drift.fetch_doc = lambda _kind, _name: doc
+        try:
+            status, message = verify_api_drift.verify({"check": check})
+        finally:
+            verify_api_drift.fetch_doc = original
+        self.assertEqual(status, "pass", message)
+
+    def test_api_registry_checks_method_return_type(self):
+        self.assert_api_check_passes(
+            {
+                "type": "method_return_type",
+                "class": "UserInputService",
+                "method": "GetMouseDelta",
+                "expected": "Vector2",
+            },
+            {
+                "methods": [
+                    {
+                        "name": "UserInputService:GetMouseDelta",
+                        "returns": [{"type": "Vector2"}],
+                    }
+                ]
+            },
+        )
+
+    def test_api_registry_checks_property_write_security(self):
+        self.assert_api_check_passes(
+            {
+                "type": "property_write_security",
+                "class": "Lighting",
+                "property": "LightingStyle",
+                "expected": "RobloxScriptSecurity",
+            },
+            {
+                "properties": [
+                    {
+                        "name": "Lighting.LightingStyle",
+                        "security": {"write": "RobloxScriptSecurity"},
+                    }
+                ]
+            },
+        )
+
+    def test_api_registry_checks_property_tag(self):
+        self.assert_api_check_passes(
+            {
+                "type": "property_has_tag",
+                "class": "Workspace",
+                "property": "StreamingIntegrityMode",
+                "tag": "NotScriptable",
+            },
+            {
+                "properties": [
+                    {
+                        "name": "Workspace.StreamingIntegrityMode",
+                        "tags": ["NotScriptable"],
+                    }
+                ]
+            },
+        )
+
+    def test_api_registry_checks_method_description(self):
+        self.assert_api_check_passes(
+            {
+                "type": "method_description_contains",
+                "class": "RunService",
+                "method": "BindToSimulation",
+                "contains": "UseFixedSimulation",
+            },
+            {
+                "methods": [
+                    {
+                        "name": "RunService:BindToSimulation",
+                        "description": "Only available when Workspace.UseFixedSimulation is enabled.",
+                    }
+                ]
+            },
+        )
+
+    def test_api_registry_checks_enum_item(self):
+        self.assert_api_check_passes(
+            {
+                "type": "enum_item_exists",
+                "enum": "ScreenInsets",
+                "item": "CoreUISafeInsets",
+            },
+            {"items": [{"name": "CoreUISafeInsets"}]},
+        )
+
+    def test_api_registry_check_types_reject_mutated_docs(self):
+        cases = [
+            (
+                {"type": "method_return_type", "class": "C", "method": "M", "expected": "Vector2"},
+                {"methods": [{"name": "C:M", "returns": [{"type": "number"}]}]},
+            ),
+            (
+                {"type": "property_write_security", "class": "C", "property": "P", "expected": "PluginSecurity"},
+                {"properties": [{"name": "C.P", "security": {"write": "None"}}]},
+            ),
+            (
+                {"type": "property_has_tag", "class": "C", "property": "P", "tag": "NotScriptable"},
+                {"properties": [{"name": "C.P", "tags": []}]},
+            ),
+            (
+                {"type": "method_description_contains", "class": "C", "method": "M", "contains": "RequiredFlag"},
+                {"methods": [{"name": "C:M", "description": "No prerequisite."}]},
+            ),
+            (
+                {"type": "enum_item_exists", "enum": "E", "item": "Wanted"},
+                {"items": [{"name": "Other"}]},
+            ),
+        ]
+        original = verify_api_drift.fetch_doc
+        try:
+            for check, doc in cases:
+                verify_api_drift.fetch_doc = lambda _kind, _name, value=doc: value
+                status, _ = verify_api_drift.verify({"check": check})
+                self.assertEqual(status, "fail", check)
+        finally:
+            verify_api_drift.fetch_doc = original
+
     def test_source_url_policy_rejects_github_web_urls(self):
         self.assertIsNotNone(
             verify_source_urls.source_url_policy_error(
@@ -42,13 +185,24 @@ class ValidatorRegressionTests(unittest.TestCase):
         )
         self.assertIsNone(
             verify_source_urls.source_url_policy_error(
-                "https://raw.githubusercontent.com/example/repo/main/README.md"
+                "https://raw.githubusercontent.com/Roblox/creator-docs/main/README.md"
             )
+        )
+
+    def test_source_url_extraction_handles_crlf_and_inline_lists(self):
+        content = (
+            "---\r\nname: example\r\nsources: "
+            "[https://example.com/a, https://example.com/b]\r\n---\r\n"
+        )
+        self.assertEqual(
+            verify_source_urls.extract_source_urls(content),
+            ["https://example.com/a", "https://example.com/b"],
         )
 
     def test_current_local_reference_and_resource_validation_pass(self):
         self.assertEqual(validate_skills.validate_local_references(), [])
         self.assertEqual(validate_skills.validate_reference_resources(), [])
+
 
     def test_code_fence_integrity_allows_adjacent_blocks_and_rejects_unclosed(self):
         valid = "```luau\nlocal x = 1\n```\n\n```luau\nlocal y = 2\n```\n"
@@ -62,28 +216,57 @@ class ValidatorRegressionTests(unittest.TestCase):
         )
         self.assertTrue(any("nested fenced block" in error for error in nested))
 
-    def test_index_generator_includes_promoted_ui_design_skill(self):
+    def test_luau_fence_compilation_rejects_invalid_syntax(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            skills = root / "skills"
-            for name in ("roblox-example", "roblox-ui-design"):
-                skill_dir = skills / name
-                skill_dir.mkdir(parents=True)
-                (skill_dir / "SKILL.md").write_text(
-                    "---\nname: %s\ndescription: example\n---\n" % name
-                )
+            document = Path(tmp) / "invalid.md"
+            document.write_text("```luau\nlocal function broken(\n```\n")
+            errors = validate_skills.validate_luau_syntax([document])
+            self.assertTrue(any("Luau syntax error" in error for error in errors))
 
-            original = (generate_index.SKILLS_DIR, generate_index.INDEX_PATH)
-            generate_index.SKILLS_DIR = skills
-            generate_index.INDEX_PATH = root / "skill_index.md"
-            try:
-                self.assertEqual(generate_index.main(), 0)
-            finally:
-                generate_index.SKILLS_DIR, generate_index.INDEX_PATH = original
+    def test_standalone_luau_reference_rejects_invalid_syntax(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "invalid.luau"
+            source.write_text("local function broken(\n")
+            errors = validate_skills.validate_luau_syntax([], [source])
+            self.assertTrue(any("Luau syntax error" in error for error in errors))
 
-            index = (root / "skill_index.md").read_text()
-            self.assertIn("roblox-example", index)
-            self.assertIn("roblox-ui-design", index)
+    def test_lua_fence_annotations_fail_without_heading_false_positive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill_dir = Path(tmp) / "roblox-example"
+            skill_dir.mkdir()
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: roblox-example\ndescription: example\n"
+                "last_reviewed: 2026-07-26\nsources: [original]\nkind: router\n---\n"
+                "# Example\n\n## When to Load\nNow.\n\n## Quick Reference\nRule.\n\n"
+                "## Full Reference Notes\nAllowed heading.\n\n"
+                "```lua,linenos\nlocal x = 1\n```\n"
+            )
+            errors = validate_skills.validate_skill(str(skill_dir))
+            self.assertTrue(any("found ```lua" in error for error in errors))
+            self.assertFalse(any("'## Full Reference' found" in error for error in errors))
+
+    def test_skill_schema_rejects_name_date_and_sources_mutations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill_dir = Path(tmp) / "roblox-example"
+            skill_dir.mkdir()
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: roblox-wrong\ndescription: example\n"
+                "last_reviewed: not-a-date\nsources: []\nkind: router\n---\n"
+                "# Example\n\n## When to Load\nNow.\n\n## Quick Reference\nRule.\n"
+            )
+            errors = validate_skills.validate_skill(str(skill_dir))
+            self.assertTrue(any("frontmatter name must match" in error for error in errors))
+            self.assertTrue(any("last_reviewed" in error for error in errors))
+            self.assertTrue(any("sources must be" in error for error in errors))
+
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: roblox-example\ndescription: example\n"
+                "last_reviewed: 2026-07-26T12:00:00Z\nsources: [original]\n"
+                "kind: router\n---\n# Example\n\n## When to Load\nNow.\n\n"
+                "## Quick Reference\nRule.\n"
+            )
+            errors = validate_skills.validate_skill(str(skill_dir))
+            self.assertTrue(any("last_reviewed" in error for error in errors))
 
     def test_validator_includes_promoted_ui_design_skill(self):
         with tempfile.TemporaryDirectory() as tmp:

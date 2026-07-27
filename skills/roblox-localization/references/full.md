@@ -52,18 +52,22 @@ locTable:SetEntries({
     {
         Key = "welcome",
         Source = "Welcome to the game!",
-        ["en-us"] = "Welcome to the game!",
-        ["pt-br"] = "Bem-vindo ao jogo!",
-        ["ja-jp"] = "ゲームへようこそ！",
-        ["es-es"] = "¡Bienvenido al juego!",
+        Values = {
+            ["en-us"] = "Welcome to the game!",
+            ["pt-br"] = "Bem-vindo ao jogo!",
+            ["ja-jp"] = "ゲームへようこそ！",
+            ["es-es"] = "¡Bienvenido al juego!",
+        },
     },
     {
         Key = "coins_count",
         Source = "You have {0} coins",
         Example = "You have 100 coins",
-        ["en-us"] = "You have {0} coins",
-        ["pt-br"] = "Você tem {0} moedas",
-        ["ja-jp"] = "{0}コイン持っています",
+        Values = {
+            ["en-us"] = "You have {0} coins",
+            ["pt-br"] = "Você tem {0} moedas",
+            ["ja-jp"] = "{0}コイン持っています",
+        },
     },
 })
 ```
@@ -72,15 +76,17 @@ locTable:SetEntries({
 
 ### How It Works
 
-1. Set `RootLocalizationTable` on a GUI object (or an ancestor)
-2. When `TextLabel.Text` is set, the engine looks up the source text in the table
-3. If a translation exists for the player's locale, it replaces the displayed text
-4. If no translation exists, the source text is shown
+1. Keep `AutoLocalize` true on the GUI object and every `GuiBase2d` ancestor
+2. Set `RootLocalizationTable` on a GUI object (or an ancestor)
+3. When `TextLabel.Text` is set, the engine looks up the source text in the table
+4. If a translation exists for the player's locale, it replaces the displayed text
+5. If no translation exists, the source text is shown
 
 ```luau
 -- Set up auto-translation on a ScreenGui
 local screenGui = player.PlayerGui:WaitForChild("MainMenu")
 local locTable = game.LocalizationService:WaitForChild("GameTranslations")
+screenGui.AutoLocalize = true
 screenGui.RootLocalizationTable = locTable
 
 -- Text auto-translates based on player's locale
@@ -114,7 +120,7 @@ local translator = LocalizationService:GetTranslatorForLocaleAsync("pt-br")
 local welcome = translator:Translate(game, "Welcome to the game!")
 
 -- With format arguments
-local coinsMsg = translator:FormatTranslate(game, "You have {0} coins", {coinCount})
+local coinsMsg = translator:FormatByKey("coins_count", {coinCount})
 
 -- Using a specific LocalizationTable (not the default hierarchy)
 local customTable = game.LocalizationService:WaitForChild("QuestTranslations")
@@ -190,5 +196,5 @@ Check `player.LocaleId` against this list to determine which translations to pro
 - **Non-GUI text**: auto-translation doesn't work on chat messages, notifications, or any non-GuiBase2d element. Use `Translator:Translate()` manually.
 - **Async calls**: `GetTranslatorForPlayerAsync` and `GetCountryRegionForPlayerAsync` are async — cache results, don't call per-frame.
 - **VPN/proxy**: country detection via IP is unreliable behind VPNs. Don't use for security-critical decisions.
-- **Argument formatting**: use `{0}`, `{1}` placeholders in source text. `FormatTranslate` replaces them in order.
+- **Argument formatting**: use `{0}`, `{1}` placeholders in source text. `FormatByKey` replaces them in order.
 - **Locale coverage**: not all locales are supported. Check `player.LocaleId` and handle unsupported locales gracefully.

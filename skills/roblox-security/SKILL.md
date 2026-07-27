@@ -1,13 +1,15 @@
 ---
 name: roblox-security
 description: "Use when auditing Roblox code for exploit vectors, authority models, remotes, economy, and DataStore flows."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/scripting/security/security-tactics
   - https://create.roblox.com/docs/scripting/security/client-server-boundary
   - https://create.roblox.com/docs/projects/server-authority
   - https://create.roblox.com/docs/projects/server-authority/techniques
 ---
+
+# Roblox Security
 
 ## When to Load
 
@@ -20,17 +22,17 @@ Load for exploit audits and hardening. Covers classic replication, opt-in Server
 ### Authority Models
 
 - **Classic replication:** validate client requests and custom movement against server state. Never trust client damage, currency, inventory, permissions, or positions.
-- **Server Authority:** with `Workspace.AuthorityMode = Server` and its required settings, the server owns core simulation while clients predict and recover from misprediction. Use `BindToSimulation()`, not blanket `Heartbeat` CFrame correction.
+- **Server Authority:** with `Workspace.AuthorityMode = Server` and its required settings, the server owns core simulation while clients predict and recover from misprediction. Use `BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio), not blanket `Heartbeat` CFrame correction.
 - **Both:** validate attacks, purchases, teleports, dashes, permissions, and custom remotes at the server boundary.
 
 ### Vectors & Mitigations
 
 | Vector | Attack | Fix |
 |--------|--------|-----|
-| Movement | Custom dash, teleport, or locomotion abuse | Server state and transition checks; under Server Authority, keep simulation logic in `BindToSimulation()` and do not add blanket CFrame snap-back |
+| Movement | Custom dash, teleport, or locomotion abuse | Server state and transition checks; under Server Authority, keep simulation logic in `BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio) and do not add blanket CFrame snap-back |
 | Remote | Spam, arg spoof, replay | Rate limiter + validate arg types + idempotency |
 | Economy | Dupe, negative qty | Session lock, atomic ops, qty > 0 |
-| DataStore | Save spam, session hijack | Server-controlled saves, JobId session lock |
+| DataStore | Save spam, session hijack | Server-controlled saves, maintained session ownership protocol |
 | General | Client trusts values | Server computes ALL game state |
 
 ### Audit Checklist

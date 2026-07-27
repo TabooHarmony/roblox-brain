@@ -1,51 +1,48 @@
 ---
 name: roblox-ui-design
-description: "Roblox UI design with simulator default and existing-style inheritance. Use with `roblox-gui`."
-last_reviewed: 2026-07-13
+description: "Use for Roblox UI composition, hierarchy, visual systems, style inheritance, accessibility, and design review."
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/production/publishing/adaptive-design
   - https://create.roblox.com/docs/production/publishing/accessibility
   - https://create.roblox.com/docs/ui/styling
-  - [original]
+  - original
 ---
 
 # Roblox UI Visual Design
 
 ## When to Load
 
-Load for Roblox UI design/review. No style source: use the simulator default. Existing UI/reference: preserve its style while applying these rules. Load `roblox-gui` for mechanics.
+Load for UI design or review. Existing style and art direction take priority. Otherwise derive a restrained system from the game fantasy and screen job. Load `roblox-gui` for mechanics.
 
 ## Quick Reference
 
-### Style
+### Establish the visual system
 
-Existing UI/reference > explicit art direction > default.
+1. Inspect existing surfaces, type roles, borders, depth, icons, spacing, and action colors. Reuse consistent tokens.
+2. If no style exists, name the screen job and game fantasy before choosing colors, fonts, or decoration.
+3. Define a small token set: background, surface, raised surface, text, muted text, accent, danger, border, radius, spacing, and type roles.
+4. Choose density from the task and device. A HUD, inventory grid, settings list, and purchase prompt should not share one topology.
+5. Use simulator styling only when the game or art direction calls for it. The full reference keeps an optional recipe.
 
-For existing style, inspect surfaces, fonts, borders, depth, icons, spacing, and action colors. Reuse those tokens. Borrow style, not broken geometry. Do not import conflicting simulator conventions.
+### Core principles
 
-### Core Principles
+- **Topology:** choose single-focus, collection, compare, HUD, list, or another justified shape. Do not force every task into a centered modal.
+- **Hierarchy:** one object, state, or action gets the strongest contrast and scale. Quiet secondary content.
+- **Flow:** each repeated flow has one owner: `UIListLayout`, `UIGridLayout`, or shared-column math.
+- **Density:** size the complete panel around useful content. Do not stretch shells or add metadata to occupy space.
+- **Bounds:** sum widths, gaps, padding, borders, and minimums. Keep strokes and backings inside parents.
+- **Alignment:** use shared layouts, fixed icon slots, and matching anchors.
+- **State:** active, available, locked, completed, selected, and disabled states need more than color.
+- **Input:** design hover only where it exists. Touch, gamepad focus, keyboard, and reduced motion need equivalent feedback.
+- **Verification:** inspect representative target viewports for clipping, overflow, dead space, type, hierarchy, and focus order.
 
-- **Topology:** choose composition from the job: single-focus, collection, compare, HUD, list, or another justified shape. Do not force every task into one modal.
-- **Hierarchy:** one focal object, state, or action gets the strongest contrast and scale. Quiet secondary content.
-- **Flow:** each repeated flow has one owner: `UIListLayout`, `UIGridLayout`, or shared-column math. Do not mix layout objects with guessed offsets.
-- **Density:** size the complete panel around useful content. Do not stretch shells or add metadata to fill space.
-- **Bounds:** sum widths, gaps, padding, borders, and minimums. Keep content, strokes, and backings inside parents.
-- **Alignment:** use shared layouts, fixed icon slots, and matching anchors. Do not independently offset paired icons and labels.
-- **State:** active, available, locked, completed, and disabled states need structural/textual differences. Color is not the only signal.
-- **Verification:** inspect the target viewport for clipping, overflow, dead space, type, and hierarchy. A valid tree is not proof of good composition.
+### Neutral fallback
 
-### Default
+Use one restrained surface and border language, one display role, one body role, and one accent. Let game content, artwork, and action importance create identity. Prefer readable contrast and clear grouping over thick outlines, ornamental depth, or genre assumptions.
 
-Default: bold, layered, toy-like UI over 3D gameplay.
+### Anti-patterns
 
-- Base: charcoal/warm brown. Green = claim/buy; red = danger/close; yellow = premium; blue = navigation/currency; purple = rare.
-- Display: `FredokaOne` (cute) or `Oswald` (action); body: `BuilderSans`.
-- Display type covers titles, section labels, item names, and key stats. Secondary values stay clean and smaller. Outline title and primary CTA only.
-- Use one neutral outline per surface. Backings share the radius or stay inset. Put color in fills, active insets, or small cues, not every perimeter.
-- Content cards need a centered focal icon/art placeholder. Do not leave item grids blank.
+Oversized shells, guessed offsets in managed layouts, drifting actions, blank item boxes, color-only state, mouse-only feedback, decoration before hierarchy, and a familiar simulator skin pasted over unrelated art direction.
 
-### Anti-Patterns
-
-Oversized shells, wide panels around narrow stacks, fixed offsets in auto-sized flows, drifting actions, colored outlines on every card, blank item boxes, independent icon/label offsets, or simulator styling pasted over an existing identity.
-
-> Full specs and QA checklist: [references/full.md](references/full.md)
+> Style inference, optional simulator recipe, composition, interaction states, and QA: [references/full.md](references/full.md)

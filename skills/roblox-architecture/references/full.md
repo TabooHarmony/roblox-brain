@@ -1,190 +1,204 @@
-# roblox architecture: full reference
+# Roblox Architecture: Full Reference
 
-This is an original implementation guide built around Roblox's data model and client/server runtime. It is deliberately framework-neutral.
+Architecture is the ownership and dependency model that makes changes safe. Folders and class names are evidence of that model only when they clarify a real boundary.
 
-## When to Load
+## 1. Define the feature before the hierarchy
 
-Use this reference when a project is growing beyond a few scripts, when a feature crosses the client/server boundary, or when startup order and ownership are unclear.
+For a behavior, answer:
 
-## 1. Start with ownership
+1. Which state is authoritative?
+2. Which code may mutate it?
+3. Which operations are public, and who calls them?
+4. Which instances, connections, tasks, and cached values does it own?
+5. Does it cross a client/server, persistence, purchase, or external-service boundary?
+6. When does it start, and how does it stop?
 
-Choose a home based on who must be allowed to run or read the code.
+If those answers fit in one small module or script, keep them there. A service/controller pair is not automatically more architectural than two scripts. Add boundaries because ownership differs, not because a template has folders to fill.
 
-| Location | Typical contents | Boundary |
+## 2. Runtime location is a trust and execution decision
+
+| Location | Typical role | Important consequence |
 | --- | --- | --- |
-| `ServerScriptService` | game rules, services, receipt handling | server only |
-| `ServerStorage` | server-only templates and private assets | server only |
-| `ReplicatedStorage` | shared modules, remotes, public definitions | replicated to clients |
-| `StarterPlayerScripts` | per-player controllers and input | client |
-| `StarterGui` | UI templates | cloned to each player's `PlayerGui` |
-| `Workspace` | live replicated instances | visible to clients unless protected elsewhere |
+| `ServerScriptService` | server rules and orchestration | not replicated to clients |
+| `ServerStorage` | server-only templates and assets | unavailable to clients |
+| `ReplicatedStorage` | shared definitions, modules, and remotes | readable by clients |
+| `StarterPlayerScripts` | per-player client behavior | cloned and run for each player |
+| `StarterGui` | UI templates | cloned into each player's GUI |
+| `Workspace` | live world instances | replicated according to engine behavior |
 
-A location is not a security feature if the object is replicated. Never put a secret, service credential, or authoritative reward table in a replicated container.
+Replicated code is not a secret store. Do not put credentials, private reward logic, hidden detection thresholds, or authoritative mutable state in replicated locations and assume clients cannot inspect it.
 
-## 2. A small feature layout
+A shared module may hold types, immutable identifiers, pure calculations, or presentation-safe configuration. The server still owns decisions that grant value, change persistent state, charge a purchase, or affect other players.
 
-A feature should be easy to find and have one obvious server owner.
+## 3. Prefer feature cohesion over ceremonial layers
+
+A small feature can keep related code together while respecting runtime boundaries:
 
 ```text
-ReplicatedStorage
-└── Shared
-    ├── Types
-    ├── Net
-    └── Util
-ServerScriptService
-├── Boot.server.luau
-└── Services
-    ├── InventoryService.luau
-    └── RoundService.luau
-StarterPlayer
-└── StarterPlayerScripts
-    ├── Boot.client.luau
-    └── Controllers
-        ├── InventoryController.luau
-        └── RoundController.luau
+ReplicatedStorage/Features/Inventory/
+├── Types.luau
+└── Remotes/
+ServerScriptService/Features/Inventory/
+├── Inventory.luau
+└── Inventory.server.luau
+StarterPlayer/StarterPlayerScripts/Features/Inventory/
+├── InventoryView.luau
+└── Inventory.client.luau
 ```
 
-The exact folders are less important than the rule: shared code stays side-effect-light, server services own state, and client controllers translate input into requests or presentation.
+This is an example, not a required tree. A flat layout is better when the project is small. A top-level server/shared/client layout is better when that is already consistent. Do not reorganize a working repository solely to match this specimen.
 
-## 3. Explicit startup
+The important properties are:
 
-Do not rely on filesystem order or accidental `require` order. A bootstrapper can pass a shared context and make dependencies visible.
+- one obvious server owner for authoritative mutation;
+- client code owns input and presentation, not grants;
+- shared code is safe to replicate;
+- one feature change does not require hunting through unrelated generic manager folders.
 
-```luau
--- ServerScriptService/Boot.server.luau
-local servicesFolder = script.Parent.Services
-local serviceNames = { "InventoryService", "RoundService" }
-local services = {}
+## 4. Module contracts
 
-for _, name in serviceNames do
-    services[name] = require(servicesFolder[name])
-end
-
-local context = { Services = services }
-
-for _, name in serviceNames do
-    local service = services[name]
-    if service.Init then
-        service:Init(context)
-    end
-end
-
-for _, name in serviceNames do
-    local service = services[name]
-    if service.Start then
-        task.spawn(function()
-            service:Start(context)
-        end)
-    end
-end
-```
-
-Use `Init` for wiring references and validation. Use `Start` for work that may connect events, yield, or begin loops. If startup order matters, represent it in the list or split the phases rather than hiding it in a module's top-level code.
-
-## 4. ModuleScript contracts
-
-A module should answer three questions:
-
-1. What state does it own?
-2. Which functions are public?
-3. Which side is allowed to call it?
-
-Prefer a narrow returned table over exporting every helper.
+A useful module contract states its owned state, public operations, caller side, failure modes, and lifecycle.
 
 ```luau
--- ServerScriptService/Services/InventoryService.luau
-local InventoryService = {}
-local inventories: {[Player]: {[string]: number}} = {}
+local Inventory = {}
+local quantities: {[Player]: {[string]: number}} = {}
 
-function InventoryService:Init()
-    -- connect dependencies here
+function Inventory.getCount(player: Player, itemId: string): number
+    local playerItems = quantities[player]
+    return if playerItems then playerItems[itemId] or 0 else 0
 end
 
-function InventoryService:GetCount(player: Player, itemId: string): number
-    local inventory = inventories[player]
-    return inventory and inventory[itemId] or 0
-end
-
-function InventoryService:Remove(player: Player, itemId: string, amount: number): boolean
-    local inventory = inventories[player]
-    local current = inventory and inventory[itemId]
-    if not current or amount < 1 or current < amount then
+function Inventory.remove(player: Player, itemId: string, amount: number): boolean
+    if amount < 1 then
         return false
     end
-    inventory[itemId] = current - amount
+    local playerItems = quantities[player]
+    local current = if playerItems then playerItems[itemId] else nil
+    if current == nil or current < amount then
+        return false
+    end
+    playerItems[itemId] = current - amount
     return true
 end
 
-return InventoryService
+function Inventory.release(player: Player)
+    quantities[player] = nil
+end
+
+return Inventory
 ```
 
-Keep module top-level code cheap. A `require` can yield when another module does work at load time, and two modules that require each other can deadlock or observe half-initialized state.
+This does not need a class, dependency container, base service, or lifecycle interface. Add one only when repeated concrete behavior pays for it.
 
-## 5. Client/server boundaries
+Keep top-level module code cheap and non-yielding. Hidden work during `require` makes ordering, failure, and cycles hard to diagnose. Circular requires indicate ownership or dependency direction is unclear; do not solve them with delayed globals.
 
-A request is not a command to obey. A client can fire any replicated `RemoteEvent`, send malformed arguments, and alter its own local state. The server should validate the request, look up trusted configuration, apply the result, and replicate the outcome.
+## 5. Dependency direction
+
+Use a direct module call when one owner needs a stable operation from another. The dependency remains visible and searchable.
+
+Use a signal when:
+
+- the publisher should not know independent observers;
+- zero, one, or several observers are legitimate;
+- delayed notification is acceptable;
+- the signal has an owner and cleanup contract.
+
+Do not introduce a global event bus merely to erase dependency arrows. It replaces compile-time/searchable relationships with string names, runtime ordering, and hidden consumers.
+
+Avoid bidirectional feature dependencies. Move a narrow pure contract downward, let one side own orchestration, or emit an event from the authoritative owner. Shared folders should not become dumping grounds for anything imported twice.
+
+## 6. Startup only when startup exists
+
+Many modules need no initialization. Requiring them and calling their operations is enough.
+
+When startup order matters, one small bootstrap should make it explicit:
 
 ```luau
--- ServerScriptService/Services/InventoryService.luau
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local buyItem = ReplicatedStorage.Shared.Net.BuyItem
+local DataOwner = require(script.Parent.DataOwner)
+local Match = require(script.Parent.Match)
 
-buyItem.OnServerEvent:Connect(function(player, itemId)
-    if typeof(itemId) ~= "string" then
-        return
-    end
+local ok, problem = DataOwner.start()
+if not ok then
+    error(`Data startup failed: {problem}`)
+end
 
-    local definition = ItemDefinitions[itemId]
-    if not definition or definition.Price < 0 then
-        return
-    end
-
-    -- Read currency and grant the item from server-owned state.
-    InventoryService:Purchase(player, definition)
-end)
+Match.start(DataOwner)
 ```
 
-The client may predict an animation or optimistically update a button, but it must reconcile with the server response. Do not accept client-supplied damage, price, ownership, reward, or teleport destination as authoritative data.
+Sequential calls preserve order and surface failure. Do not wrap every `Start` in `task.spawn`; that discards ordering and creates unowned background failures. Run independent startup concurrently only when independence is proven and failures are still collected.
 
-## 6. Remotes and shared definitions
+Avoid universal two-phase `Init`/`Start` contracts. They add ceremony and can leave modules half-initialized. If phases are necessary, state exactly what each phase guarantees, validate dependency availability, and prevent public operations before readiness.
 
-Keep remotes in a stable shared location and treat their names and argument shapes as an API. For each remote, document:
+Top-level scripts can wire small features directly. A framework is not required to make startup explicit.
 
-- direction: client to server, server to client, or both;
-- argument types and size limits;
-- authorization and ownership checks;
-- cooldown or quota;
-- response or failure behavior.
+If a client dependency arrives through replication, use a bounded
+`WaitForChild` and handle timeout explicitly. An unbounded wait converts a
+missing instance or placement mistake into a silent startup hang.
 
-`RemoteFunction` is appropriate for a short request that genuinely needs a response. Avoid making a server call wait on an untrusted client callback. For most gameplay requests, an event plus an explicit result event is easier to time out and observe.
+## 7. Client/server APIs
 
-## 7. Cross-module communication
+A client request is untrusted input, not a command. The server validates the request against current server-owned state before side effects.
 
-Use direct calls for a stable dependency. Use a signal or bindable event when the publisher should not know its consumers. Do not introduce a global event bus merely to avoid drawing a dependency graph.
+For each client-to-server remote, define:
 
-Good boundaries:
+- payload types and size limits;
+- finite number and range checks;
+- current-state preconditions;
+- player ownership or permission;
+- replay and duplicate semantics;
+- abusive-frequency controls based on operation cost;
+- success, denial, timeout, and reconciliation behavior.
 
-- `RoundService` owns round state and exposes `GetPhase` and `StartRound`.
-- `InventoryService` owns inventory mutation and emits `ItemChanged`.
-- `InventoryController` listens and renders UI; it never edits the authoritative inventory table.
+Client prediction may improve responsiveness, but it must reconcile with the authoritative result. Never accept client-supplied damage, price, ownership, reward, inventory, or privileged destination as truth.
 
-## 8. Testing and growth
+Load `roblox-networking` and `roblox-security` for executable patterns. Load `roblox-monetization` for purchase ownership and `roblox-data` for persistence ownership.
 
-A project is ready to split a module when one of these becomes true:
+## 8. One canonical side-effect owner
 
-- it owns a separate lifecycle or persistence boundary;
-- it has a distinct server/client contract;
-- tests need to exercise it without booting unrelated systems;
-- the current module has multiple unrelated reasons to change.
+Some operations tolerate only one owner:
 
-Keep pure validation and calculation functions separate from Roblox instance wiring. They can run under a headless Luau test tool, while integration tests run in Studio.
+- profile load, save, migration, and session release;
+- purchase receipt processing and durable grants;
+- authoritative currency or inventory mutation;
+- cross-server message deduplication;
+- external webhook side effects.
 
-## Architecture checklist
+Feature modules may request these operations. They should not each implement their own save loop, receipt callback, retry policy, or shutdown handler. Duplicate owners create overwrite races and ambiguous recovery.
 
-- [ ] Every persistent or authoritative state owner is server-side.
-- [ ] Replicated folders contain no secrets or trust decisions.
-- [ ] Startup order is explicit and observable.
-- [ ] Module contracts are narrow and do not form circular requires.
-- [ ] Every remote has type, authorization, size, and rate checks.
-- [ ] Client prediction cannot grant value or bypass a server decision.
-- [ ] Shutdown and player-removal paths release connections and save state.
+Player removal is a signal, not a universal persistence architecture. The canonical data owner defines leave, crash, teleport, and shutdown behavior. Other features release only the memory and resources they own.
+
+## 9. Split and merge criteria
+
+Split a module when at least one is true:
+
+- authority changes, such as client presentation versus server decision;
+- state has a separate lifecycle or persistence contract;
+- a pure calculation can be tested without Roblox wiring;
+- dependencies and reasons to change are genuinely unrelated;
+- resource ownership becomes clearer after the split.
+
+Merge or delete a boundary when:
+
+- it only forwards calls without policy or translation;
+- its name is generic but its state belongs to one feature;
+- an interface has one implementation and no independent contract;
+- two modules mutate the same state;
+- boilerplate exceeds the behavior it protects.
+
+Do not build speculative plugin systems or factories for one implementation.
+
+## 10. Architecture review
+
+Check the real call and data flow, not just folder names.
+
+- Every authoritative state mutation has one canonical owner.
+- Shared code and instances are safe for clients to read.
+- Runtime location matches execution and trust requirements.
+- Public module APIs are narrow and failure behavior is explicit.
+- No circular require, hidden top-level yield, or accidental concurrent startup.
+- Direct dependencies remain visible; signals have a real decoupling reason.
+- Connections, tasks, instances, and player-keyed caches have cleanup owners.
+- Persistence and purchase callbacks are not duplicated across features.
+- Tests can isolate pure behavior where doing so is useful.
+- No service/controller/manager/framework layer exists only for symmetry.
+- The structure is the smallest one that a new contributor can trace end to end.

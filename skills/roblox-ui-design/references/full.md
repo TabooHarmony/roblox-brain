@@ -4,15 +4,15 @@
 
 ## Design Philosophy
 
-This skill uses a simulator-based visual language by default: boxed, bold, toy-like interfaces with semantic color blocking, icon-led navigation, and dense cards. That default fits the common Roblox game made with AI. It is not a universal visual requirement.
+Start from the game's existing identity, explicit art direction, audience, and screen job. If those are absent, use a restrained content-led system: a small token set, readable contrast, clear grouping, and decoration justified by the game fantasy. Do not choose a genre skin merely because it is common on Roblox.
 
-When an existing project UI, screenshot, theme, or component library is available, its visual language takes priority. Preserve its palette, font roles, casing, border/radius language, depth treatment, icon treatment, spacing rhythm, and action colors. Do not import simulator conventions that conflict with it. Borrow style tokens and vocabulary, not broken geometry. Existing style answers “how it looks”; the core rules below answer “how it is organized.”
+When an existing project UI, screenshot, theme, or component library is available, preserve its palette, font roles, casing, border/radius language, depth, icons, spacing rhythm, and action colors. Borrow style tokens and vocabulary, not broken geometry. Existing style answers “how it looks”; the core rules below answer “how it is organized.”
 
-The visual language exists because Roblox UI overlays a moving 3D world, players need to parse information instantly, and touch targets must be large. Thin borders, subtle shadows, and generous whitespace can fail in this context, but an existing project may intentionally use a different treatment. Apply the project’s style while preserving hierarchy, density, containment, and readability.
+Roblox UI often overlays a moving 3D world and must survive varied viewports and input modes. Test contrast, containment, target size, and focus behavior in that context. Thin borders, subtle shadows, dense cards, and generous whitespace can all work when the composition supports them.
 
-## Default Visual Specs
+## Optional Simulator Recipe
 
-These 1080p values are simulator defaults inferred from shipped game screenshots, not official specifications. An existing project’s measured tokens override them.
+Use this recipe only for simulator, collection, or toy-like art direction. These 1080p values are heuristics inferred from shipped screenshots, not official specifications. Existing project tokens override them.
 
 ### Core UI Principles
 
@@ -33,9 +33,9 @@ When the task modifies or extends an existing project UI:
 
 - Inspect the existing screen or component source before designing. Record its surface colors, typography roles, casing, corner and border language, depth, icon treatment, spacing rhythm, and action hierarchy.
 - Reuse existing theme tokens, constructors, component names, and layout conventions when they are available. Do not create a second visual system for one new screen.
-- Preserve intentional identity, including unusual but consistent choices. Do not “improve” a style into the simulator default just because it is familiar.
+- Preserve intentional identity, including unusual but consistent choices. Do not replace it with a familiar genre skin.
 - Preserve the style language, not accidental geometry. Fix overflow, weak hierarchy, broken alignment, and oversized shells using the core principles above.
-- If the style source is incomplete, infer only the missing tokens from the nearest existing components. Fall back to the simulator default only for genuinely unspecified decisions.
+- If the style source is incomplete, infer missing tokens from the nearest components. If no source exists, derive a neutral system from the game fantasy and screen job before considering a genre recipe.
 
 ### Borders
 
@@ -221,7 +221,7 @@ Do not invent asset IDs. Use a verified asset, a procedural texture, or ask the 
 
 ### Density
 
-Roblox UI is dense. Players need simultaneous access to currencies, inventory, shop, rewards, and gameplay. Sparse layouts feel unfinished.
+Choose density from the screen job and device. A HUD may expose several live values while a purchase confirmation should stay focused. Sparse space is useful when it clarifies hierarchy; density is useful when comparison or monitoring is the task.
 
 **Desktop zoning:**
 - Currencies and persistent status: screen edges (top, bottom corners)
@@ -236,14 +236,13 @@ Roblox UI is dense. Players need simultaneous access to currencies, inventory, s
 - Enlarge category controls and close button
 - Consider full-screen modal instead of partial
 - Explicit touch controls where desktop uses keys
-- Respect `ScreenInsets.CoreUISafeInsets`
+- Set `ScreenGui.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets` where the UI must avoid Roblox's core UI.
 
 ```luau
 -- Responsive column count
-local GuiService = game:GetService("GuiService")
-local camera = workspace.CurrentCamera
-
 local function getColumns(): number
+    local camera = workspace.CurrentCamera
+    if camera == nil then return 2 end
     local vp = camera.ViewportSize
     if vp.X < 700 then return 2 end
     if vp.X < 1280 then return 3 end
@@ -332,7 +331,7 @@ flow.Parent = stack
 
 Use this for upgrades and loadouts. It is a compact compare surface, not a default web form.
 
-- Use the project’s depth treatment. In the simulator default, keep the outer panel layered with rear backing, foreground surface, thick outline, and a distinct header or inset.
+- Use the project’s depth treatment. For the optional simulator recipe, layer the outer panel with a rear backing, foreground surface, thick outline, and distinct header or inset.
 - Make each stat row a bounded surface or an intentional project-style separator. Do not let text float without enough contrast.
 - Reserve a 40-48px icon tile at the left of each row. Use a temporary emoji/glyph placeholder when assets are unavailable.
 - Give every row the same usable width and three columns after the icon: fixed stat label, fixed level/status, fixed action.
@@ -455,43 +454,46 @@ Roblox feedback is overt, not subtle:
 Motion should be fast: 80-180ms. No transition should delay shopping or claiming.
 
 ```luau
-local TweenService = game:GetService("TweenService")
 local GuiService = game:GetService("GuiService")
+local TweenService = game:GetService("TweenService")
 
-local function wireStates(button, defaultColor, pressedColor)
-    local baseSize = button.Size
+local function wireStates(button: GuiButton, resting: Color3, active: Color3)
+    local scale = Instance.new("UIScale")
+    scale.Parent = button
 
-    button.MouseEnter:Connect(function()
+    local hovered = false
+    local selected = false
+    local pressed = false
+
+    local function render()
+        local targetScale = pressed and 0.94 or ((hovered or selected) and 1.04 or 1)
+        local targetColor = (hovered or selected or pressed) and active or resting
+        if GuiService.ReducedMotionEnabled then
+            scale.Scale = 1
+            button.BackgroundColor3 = targetColor
+            return
+        end
+        TweenService:Create(scale, TweenInfo.new(0.1), { Scale = targetScale }):Play()
         TweenService:Create(button, TweenInfo.new(0.1), {
-            BackgroundColor3 = pressedColor,
-            Size = UDim2.new(baseSize.X.Scale, baseSize.X.Offset * 1.05,
-                            baseSize.Y.Scale, baseSize.Y.Offset * 1.05)
+            BackgroundColor3 = targetColor,
         }):Play()
-    end)
+    end
 
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.1), {
-            BackgroundColor3 = defaultColor,
-            Size = baseSize
-        }):Play()
-    end)
-
-    button.MouseButton1Down:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.08), {
-            Size = UDim2.new(baseSize.X.Scale, baseSize.X.Offset * 0.92,
-                            baseSize.Y.Scale, baseSize.Y.Offset * 0.92)
-        }):Play()
-    end)
-
-    button.MouseButton1Up:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.1), {
-            Size = baseSize
-        }):Play()
+    button.MouseEnter:Connect(function() hovered = true; render() end)
+    button.MouseLeave:Connect(function() hovered = false; render() end)
+    button.SelectionGained:Connect(function() selected = true; render() end)
+    button.SelectionLost:Connect(function() selected = false; render() end)
+    button.MouseButton1Down:Connect(function() pressed = true; render() end)
+    button.MouseButton1Up:Connect(function() pressed = false; render() end)
+    button.Activated:Connect(function()
+        pressed = false
+        render()
+        -- Perform the action through the screen's controller.
     end)
 end
-
--- Reduced motion: check GuiService.ReducedMotionEnabled and skip tweens
 ```
+
+`Activated` covers mouse, touch, and gamepad activation. Selection events provide a non-hover focus state. Add a separate disabled-state path that sets `Active = false` and changes more than color.
 
 ## Mobile Adaptation
 
@@ -548,8 +550,8 @@ Before finalizing, check:
 - [ ] Does this UI look like it belongs to a specific game, or could it be from any game?
 - [ ] Is the radius the same on every nested element? (If yes, fix it)
 - [ ] Are borders appropriate to the project style and readable over the 3D world?
-- [ ] Is the layout dense enough, or does it feel empty for a Roblox game?
-- [ ] Are colors semantic (green=buy, red=close) or just decorative?
+- [ ] Does density match the screen job, or is space being filled without purpose?
+- [ ] Do action colors follow the project's token meanings instead of decoration or assumed genre conventions?
 - [ ] Are icons custom and consistent, or emoji/generic?
 - [ ] Does the font match the game genre?
 - [ ] Would a player recognize this game from its UI alone?

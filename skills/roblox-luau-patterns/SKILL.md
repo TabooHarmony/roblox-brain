@@ -1,60 +1,65 @@
 ---
 name: roblox-luau-patterns
-description: "Use for Luau metatable classes, inheritance, Promises, coroutines, pcall, module structure, services, and Roblox coding patterns."
-last_reviewed: 2026-07-13
+description: "Use for Roblox module boundaries, object lifecycles, signals, task scheduling, fallible calls, and cleanup in Luau."
+last_reviewed: 2026-07-26
 sources:
   - https://luau-lang.org/
-  - https://raw.githubusercontent.com/Sleitnick/RbxUtil/master/README.md
 ---
+
+# Luau Patterns
 
 ## When to Load
 
-Load for Luau patterns: classes with metatables (constructors, methods, inheritance), async control flow (Promises, coroutines, pcall/xpcall), module structure (service pattern, singletons), Roblox-specific patterns (Instance creation, service access, events, task library). For syntax questions, use `roblox-luau-core`. For type annotations, use `roblox-luau-types`.
-
-**Hand off when:** Pure syntax → `roblox-luau-core` · Type annotations → `roblox-luau-types` · Networking/data/security → `roblox-networking`, `roblox-data`, `roblox-security` · Performance → `roblox-performance`.
-
-Full examples and code samples: `references/full.md`
+Load when choosing a module shape, owning Roblox instances or event connections, scheduling work, or preserving failure semantics. Use `roblox-luau-core` for language behavior, `roblox-luau-types` for types, and `roblox-architecture` for project-wide ownership and startup.
 
 ## Quick Reference
 
-**OOP (metatables):** Use for multiple instances with shared behavior.
+### Choose the smallest shape
+
+- **Plain functions:** default for stateless transformation or validation.
+- **Module with private state:** one explicit subsystem owner. Do not create a manager class merely to namespace functions.
+- **Object with metatable:** multiple independent values need shared behavior and lifecycle.
+- **Existing library abstraction:** follow it when the project already uses it consistently. Do not add Promise, signal, cleanup, or framework dependencies for one call site.
+
 ```luau
-local MyClass = {}
-MyClass.__index = MyClass
-function MyClass.new(...): MyClass  -- . for constructors
-    return setmetatable({...}, MyClass)
+local Counter = {}
+Counter.__index = Counter
+
+function Counter.new(initial: number): Counter
+    return setmetatable({ value = initial }, Counter)
 end
-function MyClass:method()           -- : for methods (implicit self)
+
+function Counter:increment()
+    self.value += 1
 end
--- Inheritance: setmetatable(Child, { __index = Parent })
 ```
-Always set `__index`. Constructors use `.`, methods use `:`.
 
-**Module Services:** Singleton pattern for managers. `Service.init()` wires events; clean up in `PlayerRemoving`.
+Constructors use `.`, instance methods use `:`, and mutable fields belong on the instance, not the class table.
 
-**Instance Creation:** Configure ALL properties, set `Parent` LAST (prevents replication races).
+### Make ownership visible
 
-**Task Library:** Always use `task.*`. `wait()`/`spawn()`/`delay()` are deprecated.
+The code that connects a signal, creates an instance, or starts a task owns cleanup. Store connections and cancel or disconnect them when it ends.
 
-**Error Handling:**
+Configure an instance before parenting when observers should not see partial state. Parent earlier only when the API or lifecycle requires ancestry, and document that reason. This is visibility control, not a magic replication-race fix.
+
+### Preserve failure semantics
+
 ```luau
-local ok, result = pcall(fn, args...)       -- one-shot fallible calls
-local ok, result = xpcall(fn, handler)      -- custom error handler + traceback
+local ok, value = pcall(dataStore.GetAsync, dataStore, key)
+if not ok then
+    return nil, `read failed: {value}`
+end
+return value, nil -- value may legitimately be nil
 ```
-Wrap ALL DataStore/HTTP calls. Use a Promise library for async chains when the project already has one; otherwise use `task` and explicit error handling.
 
-**Naming:** PascalCase (classes/modules/types), camelCase (vars/functions), UPPER_CASE (constants). Prefix `_` for private.
+Do not collapse “call succeeded and returned nil” into “call failed.” Retry only when the domain operation is safe to repeat. Persistence, HTTP, purchases, and remotes belong to their domain skills.
 
-**Anti-Patterns:**
-- `wait()`/`spawn()`/`delay()` → `task.*`
-- Polling loops → events or Heartbeat
-- String `..` in loops → `table.concat()`
-- Missing `pcall` on DataStore/HTTP → silent crash
-- Trusting client → validate types, ranges, ownership
-- Parent before config → replication race
-- Props on class table instead of `self` → shared across instances
-- No connection cleanup → use Trove or manual `:Disconnect()`
+### Schedule deliberately
 
-**Libraries:** Promise · Trove · Signal · Comm · Component · Concur · TypedRemote (Sleitnick) · ProfileStore · t (runtime checks)
+Use `task.defer` to run after the current resumption cycle, `task.spawn` for independent immediate work, `task.delay` for delayed work, and `task.cancel` when the owner ends. Replacing a polling loop with a per-frame event is not automatically cheaper. Prefer event-driven work when a real state-change signal exists; otherwise choose and measure an explicit cadence.
 
-**Checklist:** `__index` set · `.`/`:` correct · pcall on fallible · cleanup · Parent last · no deprecated · clear API · player data cleaned on leave
+### Review
+
+Clear owner, narrow public API, no circular require, no accidental concurrent startup, success and missing-data states remain distinct, connections/tasks cleaned up, client input routed to `roblox-networking`.
+
+> Detailed decision rules and lifecycle examples: [references/full.md](references/full.md)

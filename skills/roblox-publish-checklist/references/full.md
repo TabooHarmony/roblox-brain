@@ -1,125 +1,156 @@
-# Pre-Publish Verification — Full Reference
+# Roblox Publish Checklist: Full Reference
 
+This is a release gate, not a list of universal architecture rules. A gate is a check that can block publication. Define applicability first, then collect evidence.
 
-> **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
+## 1. Freeze the payload
 
-You are verifying a Roblox game is ready to publish. Work through every category below. For each item, check it and note PASS/FAIL/SKIP with a brief explanation.
+Record:
 
----
+- target experience, universe, and places;
+- changed scripts, assets, configuration, schemas, products, and permissions;
+- supported device and input matrix;
+- expected player/data compatibility;
+- rollback or forward-fix procedure.
 
-## 1. Data & Persistence
+Test the exact payload intended for publication. A passing local file that is not in the published place is irrelevant.
 
-- [ ] **DataStore save/load tested** - Player data saves on leave and loads on rejoin correctly
-- [ ] **Session locking verified** - Using ProfileStore or equivalent; no concurrent data corruption
-- [ ] **BindToClose implemented** - Server saves data before shutdown (game close, server hop)
-- [ ] **Data migration plan** - If updating an existing game, schema migration handles old data formats
-- [ ] **Edge case: disconnect during save** - Data not lost if player disconnects mid-save
-- [ ] **Edge case: multiple DataStore calls** - No race conditions from parallel saves
+## 2. Classify gates before running them
 
----
+Use four states:
 
-## 2. Security
+- **Required:** the release touches this risk or the experience depends on it.
+- **Conditional:** run when the named feature exists.
+- **Not applicable:** feature is absent, with a reason.
+- **Unverified:** required evidence could not be collected.
 
-- [ ] **All remotes validated server-side** - Every RemoteEvent/RemoteFunction checks argument types, ranges, and ownership
-- [ ] **No sensitive data exposed** - ReplicatedStorage, StarterPlayer have no server-only logic or secrets
-- [ ] **Rate limiting on all remotes** - Per-player throttling prevents flooding/exploitation
-- [ ] **No client-trusted game logic** - Currency, inventory, damage, positions calculated server-side only
-- [ ] **ProcessReceipt handled correctly** - Grant item THEN return PurchaseGranted; NotProcessedYet on failure
-- [ ] **Anti-cheat basics** - Speed checks, teleport detection, inventory validation
+Do not convert Not Applicable or Unverified into PASS. Do not calculate a readiness percentage that can hide one data-loss or purchase blocker.
 
----
+## 3. High-consequence gates
 
-## 3. Performance
+### Persistence, conditional on stored state
 
-- [ ] **Mobile tested** - Game runs on mobile devices without crashes or severe lag
-- [ ] **Part count within limits** - Workspace part count reasonable for target devices
-- [ ] **No memory leaks** - Events disconnected on cleanup, no orphaned instances accumulating
-- [ ] **MicroProfiler reviewed** - No scripts consistently over budget (>1ms per frame)
-- [ ] **StreamingEnabled considered** - If large map, StreamingEnabled is enabled and tested
-- [ ] **Signal cleanup** - No undisconnected BindableEvent/RemoteEvent connections leaking
+Load `roblox-data` for player profiles and `roblox-server-data` for shared or cross-server state. Verify the actual storage abstraction used by the project.
 
----
+- Existing data loads without being replaced by defaults.
+- Schema migrations are deterministic and safe to retry.
+- A failed session acquisition does not create a new empty profile.
+- Duplicate joins, teleport overlap, crashes, and stale ownership follow the documented policy.
+- Disconnect and shutdown paths preserve the library's release/save contract.
+- Parallel writes cannot overwrite newer state.
+- A failed save is observable and does not produce a false success.
 
-## 4. Monetization
+### Trust boundaries, conditional on client requests or authority changes
 
-- [ ] **GamePasses work correctly** - Purchasing grants the correct benefit, idempotent on rejoin
-- [ ] **DevProducts grant properly** - Consumables delivered, ProcessReceipt handles edge cases
-- [ ] **Premium or subscription benefits functional** - If offered, benefits and entitlement checks work
-- [ ] **Prices reviewed** - Competitive with similar games, clear value proposition
-- [ ] **No pay-to-win concerns** - Free players have reasonable experience
-- [ ] **Creator Rewards decision documented** - If the game relies on Creator Rewards, eligibility, attribution expectations, dashboard reporting, anti-fraud terms, and the 60-day holding period were reviewed
+Load `roblox-networking` and `roblox-security`.
 
----
+- Inventory the changed remotes and their direction, payload, caller, and side effects.
+- Validate type, finite numbers, bounds, state, ownership, permissions, and replay semantics as appropriate to each action.
+- Use abuse controls based on action cost and semantics. Do not require one arbitrary rate limit for every remote.
+- Keep currency, inventory, rewards, permissions, and purchase outcomes server-owned.
+- Test malformed, stale, repeated, unauthorized, and high-frequency requests.
+- For Server Authority projects, verify its required Studio settings and simulation path. Do not apply classic CFrame correction blindly.
 
-## 5. Mobile Compatibility
+### Monetization, conditional on paid products or entitlements
 
-- [ ] **Touch controls work** - All interactions accessible via tap
-- [ ] **UI scales properly** - Using Scale not Offset for UI elements; tested on small screens
-- [ ] **ContextActionService for input** - Game actions bound properly for mobile
-- [ ] **Small screen tested** - UI doesn't overlap, buttons are tappable, text is readable
-- [ ] **Landscape and portrait** - Orientation handled if applicable
-- [ ] **Performance on low-end devices** - Tested on minimum spec mobile device
+Load `roblox-monetization`.
 
----
+- Developer Product grants are durable and idempotent by purchase ID.
+- `ProcessReceipt` returns `PurchaseGranted` only after durable success.
+- Retry, server handoff, player absence, and already-granted receipt cases are tested.
+- Pass and subscription entitlements are checked on the server and refreshed after purchase when needed.
+- Prompt completion events are not treated as proof of payment.
+- Product IDs, amounts, and ownership come from trusted configuration.
 
-## 6. Gameplay
+### Cloud and webhooks, conditional on external integration
 
-- [ ] **Core loop tested end-to-end** - Play for 10+ minutes, full loop works
-- [ ] **Edge cases handled:**
-  - [ ] Disconnect during trade/transaction
-  - [ ] Death during cutscene
-  - [ ] Player leaves during multiplayer event
-  - [ ] Rapid button pressing
-  - [ ] Backfill/rejoin during active game
-- [ ] **Tutorial/FTUE works** - New player can learn the game without confusion
-- [ ] **Difficulty curve** - Early game engaging, progression feels rewarding
-- [ ] **Fun check** - Core loop is actually enjoyable to play repeatedly
+Load `roblox-cloud`.
 
----
+- No key, secret, authorization code, access token, or refresh token appears in replicated content, URLs, client bundles, analytics, or ordinary logs.
+- API-key permissions or OAuth scopes and resource grants are minimal and current.
+- OAuth state, PKCE, redirect URL, token rotation, and revocation behavior are tested when applicable.
+- Webhook verification runs before side effects; repeat delivery is safely deduplicated.
+- Retries are bounded and limited to safe transient failures.
 
-## 7. Metadata
+Any unresolved failure in these four groups is a release blocker.
 
-- [ ] **Game icon set** - 512x512, clear and representative
-- [ ] **Thumbnails uploaded** - At least 3 images showing gameplay
-- [ ] **Description written** - Clear, compelling, includes key features
-- [ ] **Genre selected** - Correct category for discovery
-- [ ] **Max players configured** - Appropriate for game type
-- [ ] **Game badges** - Achievement badges set up for milestones
-- [ ] **Game rating** - Age-appropriate settings configured
+## 4. Runtime and gameplay gates
 
----
+Choose specimens from the changed surface. At minimum include:
 
-## 8. Social
+1. normal completion;
+2. invalid or denied action;
+3. retry or repeat action;
+4. leave/rejoin or reconnect when state is involved;
+5. rapid input or concurrency when the flow can overlap.
 
-- [ ] **Private servers configured** - Available and priced if applicable
-- [ ] **Social features tested** - Party system, chat, friending all work
-- [ ] **Report/block doesn't break game** - Reporting a player doesn't crash or corrupt game state
-- [ ] **Server browser** - Game appears in search with correct tags
-- [ ] **Team play** - If multiplayer, team assignment and switching work
+For multiplayer changes, test at the actual participant count needed to exercise ownership, replication, team, trade, or matchmaking behavior. A solo playtest is not proof of multiplayer correctness.
 
----
+Capture runtime errors and warnings. Verify cleanup after players, characters, rounds, UI screens, and temporary instances are destroyed or replaced.
 
-## 9. Analytics
+## 5. Performance gates
 
-- [ ] **Key events instrumented:**
-  - [ ] Player joins / leaves
-  - [ ] Purchases (GamePass and DevProduct)
-  - [ ] Level/zone completions
-  - [ ] Session length tracking
-  - [ ] Error/crash reporting
-- [ ] **Basic funnel tracking** - New player → tutorial complete → first purchase → retention
-- [ ] **Dashboard configured** - Analytics visible in Roblox Creator Dashboard
+Load `roblox-performance` when the release changes hot loops, physics, rendering, networking, streaming, UI density, or asset load.
 
----
+- Capture a before and after measurement on representative device tiers.
+- Inspect frame time, script hot spots, memory trend, network traffic, and load/streaming behavior relevant to the change.
+- Investigate sustained regressions and growth, not generic part, texture, particle, or millisecond commandments.
+- Test a realistic session and population. A short empty-place profile is not enough.
 
-## Summary
+Record the tested device, viewport, graphics level, player count, place, and scenario with each result.
 
-After checking all items, output:
+## 6. Input, UI, accessibility, and localization
 
-1. **Overall status:** READY / NOT READY
-2. **Critical blockers** (must fix before publish)
-3. **Warnings** (should fix, not blocking)
-4. **Passed items** - Count and percentage
-5. **Failed items** - List each with the fix needed
+Run only supported combinations, but state the support matrix explicitly.
 
-If NOT READY, provide specific fixes for every failed item before the user publishes.
+- Keyboard/mouse, touch, and gamepad paths can reach every required action.
+- Focus order, selected state, activation, back/close behavior, and modal boundaries work without a mouse.
+- Representative small and large viewports have no clipping, overlap, hidden actions, or unsafe-inset collisions.
+- State is not communicated by color alone. Text and controls remain readable over the game view.
+- Reduced-motion behavior does not depend on animation to convey state.
+- Localized strings fit representative long locales; missing keys and fallback behavior are visible.
+- Audio-dependent information has a non-audio route where required.
+
+Load `roblox-input`, `roblox-gui`, `roblox-ui-design`, and `roblox-localization` for the relevant surfaces.
+
+## 7. Creator Dashboard and publication configuration
+
+Inspect the current dashboard rather than copying old dimensions or policy rules from this checklist.
+
+- Correct owner, experience, start place, and place versions are selected.
+- Visibility and access settings match the release intent.
+- Supported devices, server size, permissions, and private-server settings are intentional.
+- Experience questionnaire, content maturity, privacy, and policy declarations are complete and truthful.
+- Name, description, icon, thumbnails, genre, and localization reflect the shipped experience.
+- Paid items and prices point at the intended experience and products.
+- Any required API services, secrets, webhooks, Open Cloud scopes, or external endpoints are configured for production rather than a test environment.
+
+Dashboard UI and policy can change. Use the linked current Creator Hub pages as authority.
+
+## 8. Evidence contract
+
+A PASS must cite one or more of:
+
+- test name and result;
+- playtest scenario and runtime log;
+- Studio or MCP inspection/readback;
+- profiler capture with scenario metadata;
+- screenshot or video for visual/input claims;
+- dashboard inspection with the relevant setting;
+- durable-state readback for data or purchase claims.
+
+A clean console does not prove data integrity, visual quality, accessibility, or purchase idempotency. A screenshot does not prove runtime behavior.
+
+## 9. Final report
+
+Use this structure:
+
+1. **Verdict:** READY, NOT READY, or READY WITH ACCEPTED RISK.
+2. **Payload:** exact experience/places and change scope.
+3. **Blockers:** failed required high-consequence gates.
+4. **Warnings:** nonblocking regressions or debt.
+5. **Unverified:** required checks lacking evidence.
+6. **Evidence:** pass results grouped by gate.
+7. **Not applicable:** skipped gates with reasons.
+8. **Rollback:** owner, trigger, and procedure.
+
+`READY WITH ACCEPTED RISK` requires a named risk, impact, owner, and rollback or mitigation. It is not a softer spelling of NOT READY.

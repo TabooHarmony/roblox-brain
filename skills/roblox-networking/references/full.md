@@ -1,5 +1,7 @@
 # roblox networking: full reference
 
+> Code examples are illustrative. Adapt them to your project and verify in Studio before production use.
+
 Networking is an API boundary, not a trust boundary. Anything running in a player's client can be inspected, modified, or called outside the intended UI flow.
 
 ## When to Load
@@ -10,7 +12,7 @@ Use this when creating or reviewing remotes, synchronizing gameplay state, or ha
 
 Server Authority is an opt-in Roblox model configured through `Workspace.AuthorityMode = Server` and its required replication, fixed-simulation, streaming, and input settings. The server owns the authoritative core simulation while clients predict input and recover from misprediction through rollback and resimulation.
 
-For simulation-affecting input, use the Input Action System (`InputAction` and `InputContext`) and mirror synchronized logic through `RunService:BindToSimulation()`. Use `RemoteEvent` for discrete requests or notifications, not as a replacement for the continuous input path. The model does not remove server-side validation for custom attacks, purchases, teleports, permissions, or other game-specific actions.
+For simulation-affecting input, use the Input Action System (`InputAction` and `InputContext`) and mirror synchronized logic through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio). Use `RemoteEvent` for discrete requests or notifications, not as a replacement for the continuous input path. The model does not remove server-side validation for custom attacks, purchases, teleports, permissions, or other game-specific actions.
 
 ## 1. Define the request contract
 
@@ -145,7 +147,7 @@ Use the least powerful transport that preserves the gameplay contract:
 - `UnreliableRemoteEvent` for replaceable snapshots, aim previews, particles, sound cues, and other data that is stale as soon as a newer update exists.
 - `RemoteFunction` only for short request-response queries with bounded work and an explicit failure path.
 
-Unreliable events are not a free bandwidth or latency upgrade. Roblox may drop them, does not guarantee ordering against other traffic, and documents a 900-byte payload ceiling. Under Server Authority, RemoteEvents may also be observed out of order relative to property and attribute updates. If ordering matters, use one explicit state channel or carry a version/request identifier. Never use unreliable events for currency, inventory, purchases, damage, or any result that must arrive exactly once.
+Unreliable events are not a free bandwidth or latency upgrade. Roblox may drop them, does not guarantee ordering against other traffic, and documents a 1000-byte payload ceiling. Under Server Authority, RemoteEvents may also be observed out of order relative to property and attribute updates. If ordering matters, use one explicit state channel or carry a version/request identifier. Never use unreliable events for currency, inventory, purchases, damage, or any result that must arrive exactly once.
 
 ```luau
 -- ReplicatedStorage/Remotes/Effects is an UnreliableRemoteEvent.
@@ -160,7 +162,7 @@ For typed wrappers, `RbxUtil` exposes `TypedRemote` and `Comm`. They can improve
 
 ## 7. Measure packet budgets
 
-Track both payload size and frequency. A small payload fired every frame can be worse than a larger payload sent occasionally. The community `RemotePacketSizeCounter` resource is useful for estimating supported datatype sizes and testing the 900-byte unreliable-event ceiling, but its own documentation notes that some Roblox encoding behavior is undocumented and has edge cases.
+Track both payload size and frequency. A small payload fired every frame can be worse than a larger payload sent occasionally. The community `RemotePacketSizeCounter` resource is useful for estimating supported datatype sizes and testing the 1000-byte unreliable-event ceiling, but its own documentation notes that some Roblox encoding behavior is undocumented and has edge cases.
 
 Record at least:
 

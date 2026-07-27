@@ -1,7 +1,7 @@
 ---
 name: roblox-performance
 description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems, including MicroProfiler and optimization."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/performance-optimization
   - https://devforum.roblox.com/t/full-release-of-parallel-luau-v1/1836187
@@ -22,17 +22,17 @@ Use when profiling, diagnosing lag, optimizing hot paths, or setting performance
 - **Script Profiler (Ctrl+Alt+F5)** — Per-script CPU usage and heap allocations.
 
 ### Performance Targets
-| Metric | Target | Hard Limit |
-|--------|--------|------------|
-| Server heartbeat | < 16ms | < 33ms |
-| Client FPS (desktop) | 60 | 30 |
-| Client FPS (mobile) | 45 | 30 |
-| Memory (mobile) | < 800MB | < 1.2GB |
+| Metric | Starting target | Investigate at |
+|--------|-----------------|----------------|
+| Server heartbeat | < 16ms | > 33ms |
+| Client FPS (desktop) | 60 | < 30 |
+| Client FPS (mobile) | 45 | < 30 |
+| Memory | device-specific | sustained growth |
 
 ### Optimization Patterns
 - **Throttle Heartbeat** — Batch expensive work at fixed intervals (10/sec, not 60)
 - **Cache references** — Store workspace lookups in variables, avoid repeated FindFirstChild
-- **Spatial partitioning** — Distance-based activation instead of checking all entities
+- **Relevance filtering** — Skip expensive updates for distant entities; a broad scan is still O(n)
 - **Lazy loading** — Stream content from ServerStorage as player approaches
 
 ### Parallel Luau
@@ -56,12 +56,11 @@ end
 ### StreamingEnabled Essentials
 - **On by default** for new places. Only BaseParts stream; Folders, ModuleScripts, RemoteEvents load at join.
 - **Streamed-out = parented to nil**, not destroyed. Luau refs persist if it streams back.
-- **Config**: `StreamingTargetRadius` (start 256, tune down for mobile), `StreamingMinRadius` (~64).
+- **Config (Studio)**: target defaults 1024, min 64; set `StreamingIntegrityMode`; tune from data.
 - **Gotcha**: `FindFirstChild("DistantPart")` returns nil if streamed out. Use WaitForChild with timeout.
 
-### Mobile Quick Wins
-- Keep < 5000 visible parts. Textures max 512x512. Cap particles at 50 emitters.
-- Use CanvasGroup for UI batching. Consider disabling GlobalShadows.
+### Mobile Checks
+- Profile geometry, textures, particles, UI, and shadows on representative low-end devices.
 
 **MCP verification:** collect a baseline and inspect runtime counters after changes.
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

@@ -1,7 +1,7 @@
 ---
 name: roblox-npc-ai
 description: "Use when creating Roblox NPCs or enemies with pathfinding, state machines, line-of-sight or FOV detection, spawns, or AI update loops."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-26
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
   - https://devforum.roblox.com/t/improving-pathfinding-quality-with-new-algorithm/3258657
@@ -33,7 +33,7 @@ end
 ```
 
 - Recompute on blocked with a bounded retry or cancellation policy.
-- Test `Workspace.PathfindingUseImprovedSearch` on representative maps before rollout.
+- In Studio, test `Workspace.PathfindingUseImprovedSearch` on representative maps before rollout; it is not scriptable.
 - Avoid long requests and repeated recomputation. Moving collidable geometry can trigger navigation-mesh work.
 - Region modifiers: anchored part + `PathfindingModifier` Label → Costs
 - `PassThrough = true` for doors; `PathfindingLink` for disconnected navmesh

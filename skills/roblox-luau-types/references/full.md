@@ -27,11 +27,11 @@ The type system exists to **catch bugs at analysis time** without affecting runt
 
 ```luau
 --!strict    -- Full type checking. Errors on unresolved types. Use for new code.
---!nonstrict -- Default mode. Warns but allows unresolved types. Good for transitional code.
+--!nonstrict -- Permissive checking for transitional code; project settings may select it.
 --!nocheck   -- Disables type checking entirely. Only for generated code or legacy.
 ```
 
-**2025-2026 Update:** The New Type Solver (GA Nov 2025) is faster and more accurate. `--!nonstrict` is now the default for all scripts. Prefer `--!strict` for anything you actively maintain.
+**Solver rollout:** Roblox began general release of the New Type Solver on November 20, 2025. Nocheck and nonstrict projects migrated automatically at that point, while existing strict projects remained opt-in. Roblox also documented strict-mode compatibility, performance, memory, and correctness issues. Check the current project's Scripting settings and file directives instead of assuming one universal solver or mode.
 
 ## Basic Type Annotations
 

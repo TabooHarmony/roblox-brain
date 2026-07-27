@@ -15,6 +15,14 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Install Luau compiler
+        run: |
+          curl --retry 3 --retry-all-errors -fsSL https://github.com/luau-lang/luau/releases/download/0.731/luau-ubuntu.zip -o /tmp/luau.zip
+          echo "4fe023ee801158d6d04af3327dbdb8c164697e286229ba52221716cccd0e3dbe  /tmp/luau.zip" | sha256sum --check
+          unzip -q /tmp/luau.zip -d /tmp/luau
+          chmod +x /tmp/luau/luau-compile
+          echo "/tmp/luau" >> "$GITHUB_PATH"
+
       - name: Validate skill structure
         run: python3 validate_skills.py
 
@@ -46,7 +54,7 @@ jobs:
           exit 1
 
       - name: Version pin check
-        run: python3 verify_version_pins.py || true
+        run: python3 verify_version_pins.py
 
   install-test:
     strategy:
@@ -104,4 +112,11 @@ jobs:
             exit 1
           fi
 
-          echo "Install test passed ($count skills, $ref_count references, $resource_count resources)"
+          # Counts can pass with empty, renamed, or corrupted files. Compare the
+          # complete installed payload byte-for-byte against the source tree.
+          if ! diff -qr skills "$SKILLS_DIR"; then
+            echo "ERROR: Installed skill payload differs from source"
+            exit 1
+          fi
+
+          echo "Install test passed with exact payload parity ($count skills, $ref_count references, $resource_count resources)"

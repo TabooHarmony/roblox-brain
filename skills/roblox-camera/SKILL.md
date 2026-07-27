@@ -8,6 +8,8 @@ sources:
   - https://create.roblox.com/docs/reference/engine/datatypes/CFrame
 ---
 
+# Roblox Camera
+
 ## When to Load
 
 Load when scripting custom camera behavior (cutscenes, third-person follow, custom rotation), manipulating `CFrame` for placement/rotation, raycasting from the screen, or building a non-default player view. Client-only.
@@ -22,14 +24,14 @@ Load when scripting custom camera behavior (cutscenes, third-person follow, cust
 
 **CFrame essentials**:
 
-```luau
-CFrame.new(pos)
-CFrame.lookAt(at, lookAt, up?)                 -- preferred over deprecated CFrame.new(pos, lookAt)
-CFrame.Angles(rx, ry, rz)                      -- XYZ Euler (radians)
-cf * Vector3.new(0, 0, 10)                     -- local offset → world
-cf:Lerp(goal, alpha)                           -- 0..1 linear interp
-cf.LookVector / RightVector / UpVector         -- world-space unit axes
-```
+| Operation | Luau |
+| --- | --- |
+| Position only | `CFrame.new(position)` |
+| Look at target | `CFrame.lookAt(position, target, upVector)` |
+| XYZ rotation | `CFrame.Angles(rx, ry, rz)` |
+| Local to world | `cf * Vector3.new(0, 0, 10)` |
+| Interpolate | `cf:Lerp(goal, alpha)` |
+| Unit axes | `cf.LookVector`, `cf.RightVector`, `cf.UpVector` |
 
 **Custom camera loop** — always `RenderStepped`, never `Heartbeat`:
 

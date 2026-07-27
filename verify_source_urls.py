@@ -19,6 +19,8 @@ import urllib.request
 import urllib.error
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parent
 SKILLS_DIR = ROOT / "skills"
 TIMEOUT = 15
@@ -26,22 +28,21 @@ TIMEOUT = 15
 
 def extract_source_urls(content: str) -> list[str]:
     """Extract URLs from the sources: frontmatter field."""
-    fm_match = re.match(r"^---\n(.+?)\n---", content, re.DOTALL)
+    fm_match = re.match(r"^---\r?\n(.+?)\r?\n---(?:\r?\n|$)", content, re.DOTALL)
     if not fm_match:
         return []
-    fm_body = fm_match.group(1)
-    urls = []
-    for line in fm_body.split("\n"):
-        line = line.strip()
-        if line.startswith("- ") or line.startswith("  - "):
-            url = line.lstrip("- ").strip()
-            if url.startswith("http"):
-                urls.append(url)
-        elif line.startswith("sources:") and "http" in line:
-            url = line.split("sources:", 1)[1].strip().strip("[]")
-            if url.startswith("http"):
-                urls.append(url)
-    return urls
+    try:
+        frontmatter = yaml.safe_load(fm_match.group(1))
+    except yaml.YAMLError:
+        return []
+    if not isinstance(frontmatter, dict):
+        return []
+    sources = frontmatter.get("sources", [])
+    if isinstance(sources, str):
+        sources = [sources]
+    if not isinstance(sources, list):
+        return []
+    return [source for source in sources if isinstance(source, str) and source.startswith("http")]
 
 
 def source_url_policy_error(url: str) -> str | None:

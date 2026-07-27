@@ -1,5 +1,7 @@
 # roblox monetization: full reference
 
+> Code examples are illustrative. Adapt them to your project and verify in Studio before production use.
+
 This guide focuses on the server-side correctness of Roblox's purchase APIs. Product catalog setup and current policy requirements change over time; use the linked Creator Hub pages as the authority for eligibility and configuration details.
 
 ## 1. Pick the product type
@@ -51,14 +53,15 @@ Only one server callback should own `ProcessReceipt`. It must:
 4. record the receipt or transaction id with the grant;
 5. return `PurchaseGranted` only after durable success.
 
+`BindReceiptHandler` is a separate API for Robux-transfer sender and receiver
+receipts. It does not replace `ProcessReceipt` for Developer Products.
+
 ```luau
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 
-local handlers = {
-    [COIN_PRODUCT_ID] = function(player: Player)
-        return EconomyService:AddCoins(player, 500)
-    end,
+local productGrants = {
+    [COIN_PRODUCT_ID] = { coins = 500 },
 }
 
 MarketplaceService.ProcessReceipt = function(receiptInfo)
@@ -67,30 +70,30 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
         return Enum.ProductPurchaseDecision.NotProcessedYet
     end
 
-    local productHandler = handlers[receiptInfo.ProductId]
-    if not productHandler then
+    local productGrant = productGrants[receiptInfo.ProductId]
+    if not productGrant then
         warn("Unhandled product", receiptInfo.ProductId)
         return Enum.ProductPurchaseDecision.NotProcessedYet
     end
 
     local transactionId = tostring(receiptInfo.PurchaseId)
-    if ReceiptStore:WasGranted(transactionId) then
-        return Enum.ProductPurchaseDecision.PurchaseGranted
-    end
-
-    local ok = productHandler(player)
-    if not ok then
-        return Enum.ProductPurchaseDecision.NotProcessedYet
-    end
-
-    if not ReceiptStore:RecordGrant(transactionId, player.UserId) then
+    local granted = ReceiptStore:ApplyGrantOnce(
+        transactionId,
+        player.UserId,
+        productGrant
+    )
+    if not granted then
         return Enum.ProductPurchaseDecision.NotProcessedYet
     end
     return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 ```
 
-The order between granting and recording must match the project's persistence guarantees. If a grant and receipt record cannot be made atomic, make the grant idempotent so a retry cannot duplicate value.
+`ApplyGrantOnce` is a project-specific persistence boundary. It must make the
+transaction ID and entitlement mutation one durable, idempotent operation, and
+must treat an already-granted ID as success. Do not implement it as “grant,
+then separately record”: a crash or failed record between those operations can
+duplicate value on retry.
 
 ## 4. Subscriptions and recurring benefits
 

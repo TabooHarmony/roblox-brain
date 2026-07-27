@@ -1,49 +1,49 @@
 ---
 name: roblox-publish-checklist
-description: "Use before publishing or updating a Roblox game to check data, security, performance, monetization, mobile, metadata, social, and analytics."
-last_reviewed: 2026-07-13
+description: "Use before publishing or updating a Roblox experience to run evidence-backed release gates for the surfaces that changed."
+last_reviewed: 2026-07-26
 sources:
-  - https://create.roblox.com/docs/creator-rewards
-  - https://create.roblox.com/docs/production/monetization/developer-products
-  - https://devforum.roblox.com/t/creator-rewards-is-live/3838257
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/publish-games-and-places.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/adaptive-design.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/accessibility.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/descriptions.md
 ---
+
+# Roblox Publish Checklist
 
 ## When to Load
 
-Load when preparing to publish or update a Roblox game. Provides a structured checklist covering data persistence, security, performance, monetization, mobile, gameplay, metadata, social, and analytics. Use to catch blockers before going live.
+Load before publishing a new experience or updating a live one. This is a release router, not a universal coding standard. Test the surfaces that exist and the risks introduced by the change.
 
 ## Quick Reference
 
-### 1. Data & Persistence
-DataStore save/load ✓ · Session locking (ProfileStore) ✓ · BindToClose ✓ · Data migration plan ✓ · Disconnect-during-save edge case ✓ · No parallel save race conditions ✓
+### 1. Define the release
 
-### 2. Security
-All remotes validated server-side (types, ranges, ownership) ✓ · No secrets in ReplicatedStorage/StarterPlayer ✓ · Rate limiting on remotes ✓ · Logic server-side only (currency, inventory, damage) ✓ · ProcessReceipt: grant THEN PurchaseGranted ✓ · Anti-cheat basics (speed, teleport, inventory) ✓
+Record the changed places, scripts, assets, configuration, schemas, products, supported devices, and rollback path. Classify each gate as required, conditional, or not applicable before testing.
 
-### 3. Performance
-Mobile tested ✓ · Part count reasonable ✓ · No memory leaks (events disconnected) ✓ · MicroProfiler: no scripts >1ms/frame ✓ · StreamingEnabled if large map ✓ · Signal cleanup ✓
+### 2. Block on high-consequence failures
 
-### 4. Monetization
-GamePasses idempotent on rejoin ✓ · DevProducts deliver correctly ✓ · Creator Rewards decision and eligibility reviewed if relevant ✓ · Prices competitive ✓ · No pay-to-win ✓
+- **Persistence changed:** load, save, migration, duplicate-session, disconnect, and shutdown behavior. Load `roblox-data` or `roblox-server-data`.
+- **Remotes or authority changed:** validate types, bounds, state, ownership, replay, and abusive frequency. Load `roblox-networking` and `roblox-security`.
+- **Purchases changed:** test durable, idempotent receipt grants and retries. Load `roblox-monetization`.
+- **Cloud auth or webhooks changed:** verify secrets, scopes, callback state, retries, signatures, and deduplication. Load `roblox-cloud`.
 
-### 5. Mobile
-Touch controls work ✓ · UI uses Scale not Offset ✓ · ContextActionService ✓ · Small screen tested ✓ · Orientation handled ✓ · Low-end device tested ✓
+A failed high-consequence gate means NOT READY. Do not average it into a percentage.
 
-### 6. Gameplay
-Core loop 10+ min test ✓ · Edge cases: disconnect during trade, death during cutscene, rapid pressing, rejoin mid-game ✓ · Tutorial/FTUE ✓ · Difficulty curve ✓ · Fun check ✓
+### 3. Exercise the shipped surface
 
-### 7. Metadata
-Icon 512x512 ✓ · 3+ thumbnails ✓ · Description ✓ · Genre ✓ · Max players ✓ · Badges ✓ · Rating ✓
+- Run one normal flow plus failure, retry, leave/rejoin, and rapid-input cases relevant to the change.
+- Test every supported input mode and representative viewport/device tier.
+- Inspect runtime errors, memory growth, frame/network hot spots, and streaming behavior from measurements, not fixed object-count rules.
+- Verify focus, touch targets, readable contrast, non-color state cues, reduced motion, and localized overflow where applicable.
+- Confirm experience metadata, visibility, places, thumbnails/icons, permissions, and policy declarations in the current Creator Dashboard.
 
-### 8. Social
-Private servers ✓ · Party/chat/friend ✓ · Report/block safe ✓ · Tags correct ✓ · Team assignment ✓
+### 4. Require evidence
 
-### 9. Analytics
-Events: join/leave, purchases, completions, session length, errors ✓ · Funnel tracking ✓ · Dashboard configured ✓
+Every PASS cites a test, log, profiler capture, readback, screenshot, or dashboard inspection. If a capability is unavailable, mark UNVERIFIED, not PASS.
 
-### Output Format
-1. READY / NOT READY  2. Critical blockers  3. Warnings  4. Pass count/%  5. Failed items + fixes
+### Output
 
-When Studio MCP is available, attach evidence for each claimed pass: inspection/readback, runtime console, screenshot, or an explicit unavailable-capability note.
+`READY`, `NOT READY`, or `READY WITH ACCEPTED RISK`; blockers first, then warnings, unverified gates, evidence, rollback plan, and skipped gates with reasons.
 
-📖 Full reference: `references/full.md`
+> Full gate design and conditional matrix: [references/full.md](references/full.md)

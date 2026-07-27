@@ -113,7 +113,7 @@ end
 
 ### Vehicle Input (server-authoritative)
 
-The `RemoteEvent` pattern below is for classic projects and discrete or low-frequency control. In a Server Authority project, continuous throttle and steering belong in the Input Action System, with input state available to the synchronized simulation through `RunService:BindToSimulation()`. RemoteEvents are still appropriate for discrete requests, not as the continuous prediction path.
+The `RemoteEvent` pattern below is for classic projects and discrete or low-frequency control. In a Server Authority project, continuous throttle and steering belong in the Input Action System, with input state available to the synchronized simulation through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio). RemoteEvents are still appropriate for discrete requests, not as the continuous prediction path.
 
 ```luau
 -- Server: receive input, apply to constraints
@@ -343,7 +343,7 @@ end
 
 When `Workspace.AuthorityMode = Server` and the required replication, fixed-simulation, streaming, and input settings are enabled, core gameplay objects can remain server-owned while client prediction keeps controls responsive. The traditional secure-but-laggy trade-off does not apply in the same way. `SetNetworkOwner()` is not a substitute for Server Authority.
 
-Use `InputAction`/`InputContext` and `RunService:BindToSimulation()` for continuous vehicle or character input. Create gameplay-critical predicted instances, such as projectiles, inside the synchronized simulation and make hit or damage transitions idempotent across rollback and resimulation.
+Use `InputAction`/`InputContext` and `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio) for continuous vehicle or character input. Create gameplay-critical predicted instances, such as projectiles, inside the synchronized simulation and make hit or damage transitions idempotent across rollback and resimulation.
 
 ## Common Mistakes
 

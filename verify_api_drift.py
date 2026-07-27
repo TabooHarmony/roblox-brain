@@ -60,6 +60,13 @@ def find_named(items: list[dict[str, Any]], full_name: str) -> dict[str, Any] | 
     return None
 
 
+def find_method(doc: dict[str, Any], class_name: str, method_name: str) -> dict[str, Any] | None:
+    methods = doc.get("methods") or []
+    return find_named(methods, f"{class_name}:{method_name}") or find_named(
+        methods, f"{class_name}.{method_name}"
+    )
+
+
 def has_parameters(item: dict[str, Any], names: list[str]) -> bool:
     params = item.get("parameters") or []
     return [p.get("name") for p in params] == names
@@ -87,6 +94,42 @@ def validate_file_paths(entry: dict[str, Any]) -> list[str]:
     return missing
 
 
+def claim_needles(entry: dict[str, Any]) -> list[str]:
+    """Return identifiers that must still appear in the teaching files."""
+    explicit = entry.get("teaching_needles")
+    if explicit is not None:
+        return [str(needle) for needle in explicit if str(needle)]
+
+    check = entry.get("check") or {}
+    check_type = check.get("type")
+    if check_type == "class_deprecation_status":
+        return [str(check.get("class", ""))]
+    if check_type in {"constructor_deprecation_status", "constructor_description_contains"}:
+        return [f"{check.get('datatype', '')}.{check.get('constructor', '')}".strip(".")]
+    for key in ("property", "method", "member", "item"):
+        value = check.get(key)
+        if value:
+            return [str(value)]
+    return []
+
+
+def validate_claim_tether(entry: dict[str, Any], root: Path = ROOT) -> list[str]:
+    """Reject registry file links whose claimed identifiers disappeared."""
+    missing = []
+    needles = claim_needles(entry)
+    for file_ref in entry.get("files") or []:
+        relative = str(file_ref.get("path", ""))
+        path = root / relative
+        if path.is_file():
+            haystack = path.read_text(encoding="utf-8").lower()
+            missing.extend(
+                f"{relative}:{needle}"
+                for needle in needles
+                if needle.lower() not in haystack
+            )
+    return missing
+
+
 def verify(entry: dict[str, Any]) -> tuple[str, str]:
     check = entry["check"]
     check_type = check["type"]
@@ -99,6 +142,55 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
         if prop:
             return "pass", f"{class_name}.{prop_name} exists"
         return "fail", f"{class_name}.{prop_name} missing"
+
+    if check_type == "property_write_security":
+        class_name = check["class"]
+        prop_name = check["property"]
+        expected = check["expected"]
+        doc = fetch_doc("classes", class_name)
+        prop = find_named(doc.get("properties") or [], f"{class_name}.{prop_name}")
+        if not prop:
+            return "fail", f"{class_name}.{prop_name} missing"
+        actual = (prop.get("security") or {}).get("write")
+        if actual == expected:
+            return "pass", f"{class_name}.{prop_name} write security={actual}"
+        return "fail", f"{class_name}.{prop_name} write security={actual}, expected {expected}"
+
+    if check_type == "property_has_tag":
+        class_name = check["class"]
+        prop_name = check["property"]
+        expected_tag = check["tag"]
+        doc = fetch_doc("classes", class_name)
+        prop = find_named(doc.get("properties") or [], f"{class_name}.{prop_name}")
+        if not prop:
+            return "fail", f"{class_name}.{prop_name} missing"
+        tags = prop.get("tags") or []
+        if expected_tag in tags:
+            return "pass", f"{class_name}.{prop_name} has tag {expected_tag}"
+        return "fail", f"{class_name}.{prop_name} tags={tags}, expected {expected_tag}"
+
+    if check_type == "member_exists":
+        # Searches properties, methods, and events for a named member.
+        class_name = check["class"]
+        member_name = check["member"]
+        doc = fetch_doc("classes", class_name)
+        for collection, sep in (
+            ("properties", "."),
+            ("methods", ":"),
+            ("events", "."),
+            ("callbacks", "."),
+        ):
+            if find_named(doc.get(collection) or [], f"{class_name}{sep}{member_name}"):
+                return "pass", f"{class_name}{sep}{member_name} exists ({collection})"
+        return "fail", f"{class_name} member {member_name} missing (checked properties/methods/events/callbacks)"
+
+    if check_type == "enum_item_exists":
+        enum_name = check["enum"]
+        item_name = check["item"]
+        doc = fetch_doc("enums", enum_name)
+        if find_named(doc.get("items") or [], item_name):
+            return "pass", f"{enum_name}.{item_name} exists"
+        return "fail", f"{enum_name}.{item_name} missing"
 
     if check_type == "property_deprecation_status":
         class_name = check["class"]
@@ -119,14 +211,7 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
         parameter_name = check["parameter"]
         expected_type = check["expected"]
         doc = fetch_doc("classes", class_name)
-        method = next(
-            (
-                item
-                for item in doc.get("methods") or []
-                if item.get("name") in {f"{class_name}:{method_name}", f"{class_name}.{method_name}"}
-            ),
-            None,
-        )
+        method = find_method(doc, class_name, method_name)
         if not method:
             return "fail", f"{class_name}:{method_name} missing"
         parameter = next((p for p in method.get("parameters") or [] if p.get("name") == parameter_name), None)
@@ -137,6 +222,36 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
             return "pass", f"{class_name}:{method_name}.{parameter_name} type={actual_type}"
         return "fail", f"{class_name}:{method_name}.{parameter_name} type={actual_type}, expected {expected_type}"
 
+    if check_type == "method_return_type":
+        class_name = check["class"]
+        method_name = check["method"]
+        return_index = int(check.get("return_index", 0))
+        expected_type = check["expected"]
+        doc = fetch_doc("classes", class_name)
+        method = find_method(doc, class_name, method_name)
+        if not method:
+            return "fail", f"{class_name}:{method_name} missing"
+        returns = method.get("returns") or []
+        if return_index >= len(returns):
+            return "fail", f"{class_name}:{method_name} return {return_index} missing"
+        actual_type = returns[return_index].get("type")
+        if actual_type == expected_type:
+            return "pass", f"{class_name}:{method_name} return {return_index} type={actual_type}"
+        return "fail", f"{class_name}:{method_name} return {return_index} type={actual_type}, expected {expected_type}"
+
+    if check_type == "method_description_contains":
+        class_name = check["class"]
+        method_name = check["method"]
+        needle = check["contains"]
+        doc = fetch_doc("classes", class_name)
+        method = find_method(doc, class_name, method_name)
+        if not method:
+            return "fail", f"{class_name}:{method_name} missing"
+        haystack = str(method.get("description") or "") + " " + str(method.get("summary") or "")
+        if needle.lower() in haystack.lower():
+            return "pass", f"{class_name}:{method_name} description contains '{needle}'"
+        return "fail", f"{class_name}:{method_name} description does not contain '{needle}'"
+
     if check_type == "class_deprecation_status":
         class_name = check["class"]
         doc = fetch_doc("classes", class_name)
@@ -146,12 +261,11 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
             return "pass", f"{class_name} deprecated={deprecated}"
         return "fail", f"{class_name} deprecated={deprecated}, expected {expected}"
 
-    if check_type == "member_deprecation_status":
+    if check_type == "method_deprecation_status":
         class_name = check["class"]
         member_name = check["member"]
         doc = fetch_doc("classes", class_name)
-        member = find_named(doc.get("methods") or [], f"{class_name}:{member_name}")
-        member = member or find_named(doc.get("methods") or [], f"{class_name}.{member_name}")
+        member = find_method(doc, class_name, member_name)
         if not member:
             return "fail", f"{class_name}:{member_name} missing"
         deprecated = nonempty(member.get("deprecation_message")) or "Deprecated" in (member.get("tags") or [])
@@ -210,7 +324,12 @@ def main() -> int:
                 status = "error"
                 message = "missing repository path(s): " + ", ".join(missing_paths)
             else:
-                status, message = verify(entry)
+                untethered = validate_claim_tether(entry)
+                if untethered:
+                    status = "error"
+                    message = "registry identifier(s) absent from teaching files: " + ", ".join(untethered)
+                else:
+                    status, message = verify(entry)
         except Exception as exc:  # noqa: BLE001, surface exact failing entry
             status, message = "error", str(exc)
         counts[status] += 1
@@ -226,7 +345,7 @@ def main() -> int:
     if counts["fail"] or counts["error"]:
         print("❌ Drift or verification errors detected")
         return 1
-    print("✅ All API claims verified")
+    print("✅ All registered API claims verified")
     return 0
 
 

@@ -17,7 +17,7 @@ Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support ag
 
 `roblox-brain` gives an AI coding agent focused Roblox Studio knowledge without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details.
 
-- 30 focused skills across Luau, architecture, networking, UI, physics, data, monetization, localization, tooling, and publishing.
+- 28 focused skills across Luau, architecture, game design, networking, UI, physics, data, monetization, localization, tooling, and publishing.
 - Compact `SKILL.md` entry points with deeper `references/full.md` material.
 - Guidance grounded in Roblox Creator Hub documentation, compatible external tools, and original synthesis.
 - Local validation, source checks, API-drift checks, version-pin checks, and copy-paste Luau probes.
@@ -45,21 +45,27 @@ skills/roblox-gui/
     └── full.md           # examples, API notes, and edge cases
 ```
 
-1. **Index:** `skill_index.md` shows what is available.
-2. **Quick reference:** the relevant `SKILL.md` gives the default rules and routing.
-3. **Full reference:** `references/full.md` supplies implementation details when the task needs them.
+1. **Discovery:** the host reads skill names and descriptions from `SKILL.md` frontmatter.
+2. **Quick reference:** the selected `SKILL.md` gives default rules and routing.
+3. **Full reference:** linked `references/full.md` material is loaded only when the task needs it.
 
-## Skills (30)
+## Skills (28)
 
 ### Core language and architecture
 
 | Skill | What it covers |
 | --- | --- |
-| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, math, scope, closures, idioms, and sharp edges |
+| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, scope, closures, idioms, and language traps |
 | `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, and Roblox-aware typing |
-| `roblox-luau-patterns` | Metatables, inheritance, async patterns, module structure, services, and Roblox idioms |
-| `roblox-architecture` | Service hierarchy, client/server boundaries, module contracts, and startup design |
-| `roblox-sharp-edges` | High-impact production footguns involving data, remotes, purchases, lifecycle, and scale |
+| `roblox-luau-patterns` | Module boundaries, object lifecycles, signals, scheduling, fallible calls, and cleanup |
+| `roblox-architecture` | Feature ownership, runtime location, dependencies, startup, and client/server authority |
+
+
+### Game design and growth
+
+| Skill | What it covers |
+| --- | --- |
+| `roblox-growth-design` | Discovery, positioning, onboarding, retention, experiments, packaging, LiveOps, and growth diagnosis |
 
 ### Monetization
 
@@ -91,7 +97,7 @@ skills/roblox-gui/
 | `roblox-building` | Roblox geometry, maps, props, generated assets, MCP workflows, and acceptance gates |
 | `roblox-physics` | Constraints, vehicles, ragdolls, projectiles, elevators, and network ownership |
 | `roblox-gui` | Screen, surface, and world UI; layout, responsiveness, input, and UI state |
-| `roblox-ui-design` | Visual UI design with simulator defaults, existing-style inheritance, composition, hierarchy, and bounded layout |
+| `roblox-ui-design` | Content-led visual systems, existing-style inheritance, optional simulator styling, composition, and hierarchy |
 | `roblox-animation-vfx` | Animations, particles, beams, trails, tweens, camera feedback, and cleanup |
 | `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, and day/night cycles |
 | `roblox-audio` | SoundService, spatial audio, music systems, SFX, ambient layers, and volume management |
@@ -103,23 +109,20 @@ skills/roblox-gui/
 | Skill | What it covers |
 | --- | --- |
 | `roblox-studio-mcp` | Studio MCP capabilities, bridge-neutral routing, reliability, building, and testing workflows |
-| `roblox-cloud` | Open Cloud REST APIs, API keys, webhooks, HttpService, and rate limits |
-| `roblox-oauth` | OAuth 2.0, PKCE, token lifecycle, scopes, and app registration |
+| `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth 2.0, PKCE, webhooks, HttpService, and token lifecycle |
 
 ### Workflow and tooling
 
 | Skill | What it covers |
 | --- | --- |
-| `roblox-debug` | Iterative debugging for Luau and Roblox issues |
 | `roblox-code-review` | Reviews through security, performance, correctness, and monetization lenses |
-| `roblox-publish-checklist` | Pre-publish verification and release gates |
+| `roblox-publish-checklist` | Change-scoped release gates, evidence, dashboard checks, and rollback readiness |
 | `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, sourcemaps, and CI |
 | `roblox-localization` | LocalizationService, translation tables, locale handling, and auto-translation |
 
 ## Recommended MCP servers
 
 - **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp):** use the official server or a compatible community bridge. The skills route by capability and do not require one specific bridge.
-- **[mcp-roblox-docs](https://github.com/n4tivex/mcp-roblox-docs):** runtime Roblox API reference, installable with `uvx mcp-roblox-docs`.
 - **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search.
 
 ## Contributing
@@ -147,7 +150,7 @@ python3 verify_version_pins.py
 
 ## Release notes
 
-See [CHANGELOG.md](CHANGELOG.md) for the v1.0.0 release notes.
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 

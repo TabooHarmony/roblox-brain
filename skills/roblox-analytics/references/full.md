@@ -22,11 +22,9 @@ AnalyticsService:LogCustomEvent(player, "MissionCompletedDuration", 120)
 
 -- With custom fields (up to 3): enables filtering/breakdown on dashboard
 AnalyticsService:LogCustomEvent(player, "EnemyDefeated", 1, {
-    customFields = {
-        [Enum.AnalyticsCustomFieldKeys.CustomField01] = { value = "Zombie" },
-        [Enum.AnalyticsCustomFieldKeys.CustomField02] = { value = "Sword" },
-        [Enum.AnalyticsCustomFieldKeys.CustomField03] = { value = "Wave5" },
-    }
+    [Enum.AnalyticsCustomFieldKeys.CustomField01.Name] = "Enemy - Zombie",
+    [Enum.AnalyticsCustomFieldKeys.CustomField02.Name] = "Weapon - Sword",
+    [Enum.AnalyticsCustomFieldKeys.CustomField03.Name] = "Wave - 5",
 })
 ```
 
@@ -39,15 +37,13 @@ Track virtual currency flow. Enables revenue analysis, inflation detection, econ
 AnalyticsService:LogEconomyEvent(
     player,
     Enum.AnalyticsEconomyFlowType.Source, -- Source = earned/gained
-    "Coins",                               -- Currency name (max 10 types)
+    "Coins",                               -- Currency name (max 5 types)
     50,                                    -- Amount
     player.leaderstats.Coins.Value + 50,   -- Balance AFTER transaction
     Enum.AnalyticsEconomyTransactionType.Gameplay.Name, -- Transaction type
     "QuestReward_Daily",                   -- Item SKU (what triggered it)
     {
-        customFields = {
-            [Enum.AnalyticsCustomFieldKeys.CustomField01] = { value = "Quest_001" },
-        }
+        [Enum.AnalyticsCustomFieldKeys.CustomField01.Name] = "Quest - 001",
     }
 )
 
@@ -63,7 +59,7 @@ AnalyticsService:LogEconomyEvent(
 )
 ```
 
-Transaction types: `Gameplay`, `ContextualPurchase`, `InAppPurchase`, `Shop`, `TimedReward`, `Trade`.
+Transaction types: `IAP`, `Shop`, `Gameplay`, `ContextualPurchase`, `TimedReward`, `Onboarding`.
 
 ### Funnel Events
 
@@ -71,22 +67,25 @@ Track step-by-step progression through a flow. Max 10 funnels, 100 steps each.
 
 ```luau
 -- Onboarding funnel: track where players drop off
-AnalyticsService:LogFunnelStepEvent(player, "Onboarding", "1", "WelcomeScreen")
+AnalyticsService:LogOnboardingFunnelStepEvent(player, 1, "WelcomeScreen")
 -- ... player progresses ...
-AnalyticsService:LogFunnelStepEvent(player, "Onboarding", "2", "PickCharacter")
+AnalyticsService:LogOnboardingFunnelStepEvent(player, 2, "PickCharacter")
 -- ... player progresses ...
-AnalyticsService:LogFunnelStepEvent(player, "Onboarding", "3", "FirstBattle")
+AnalyticsService:LogOnboardingFunnelStepEvent(player, 3, "FirstBattle")
 -- ... player progresses ...
-AnalyticsService:LogFunnelStepEvent(player, "Onboarding", "4", "CompleteTutorial")
+AnalyticsService:LogOnboardingFunnelStepEvent(player, 4, "CompleteTutorial")
 
--- Shop conversion funnel
-AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", "1", "OpenedShop")
-AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", "2", "ViewedItem")
-AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", "3", "ClickedBuy")
-AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", "4", "ConfirmedPurchase")
+-- Recurring shop funnel: keep one ID for this checkout attempt
+local HttpService = game:GetService("HttpService")
+local checkoutSessionId = HttpService:GenerateGUID(false)
+AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", checkoutSessionId, 1, "OpenedShop")
+AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", checkoutSessionId, 2, "ViewedItem")
+AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", checkoutSessionId, 3, "ClickedBuy")
+AnalyticsService:LogFunnelStepEvent(player, "ShopPurchase", checkoutSessionId, 4, "ConfirmedPurchase")
 ```
 
-Steps MUST fire in order for the same player in the same session. Skipping step 2 and firing step 3 breaks the funnel visualization.
+Use the same session ID for every step of one recurring funnel attempt. If a
+step is skipped, Analytics treats the intermediate step as completed.
 
 ---
 
@@ -96,7 +95,7 @@ Steps MUST fire in order for the same player in the same session. Skipping step 
 |-----------|-------|
 | Total AnalyticsService calls/minute | 120 + (20 × CCU) |
 | Custom event names | 100 |
-| Economy resource types | 10 |
+| Unique currency types | 5 |
 | Funnels | 10 |
 | Steps per funnel | 100 |
 | Custom fields per event | 3 |
@@ -104,63 +103,12 @@ Steps MUST fire in order for the same player in the same session. Skipping step 
 
 ### Batching Strategy
 
-For high-frequency events (kills, item pickups), batch on the server:
-
-```luau
--- ServerScriptService/Analytics/EventBatcher.luau
-
-local AnalyticsService = game:GetService("AnalyticsService")
-
-local EventBatcher = {}
-local batches: { [Player]: { [string]: number } } = {}
-
--- Accumulate events, flush periodically
-function EventBatcher:increment(player: Player, eventName: string, amount: number?)
-    if not batches[player] then
-        batches[player] = {}
-    end
-    local current = batches[player][eventName] or 0
-    batches[player][eventName] = current + (amount or 1)
-end
-
-function EventBatcher:flush()
-    for player, events in batches do
-        if not player:IsDescendantOf(game.Players) then
-            batches[player] = nil
-            continue
-        end
-        for eventName, value in events do
-            local success, err = pcall(function()
-                AnalyticsService:LogCustomEvent(player, eventName, value)
-            end)
-            if not success then warn("Analytics event failed:", err) end
-        end
-    end
-    batches = {}
-end
-
--- Flush every 30 seconds
-task.spawn(function()
-    while true do
-        task.wait(30)
-        EventBatcher:flush()
-    end
-end)
-
--- Flush on player leaving (capture final counts)
-game.Players.PlayerRemoving:Connect(function(player)
-    if batches[player] then
-        for eventName, value in batches[player] do
-            AnalyticsService:LogCustomEvent(player, eventName, value)
-        end
-        batches[player] = nil
-    end
-end)
-
-return EventBatcher
-```
-
-For a maintained batching module with failure retention, see [`references/event-batcher.luau`](references/event-batcher.luau).
+For high-frequency events such as kills or pickups, aggregate counters in the
+project's canonical analytics owner and flush on its existing scheduler.
+Preserve failed sends for a later retry; do not clear the whole batch after a
+partial failure. Do not hide a permanent task loop inside a reference module's
+top-level `require`; startup, player cleanup, and shutdown need an explicit
+owner in the consuming project.
 
 ---
 
@@ -173,10 +121,8 @@ Use consistent naming. Custom fields for breakdown, not separate event names.
 ```luau
 -- ONE event, broken down by weapon type via custom field
 AnalyticsService:LogCustomEvent(player, "EnemyKill", 1, {
-    customFields = {
-        [Enum.AnalyticsCustomFieldKeys.CustomField01] = { value = weaponType },
-        [Enum.AnalyticsCustomFieldKeys.CustomField02] = { value = enemyType },
-    }
+    [Enum.AnalyticsCustomFieldKeys.CustomField01.Name] = tostring(weaponType),
+    [Enum.AnalyticsCustomFieldKeys.CustomField02.Name] = tostring(enemyType),
 })
 ```
 
