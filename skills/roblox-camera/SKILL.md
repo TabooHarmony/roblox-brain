@@ -33,11 +33,11 @@ Load when scripting custom camera behavior (cutscenes, third-person follow, cust
 | Interpolate | `cf:Lerp(goal, alpha)` |
 | Unit axes | `cf.LookVector`, `cf.RightVector`, `cf.UpVector` |
 
-**Custom camera loop** — always `RenderStepped`, never `Heartbeat`:
+**Custom camera loop** — always `PreRender`, never `Heartbeat`:
 
 ```luau
 camera.CameraType = Enum.CameraType.Scriptable
-RunService.RenderStepped:Connect(function(dt)
+RunService.PreRender:Connect(function(dt)
     local desired = CFrame.lookAt(head.Position - offset, head.Position)
     camera.CFrame = camera.CFrame:Lerp(desired, math.min(dt * 10, 1))
 end)
@@ -48,7 +48,7 @@ end)
 **Pitfalls**:
 - Client-only. Server sets silently dropped.
 - Without `Scriptable`, defaults overwrite your CFrame every frame.
-- `RenderStepped` for camera (visual sync). `Heartbeat` adds 1-frame lag.
+- `PreRender` for camera (visual sync). `Heartbeat` adds 1-frame lag. `RenderStepped` still works but is superseded by `PreRender`.
 - `Camera.CFrame` lacks VR head rotation — use `GetRenderCFrame()` for true view.
 - `SetRoll` is outdated — apply roll via `CFrame.Angles(0, 0, roll)` on CFrame.
 - `CameraSubject = nil` reverts to previous.

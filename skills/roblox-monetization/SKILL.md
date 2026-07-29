@@ -26,7 +26,7 @@ Load when adding a Game Pass, Developer Product, subscription, private server, C
 - Passes: durable ownership for an experience. Check ownership server-side and refresh after a purchase.
 - Developer Products: repeatable consumables. `ProcessReceipt` is the grant path; `PromptProductPurchaseFinished` is not purchase confirmation.
 - `BindReceiptHandler` handles Robux-transfer receipts, not Developer Products.
-- A receipt that cannot be safely granted must remain unprocessed so Roblox can retry it.
+- A receipt that cannot be safely granted must return `NotProcessedYet`. Roblox redelivers it when the player rejoins (there is no time-based retry).
 - Use `PolicyService` and the current monetization documentation for eligibility-sensitive features.
 - Creator Rewards is a platform program, not a grant API. Track eligibility, attribution, engagement, and dashboard reporting separately from purchases and inventory.
 - Test failed grants, duplicate receipts, player absence, and interrupted saves before shipping.

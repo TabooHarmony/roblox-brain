@@ -3,7 +3,7 @@
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
-Camera work is **client-only**. `workspace.CurrentCamera`, `CFrame` setters, and `RenderStepped` callbacks must run in a `LocalScript` or `Script` with `RunContext = Client`. Server scripts silently drop camera writes.
+Camera work is **client-only**. `workspace.CurrentCamera`, `CFrame` setters, and `PreRender` callbacks must run in a `LocalScript` or `Script` with `RunContext = Client`. Server scripts silently drop camera writes.
 
 ## The Camera Object
 
@@ -176,7 +176,7 @@ local SMOOTH = 8
 
 camera.CameraType = Enum.CameraType.Scriptable
 
-RunService.RenderStepped:Connect(function(dt)
+RunService.PreRender:Connect(function(dt)
     local character = player.Character
     if not character then return end
     local root = character:FindFirstChild("HumanoidRootPart")
@@ -195,7 +195,7 @@ end)
 ```luau
 camera.CameraType = Enum.CameraType.Scriptable
 
-RunService.RenderStepped:Connect(function()
+RunService.PreRender:Connect(function()
     local head = character:FindFirstChild("Head")
     if not head then return end
     camera.CFrame = head.CFrame + Vector3.new(0, 0.5, 0)
@@ -233,7 +233,7 @@ UIS.InputChanged:Connect(function(input, gpe)
     end
 end)
 
-RunService.RenderStepped:Connect(function(_dt)
+RunService.PreRender:Connect(function(_dt)
     local root = character.HumanoidRootPart
     local orbit = CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
     local offset = orbit.LookVector * DIST
@@ -267,7 +267,7 @@ UIS.InputChanged:Connect(function(input, gpe)
     end
 end)
 
-RunService.RenderStepped:Connect(function()
+RunService.PreRender:Connect(function()
     if not character:FindFirstChild("Head") then return end
     local head = character.Head
     camera.CFrame = CFrame.new(head.Position) * CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
@@ -339,7 +339,7 @@ local function startShake(intensity: number, duration: number)
     end)
 end
 
-RunService.RenderStepped:Connect(function()
+RunService.PreRender:Connect(function()
     if not shakeActive then return end
     local offset = CFrame.new(
         (math.random() - 0.5) * shakeIntensity,
@@ -397,7 +397,7 @@ For non-Play testing (Edit mode), `CurrentCamera` exists but the perspective doe
 
 - **Camera work on the server.** Silently dropped. Must be in `LocalScript` or client `RunContext`.
 - **Forgetting `CameraType = Scriptable`.** Defaults overwrite your CFrame every frame.
-- **Using `Heartbeat` instead of `RenderStepped` for camera.** Adds 1 frame of lag.
+- **Using `Heartbeat` instead of `PreRender` for camera.** Adds 1 frame of lag. (`RenderStepped` still works but is superseded by `PreRender`.)
 - **Setting `CameraSubject = nil` "expecting it to detach".** It reverts to previous value.
 - **Reading `Camera.CFrame` in VR for gameplay math.** Use `GetRenderCFrame()` for true view (includes head rotation).
 - **Using `SetRoll` because it's convenient.** It's outdated; apply roll via `CFrame.Angles(0, 0, roll)` on CFrame.

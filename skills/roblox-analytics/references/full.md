@@ -173,7 +173,7 @@ AnalyticsService:LogCustomEvent(player, "EnemyKill_Magic")
 - Logging from client (exploiters can spam fake events)
 - Exceeding rate limits silently (events get dropped, no error)
 - Using too many unique event names (100 limit, then new ones are ignored)
-- Firing funnel steps out of order (breaks the visualization)
+- Firing funnel steps out of order (skipped intermediate steps are automatically back-filled as completed, so the visualization still works, but the data may not reflect the actual player journey)
 - Not logging economy balance (makes inflation analysis impossible)
 
 ---

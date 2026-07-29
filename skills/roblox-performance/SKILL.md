@@ -12,7 +12,7 @@ sources:
 
 ## When to Load
 
-Use when profiling, diagnosing lag, optimizing hot paths, or setting performance budgets. Load if the user mentions FPS drops, memory issues, network bandwidth, or mobile optimization.
+Use when profiling, diagnosing lag, optimizing hot paths, or setting performance budgets.
 
 ## Quick Reference
 
@@ -54,13 +54,12 @@ end
 ```
 
 ### StreamingEnabled Essentials
-- **On by default** for new places. Only BaseParts stream; Folders, ModuleScripts, RemoteEvents load at join.
+- **On by default**. Container-scoped: only Workspace descendants stream. `ModelStreamingBehavior = Improved` streams non-BasePart descendants with their parent Model; Legacy streams only BaseParts.
 - **Streamed-out = parented to nil**, not destroyed. Luau refs persist if it streams back.
 - **Config (Studio)**: target defaults 1024, min 64; set `StreamingIntegrityMode`; tune from data.
 - **Gotcha**: `FindFirstChild("DistantPart")` returns nil if streamed out. Use WaitForChild with timeout.
 
-### Mobile Checks
-- Profile geometry, textures, particles, UI, and shadows on representative low-end devices.
+### Mobile
+- Profile geometry, textures, particles, UI, and shadows on low-end devices.
 
-**MCP verification:** collect a baseline and inspect runtime counters after changes.
-**Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
+> Full reference with code examples and API tables: [references/full.md](references/full.md)

@@ -27,7 +27,7 @@ Key rules:
 - Log events AFTER successful operations, not on attempt (avoids inflated metrics).
 - Custom fields (up to 3) let you slice data without burning event cardinality.
 - Economy events track sources (earned) and sinks (spent) separately.
-- Funnel events must fire steps in order. Skipped steps break the funnel.
+- Funnel steps do not need to fire in order. If a later step is logged without earlier ones, the skipped intermediate steps are automatically back-filled as completed.
 - Events appear on Creator Hub dashboard after ~24 hours. Use "View Events" for real-time validation.
 - Server-side logging preferred for accuracy. Client-side only for UI interaction tracking.
 - Creator Rewards has no AnalyticsService grant event. Use analytics for leading indicators such as session duration, onboarding, and referral-flow milestones; use Creator Dashboard for reward attribution and payout data.

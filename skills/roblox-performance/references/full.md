@@ -223,7 +223,9 @@ Optimize for representative low-end mobile devices, not universal object caps:
 
 ### StreamingEnabled
 
-StreamingEnabled is **on by default** for new places. Only `BaseParts` and their descendants stream in/out. Other instances (Folders, ValueObjects, RemoteEvents, ModuleScripts) load during initial join and never stream.
+StreamingEnabled is **on by default** for new places. Scoping is container-based: streaming applies exclusively to descendants of `Workspace`. Instances in `ReplicatedStorage`, `ReplicatedFirst`, etc. never stream.
+
+With `ModelStreamingBehavior = Improved` (recommended), a Model streams in only when one of its BasePart descendants is eligible, and the model's non-BasePart descendants (Folders, Scripts, ValueObjects) stream in alongside it. A Model with no BasePart descendants replicates at join and is exempt from streaming out. In Legacy mode (default), non-BasePart descendants replicate at join and only BaseParts stream in/out.
 
 When instances stream out, they are **parented to nil** (not destroyed). Luau references persist if they stream back in. Removal signals fire, but local-only property changes may be lost.
 

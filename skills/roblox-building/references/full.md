@@ -178,7 +178,7 @@ end
 
 - Keep CSG trees shallow. Don't subtract from a part that was already unioned multiple times.
 - Perform complex CSG near origin (0,0,0), then PivotTo() the final model to its destination. Floating-point precision degrades far from origin.
-- GeometryService only supports Part and PartOperation. NOT MeshPart or Terrain.
+- GeometryService supports Part, PartOperation, and MeshPart. Terrain is NOT supported.
 - Set `CollisionFidelity = Enum.CollisionFidelity.Box` on decorative unions for performance.
 
 ## Platform Quirks
