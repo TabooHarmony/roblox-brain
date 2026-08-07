@@ -19,6 +19,7 @@ All notable changes to `roblox-brain` are documented here.
 - Added failure-oriented checks for custom loading, receipt retries, feature-slice review, and large-place readback.
 - Added validation for public catalog drift, annotated Luau fences, empty or future-dated metadata, and exact identifier tethers.
 - Inventoried the release-driving official sources and added a live check for `Workspace.PredictiveStreamingMode` scriptability.
+- Updated GitHub Actions to current Node 24-based runtimes.
 
 ## [1.2.1] - 2026-07-29
 
