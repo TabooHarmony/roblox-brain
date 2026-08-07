@@ -1,11 +1,10 @@
 ---
 name: roblox-luau-types
 description: "Use for Luau annotations, generics, unions, narrowing, strictness, sealed tables, module type exports, or typed metatables."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-07-26
 sources:
   - https://luau-lang.org/typecheck
   - https://devforum.roblox.com/t/general-release-luau%E2%80%99s-new-type-solver/4084991
-  - original
 ---
 
 # Luau Type System

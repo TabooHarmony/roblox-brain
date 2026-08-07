@@ -216,32 +216,6 @@ The important behavior is the failure path. `StartSessionAsync()` can return `ni
 
 Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-targeted delivery, such as an offline paid gift that must be delivered later, and receive it with `profile:MessageHandler(...)`. For best-effort live announcements, use MessagingService instead. Profiles also expose critical-state and error signals; route them to observability rather than silently continuing as if saves were healthy.
 
-## Static Artifact Review
-
-When reviewing an archived place, use DataStore call sites and names to locate persistence boundaries, not to certify them. A `SetAsync` or `UpdateAsync` token does not reveal schema compatibility, session ownership, retry safety, or whether the write can overwrite a failed load. Trace the canonical owner and lifecycle before drawing a conclusion.
-
-## Persistence patterns from shipped games
-
-<!-- temporal: 2026-08 -->
-
-In shipped Roblox games, `SetAsync` outnumbers `UpdateAsync`, retry discipline around DataStore calls is rare, and session locking is nearly absent. Frequency is not quality, but it tells a reviewer where to look first. Two failure shapes recur:
-
-- **Load-failure overwrites.** `GetData` falls back to a default template on any error, and that template is later written back, clobbering the real record.
-- **Partial-write saves.** Several value objects are saved in separate `SetAsync` calls with no transactional guarantee; a crash mid-loop leaves a split save.
-- **`UpdateAsync` used as `SetAsync`.** The transform function ignores the current value and overwrites it with an in-memory number, commonly inside a repeating loop. It gains nothing over `SetAsync` and gives a false sense of merge safety.
-
-Shipped games also commonly save on a repeating timer, on `PlayerRemoving`, and in `BindToClose` at once. That is fine, but verify the timer cannot overwrite a newer in-memory state and that `BindToClose` completes its writes.
-
-For each mutable profile, build a write inventory before judging the implementation:
-
-1. classify every `SetAsync` as intentional replacement or read-modify-write;
-2. map the load-failure path and prove that defaults cannot overwrite an existing record;
-3. identify the session owner, heartbeat/expiry, release path, and stale-lock decision;
-4. trace `PlayerRemoving` and `BindToClose` to bounded completion and failure reporting;
-5. verify that grants, remote requests, and autosaves converge on one canonical writer.
-
-This is a static review recipe. The scan cannot establish schema compatibility, race freedom, or runtime save success.
-
 ## 9. Data safety checklist
 
 - [ ] A failed load cannot overwrite an existing record with defaults.

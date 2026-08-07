@@ -11,6 +11,11 @@ sources:
   - https://raw.githubusercontent.com/LPGhatguy/aftman/main/README.md
   - https://raw.githubusercontent.com/rojo-rbx/rokit/main/README.md
   - https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/README.md
+  - https://create.roblox.com/docs/llms.txt
+  - https://create.roblox.com/docs/reference/engine/llms.txt
+  - https://create.roblox.com/docs/cloud/llms.txt
+  - https://create.roblox.com/docs/llms-full.txt
+  - https://create.roblox.com/docs/reference/engine/deprecated.md
   - original
 ---
 

@@ -10,13 +10,14 @@ sources:
   - https://create.roblox.com/docs/cloud/auth/oauth2-develop
   - https://create.roblox.com/docs/cloud/auth/oauth2-reference
   - https://create.roblox.com/docs/cloud/webhooks/webhook-notifications
+  - https://devforum.roblox.com/t/test-ads-manager-api-now-on-open-cloud/4766543
 ---
 
 # Roblox Open Cloud
 
 ## When to Load
 
-Load for Open Cloud APIs, API keys, OAuth, app registration, webhooks, or supported HttpService calls. Route persistence, gameplay remotes, and Studio control to their domain skills.
+Load for Open Cloud, API keys, OAuth, webhooks, or supported HttpService calls. Route gameplay and Studio work to domain skills.
 
 ## Quick Reference
 
@@ -47,11 +48,11 @@ Public clients cannot hold a secret and require PKCE. Confidential clients keep 
 
 ### Webhooks and HttpService
 
-- Verify webhook signatures, reject stale delivery timestamps, deduplicate notification IDs, return 2XX quickly, and process asynchronously.
-- Before an in-experience call, confirm the endpoint supports HttpService. Use HTTPS and a Roblox Secret for `x-api-key`; do not assume arbitrary headers are allowed.
+- Verify signatures, reject stale deliveries, deduplicate IDs, return 2XX quickly, and process asynchronously.
+- For in-experience calls, confirm HttpService support. Use HTTPS and a Roblox Secret for `x-api-key`.
 
 ### Failure boundaries
 
-Validate endpoint paths, schemas, scopes, creator permissions, and resource grants separately. Retry only transient failures. Never solve permission or invalid-input errors with repeated requests.
+Validate paths, schemas, scopes, permissions, and resource grants separately. Retry only transient failures.
 
 > Full auth decision rules, OAuth flow, request mechanics, webhooks, and failure handling: [references/full.md](references/full.md)

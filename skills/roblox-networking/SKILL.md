@@ -1,7 +1,7 @@
 ---
 name: roblox-networking
 description: "Use when validating RemoteEvent or RemoteFunction arguments, adding rate limits, designing server-authoritative systems, or preventing exploits."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/scripting/events/remote
   - https://create.roblox.com/docs/scripting/security/security-tactics
@@ -30,7 +30,7 @@ Load when adding a remote, handling untrusted client input, implementing cooldow
 - Use events for most gameplay requests. Keep `RemoteFunction` calls short and bounded.
 - Use `RemoteEvent` for reliable state changes within its event channel. Do not assume a RemoteEvent is ordered with property or attribute replication; use one explicit state channel or version the state when ordering matters. Use `UnreliableRemoteEvent` only for replaceable or ephemeral data such as VFX and continuous snapshots.
 - Unreliable does not mean automatically faster: delivery is unordered, packets may be dropped, and payloads should stay at or below the documented 1000-byte limit.
-- Map the remote contract and high-frequency specimens, then measure payload size and fire rate under load. Do not treat a community packet-size estimator as an official wire-format specification.
+- Measure payload size and fire rate under load. Do not treat a community packet-size estimator as an official wire-format specification.
 - Validate numeric inputs for NaN and infinity before applying range checks. `NaN` makes ordinary `<` and `>` checks return false.
 - Rate limits protect the server, but validation must still reject invalid requests.
 - Record suspicious behavior and use thresholds. Do not punish a player for one malformed packet.

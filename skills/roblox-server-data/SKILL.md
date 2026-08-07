@@ -1,7 +1,7 @@
 ---
 name: roblox-server-data
 description: "Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-07-13
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/OrderedDataStore
   - https://create.roblox.com/docs/reference/engine/classes/MessagingService
@@ -9,7 +9,6 @@ sources:
   - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreService
   - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreQueue
   - https://devforum.roblox.com/t/partyservice-plus-party-matchmaking-framework/4668883
-  - original
 ---
 
 # Roblox Server & Shared Data

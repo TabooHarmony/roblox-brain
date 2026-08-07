@@ -54,6 +54,22 @@ class ValidatorRegressionTests(unittest.TestCase):
             document.write_text("Call `ExampleService:DoThingAsync()`.")
             self.assertEqual(verify_api_drift.validate_claim_tether(entry, root), [])
 
+    def test_api_registry_tether_requires_identifier_boundaries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            document = root / "skills" / "roblox-example" / "SKILL.md"
+            document.parent.mkdir(parents=True)
+            document.write_text("Containment is unrelated.")
+            entry = {
+                "files": [{"path": "skills/roblox-example/SKILL.md"}],
+                "teaching_needles": ["contain"],
+                "check": {"type": "member_exists", "class": "C", "member": "M"},
+            }
+            self.assertEqual(
+                verify_api_drift.validate_claim_tether(entry, root),
+                ["skills/roblox-example/SKILL.md:contain"],
+            )
+
     def assert_api_check_passes(self, check, doc):
         original = verify_api_drift.fetch_doc
         verify_api_drift.fetch_doc = lambda _kind, _name: doc
@@ -223,6 +239,13 @@ class ValidatorRegressionTests(unittest.TestCase):
             errors = validate_skills.validate_luau_syntax([document])
             self.assertTrue(any("Luau syntax error" in error for error in errors))
 
+    def test_annotated_luau_fence_compilation_rejects_invalid_syntax(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            document = Path(tmp) / "invalid.md"
+            document.write_text("```luau,linenos\nlocal function broken(\n```\n")
+            errors = validate_skills.validate_luau_syntax([document])
+            self.assertTrue(any("Luau syntax error" in error for error in errors))
+
     def test_standalone_luau_reference_rejects_invalid_syntax(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "invalid.luau"
@@ -267,6 +290,52 @@ class ValidatorRegressionTests(unittest.TestCase):
             )
             errors = validate_skills.validate_skill(str(skill_dir))
             self.assertTrue(any("last_reviewed" in error for error in errors))
+
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: roblox-example\ndescription: ''\n"
+                "last_reviewed: 2099-01-01\nsources: [original]\n"
+                "kind: router\n---\n# Example\n\n## When to Load\nNow.\n\n"
+                "## Quick Reference\nRule.\n"
+            )
+            errors = validate_skills.validate_skill(str(skill_dir))
+            self.assertTrue(any("description must be non-empty" in error for error in errors))
+            self.assertTrue(any("last_reviewed cannot be in the future" in error for error in errors))
+
+    def test_catalog_validation_rejects_count_and_row_drift(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text(
+                "- 99 focused skills\n\n## Skills (99)\n\n| `roblox-example` | Example |\n"
+            )
+            (root / "AGENTS.md").write_text("99 curated skills\n")
+            errors = validate_skills.validate_catalog({"roblox-example"}, root)
+            self.assertGreaterEqual(len(errors), 3)
+
+            (root / "README.md").write_text(
+                "- 1 focused skills\n\n## Skills (1)\n\n| `roblox-example` | Example |\n"
+            )
+            (root / "AGENTS.md").write_text("1 curated skills\n")
+            self.assertEqual(
+                validate_skills.validate_catalog({"roblox-example"}, root), []
+            )
+
+            (root / "README.md").write_text(
+                "- 1 focused skills\n\n## Skills (1)\n\n"
+                "| `roblox-example` | Example |\n| `roblox-example` | Duplicate |\n"
+            )
+            errors = validate_skills.validate_catalog({"roblox-example"}, root)
+            self.assertTrue(any("duplicate rows" in error for error in errors))
+
+    def test_local_reference_validation_skips_incomplete_skill_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skills = Path(tmp) / "skills"
+            (skills / "roblox-incomplete").mkdir(parents=True)
+            original = validate_skills.SKILLS_DIR
+            validate_skills.SKILLS_DIR = str(skills)
+            try:
+                self.assertEqual(validate_skills.validate_local_references(), [])
+            finally:
+                validate_skills.SKILLS_DIR = original
 
     def test_validator_includes_promoted_ui_design_skill(self):
         with tempfile.TemporaryDirectory() as tmp:

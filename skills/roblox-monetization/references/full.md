@@ -95,18 +95,9 @@ must treat an already-granted ID as success. Do not implement it as “grant,
 then separately record”: a crash or failed record between those operations can
 duplicate value on retry.
 
-## 3a. Receipt review: what shipped code misses
+## 3a. Receipt failure tests
 
-<!-- temporal: 2026-08 -->
-
-In shipped Roblox games, `ProcessReceipt` implementations are rare, and durable transaction-ID idempotency is nearly absent: in a broad sample of games that had a receipt callback at all, only one kept any transaction-ID record. Observed failure shapes included:
-
-- granting the benefit without recording the receipt anywhere durable;
-- acknowledging an unknown product instead of retrying (`NotProcessedYet`);
-- returning `PurchaseGranted` before the grant was durably recorded;
-- dispatching per-product handlers with no duplicate-guard.
-
-Use that result as a review test, not as a prevalence or runtime claim. For every receipt implementation, force these cases in a test place:
+For every receipt implementation, force these cases in a test place:
 
 - the player is absent;
 - the product is unknown or its handler is missing;
@@ -114,7 +105,7 @@ Use that result as a review test, not as a prevalence or runtime claim. For ever
 - the same transaction is delivered twice;
 - the server shuts down between grant and acknowledgement.
 
-Receipt failures are silent in normal play: the player paid, nothing arrived, and nothing logged. When reviewing or implementing purchases, treat the idempotency record as the load-bearing piece and verify the retry loop actually re-delivers `NotProcessedYet` receipts on the next callback.
+Receipt failures can be silent in normal play: the player paid and nothing arrived. Treat the durable idempotency record as load-bearing. Do not acknowledge an unknown product or a grant that was not durably recorded, and verify duplicate delivery returns success without granting twice.
 
 ## 4. Subscriptions and recurring benefits
 

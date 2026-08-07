@@ -12,6 +12,7 @@ Exit 1 means drift, parse errors, or network/doc fetch errors were found.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -37,16 +38,6 @@ def fetch_doc(category: str, name: str) -> dict[str, Any]:
         raise RuntimeError(f"{url} did not parse as a YAML mapping")
     CACHE[key] = data
     return data
-
-
-def fetch_first(name: str, categories: tuple[str, ...]) -> dict[str, Any]:
-    errors = []
-    for category in categories:
-        try:
-            return fetch_doc(category, name)
-        except Exception as exc:  # noqa: BLE001, report all attempted locations
-            errors.append(f"{category}: {exc}")
-    raise RuntimeError(f"could not fetch {name}: " + "; ".join(errors))
 
 
 def nonempty(value: Any) -> bool:
@@ -121,11 +112,15 @@ def validate_claim_tether(entry: dict[str, Any], root: Path = ROOT) -> list[str]
         relative = str(file_ref.get("path", ""))
         path = root / relative
         if path.is_file():
-            haystack = path.read_text(encoding="utf-8").lower()
+            haystack = path.read_text(encoding="utf-8")
             missing.extend(
                 f"{relative}:{needle}"
                 for needle in needles
-                if needle.lower() not in haystack
+                if not re.search(
+                    rf"(?<![A-Za-z0-9_]){re.escape(needle)}(?![A-Za-z0-9_])",
+                    haystack,
+                    re.IGNORECASE,
+                )
             )
     return missing
 

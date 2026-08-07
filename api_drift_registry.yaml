@@ -242,6 +242,20 @@ entries:
       tag: NotScriptable
     verified: 2026-07-26
 
+  - id: performance-predictive-streaming-not-scriptable
+    claim: "Workspace.PredictiveStreamingMode is configured in Studio, not by runtime scripts"
+    files:
+      - path: skills/roblox-performance/references/full.md
+    teaching_needles:
+      - PredictiveStreamingMode
+      - not scriptable
+    check:
+      type: property_has_tag
+      class: Workspace
+      property: PredictiveStreamingMode
+      tag: NotScriptable
+    verified: 2026-08-07
+
   - id: audio-default-listener-location-exists
     claim: "SoundService.DefaultListenerLocation controls default advanced-audio listener placement"
     files:

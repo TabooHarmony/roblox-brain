@@ -61,7 +61,10 @@ def extract_description(content: str) -> str:
 
 def extract_luau_blocks(content: str):
     """Yield (line, code) for complete Luau fences."""
-    pattern = re.compile(r"^```luau\s*\n(.*?)^```\s*$", re.MULTILINE | re.DOTALL)
+    pattern = re.compile(
+        r"^ *```luau(?:[ ,][^`\r\n]*)?\r?\n(.*?)^ *```\s*$",
+        re.MULTILINE | re.DOTALL,
+    )
     for match in pattern.finditer(content):
         yield content.count("\n", 0, match.start()) + 1, match.group(1)
 
@@ -110,7 +113,7 @@ def validate_luau_syntax(
 def validate_code_fences(content: str, label: str) -> list[str]:
     """Reject unclosed fences and language-tagged nested openings."""
     errors = []
-    fence_pattern = re.compile(r"^ *```([^` ]*)? *$")
+    fence_pattern = re.compile(r"^ *```([^`]*)? *$")
     open_line = None
     open_language = ""
 
@@ -118,7 +121,7 @@ def validate_code_fences(content: str, label: str) -> list[str]:
         match = fence_pattern.match(line)
         if not match:
             continue
-        language = match.group(1) or ""
+        language = (match.group(1) or "").strip()
         if open_line is None:
             open_line = line_number
             open_language = language
@@ -169,6 +172,8 @@ def validate_skill(skill_dir: str) -> list[str]:
     reviewed = fm.get("last_reviewed")
     if type(reviewed) is not dt.date:
         errors.append(f"{skill_name}: last_reviewed must be an unquoted YYYY-MM-DD date")
+    elif reviewed > dt.date.today():
+        errors.append(f"{skill_name}: last_reviewed cannot be in the future")
     sources = fm.get("sources")
     if not isinstance(sources, list) or not sources or not all(
         isinstance(source, str) and source.strip() for source in sources
@@ -179,6 +184,8 @@ def validate_skill(skill_dir: str) -> list[str]:
 
     # Description length
     desc = extract_description(content)
+    if not desc.strip():
+        errors.append(f"{skill_name}: description must be non-empty")
     if len(desc) > MAX_DESC_CHARS:
         errors.append(
             f"{skill_name}: description is {len(desc)} chars (max {MAX_DESC_CHARS})"
@@ -248,6 +255,49 @@ def collect_all_skill_names() -> set[str]:
         if os.path.isdir(path):
             names.add(entry)
     return names
+
+
+def validate_catalog(all_skill_names: set[str], root: Path = REPO_ROOT) -> list[str]:
+    """Keep public skill counts and README catalog rows tied to the real tree."""
+    errors = []
+    expected_count = len(all_skill_names)
+    readme_path = root / "README.md"
+    agents_path = root / "AGENTS.md"
+    if not readme_path.is_file() or not agents_path.is_file():
+        return ["catalog validation requires README.md and AGENTS.md"]
+
+    readme = readme_path.read_text(encoding="utf-8")
+    agents = agents_path.read_text(encoding="utf-8")
+    count_patterns = (
+        (readme, r"(?m)^- (\d+) focused skills\b", "README summary"),
+        (readme, r"(?m)^## Skills \((\d+)\)$", "README heading"),
+        (agents, r"(?m)\b(\d+) curated skills\b", "AGENTS summary"),
+    )
+    for document, pattern, label in count_patterns:
+        match = re.search(pattern, document)
+        if not match:
+            errors.append(f"{label}: skill count not found")
+        elif int(match.group(1)) != expected_count:
+            errors.append(
+                f"{label}: says {match.group(1)} skills, found {expected_count}"
+            )
+
+    catalog_row_names = re.findall(
+        r"(?m)^\| `(roblox-[a-z0-9]+(?:-[a-z0-9]+)*)` \|", readme
+    )
+    catalog_rows = set(catalog_row_names)
+    missing = sorted(all_skill_names - catalog_rows)
+    extra = sorted(catalog_rows - all_skill_names)
+    if missing:
+        errors.append(f"README catalog missing: {', '.join(missing)}")
+    if extra:
+        errors.append(f"README catalog has unknown skills: {', '.join(extra)}")
+    duplicates = sorted(
+        name for name in catalog_rows if catalog_row_names.count(name) > 1
+    )
+    if duplicates:
+        errors.append(f"README catalog has duplicate rows: {', '.join(duplicates)}")
+    return errors
 
 
 def validate_cross_references(all_skill_names: set[str]) -> list[str]:
@@ -326,6 +376,8 @@ def validate_local_references() -> list[str]:
         if full_reference.exists():
             documents.append(full_reference)
         for filepath in documents:
+            if not filepath.is_file():
+                continue
             content = filepath.read_text(encoding="utf-8")
             for reference, position in _local_reference_matches(filepath, content):
                 target = _resolve_local_reference(filepath, reference)
@@ -380,6 +432,7 @@ def main():
 
     # Cross-reference validation runs across all skills
     all_skill_names = collect_all_skill_names()
+    all_errors.extend(validate_catalog(all_skill_names))
     all_errors.extend(validate_cross_references(all_skill_names))
     all_errors.extend(validate_local_references())
     all_errors.extend(validate_reference_resources())

@@ -297,4 +297,3 @@ return Counter
 - [ ] Exported types are named, focused, and documented
 - [ ] Casts (`::`) are justified (narrowing, not hiding errors)
 - [ ] No sealed table violations (fields added after annotation)
-- [ ] Annotation density is calibrated by role; high per-line density is inspected as a signal, not assumed to be quality

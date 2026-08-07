@@ -46,22 +46,12 @@ Ask for the evidence that actually exists: Creator Dashboard screenshots or expo
 
 ### Static project structure: hypothesis only
 
-A static `.rbxl` or `.rbxm` can reveal recurring structures such as inventories, currencies, upgrades, zones, prompts, checkpoints, and progression UI. Those structures describe implementation shape, not player success, usability, retention, conversion, or fun. They may be copied, unfinished, dead, or unrelated to the player path.
+A static `.rbxl` or `.rbxm` can reveal implementation structures, not player success, usability, retention, conversion, or fun. Use a short handoff:
 
-Use a four-step handoff:
-
-1. **Observe:** name the structure and the evidence boundary.
-2. **Question:** translate it into a player-facing question, such as whether a new player reaches the first meaningful action or understands the next goal.
-3. **Instrument:** choose the smallest runtime funnel or event that can answer that question, with a success event and a failure or abandonment path.
-4. **Test:** use player observation, runtime logs, cohorts, or an experiment to decide. Do not label the static pattern an outcome.
-
-Examples are routing hints, not success claims:
-
-- inventory, currency, or upgrade structures suggest checking first acquisition, first spend, and progression comprehension;
-- zones, checkpoints, seats, or traversal markers suggest checking spawn-to-control, first destination, and completion transitions;
-- prompts, tools, remotes, or effects suggest checking action reachability, accepted action, readable feedback, and repeat behavior.
-
-Keep static evidence, practitioner heuristics, and measured player outcomes in separate fields in the audit. A static scan can suggest what to inspect; it cannot establish that a loop is fun or that it caused retention, conversion, virality, or revenue.
+1. **Observe:** name the structure and evidence boundary.
+2. **Question:** translate it into a player-facing question.
+3. **Instrument:** choose the smallest success and abandonment events that can answer it.
+4. **Test:** use observation, logs, cohorts, or an experiment. Keep static evidence and measured outcomes separate.
 
 ## 2. Official Home Recommendations Model
 
@@ -582,4 +572,4 @@ Official Roblox sources, reviewed 2026-08-02 (RFY direction update reviewed 2026
 - [Price optimization](https://create.roblox.com/docs/production/monetization/price-optimization)
 - [Boost Your Discovery by Building Games People Want to Play](https://devforum.roblox.com/t/boost-your-discovery-by-building-games-people-want-to-play/4779042) (2026-08-06)
 
-Practitioner synthesis is original work derived from the submitted draft. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources. Sampled videos from the [Tizzy RBLX channel](https://www.youtube.com/@TizzyRBLX12) were reviewed 2026-08-02 for practitioner heuristics about clear fantasy, fast first value, action-based teaching, observation, and iteration. Personal virality, revenue, or algorithm-causation claims were not adopted as facts.
+Practitioner synthesis is original work derived from the submitted draft. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources.

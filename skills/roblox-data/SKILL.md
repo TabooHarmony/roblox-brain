@@ -1,7 +1,7 @@
 ---
 name: roblox-data
 description: "Use when implementing player data persistence with DataStore, session ownership, schemas, migrations, or save and load flows."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-07-26
 sources:
   - https://create.roblox.com/docs/cloud-services/data-stores
   - https://create.roblox.com/docs/cloud-services/data-stores-vs-memory-stores
@@ -30,6 +30,5 @@ Load when designing player saves, schema migrations, retries, shutdown handling,
 - Save on meaningful changes and on lifecycle boundaries, but do not assume `PlayerRemoving` alone is sufficient.
 - Use `BindToClose` to finish pending work within Roblox's shutdown window.
 - Store primitives, arrays, and dictionaries. Convert Instances, userdata, functions, and cyclic tables first.
-- Static presence of a DataStore call is not persistence hygiene; use a write inventory to verify the save owner, schema, session protocol, and retry behavior in the actual project.
 
 **Need the details?** Load `references/full.md` for a framework-neutral persistence design.

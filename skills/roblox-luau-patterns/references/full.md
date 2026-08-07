@@ -130,7 +130,7 @@ Disconnecting before destroying is useful when callbacks could run during teardo
 
 ### Instance references
 
-When a value must point at another instance, prefer an `ObjectValue` under the instance for ordinary references; it is replicated with its parent and survives streaming-out. Attributes are the lightweight alternative when the reference is configuration-style metadata.
+For an ordinary replicated reference, use an `ObjectValue` under a stable owner. With streaming enabled, its `Value` is `nil` until the target streams in, so callers must handle temporary absence. Attributes remain useful for lightweight configuration metadata.
 
 <!-- temporal: 2026-08 -->
 
@@ -143,6 +143,8 @@ Studio beta adds instance-typed attributes (`Instance:SetAttribute("Target", oth
 - `task.delay`: schedule after a duration.
 - `task.cancel`: cancel a thread that is still owned and cancellable.
 - `task.wait`: yield for an approximate duration, not a precise clock.
+
+Do not use legacy `wait()`. Prefer a state-change signal when one exists; use `task.wait()` only for justified polling or cadence and give long-lived loops an explicit stop condition.
 
 A spawned task has no automatic owner and no automatic error contract. Keep its handle when cancellation matters. Do not use spawning to hide required startup ordering or to turn an error into an unobserved background failure.
 

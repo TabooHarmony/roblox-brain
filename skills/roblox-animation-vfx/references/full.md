@@ -133,39 +133,6 @@ Pool effects that fire frequently, such as muzzle flashes, hit sparks, and foots
 
 Use `Debris` for a simple one-shot lifetime. Use an explicit owner object when the effect has multiple connections or must be cancelled early.
 
-## 8a. Effect review in shipped games
-
-<!-- temporal: 2026-08 -->
-
-Particle emitters, beams, and trails are dense in shipped Roblox games: many shipped places carry more than 1,000 emitters, and effect-heavy scenes are the norm rather than the exception. These are inspection-priority signals, not device budgets.
-
-When a place is effect-dense, review it by feature, zone, or character rather than by one global count:
-
-1. read back emitter `Rate`, `Lifetime`, `Enabled`, burst counts, and texture usage;
-2. estimate active-particle load from instance count, rate, and lifetime, then measure it on representative devices;
-3. trace every beam and trail attachment to an owner and verify what happens when the owner moves, streams out, or is destroyed;
-4. check whether frequent effects use pooling or bounded creation, and whether reset logic clears tweens, connections, attachments, and enabled state;
-5. compare the effect's gameplay or feedback role against its cost before reducing visual fidelity.
-
-Effect lifecycle findings from shipped games worth teaching as defaults:
-
-- **Disable, don't destroy, for reusable effects.** Toggling `Enabled = false` on pooled emitters is common and cheaper than recreating instances; reserve `:Destroy()` for one-shot instances.
-- **Every timed effect needs a bounded teardown.** A `task.delay`/`Debris` path that disconnects connections and destroys the effect container is the recurring correct shape; effects left streaming with live emitters are the recurring leak.
-- **Guard re-entry.** Repeated activation of the same effect path should cancel or reset the previous lifetime before starting a new one, or overlapping activations leave stale particles behind.
-
-## 8b. Presentation bundles
-
-<!-- temporal: 2026-08 -->
-
-Synchronized sound, particles, animation, and UI tweens are the standard shape of feedback in shipped games. When an action has a synchronized presentation bundle, review it as one state machine:
-
-1. name the authoritative start, confirmed, interrupted, and completed states;
-2. assign one owner and cancellation path to the animation track, sound, emitters, beams, trails, and tweens;
-3. verify that respawn, streaming, target replacement, and repeated activation cannot leave a stale presentation layer;
-4. test mismatched load times and missing assets so feedback does not claim success before the state is confirmed.
-
-These observations indicate where a bundled review is useful. They do not prove that the classes are coupled at runtime or that the presentation is synchronized.
-
 ## 9. Preloading and runtime failure
 
 Preload only the assets needed for an imminent experience state. Preloading an entire catalog increases memory pressure and still does not make an unavailable asset valid. Show a fallback when an animation, image, sound, or particle texture cannot load.

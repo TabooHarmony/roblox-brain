@@ -139,27 +139,6 @@ end)
 - `message.Data` contains the published payload
 - Subscribe callbacks run in a separate thread — use pcall
 
-### Static-source review
-
-Cross-server code is often absent or incomplete in archived places. Treat a `MessagingService`, `GlobalDataStore`, or `MemoryStoreService` call as a concept specimen until you verify delivery assumptions, expiry, idempotency, ownership, and current platform limits against the official docs. Do not infer that a missing call means the live game lacks cross-server behavior.
-
-## Cross-server routing in shipped games
-
-<!-- temporal: 2026-08 -->
-
-In shipped Roblox games, cross-server services (`MessagingService`, `GlobalDataStore`, `MemoryStoreService`, `OrderedDataStore`, `TeleportService`) are uncommon relative to single-server persistence and `HttpService`. That is not a recommendation to avoid them; it is a reminder to add them only for a declared requirement such as matchmaking, global announcements, teleport handoff, shared counters, or external integration.
-
-Before adding or approving one, write the boundary:
-
-1. what state or message is shared, and which server owns it;
-2. whether delivery is lossy, delayed, duplicated, or out of order;
-3. expiry, retry, idempotency, and stale-owner behavior;
-4. platform budget, payload, security, and failure fallback;
-5. the runtime test that proves two servers observe the intended transition.
-
-Static presence is a routing signal. It does not prove that a cross-server protocol is complete, or that a missing service is a defect.
-
-
 ## GlobalDataStore
 
 ### Overview

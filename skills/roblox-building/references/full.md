@@ -310,6 +310,20 @@ Before calling a map phase complete, verify:
 - geometry is connected to the ground or a parent structure
 - bounds calculations exclude `Baseplate`, `Terrain`, and default `SpawnLocation` unless intentionally included
 
+## Player-Facing Route Acceptance
+
+Treat a map as a player path, not only a geometry tree:
+
+1. Draw the main route as nodes and edges: spawn, first action, decision points, checkpoints, goals, returns, and exits.
+2. From every spawn, verify that the next landmark or affordance is visible, the camera is not inside geometry, and the player is not facing a wall or hazard.
+3. Give each critical action a readable world cue and feedback. Route prompts and input to their owning skills rather than encoding progress in decoration alone.
+4. Check the return path and recovery from falls, death, wrong turns, and interrupted traversal.
+5. Playtest from the player camera at representative movement speeds. A top-down editor view cannot prove wayfinding or spatial onboarding.
+
+Use runtime observation or a small funnel to judge onboarding success. Static route structure can reveal what to test, not whether players understand it.
+
+For world interactions, prefer `ProximityPrompt` when cross-device button or hold semantics fit. Use `ClickDetector` for simple click interactions and `Touched` only when physical contact is the mechanic. `BillboardGui`, `SurfaceGui`, and `Highlight` provide cues, not authority. Validate outcomes on the server from current distance, state, cooldown, and ownership.
+
 ## Large-Place Readback
 
 For a large root, do not use an unbounded "dump everything" readback as the only check. Partition the inspection by build root or zone and collect:
@@ -321,14 +335,6 @@ For a large root, do not use an unbounded "dump everything" readback as the only
 - the smallest representative set of paths needed to investigate each exception.
 
 Use the report to choose the next bounded inspection or playtest. Static counts are triage signals, not proof of quality, usability, memory use, or frame rate. Confirm performance concerns with Scene Analysis, the Developer Console, MicroProfiler, and representative devices.
-
-## Patterns observed in shipped games
-
-<!-- temporal: 2026-08 -->
-
-In shipped Roblox games, mesh-backed geometry dominates construction: `MeshPart` and mesh asset references are near-universal, CSG unions are common, and `ProximityPrompt` plus `BillboardGui` markers are the standard way places signal interactability. Effect-heavy classes (`ParticleEmitter`, `Attachment`) are also dense, so a static readback should separate structural geometry from effect scaffolding before judging map scale.
-
-Artifact size is wildly uneven, from a few thousand instances to several hundred thousand, so a global "dump everything" readback is a poor default; partition by zone or build root instead. These observations justify mesh, interaction-marker, and scoped-readback checks. They do not establish construction quality, frame rate, licensing, or player success.
 
 ## Evidence Recipes
 

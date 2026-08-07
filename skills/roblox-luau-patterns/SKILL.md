@@ -4,6 +4,8 @@ description: "Use for Roblox module boundaries, object lifecycles, signals, task
 last_reviewed: 2026-08-07
 sources:
   - https://luau-lang.org/
+  - https://create.roblox.com/docs/reference/engine/classes/ObjectValue
+  - https://devforum.roblox.com/t/studio-beta-reference-instances-directly-with-attributes/4753441
   - original
 ---
 
@@ -21,19 +23,6 @@ Load when choosing a module shape, owning Roblox instances or event connections,
 - **Module with private state:** one explicit subsystem owner. Do not create a manager class merely to namespace functions.
 - **Object with metatable:** multiple independent values need shared behavior and lifecycle.
 - **Existing library abstraction:** follow it when the project already uses it consistently. Do not add Promise, signal, cleanup, or framework dependencies for one call site.
-
-```luau
-local Counter = {}
-Counter.__index = Counter
-
-function Counter.new(initial: number): Counter
-    return setmetatable({ value = initial }, Counter)
-end
-
-function Counter:increment()
-    self.value += 1
-end
-```
 
 Constructors use `.`, instance methods use `:`, and mutable fields belong on the instance, not the class table.
 
@@ -57,7 +46,7 @@ Do not collapse “call succeeded and returned nil” into “call failed.” Re
 
 ### Schedule deliberately
 
-Use `task.defer` to run after the current resumption cycle, `task.spawn` for independent immediate work, `task.delay` for delayed work, and `task.cancel` when the owner ends. Replacing a polling loop with a per-frame event is not automatically cheaper. Prefer event-driven work when a real state-change signal exists; otherwise choose and measure an explicit cadence.
+Use `task.defer`, `task.spawn`, `task.delay`, and `task.cancel` deliberately. Avoid legacy `wait()` and unjustified polling. Prefer a real state-change signal; otherwise choose and measure an explicit cadence.
 
 ### Review
 

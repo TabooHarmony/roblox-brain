@@ -7,6 +7,7 @@ sources:
   - https://create.roblox.com/docs/projects/client-server
   - https://create.roblox.com/docs/scripting/locations
   - https://create.roblox.com/docs/scripting/security/access-control
+  - https://create.roblox.com/docs/reference/engine/classes/CollectionService
   - original
 ---
 
@@ -49,6 +50,6 @@ Split when there is a separate lifecycle or authority boundary, a distinct persi
 
 ### Review
 
-One canonical owner per state mutation, no circular require, no hidden startup yield, no replicated secret or trust decision, no duplicate save or purchase owner, explicit cleanup, and the smallest structure that keeps the feature understandable. For noisy RBXMs, hash and parse statically, deduplicate, quarantine suspicious code, and validate abstractions instead of copying assets.
+One canonical owner per mutation, no hidden startup yield or replicated trust decision, explicit cleanup, and the smallest traceable structure. For tag-driven behavior, use tags for discovery, attributes for configuration, and one owner for attach/remove cleanup.
 
 > Detailed layouts, dependency rules, and startup examples: [references/full.md](references/full.md)

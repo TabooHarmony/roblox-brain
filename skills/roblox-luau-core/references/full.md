@@ -230,5 +230,4 @@ Translate the data model and control flow, not token by token.
 - Method definition and call syntax agree.
 - Multiple return values preserve success, absence, and error states.
 - String patterns are Lua patterns, not unverified regex translations.
-- `getfenv`, `setfenv`, `loadstring`, and similar legacy markers are review prompts; check the supported Luau behavior and the containing code's purpose instead of treating a token as a verdict.
 - Engine behavior and project architecture are routed to their canonical skills.
