@@ -2,6 +2,34 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [1.3.0] - 2026-08-07
+
+### Added
+
+- Added `roblox-level-design` for player-facing spaces: zones, routes, landmarks, affordances, spawn flow, and spatial onboarding, with player-view acceptance gates.
+- Added Predictive Streaming guidance to performance (`Workspace.PredictiveStreamingMode`, spawn prefetching, CFrame return optimization), verified against current engine docs.
+- Added instance-reference guidance to Luau patterns: `ObjectValue` vs attributes, plus the Studio-beta `InstanceHandle` attribute type with its absent-vs-unstreamed semantics.
+- Added the Ads Manager API (Open Cloud, test stage) to the cloud skill with auth scopes and test-stage caveats.
+- Added Roblox documentation indexes for agents (`llms.txt`, engine and Open Cloud sub-indexes, deprecated API inventory) to tooling.
+- Added the 2026-08 Recommended-for-You direction from Roblox's Chief Growth Officer to growth design: long-term retention and monetization both drive Home impressions, with the retention-first vs monetization-first decision rule.
+
+### Changed
+
+- Grounded review guidance in patterns observed across a static sample of shipped Roblox games instead of raw class counts: remote failure shapes (client-supplied config tables, client-computed outcomes, missing server cooldowns, unvalidated broadcasts), persistence failure shapes (load-failure overwrites, split saves, `UpdateAsync` used as `SetAsync`), receipt failure shapes (missing idempotency, unknown-product acknowledgement), effect lifecycle rules (disable vs destroy, bounded teardown, re-entry guards), and loading-screen flow (CoreGui hiding, preload, control restoration).
+- Replaced inline instance-count tables with distilled, durable guidance in building, GUI, UI design, animation/VFX, performance, security, server data, input, and code review.
+- Clarified that static risk signals in a place are routing decisions, not verdicts, and that quarantined material can still be studied for structure while being excluded from anything copied.
+- Fixed the skill count in `AGENTS.md` (28 → 29).
+
+### Verified
+
+- 29 skills pass structural validation; all 32 API-drift registry entries verified against live creator docs; all 146 source URLs reachable.
+
+## [1.2.1] - 2026-07-29
+
+### Fixed
+
+- Corrected six behavioral claims flagged by community audit in analytics, building, camera, monetization, and performance.
+
 ## [1.2.0] - 2026-07-26
 
 ### Added

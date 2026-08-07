@@ -1,7 +1,7 @@
 ---
 name: roblox-growth-design
 description: "Use for Roblox growth diagnosis, discovery, retention, onboarding, experiments, positioning, LiveOps, and packaging."
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-07
 sources:
   - https://create.roblox.com/docs/discovery
   - https://create.roblox.com/docs/production/game-design/analytics-essentials
@@ -18,6 +18,7 @@ sources:
   - https://create.roblox.com/docs/production/publishing/accessibility
   - https://create.roblox.com/docs/production/monetization/regional-pricing
   - https://create.roblox.com/docs/production/monetization/price-optimization
+  - https://www.youtube.com/@TizzyRBLX12
   - https://qptr.io
   - https://creatorexchange.io
   - original
@@ -33,8 +34,8 @@ Load for weak growth, discovery, retention, onboarding, packaging, or LiveOps. D
 
 ### Diagnose before prescribing
 
-1. Ask for dashboard evidence, release dates, acquisition mix, and observed sessions. Never invent metrics.
-2. Find the narrowest broken transition: impression to play, join to control, first action to payoff, return, or purchase.
+1. Ask for dashboard, release, acquisition, session evidence. Never invent metrics.
+2. Find the narrowest broken transition: impression→play, join→control, action→payoff, return, or purchase.
 3. Write a falsifiable hypothesis: **If Y changes because evidence Z, X should move without harming G.**
 4. Prefer one interpretable experiment with a primary metric, counter-metrics, MDE, and decision rule.
 5. Stop for safety, severe regressions, or invalid instrumentation. Avoid significance peeking.

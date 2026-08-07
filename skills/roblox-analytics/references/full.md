@@ -190,7 +190,16 @@ Creator Rewards is not an `AnalyticsService` event and should not be reconstruct
 
 Use Creator Dashboard as the authority for Creator Rewards eligibility, rewarded active spenders, signups, reactivations, and estimated payout. Do not label a local event as “Creator Reward Granted” or promise a Robux amount based on it.
 
-## 6. Best Practices
+## 6. Static Artifact Review
+
+When reviewing a static `.rbxl` or `.rbxm`, scan script call sites, funnel-shaped names, and UI or interaction boundaries to propose candidate instrumentation. Treat the result as a routing aid only:
+
+- a present call site does not prove that the event fires on the successful server-side transition;
+- a missing call site does not prove that live instrumentation is absent, because code may be generated, external, or outside the inspected artifact;
+- class, name, and string counts do not establish funnel quality, retention, conversion, or economy health;
+- validate the chosen events with a runtime scenario and Creator Hub's event view before using them for decisions.
+
+## 7. Best Practices
 
 - Log from server, not client. Client events can be spoofed.
 - Log AFTER the action succeeds, not when attempted.

@@ -1,10 +1,11 @@
 ---
 name: roblox-luau-core
 description: "Use for Luau language semantics, tables, control flow, string patterns, scope, closures, and cross-language translation errors."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-07
 sources:
   - https://luau.org/syntax
   - https://luau.org/library
+  - original
 ---
 
 # Luau Core Language

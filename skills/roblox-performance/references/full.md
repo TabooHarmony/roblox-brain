@@ -114,6 +114,30 @@ The practical rule is: profile first, isolate a pure or read-heavy calculation, 
 | Replicating unnecessary instances | Join time slow | Keep Workspace lean, use ServerStorage |
 | Unthrottled property changes | Network saturation | Batch property changes, use attributes |
 
+## Static Place Triage
+
+When starting from a static `.rbxl` or `.rbxm`, use structure to choose runtime specimens rather than declaring the place fast or slow:
+
+1. Partition the inspection by map root, zone, or runtime container. Record instance counts and bounds for each scope.
+2. Flag `MeshPart`, `UnionOperation`, and `SurfaceAppearance` for asset, material, collision, and device-quality review.
+3. Flag `ParticleEmitter`, `Beam`, `Trail`, `Highlight`, lights, and post-processing for visual-density and overdraw review.
+4. Flag high-frequency scripts, remotes, and large replicated containers for server, network, and join-time review.
+5. Confirm the suspected cost with Scene Analysis, the Developer Console, MicroProfiler, and a representative low-end device.
+
+The static patterns that motivate this triage are presence signals only. A class count is not a frame-time, memory, or quality benchmark, and absence from a parsed artifact does not prove that runtime code or external tooling is absent.
+
+### Triage order from shipped-game patterns
+
+<!-- temporal: 2026-08 -->
+
+In shipped Roblox games, effects, input, UI motion, and persistence routinely sit in the same feature, so cross-surface specimens are more useful than isolated class totals. Choose a bounded specimen along one of the paths the game actually exercises:
+
+- **effect path:** emitter or beam creation → owner/lifetime → cleanup → device measurement;
+- **interaction path:** input/action → UI or world feedback → remote or simulation request → confirmed state;
+- **persistence path:** remote or purchase request → server authority → DataStore mutation → retry/shutdown behavior.
+
+This is a prioritization heuristic for profiling and review, not proof that any one implementation is good or bad.
+
 ## Optimization Patterns
 
 ### Object Pooling
@@ -238,6 +262,16 @@ These settings are not scriptable. Tune them in Studio from measurements on
 representative devices; do not assume a smaller radius is automatically better.
 
 **Gotcha**: `workspace:FindFirstChild("DistantPart")` returns nil if the part is streamed out. Use `WaitForChild` with timeout, or design systems that don't depend on distant parts existing on the client.
+
+### Predictive Streaming
+
+<!-- temporal: 2026-08 -->
+
+`Workspace.PredictiveStreamingMode` (Studio-only, not scriptable) opts streaming-enabled games into proactive loading, launched 2026-07: the engine anticipates player movement and streams in areas before arrival, reducing pause-and-pop-in. `Default` currently behaves the same as `Disabled`.
+
+Initial features: spawn prefetching (temporary streaming foci at likely respawn locations on death) and CFrame return optimization (a temporary focus where a player CFrame-teleported away, covering enter/leave loops between hubs, buildings, and sublevels). Predictions are additive and expire; the engine skips them on resource-constrained devices.
+
+Do not re-implement what the engine predicts for you; use `Player:RequestStreamAroundAsync()` or `Player:AddReplicationFocus()` when you need deterministic control, e.g. teleporting to a specific region.
 
 ### Detect Platform
 

@@ -17,7 +17,7 @@ Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support ag
 
 `roblox-brain` gives an AI coding agent focused Roblox Studio knowledge without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details.
 
-- 28 focused skills across Luau, architecture, game design, networking, UI, physics, data, monetization, localization, tooling, and publishing.
+- 29 focused skills across Luau, architecture, game design, level design, networking, UI, physics, data, monetization, localization, tooling, and publishing.
 - Guidance grounded in Roblox Creator Hub documentation, compatible external tools, and original synthesis.
 
 ## Install
@@ -32,7 +32,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 You can also copy an individual `SKILL.md` into `.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, or another compatible skill directory.
 
-## Skills (28)
+## Skills (29)
 
 ### Core language and architecture
 
@@ -49,6 +49,7 @@ You can also copy an individual `SKILL.md` into `.claude/skills/`, `.codex/skill
 | Skill | What it covers |
 | --- | --- |
 | `roblox-growth-design` | Discovery, positioning, onboarding, retention, experiments, packaging, LiveOps, and growth diagnosis |
+| `roblox-level-design` | Player-facing spaces, traversal, landmarks, affordances, spawn flow, and spatial onboarding |
 
 ### Monetization
 

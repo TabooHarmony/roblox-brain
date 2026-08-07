@@ -176,6 +176,14 @@ Diagnose in this order:
 
 Do not broaden scopes until the failing permission boundary is identified.
 
+## 8.5 Ads Manager API (Open Cloud, test stage)
+
+<!-- temporal: 2026-08 -->
+
+Roblox announced an Ads Manager API on Open Cloud (DevForum, 2026-07-30, test stage) for programmatic campaign management: create/update/pause/resume/cancel campaigns, check delivery status, list billing accounts and creatives. It authenticates with an API key (`x-api-key`) or OAuth2 using scopes such as `ad.campaign:read`, `ad.campaign:write`, and `ad.billing:read`, and campaign creates take an `x-idempotency-key` header.
+
+This is a marketing-surface API, not an in-experience engine API: it lives on the Open Cloud side, so the standard rules of this skill apply (least-privilege keys, no keys in game code, server-side storage). As a test-stage API it may change before Beta; verify the current surface against the official docs before building on it, and treat anything beyond campaign CRUD as unverified.
+
 ## 9. Completion checklist
 
 - Caller and authority model are explicit.

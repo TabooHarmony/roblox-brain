@@ -166,6 +166,18 @@ sourcemap.json
 
 Do not ignore source, lockfiles, configuration, or test fixtures by accident. Check `git status` after installing tools and packages.
 
+## 11. Documentation indexes for agents
+
+Roblox publishes LLM-oriented documentation indexes that route an agent to the correct API surface before it starts reading:
+
+- `https://create.roblox.com/docs/llms.txt`: top-level index; use it first.
+- `https://create.roblox.com/docs/reference/engine/llms.txt`: Engine API index (Luau inside an experience).
+- `https://create.roblox.com/docs/cloud/llms.txt`: Open Cloud API index (REST from external servers).
+- `https://create.roblox.com/docs/llms-full.txt`: all docs in one file (large).
+- `https://create.roblox.com/docs/reference/engine/deprecated.md`: deprecated API inventory.
+
+The Engine API and Open Cloud API are separate systems. Engine APIs are Luau objects via `game:GetService()` inside a running experience; Open Cloud APIs are HTTP endpoints called with an `x-api-key` from outside Roblox. Fetching the wrong index produces non-functional code, so route first.
+
 ## Tooling checklist
 
 - [ ] The project has one documented source-to-Studio workflow.

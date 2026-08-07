@@ -207,3 +207,36 @@ The goal is not to make the client impossible to modify. The goal is to make mod
 - [ ] Packet size and fire rate are measured for high-frequency remotes.
 - [ ] Player cleanup removes limiter, subscription, and connection state.
 - [ ] Suspicion handling tolerates false positives and does not expose private data.
+
+## 10. Static-Source Review
+
+When reviewing an archived or third-party Roblox model, treat remote presence as an inventory signal, not a safety verdict. Map each client call to its server handler and contract:
+
+- an unpaired call or handler is an incomplete review target, not proof that the live project is broken;
+- inspect the actual handler for type, range, ownership, state, and rate validation;
+- distinguish reliable state changes from replaceable presentation data before recommending `UnreliableRemoteEvent`;
+- establish the authority model before judging movement or simulation code; do not copy a remote pattern because it appears repeatedly in archived code.
+
+## Remote validation patterns from shipped games
+
+<!-- temporal: 2026-08 -->
+
+Remotes are near-universal in shipped Roblox games; pairing a call with a handler is only the start of review. In shipped Roblox games, these recurring failure shapes are worth treating as review defaults:
+
+- **Client-supplied config tables.** Combat systems that let the client send its own copy of a settings table are common. The stronger implementations re-require the server's own copy of the module and deep-compare before acting, and kick on mismatch; weaker ones apply client-sent magazine, ammo, or stat values to server state with no bounds check.
+- **Client-computed outcomes.** Damage amounts, critical flags, and hit results computed on the client are frequently passed straight into server apply functions. Treat every client-computed number as input to re-derive or clamp, never as a result to trust.
+- **Action remotes without cooldowns.** Fire, reload, and ability handlers with no per-player clock check are common; per-player rate limiting is the exception, not the rule.
+- **FireAllClients for spectacle.** Broadcasting rolls, kills, and effects to all players is intentional design, but each broadcast is an amplification path: validate before broadcasting.
+
+The strongest observed defense is targeted rather than total: verify the specific client-reported instance (it exists, its size matches what the client claimed) and derive the outcome from server-owned config looked up by key, instead of re-simulating everything or trusting raw client numbers. Even systems that do this still omit server-side rate limiting, so apply both.
+
+For each remote family, produce a compact contract map with:
+
+- direction and every caller/handler path;
+- payload fields, size, and whether the client can choose an instance, amount, target, or outcome;
+- authoritative state and the exact validation performed;
+- rate, queue, and duplicate-request behavior;
+- side effects such as DataStore writes, purchases, effects, or damage;
+- the acknowledgement or replicated state that tells the client what was accepted.
+
+Use the map to find unvalidated value paths and high-frequency specimens. A validation-like token in source may be a comment or generic helper rather than a complete check.

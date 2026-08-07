@@ -128,6 +128,14 @@ Use `:Once()` for a genuinely one-shot event. Use `:Wait()` only when yielding t
 
 Disconnecting before destroying is useful when callbacks could run during teardown or captured references outlive the instance. Do not claim every destroyed instance leaks every attached connection. Verify the actual owner and references.
 
+### Instance references
+
+When a value must point at another instance, prefer an `ObjectValue` under the instance for ordinary references; it is replicated with its parent and survives streaming-out. Attributes are the lightweight alternative when the reference is configuration-style metadata.
+
+<!-- temporal: 2026-08 -->
+
+Studio beta adds instance-typed attributes (`Instance:SetAttribute("Target", otherInstance)`). Reading one back returns an `InstanceHandle`, not the instance: call `handle:Get()` (nil when the target is absent) or `handle:Wait(timeout)` (yields until it streams in). The handle exists so "attribute missing" (GetAttribute returns nil) stays distinguishable from "target not streamed in yet" (handle present, `Get()` nil). Treat this as beta until it reaches the stable engine reference, and verify current behavior before relying on it.
+
 ## 6. Task scheduling and cancellation
 
 - `task.defer`: queue work after the current resumption cycle.
@@ -181,6 +189,10 @@ Use one when:
 - its behavior is covered by tests and current documentation.
 
 Do not recommend a package from name recognition alone. Verify maintenance, license, current API, and whether native Luau plus a small explicit pattern is enough. Install through the package manager already used by the project.
+
+## Static Scan Interpretation
+
+Static searches for `:Destroy(`, `:Disconnect(`, `Janitor`, `Maid`, or wait calls are review prompts, not proof of correct teardown or scheduling. Trace whether cleanup is reachable, whether every owned resource is covered, and whether a wait-coupled loop has a justified cadence or should respond to a real state-change event.
 
 ## 9. Review checklist
 

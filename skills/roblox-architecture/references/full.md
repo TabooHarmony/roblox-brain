@@ -202,3 +202,19 @@ Check the real call and data flow, not just folder names.
 - Tests can isolate pure behavior where doing so is useful.
 - No service/controller/manager/framework layer exists only for symmetry.
 - The structure is the smallest one that a new contributor can trace end to end.
+
+## 11. Learn from noisy RBXMs without cargo-culting
+
+A Roblox model or place is evidence, not an authority. A large file, a name such as `Best`, `Working`, or `Template`, or a claim that it came from a successful game does not establish that its architecture is good.
+
+When using a corpus of `.rbxm` or `.rbxl` files:
+
+1. Preserve the original archive and record hashes before changing anything.
+2. Parse instances and script source statically. Never execute source from an untrusted model during analysis.
+3. Deduplicate exact files and near-identical variants before counting patterns.
+4. Route artifacts into separate high-signal, component, review, and quarantine sets. Quarantine is a copy-safety decision, not proof of malware or uselessness, and it must not silently exclude artifacts from pattern study: shipped, successful games routinely trigger risk signals through anti-exploit tooling. Study quarantined code for structure while keeping it out of anything copied.
+5. Infer a pattern only when it recurs across independent artifacts and survives a code-quality review. Rich trees and lots of code are signals for study, not quality labels.
+6. Extract the abstraction, boundary, invariant, and failure behavior. Do not copy source, asset IDs, hidden loaders, or project-specific names into a new game.
+7. Test the resulting guidance against a held-out project and the relevant runtime requirements. Static files contain no retention, conversion, crash, or live performance evidence.
+
+Useful recurring structures to inspect are feature ownership, explicit server/client boundaries, narrow remote contracts, canonical persistence owners, layout-driven UI, and cleanup ownership. Treat dynamic code, numeric asset requires, obfuscation-like code, duplicate variants, and self-described unfinished files as review triggers.

@@ -1,7 +1,7 @@
 ---
 name: roblox-performance
 description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems, including MicroProfiler and optimization."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-07
 sources:
   - https://create.roblox.com/docs/performance-optimization
   - https://devforum.roblox.com/t/full-release-of-parallel-luau-v1/1836187
@@ -34,6 +34,7 @@ Use when profiling, diagnosing lag, optimizing hot paths, or setting performance
 - **Cache references** — Store workspace lookups in variables, avoid repeated FindFirstChild
 - **Relevance filtering** — Skip expensive updates for distant entities; a broad scan is still O(n)
 - **Lazy loading** — Stream content from ServerStorage as player approaches
+- **Static triage:** use scope and co-occurrence signals to choose profiler specimens; counts are not performance evidence.
 
 ### Parallel Luau
 - Use Actors only after profiling identifies isolatable CPU work.

@@ -1,7 +1,7 @@
 ---
 name: roblox-monetization
 description: "Use when implementing Roblox GamePasses, Developer Products, subscriptions, private servers, Creator Rewards, or purchase policy checks."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-07
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/MarketplaceService
   - https://create.roblox.com/docs/production/monetization/passes
@@ -30,5 +30,6 @@ Load when adding a Game Pass, Developer Product, subscription, private server, C
 - Use `PolicyService` and the current monetization documentation for eligibility-sensitive features.
 - Creator Rewards is a platform program, not a grant API. Track eligibility, attribution, engagement, and dashboard reporting separately from purchases and inventory.
 - Test failed grants, duplicate receipts, player absence, and interrupted saves before shipping.
+- Static presence of `ProcessReceipt` is not receipt correctness; inspect its single owner, durable idempotent grant, retry paths, and the failure modes observed in shipped games for unknown products or absent players.
 
 **Need the details?** Load `references/full.md` for purchase flows and failure handling.

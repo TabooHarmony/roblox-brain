@@ -349,3 +349,25 @@ entries:
       enum: AnalyticsCustomFieldKeys
       item: CustomField01
     verified: 2026-07-26
+
+  - id: building-meshpart-meshid-not-script-writable
+    claim: "MeshPart.MeshId is read-only to ordinary runtime scripts"
+    files:
+      - path: skills/roblox-building/references/full.md
+    check:
+      type: property_write_security
+      class: MeshPart
+      property: MeshId
+      expected: NotAccessibleSecurity
+    verified: 2026-08-02
+
+  - id: building-surfaceappearance-colormap-plugin-only
+    claim: "SurfaceAppearance.ColorMap is not an ordinary runtime-write property"
+    files:
+      - path: skills/roblox-building/references/full.md
+    check:
+      type: property_write_security
+      class: SurfaceAppearance
+      property: ColorMap
+      expected: PluginSecurity
+    verified: 2026-08-02

@@ -391,6 +391,34 @@ UIS.JumpRequest:Connect(function()
 end)
 ```
 
+## Action review across devices
+
+<!-- temporal: 2026-08 -->
+
+In shipped Roblox games, input handling is nearly always paired with UI feedback and tweens: an action is a cross-surface contract, not a key binding. Treat it that way:
+
+1. map every supported device and context to one named action;
+2. identify who consumes or blocks it, and what cleanup restores when the context closes;
+3. trace the action to UI/world feedback, a server request, or the synchronized simulation path;
+4. define pending, rejected, disabled, and confirmed feedback states;
+5. test rapid input, cancellation, focus changes, respawn, and device switching.
+
+### Device adaptation in shipped games
+
+<!-- temporal: 2026-08 -->
+
+In the studied games, raw `UserInputService.InputBegan` is far more common than `ContextActionService:BindAction`, and touch paths are frequent while explicit gamepad handling is rare. This is not a quality comparison; it is a prompt to inspect raw-input paths for device coverage instead of assuming that a desktop binding is adaptive, and to know that shipped code routinely works without `gameProcessedEvent` checks, which is a latent bug class, not a pattern to copy.
+
+When a feature uses raw input or has a device signal, verify:
+
+1. one named action exists across keyboard/mouse, touch, and gamepad where supported;
+2. touch targets and gamepad focus expose the same state and cancellation path;
+3. `gameProcessedEvent`, text focus, context ownership, and `UnbindAction` do not leave stale or competing handlers;
+4. the player can discover the binding and recover after respawn, modal UI, or device switching;
+5. player-view captures or playtests cover each supported device rather than relying on source presence.
+
+Absence of a binding in source does not prove that a device is unsupported; use runtime input and rendered-state evidence for that conclusion.
+
 ## Common Mistakes
 
 - **Forgetting `gameProcessedEvent` filter.** If `gpe==true` in InputBegan, a UI element (button, text box, chat) already consumed it. Filter out for gameplay.

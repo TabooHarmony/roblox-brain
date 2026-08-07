@@ -1,7 +1,7 @@
 ---
 name: roblox-building
 description: "Use when building Roblox geometry, maps, props, or generated assets with MCP or standalone Luau."
-last_reviewed: 2026-07-12
+last_reviewed: 2026-08-07
 sources:
   - original
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/mcp.md
@@ -11,7 +11,7 @@ sources:
 
 ## When to Load
 
-Load when building physical geometry, maps, props, or environment assets in Roblox Studio through MCP or standalone scripts. Covers spatial planning, CSG, generated/reused assets, scale, and verification. See `references/full.md` for complete patterns.
+Load for Roblox geometry, maps, props, or environment assets via MCP or standalone Luau. Use `roblox-level-design` for player-facing routes, landmarks, affordances, and spatial onboarding. See `references/full.md` for complete patterns.
 
 ## Quick Reference
 
@@ -28,6 +28,7 @@ Load when building physical geometry, maps, props, or environment assets in Robl
 - For cross-owner or paid assets, surface creator/source/price and get explicit consent before insertion.
 - Use `generate_procedural_model` for configurable primitive-part props and blockouts.
 - Use `generate_mesh` for custom textured props and `generate_material` for surface variants.
+- For meshes, read back `MeshPart`/`SurfaceAppearance`, bounds, collision fidelity, anchoring, and provenance; preview representative quality levels.
 - Use `store_image`/`upload_image` only for permitted images; pass a returned `generationId` to `wait_job_finished` before dependent work.
 - Fall back to native Parts/CSG and report unavailable or unsuitable generation.
 
@@ -43,7 +44,7 @@ Player ~5 studs | Door 4w×7h | Ceiling 10-14 | Counter 3.5-4 | Seat 1.5 | Path 
 
 ### Acceptance
 **Prop:** named model, pivot, scale, bounds, materials, collision, anchoring, no loose parts, asset provenance.
-**Map:** root/origin, zones, landmarks, spawns, path widths, traversal, and bounds checks excluding Baseplate/Terrain/SpawnLocation.
+**Map:** root/origin, zones, landmarks, spawns/return paths, path widths, traversal, and bounds checks excluding Baseplate/Terrain/SpawnLocation.
 **Evidence:** structural readback plus screenshot when supported, console/runtime result when playtested.
 
 ### Anti-Patterns

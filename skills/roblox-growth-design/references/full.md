@@ -44,6 +44,25 @@ Roblox Experiments run for 14–60 days. Do not use first-day results for decisi
 
 Ask for the evidence that actually exists: Creator Dashboard screenshots or exports, cohort windows, release dates, acquisition mix, session recordings, and player feedback. Use Studio or project telemetry for runtime facts when available. State what is missing and never fabricate a metric, cohort, or causal explanation.
 
+### Static project structure: hypothesis only
+
+A static `.rbxl` or `.rbxm` can reveal recurring structures such as inventories, currencies, upgrades, zones, prompts, checkpoints, and progression UI. Those structures describe implementation shape, not player success, usability, retention, conversion, or fun. They may be copied, unfinished, dead, or unrelated to the player path.
+
+Use a four-step handoff:
+
+1. **Observe:** name the structure and the evidence boundary.
+2. **Question:** translate it into a player-facing question, such as whether a new player reaches the first meaningful action or understands the next goal.
+3. **Instrument:** choose the smallest runtime funnel or event that can answer that question, with a success event and a failure or abandonment path.
+4. **Test:** use player observation, runtime logs, cohorts, or an experiment to decide. Do not label the static pattern an outcome.
+
+Examples are routing hints, not success claims:
+
+- inventory, currency, or upgrade structures suggest checking first acquisition, first spend, and progression comprehension;
+- zones, checkpoints, seats, or traversal markers suggest checking spawn-to-control, first destination, and completion transitions;
+- prompts, tools, remotes, or effects suggest checking action reachability, accepted action, readable feedback, and repeat behavior.
+
+Keep static evidence, practitioner heuristics, and measured player outcomes in separate fields in the audit. A static scan can suggest what to inspect; it cannot establish that a loop is fun or that it caused retention, conversion, virality, or revenue.
+
 ## 2. Official Home Recommendations Model
 
 <!-- temporal: 2026-07 -->
@@ -98,13 +117,28 @@ A temporary decline in play through rate can accompany an impression increase. D
 
 ### Dashboard workflow
 
-In Creator Hub, use **Analytics > Acquisition > Home Recommendations**:
+In Creator Hub, use **Analytics > Acquisition > Home Recommendations** (also surfaced in the Creator Analytics Overview page):
 
 1. Inspect Home recommendation impressions and plays.
 2. Check the most important signals first.
 3. If those are stable, inspect co-play, qualified sessions, spend days, and Robux spend.
 4. Compare against similar-game benchmarks as rough context only. Benchmark games do not affect ranking.
 5. Segment other acquisition sources separately.
+
+<!-- temporal: 2026-08 -->
+
+### 2026-08 RFY direction (Roblox CGO announcement)
+
+Roblox's Chief Growth Officer stated the next Recommended-for-You update (targeted late August / early September 2026) will better recognize long-term player value: games players return to over time, and where players find value in purchases. Source: DevForum announcement, 2026-08-06.
+
+Working guidance from the same post:
+
+- If retention is low, fix core gameplay first: first session clarity, a satisfying core loop, reasons to return, and iteration from feedback and analytics. Monetization alone cannot carry a game players do not keep playing.
+- If retention is strong, build sustainable monetization: value players can feel, offers integrated into progression rather than interrupting play, fair and transparent pricing, and continued content investment.
+- Both retention and monetization drive Home impressions; games strong in only one still receive recommendations, but games strong in both may get broader distribution.
+- Four factors move Home impressions: your own gameplay/updates, platform algorithm changes (announced transparently), seasonality (weekly peaks on Saturdays, summer/holiday/school cycles), and competing games improving faster. A drop while your signals are steady can be competitive, not punitive.
+
+Treat the timing as temporal; re-check the announcement thread for launch status before citing the update as live.
 
 ## 3. Diagnose Metrics Without Single-Cause Thinking
 
@@ -529,7 +563,7 @@ Use this structure for a game-design diagnosis:
 
 ## Sources
 
-Official Roblox sources, reviewed 2026-07-26:
+Official Roblox sources, reviewed 2026-08-02 (RFY direction update reviewed 2026-08-07):
 
 - [Discovery](https://create.roblox.com/docs/discovery)
 - [Analytics essentials](https://create.roblox.com/docs/production/game-design/analytics-essentials)
@@ -546,5 +580,6 @@ Official Roblox sources, reviewed 2026-07-26:
 - [Accessibility](https://create.roblox.com/docs/production/publishing/accessibility)
 - [Regional pricing](https://create.roblox.com/docs/production/monetization/regional-pricing)
 - [Price optimization](https://create.roblox.com/docs/production/monetization/price-optimization)
+- [Boost Your Discovery by Building Games People Want to Play](https://devforum.roblox.com/t/boost-your-discovery-by-building-games-people-want-to-play/4779042) (2026-08-06)
 
-Practitioner synthesis is original work derived from the submitted draft. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources.
+Practitioner synthesis is original work derived from the submitted draft. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources. Sampled videos from the [Tizzy RBLX channel](https://www.youtube.com/@TizzyRBLX12) were reviewed 2026-08-02 for practitioner heuristics about clear fantasy, fast first value, action-based teaching, observation, and iteration. Personal virality, revenue, or algorithm-causation claims were not adopted as facts.

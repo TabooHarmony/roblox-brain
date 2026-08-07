@@ -1,7 +1,7 @@
 ---
 name: roblox-ui-design
 description: "Use for Roblox UI composition, hierarchy, visual systems, style inheritance, accessibility, and design review."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-07
 sources:
   - https://create.roblox.com/docs/production/publishing/adaptive-design
   - https://create.roblox.com/docs/production/publishing/accessibility
@@ -35,11 +35,11 @@ Load for UI design or review. Existing style and art direction take priority. Ot
 - **Alignment:** use shared layouts, fixed icon slots, and matching anchors.
 - **State:** active, available, locked, completed, selected, and disabled states need more than color.
 - **Input:** design hover only where it exists. Touch, gamepad focus, keyboard, and reduced motion need equivalent feedback.
-- **Verification:** inspect representative target viewports for clipping, overflow, dead space, type, hierarchy, and focus order.
+- **Verification:** inspect target viewports for clipping, overflow, dead space, type, hierarchy, focus order, and reference parity.
 
 ### Neutral fallback
 
-Use one restrained surface and border language, one display role, one body role, and one accent. Let game content, artwork, and action importance create identity. Prefer readable contrast and clear grouping over thick outlines, ornamental depth, or genre assumptions.
+Use one restrained surface and border language, one display role, one body role, and one accent. Let content, artwork, and action importance create identity. Prefer readable contrast and clear grouping over thick outlines, ornamental depth, or genre assumptions.
 
 ### Anti-patterns
 

@@ -209,3 +209,39 @@ A layout that looks correct at one Studio viewport size is not finished. Capture
 - [ ] Server responses, not local optimism, determine durable state.
 - [ ] The interface works with touch, mouse, keyboard, and gamepad where relevant.
 - [ ] All temporary connections, tweens, and rows have an owner lifetime.
+
+## UI structure in shipped games
+
+<!-- temporal: 2026-08 -->
+
+In shipped Roblox games, layout-driven containers (`UIListLayout`, `UIGridLayout`, `UIPadding`, `UIAspectRatioConstraint`) and decorative styling (`UIStroke`, `UIGradient`, `UICorner`) are nearly universal, and scrolling lists are the default shape for inventories, shops, and any repeated-row screen. Composition, typography, state design, and rendered parity belong in `roblox-ui-design`; these are presence observations, not quality judgments.
+
+Loading screens in shipped games follow one recurring shape worth knowing: the client teleports the character to a hidden position or disables camera control, hides the relevant CoreGui elements with `StarterGui:SetCoreGuiEnabled`, runs `ContentProvider:PreloadAsync` for critical assets, and only then restores control. Review any loading flow against that sequence: what locks input, what reports progress honestly, and what happens when preload fails or times out.
+
+## Container triage
+
+<!-- temporal: 2026-08 -->
+
+When reviewing a repeated screen, inspect the container topology as one contract:
+
+1. identify the screen job and repeated item shape;
+2. locate the owner of ordering, sizing, aspect ratio, padding, and scrolling;
+3. test long text, empty/full states, narrow and wide viewports, and dynamic row insertion;
+4. test touch targets and gamepad focus after the layout changes;
+5. capture the rendered result rather than accepting a valid-looking instance tree.
+
+## Text-entry and transaction review
+
+<!-- temporal: 2026-08 -->
+
+Text boxes in shipped games are commonly coupled to marketplace paths or remotes (rename, trade, code redemption). These are routing signals, not proof that every text box is a shop or that any transaction is safe.
+
+When a text box is coupled to a button, marketplace path, or remote, review the whole boundary:
+
+1. focus, keyboard dismissal, touch affordance, and gamepad fallback;
+2. empty, invalid, loading, accepted, rejected, and retry states;
+3. client-side formatting versus server-side validation and authority;
+4. debounce, duplicate submission, cancellation, and feedback timing;
+5. whether the text actually changes the intended catalog, request, or durable state.
+
+Route purchase and grant correctness to `roblox-monetization`, remote contracts to `roblox-networking`, and rendered state to `roblox-ui-design`.

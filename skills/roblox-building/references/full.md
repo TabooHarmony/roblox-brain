@@ -60,6 +60,17 @@ Choose the least risky source that satisfies the prop:
 
 Generated assets are candidates. Structural and visual review are still required.
 
+## Mesh-Backed Geometry
+
+`MeshPart` is a `BasePart` with a custom mesh. Treat the visible mesh, its appearance, and its collision shape as separate review surfaces:
+
+- read back `MeshId`/`MeshContent`, `MeshSize`, transform, bounds, `Anchored`, `CanCollide`, `CanTouch`, `CanQuery`, and `CollisionFidelity`;
+- inspect a child `SurfaceAppearance` and its `ColorMap`, normal, metalness, roughness, and emissive maps when present; PBR appearance depends on device and graphics quality, so preview representative quality levels;
+- do not imply that a runtime script can repair `MeshId` or most PBR maps. Resolve authoring/import issues before placement, then verify after insertion;
+- record source and intended use for each non-original mesh. A repeated asset key may indicate reuse, but static equality is not proof of license or quality.
+
+Use native Parts or CSG for simple collision and blockout geometry. Use a separate low-cost collision model when the visible mesh is large, detailed, or non-interactive. Let measured playtests and profiling, not class counts, decide performance changes.
+
 ## Player Scale Reference
 
 - Player height: ~5 studs
@@ -252,6 +263,10 @@ for _, desc in ipairs(root:GetDescendants()) do
             print("[WARN] " .. desc.Name .. " uses default color/material")
             warnings += 1
         end
+
+        -- For MeshPart, read back MeshId/MeshContent. If the asset manifest
+        -- expects PBR, inspect child SurfaceAppearance maps in Studio or
+        -- plugin tooling; ordinary runtime scripts may not access most maps.
     end
 end
 print(string.format("Parts: %d | Errors: %d | Warnings: %d", parts, errors, warnings))
@@ -290,9 +305,30 @@ Before calling a map phase complete, verify:
 
 - the map root and `Origin` are present
 - zone floors and landmarks are inside the intended bounds
-- spawn points and main paths are reachable and wide enough
+- each named spawn has a navigable return path, is not inside collision or facing a wall, and, when the design declares a fixed session population, spawn count matches it
+- main paths are reachable and wide enough
 - geometry is connected to the ground or a parent structure
 - bounds calculations exclude `Baseplate`, `Terrain`, and default `SpawnLocation` unless intentionally included
+
+## Large-Place Readback
+
+For a large root, do not use an unbounded "dump everything" readback as the only check. Partition the inspection by build root or zone and collect:
+
+- instance and descendant counts, plus bounds and pivot for each scope;
+- class counts for structural and effect-heavy classes such as `MeshPart`, `UnionOperation`, `SurfaceAppearance`, `Attachment`, and `ParticleEmitter`;
+- anchoring, collision, and query-state exceptions;
+- repeated mesh, texture, and image references that may deserve deduplication review;
+- the smallest representative set of paths needed to investigate each exception.
+
+Use the report to choose the next bounded inspection or playtest. Static counts are triage signals, not proof of quality, usability, memory use, or frame rate. Confirm performance concerns with Scene Analysis, the Developer Console, MicroProfiler, and representative devices.
+
+## Patterns observed in shipped games
+
+<!-- temporal: 2026-08 -->
+
+In shipped Roblox games, mesh-backed geometry dominates construction: `MeshPart` and mesh asset references are near-universal, CSG unions are common, and `ProximityPrompt` plus `BillboardGui` markers are the standard way places signal interactability. Effect-heavy classes (`ParticleEmitter`, `Attachment`) are also dense, so a static readback should separate structural geometry from effect scaffolding before judging map scale.
+
+Artifact size is wildly uneven, from a few thousand instances to several hundred thousand, so a global "dump everything" readback is a poor default; partition by zone or build root instead. These observations justify mesh, interaction-marker, and scoped-readback checks. They do not establish construction quality, frame rate, licensing, or player success.
 
 ## Evidence Recipes
 

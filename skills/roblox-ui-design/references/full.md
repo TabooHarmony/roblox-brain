@@ -556,6 +556,18 @@ Before finalizing, check:
 - [ ] Does the font match the game genre?
 - [ ] Would a player recognize this game from its UI alone?
 
+## Reference-Driven UI Work
+
+When a screenshot, mockup, layered reference, or segmented asset set is part of the task, establish a visual contract before implementation:
+
+1. Record the target viewport, safe area, scale, UI state, and any intentionally omitted pixels or elements.
+2. Inventory every visible element with a stable semantic key, parent, role, bounds, text or asset source, dynamic values, and uncertainty.
+3. Map each element to a Roblox instance, token, or explicit skip reason. Reuse existing primitives and tokens instead of inventing parallel styling.
+4. Render boundary states such as empty, full, long-text, loading, error, selected, disabled, and toggled states.
+5. Capture the real component at the reference viewport and compare anchors, bounds, spacing, hierarchy, and readable pixels. Code inspection alone cannot establish visual parity.
+
+This is a workflow synthesis, not a requirement to reproduce a PSD-like pipeline. If the reference is incomplete, preserve the uncertainty and verify the actual player-facing state in Studio.
+
 ## What NOT to Do
 
 - Same radius on every nested element (kills hierarchy)
@@ -570,6 +582,26 @@ Before finalizing, check:
 - Pure white on pure black (use off-white on dark charcoal/brown)
 - Scaling desktop layout down to mobile without changing layout
 
+## UI scale and structure in shipped games
+
+<!-- temporal: 2026-08 -->
+
+In shipped Roblox games, `TextLabel`, `Frame`, and `ImageLabel` dominate UI trees, with heavy use of `UIStroke` and `UIGradient` for styling and `UIListLayout`/`UIGridLayout` for structure. Use that to choose what to inspect in an existing place: text, image, state, stroke, gradient, and layout ownership are common review surfaces. Presence is not proof of composition quality, readability, usability, or player success. Keep API claims tied to official Roblox docs and verify actual rendered states.
+
+## Feature-slice review
+
+<!-- temporal: 2026-08 -->
+
+UI in shipped games is almost always coupled to input and remotes: screens are not decorative, they are feature surfaces. Review the whole slice instead of the screen in isolation:
+
+1. name the player action and the UI/world affordance that starts it;
+2. trace input consumption, focus, and disabled/blocked states;
+3. trace feedback timing, tween ownership, and the transition from predicted to confirmed state;
+4. map the request or simulation path to server authority and failure feedback;
+5. render success, pending, rejected, empty, and retry states at target viewports and input modes.
+
+This is an inspection prior, not proof that any one reviewed place implements a coherent feature or that the resulting experience is usable.
+
 ## Source Notes
 
 - Visual patterns, measurements, and color semantics: original synthesis from analysis of Pet Simulator 99, Grow a Garden, Blox Fruits, DOORS, Tower Defense Simulator, Adopt Me, and Blade Ball UI screenshots, DevForum discussions, and community UI pack analysis (2026-07)
@@ -577,3 +609,5 @@ Before finalizing, check:
 - Font deprecation (Gotham/Arial, Builder Font introduction): verified against current Roblox creator docs, 2026-07
 - UIShadow properties (BlurRadius, Offset, Transparency, Color, Spread): verified against [Roblox Creator Docs](https://create.roblox.com/docs/ui/styling) (CC-BY-4.0)
 - Stud UI grammar, pack market analysis, and anti-clone guidance: original synthesis from BuiltByBit marketplace analysis and DevForum community discussions (2026-07)
+- Reference-driven extraction and rendered-state comparison: original synthesis informed by [extract-ui-reference](https://gist.github.com/Chrrxs/9961d3c2df1f848abee3c19e6a3e3430) and [create-ui-component](https://gist.github.com/Chrrxs/b6ba0a879c271c484ef67580109d8668), reviewed 2026-08-02. The public gists had no license field; no text or code was copied.
+- UI structure observations: static review of a sample of shipped Roblox places, reviewed 2026-08-02. Presence counts are routing signals only; they are not quality or outcome evidence.

@@ -1,7 +1,7 @@
 ---
 name: roblox-architecture
 description: "Use when assigning Roblox feature ownership, code location, dependencies, startup, or client-server boundaries without imposing a framework."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-07
 sources:
   - https://create.roblox.com/docs/projects/data-model
   - https://create.roblox.com/docs/projects/client-server
@@ -49,6 +49,6 @@ Split when there is a separate lifecycle or authority boundary, a distinct persi
 
 ### Review
 
-One canonical owner per state mutation, no circular require, no hidden startup yield, no replicated secret or trust decision, no duplicate save or purchase owner, explicit cleanup, and the smallest structure that keeps the feature understandable.
+One canonical owner per state mutation, no circular require, no hidden startup yield, no replicated secret or trust decision, no duplicate save or purchase owner, explicit cleanup, and the smallest structure that keeps the feature understandable. For noisy RBXMs, hash and parse statically, deduplicate, quarantine suspicious code, and validate abstractions instead of copying assets.
 
 > Detailed layouts, dependency rules, and startup examples: [references/full.md](references/full.md)

@@ -1,7 +1,7 @@
 ---
 name: roblox-animation-vfx
 description: "Use when implementing Roblox character animations, particles, beams, trails, tweens, camera shake, or other visual effects."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-07
 sources:
   - https://create.roblox.com/docs/animation/using
   - https://create.roblox.com/docs/reference/engine/classes/Animator
@@ -26,6 +26,6 @@ Load when implementing character animation, particle or beam effects, tweens, ca
 - Beams and trails need two attachments with a stable world-space relationship and a cleanup owner.
 - Tween a bounded set of properties with `TweenService:Create`; cancel or destroy temporary effects when their owner ends, and use `Debris:AddItem` for simple lifetimes.
 - In Server Authority projects, keep synchronized animation logic in `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio), query current tracks instead of caching handles across rollback, and make predicted effects reversible.
-- Profile particle counts, lights, post-processing, and per-frame camera work on the target device class.
+- Use effect-density triage to choose specimens, then profile particles, lights, post-processing, and camera work on target devices.
 
 **Need the details?** Load `references/full.md` for animation and effect recipes.

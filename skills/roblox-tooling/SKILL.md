@@ -1,7 +1,7 @@
 ---
 name: roblox-tooling
 description: "Use when configuring Roblox tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, or CI/CD."
-last_reviewed: 2026-07-12
+last_reviewed: 2026-08-07
 sources:
   - https://rojo.space/docs/
   - https://wally.run/
