@@ -99,7 +99,7 @@ step is skipped, Analytics treats the intermediate step as completed.
 | Funnels | 10 |
 | Steps per funnel | 100 |
 | Custom fields per event | 3 |
-| Unique values per custom field | 8,000 (then grouped as "Other") |
+| Unique values per custom field | Unlimited, but after 8,000 **combined** values across all custom fields they are grouped as "Other" |
 
 ### Batching Strategy
 

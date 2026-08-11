@@ -157,7 +157,7 @@ A live-game operator's practical model of how the Home algorithm behaves. Experi
 
 **Ads money does not buy Home placement.** After initial data collection, ad players' statistics do not feed Home ranking (except some caveats). Running more ads without improving stats does not get you into the Home market; it only buys sponsored placement. The lever is meaningful stat-improving updates: run ads → collect data → find worst stat (D1, D7, playtime) → ship an update that improves it → rerun ads to re-feed data on the improved game. Updates move you up the ranking, not ad spend.
 
-**The 7-day window.** Roblox ranks on a rolling 7-day data window. A good update does not show up the next day; don't panic when a major push doesn't immediately move stats.
+**The 28-day signals window (June 2026).** Roblox's RFY algorithm directly measures longer-term retention across Day 1, Day 2–7, and Day 8–28. The pre-June rolling "7-day window" guidance is stale. Optimize onboarding for D1, early loops for D2–7, and content cadence for D8–28; the skill's official §2 retention windows above match this.
 
 **Beta mode (official feature).** While in Beta mode, your experience is not shown in Home recommendations. Use it to tune metrics with cheap ad traffic before opening to the algorithm, so the first Home exposure has already-optimized stats.
 
@@ -167,16 +167,17 @@ A live-game operator's practical model of how the Home algorithm behaves. Experi
 
 **Diagnose with "rows" not totals.** In the Creator dashboard, slice engagement and funnels by device, platform, locale, and source. A game with good overall tutorial metrics can be terrible on console or mobile — that friction caps growth. Console players play long and often; don't skip console.
 
-**The 500 highly-engaged-players gate (2026 platform change).** Games launched since May 19, 2026 are only available to 16+ audiences until they confirm the experience meets Roblox Kids/Select policies. Confirmation comes from Roblox's real-time multimodal moderation of player engagement: account age, play history, and platform spend, verifying players are genuine, not bots. The practical definition: a highly engaged player is a user who has met a minimum purchase amount **anywhere on Roblox in the last 60 days** — they do not need to spend in your game. Practical dynamics reported by operators:
+**The 500 highly-engaged-players gate (2026 platform change).** Games published for all-ages audiences are first available only to age-checked 16+ users until they complete Roblox's Kids/Select evaluation. Confirmation comes from Roblox's real-time multimodal moderation of player engagement — account age, play history, and platform spend — verifying players are genuine, not bots. Roblox's own definition of a highly engaged player: meets requirements on account tenure, playtime in your game, and platform spend, where platform spend means a minimum purchase **anywhere on Roblox in the last 60 days** (they do not need to spend in your game) **and** time spent in your game within that same window. The exact criteria "will evolve"; re-check the kids-and-select doc. Practitioner-reported dynamics (not official docs):
 
 - Ads are served 16+ automatically with Roblox-recommended targeting; you do not need to target 16+ players yourself.
 - You can hit Home algorithm placement before clearing the 500 threshold.
 - The fastest path is ads for initial traffic, then Home impressions accelerate the count (engaged players come from Home faster than from ads).
 - Anecdotal spend: roughly $16/day for ~2 weeks (~$180) hit the threshold from ads alone; one dev saw 190 in 2 weeks from 210K ad visits, then 350 more from 90K Home visits in 5 days.
 - Not a huge new cost: similar to what launch ads already cost; commissions are an option if you cannot fund ads.
-- Fast track (FAQ): for games that must reach kids/Select before meeting the bar, Roblox is exploring a paid pre-launch review option (higher upfront fee, recoupable if the experience meets Community Standards). Monitor rollout details.
+- **100 vs 500 thresholds (official).** The 500 unique plays by highly engaged players within 60 days is the Kids/Select **evaluation** gate and applies to games published to all ages. Separately, the refundable **publishing fee** (1,000 R$) is refunded when your game maintains **100** highly engaged players for 60 days; the **expedited review fee** (100,000 R$) is refundable after 90 days if you maintain **100** highly engaged players. Different thresholds, different purposes — do not conflate them.
+- Fast track (official, shipped): the **expedited review fee** (100,000 R$/game, 48-hour review) lets timed launches reach kids/Select before the 500 bar; refundable after 90 days with 100 highly engaged players. See publish-games-and-places doc.
 
-Source: official Roblox docs FAQ + practitioner reporting, June 2026. Re-check the docs for rollout status before citing as live.
+Source: official Roblox docs (kids-and-select, publish-games-and-places) + practitioner reporting, June 2026. Practitioner dynamics are experience-based; re-check the docs for rollout status before citing as live.
 
 ## 3. Diagnose Metrics Without Single-Cause Thinking
 
