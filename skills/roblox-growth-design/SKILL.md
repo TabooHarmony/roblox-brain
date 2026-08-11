@@ -13,6 +13,8 @@ sources:
   - https://create.roblox.com/docs/production/game-design/core-loops
   - https://create.roblox.com/docs/production/game-design/onboarding
   - https://create.roblox.com/docs/production/game-design/liveops-planning
+  - https://create.roblox.com/docs/production/game-design/liveops-essentials
+  - https://create.roblox.com/docs/production/game-design/content-updates
   - https://create.roblox.com/docs/production/publishing/experience-icons
   - https://create.roblox.com/docs/production/publishing/thumbnails
   - https://create.roblox.com/docs/production/publishing/accessibility
@@ -53,6 +55,6 @@ These are hypotheses, not one-to-one causes. Segment and test. Per-stat tactics 
 
 ### Guardrails
 
-Use accurate metadata. Avoid dark patterns, deceptive odds, coercive scarcity, and "whale" targeting. Treat platform input, moderation, abuse, accessibility, localization, performance, and economy health as constraints.
+Use accurate metadata. Avoid dark patterns, deceptive odds, coercive scarcity, and "whale" targeting. Treat moderation, abuse, accessibility, localization, performance, and economy health as constraints.
 
 > Full signal definitions, positioning, FTUE, packaging, social design, and audit workflow: [references/full.md](references/full.md)

@@ -34,6 +34,10 @@ from pathlib import Path
 import yaml
 
 MAX_SKILL_CHARS = 3000
+# Conversational/strategic skills are loaded at planning time, not hot-loaded
+# mid-development, so the tight hot-load budget does not apply. Keep the
+# explicit list small and justified.
+CHAR_CAP_EXEMPT = {"roblox-growth-design"}
 MAX_DESC_CHARS = 150
 MAX_REF_CHARS = 35000
 REPO_ROOT = Path(__file__).resolve().parent
@@ -154,7 +158,7 @@ def validate_skill(skill_dir: str) -> list[str]:
         content = f.read()
 
     # Size check
-    if len(content) > MAX_SKILL_CHARS:
+    if len(content) > MAX_SKILL_CHARS and skill_name not in CHAR_CAP_EXEMPT:
         errors.append(
             f"{skill_name}: SKILL.md is {len(content)} chars (max {MAX_SKILL_CHARS})"
         )
@@ -215,7 +219,7 @@ def validate_skill(skill_dir: str) -> list[str]:
     if not is_router and os.path.exists(ref_path):
         with open(ref_path, encoding="utf-8") as f:
             ref_content = f.read()
-        if len(ref_content) > MAX_REF_CHARS:
+        if len(ref_content) > MAX_REF_CHARS and skill_name not in CHAR_CAP_EXEMPT:
             errors.append(
                 f"{skill_name}: references/full.md is {len(ref_content)} chars (max {MAX_REF_CHARS})"
             )

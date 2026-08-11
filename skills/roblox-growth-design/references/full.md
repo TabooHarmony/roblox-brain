@@ -2,7 +2,7 @@
 
 > Examples, thresholds, and practitioner playbooks are starting hypotheses, not universal laws. Verify platform behavior against the dated sources, adapt to the game and audience, and test before broad rollout.
 
-This reference combines Roblox's published discovery and analytics guidance with original practitioner synthesis. Sections labeled **Official** restate current Creator Hub behavior. Sections labeled **Heuristic** are diagnostic lenses, not claims about the recommendation algorithm.
+This reference combines Roblox's published discovery and analytics guidance with original practitioner synthesis. Sections labeled **Official** restate current Creator Hub behavior. Sections labeled **Heuristic** are diagnostic lenses, not claims about the recommendation algorithm. §8.3 practitioner heuristics are from a live-ops practitioner's public experience (Tizzy, "how I keep my $131,000/month Roblox game alive", YouTube); treat them as experience, not official guidance.
 
 ## 1. Operating Model
 
@@ -463,6 +463,37 @@ Social features are not automatically retention features. Define the interaction
 - griefing controls that preserve legitimate competition;
 - whether server size and matchmaking support the intended behavior;
 - how co-play is measured without manufacturing friction.
+
+### 8.1 LiveOps taxonomy (official)
+
+LiveOps is the post-launch support that maintains engagement. Four update types, in increasing scope:
+
+1. **Content cadence** — regular release of fresh content (weekly to monthly), building on existing systems: limited-time events, seasonal content, UGC. Cheap to produce, maintains engagement between major updates, concentrates programming resources on the next major.
+2. **Major updates** — new or expanded systems that change gameplay: social systems (guilds, trading), competitive systems (PVP, leaderboards, tournaments), collections/achievements, large live events aimed at re-engaging lapsed players. Months of development; retain existing players and attract new ones.
+3. **Quality-of-life improvements** — polish: UI layouts, UX flows, aesthetic refreshes, accessibility, performance. Can have outsized goodwill impact; gather player feedback on frustrations and time sinks.
+4. **Bug fixes** — implementation issues. Prioritize by severity (impact on gameplay), effort, and number of players affected.
+
+Blend all four; cadence keeps the game fresh, majors evolve it, QoL buys goodwill, bug fixes preserve trust. The precise cadence depends on the team's capability and the game's systems; balance player desires against what can be reliably delivered.
+
+### 8.2 Planning (official)
+
+- **KPIs** — pick the metric you want to impact (e.g. daily active users) before designing the update. Events usually move several KPIs at once.
+- **Player actions** — define the intended player actions during the event and the KPIs those actions influence.
+- **Economy impact** — increased interaction can change earning/spending patterns. Design rewards so they don't damage the economy (e.g. a fishing tournament that exposes a currency-earning loop must not hand out rewards that break price levels).
+- **Communication** — plan external (social, community) and internal (popups, UI, lobby) communication, and its timing. Advance notice lets players schedule their return; waiting too long risks being overlooked.
+- **Monitor and analyze** — track currency sources/sinks; make data timely (hourly or same-day checks during launch), comparable (compare event weeks to pre/post event weeks), and use it to confirm the event is hitting goals without granting too much.
+
+### 8.3 Practitioner heuristics (supplementary)
+
+From a practitioner with a live 21K CCU game (~$131K/mo). Experience, not official guidance:
+
+- **Patch vs update track** — patches (bugs, exploits, nerfs/buffs, monetization tweaks) ship daily if needed; never wait for a weekly window. Updates ship weekly/bi-weekly and each names its metric before work starts.
+- **Three data sources** — qualitative (Discord bug reports, community forum, Creator Dashboard Feedback tab AI summary), quantitative (dashboard analytics), competitor research (mine your core audience's server tags and past games to find what they play beyond the recommendation feed).
+- **Core audience** — dedicated playtesters who out-play you. Plan and playtest with them, but discern: they are players, not game designers. The player is usually right, not always.
+- **Cadence** — launch, plan next same day, assign next day, build midweek, playtest internal then core on Friday, launch Saturday.
+- **Dos/don'ts** — listen and talk to your audience; test before launch; watch small YouTubers play (sort by posted today, low views) to find friction; prefer internal team over big studio when resources allow; don't prioritize monetization over gameplay (pay-to-win kills); don't do last-second updates; don't please everyone or implement every suggestion (can fry the economy); don't get lazy ("we made it, don't need to touch it" kills games); don't push updates that create no engagement.
+- **Sunk cost fallacy** — players keep playing due to invested time/money/effort; design updates that deepen emotional investment in progress (e.g. build mode where new players build safely before facing pressure).
+- **Retention lens** — Roblox discovery accounts are D28: continuous content keeps the algorithm feeding fresh engagement.
 
 LiveOps should complement or deepen the core loop. For each event or update, define:
 
