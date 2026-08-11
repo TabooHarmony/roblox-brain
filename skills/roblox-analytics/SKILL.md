@@ -5,6 +5,8 @@ last_reviewed: 2026-08-11
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/AnalyticsService
   - https://create.roblox.com/docs/production/analytics/custom-fields
+  - https://create.roblox.com/docs/production/analytics/analytics-dashboard
+  - https://create.roblox.com/docs/production/analytics/monetization
   - https://create.roblox.com/docs/creator-rewards
   - https://devforum.roblox.com/t/creator-rewards-is-live/3838257
 ---
@@ -35,7 +37,7 @@ Key rules:
 **Economy health (decision layer):**
 - Instrument from day one. You cannot backfill history when the economy breaks.
 - For each currency log source AND sink with SKUs, plus balance-after-transaction.
-- Health signals: sink/source ratio (near 1.0 healthy), inflation (units/player climbing = earn outpacing sinks), whale concentration (>75% from top 5% = fragile), price elasticity, sink sufficiency, D1/D7 cohort cross-links.
+- Health signals: sink/source ratio, inflation (dashboard formula: `CurrencySources - CurrencySinks`), whale concentration (docs: high ARPPU + low ARPDAU), price elasticity, sink sufficiency, D1/D7 cohorts. Thresholds are practitioner heuristics, not Roblox statements.
 - When the economy breaks, first verify events exist and are logged correctly, then read the narrowest broken signal, then change ONE lever at a time and re-check.
 - Telemetry tells you what broke and whether a fix worked; the user owns the design decision.
 

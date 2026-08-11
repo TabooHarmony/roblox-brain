@@ -228,6 +228,8 @@ When the economy or retention breaks, run this before touching balance numbers:
 
 Telemetry tells you the economy is broken and whether a fix worked; it does not decide what to do. The user owns the design choice. Your job is to surface what the numbers mean and flag when the data is insufficient to decide.
 
+**Provenance.** Official-doc-grounded: the dashboard's calculated-metric example defines economy health as `CurrencySources - CurrencySinks` (its "Economy health" formula), and the monetization page flags high ARPPU with low ARPDAU as revenue concentrated in a limited subset. The threshold numbers (sink/source near 1.0, >75% whale concentration), the price-elasticity framing, and the four-step diagnose workflow are practitioner synthesis from game-economy practice, not Roblox statements — treat them as starting heuristics and verify against your game's actual distributions.
+
 ---
 
 ## 7. Best Practices
