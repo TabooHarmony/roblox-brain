@@ -4,7 +4,7 @@ description: "Use for Luau annotations, generics, unions, narrowing, strictness,
 last_reviewed: 2026-07-26
 sources:
   - https://luau-lang.org/typecheck
-  - https://devforum.roblox.com/t/general-release-luau%E2%80%99s-new-type-solver/4084991
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/luau/type-checking.md
 ---
 
 # Luau Type System

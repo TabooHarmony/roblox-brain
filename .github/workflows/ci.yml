@@ -33,6 +33,7 @@ jobs:
 
       - name: API drift check
         run: |
+          python3 mirror_creator_docs.py
           for i in 1 2 3; do
             if python3 verify_api_drift.py; then
               exit 0

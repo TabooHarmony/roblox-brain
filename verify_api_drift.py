@@ -23,6 +23,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent
 REGISTRY_PATH = ROOT / "api_drift_registry.yaml"
 BASE_URL = "https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine"
+MIRROR_DIR = ROOT / "vendor" / "creator-docs"
 CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 
@@ -30,6 +31,16 @@ def fetch_doc(category: str, name: str) -> dict[str, Any]:
     key = (category, name)
     if key in CACHE:
         return CACHE[key]
+    # Prefer the local mirror (populated by mirror_creator_docs.py) so the
+    # checker runs offline and against a pinned snapshot. Fall back to live
+    # creator-docs when the mirror is absent.
+    mirror_path = MIRROR_DIR / category / f"{name}.yaml"
+    if mirror_path.is_file():
+        data = yaml.safe_load(mirror_path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise RuntimeError(f"{mirror_path} did not parse as a YAML mapping")
+        CACHE[key] = data
+        return data
     url = f"{BASE_URL}/{category}/{name}.yaml"
     req = urllib.request.Request(url, headers={"User-Agent": "roblox-brain-api-drift"})
     with urllib.request.urlopen(req, timeout=30) as response:

@@ -4,7 +4,6 @@ description: "Use when creating Roblox NPCs or enemies with pathfinding, state m
 last_reviewed: 2026-07-26
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
-  - https://devforum.roblox.com/t/improving-pathfinding-quality-with-new-algorithm/3258657
   - https://create.roblox.com/docs/projects/server-authority
 ---
 
