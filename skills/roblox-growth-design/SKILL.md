@@ -62,7 +62,7 @@ These are hypotheses, not one-to-one causes. Segment and test. Per-stat tactics 
 - Ranking: genre-wide first, then against "experiences with similar players." That second benchmark is the real competition.
 - Ads do not buy Home placement; meaningful stat-improving updates do. 28-day signals (D1, D2–7, D8–28) — updates take days to show.
 - Beta mode hides a game from Home; tune metrics on cheap ad traffic before opening to the algo.
-- The 500 highly-engaged-players gate (official): all-ages games start 16+ only until 500 highly engaged age-checked plays within 60 days. Definition (official, evolving): account tenure + playtime in your game + a purchase anywhere on Roblox in the last 60 days. 100 = publishing-fee refund threshold (separate). Ads serve 16+ automatically. Home impressions accelerate the count fastest.
+- The 500 highly-engaged-player requirement (official): all-ages games start 16+ only until 500 highly engaged age-checked plays within 60 days. Definition (official, evolving): account tenure + playtime in your game + a purchase anywhere on Roblox in the last 60 days. 100 = publishing-fee refund threshold (separate). Ads serve 16+ automatically. Home impressions accelerate the count fastest.
 - Experience detail page matters: put your best thumbnails and a gameplay description there; it feeds overall play-through.
 
 ### Monetization mental model (practitioner)
