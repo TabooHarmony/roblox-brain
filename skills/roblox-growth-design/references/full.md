@@ -40,6 +40,23 @@ Before changing the game, write:
 
 Roblox Experiments run for 14–60 days. Do not use first-day results for decisions, stop because a favorable line appears, or claim a causal win without statistical significance. Stop or roll back for safety, severe regressions, broken instrumentation, or invalid exposure. Games below roughly 1,000 daily active users may struggle to detect useful effects; use the dashboard's MDE rather than inventing a universal traffic threshold.
 
+**Experiments mechanics (official).** In-game experiments apply per-player config values; matchmaking experiments test matchmaking configs (only one matchmaking experiment at a time; recommend 100% rollout to avoid isolating players). Implementation:
+
+- Use `ConfigService:GetConfigForPlayerAsync(player)` (not `GetConfigAsync`) to get a player-specific snapshot. `GetValue` on that snapshot enrolls the player; the first call is random, every later call returns the same variant for the experiment duration.
+- Call `GetValue` as late as possible. Calling it early enrolls players who never reach the feature you are testing.
+- Target enrollment with your own criteria: check the condition (e.g. new player), then enroll only those players (e.g. `racesCompleted == 0`). For cross-session persistence, store the assignment.
+- Experiments track all metrics (D1, D7, playtime, ARPU, ARPPU, payer conversion, session time) regardless of the goal metric you pick. Use the Results tab after completion; a metric is significant when its confidence interval does not overlap 0%. Use "Make decision" to promote a variant to the default config.
+
+**Experiments best practices (official):**
+- Start with a written cause-and-effect hypothesis.
+- Use the MDE to decide if the experiment is worth running; if the MDE is too high (e.g. >100%), statistical significance is unlikely.
+- Let experiments run their full duration: the novelty effect can skew early results in and out of significance.
+- Don't act without significance. If one metric is up and another down, decide whether the trade-off is worth it.
+- Avoid unrelated changes during a running experiment; they can invalidate results. Only run simultaneous experiments if confident they won't interact.
+- Use confidence intervals for deep dives; a too-wide interval means the metric may never reach significance.
+- Balance experiment results against qualitative player feedback and the product vision. Experiments are probabilities, not certainties.
+- Document findings and decisions as a body of knowledge.
+
 ### Acquire evidence before diagnosis
 
 Ask for the evidence that actually exists: Creator Dashboard screenshots or exports, cohort windows, release dates, acquisition mix, session recordings, and player feedback. Use Studio or project telemetry for runtime facts when available. State what is missing and never fabricate a metric, cohort, or causal explanation.
@@ -129,6 +146,36 @@ Working guidance from the same post:
 - Four factors move Home impressions: your own gameplay/updates, platform algorithm changes (announced transparently), seasonality (weekly peaks on Saturdays, summer/holiday/school cycles), and competing games improving faster. A drop while your signals are steady can be competitive, not punitive.
 
 Treat the timing as temporal; re-check the announcement thread for launch status before citing the update as live.
+
+### Practitioner algorithm mechanics (supplementary)
+
+A live-game operator's practical model of how the Home algorithm behaves. Experience-based; not official Roblox guidance.
+
+**Traffic is learned from, but ads are cold traffic.** A new game needs initial traffic before it can be ranked; ads or short-form content (TikTok/YouTube clips) provide it. Ad traffic is the cheapest, least-qualified audience ("cold"): low engagement, low spend, low D1. Roblox uses ad traffic mainly for initial data to gauge the game and its audience. Home-algo traffic is the qualified audience: higher D1, D7, playtime, and spend. Do not panic if launch stats look bad on ad-sourced players.
+
+**Ranking is progressive.** First, Roblox ranks your game against the broad genre (all games with similar loops/mechanics, including adjacent genres). Then it ranks you against "experiences with similar players" — games your players also play (Analytics > Acquisition > Home Recommendations > benchmark). The second benchmark is the real competition: this is where stats usually take a hit, and where games with better stats steal your players (winner-takes-most).
+
+**Ads money does not buy Home placement.** After initial data collection, ad players' statistics do not feed Home ranking (except some caveats). Running more ads without improving stats does not get you into the Home market; it only buys sponsored placement. The lever is meaningful stat-improving updates: run ads → collect data → find worst stat (D1, D7, playtime) → ship an update that improves it → rerun ads to re-feed data on the improved game. Updates move you up the ranking, not ad spend.
+
+**The 7-day window.** Roblox ranks on a rolling 7-day data window. A good update does not show up the next day; don't panic when a major push doesn't immediately move stats.
+
+**Beta mode (official feature).** While in Beta mode, your experience is not shown in Home recommendations. Use it to tune metrics with cheap ad traffic before opening to the algorithm, so the first Home exposure has already-optimized stats.
+
+**June 2026 metric change (practitioner reading of official docs).** QPTR was split into **Play-Through Rate** (PTR: % of Home impressions converting to play sessions) and **First-Play Bounce Rate** (negative stat: % of players leaving within 60s; also a 61–180s bucket). D28 is now tracked. Bounce rate is a negative signal — keep it low; clickbait/mystery-game packages that exploited QPTR are "cooked" because bounce rate now exposes them, and template clones and misleading titles suffer. **Experience detail page CTR** (users who played from detail page / users who viewed it) matters for overall PTR — put your best thumbnails and gameplay description there, not just on the Home tile.
+
+**Game-as-funnel framing (from Roblox PM, via practitioner).** Think of the game as a funnel: Home impression → detail page view → play session → engagement → retention. Optimize the whole funnel, not just the thumbnail.
+
+**Diagnose with "rows" not totals.** In the Creator dashboard, slice engagement and funnels by device, platform, locale, and source. A game with good overall tutorial metrics can be terrible on console or mobile — that friction caps growth. Console players play long and often; don't skip console.
+
+**The 500 highly-engaged-players gate (2026 platform change).** Games launched since May 19, 2026 are only available to 16+ audiences until they confirm the experience meets Roblox Kids/Select policies. Confirmation comes from Roblox's real-time multimodal moderation of player engagement: account age, play history, and platform spend, verifying players are genuine, not bots. The practical definition: a highly engaged player is a user who has met a minimum purchase amount **anywhere on Roblox in the last 60 days** — they do not need to spend in your game. Practical dynamics reported by operators:
+
+- Ads are served 16+ automatically with Roblox-recommended targeting; you do not need to target 16+ players yourself.
+- You can hit Home algorithm placement before clearing the 500 threshold.
+- The fastest path is ads for initial traffic, then Home impressions accelerate the count (engaged players come from Home faster than from ads).
+- Anecdotal spend: roughly $16/day for ~2 weeks (~$180) hit the threshold from ads alone; one dev saw 190 in 2 weeks from 210K ad visits, then 350 more from 90K Home visits in 5 days.
+- Not a huge new cost: similar to what launch ads already cost; commissions are an option if you cannot fund ads.
+
+Source: official Roblox docs FAQ + practitioner reporting, June 2026. Re-check the docs for rollout status before citing as live.
 
 ## 3. Diagnose Metrics Without Single-Cause Thinking
 
@@ -239,6 +286,15 @@ A lower-cost first-purchase offer is one hypothesis, not a default. Measure down
 - A very cheap starter pack (under 50 Robux) removes the "first purchase" barrier; the goal is converting a non-payer into a payer, not maximizing that transaction.
 - Cheap repeatable consumable developer products (e.g., 19 Robux to double offline earnings on login) build a purchasing habit without requiring a large commitment.
 
+**Official item taxonomy.** Purchasable items are durable (unlimited uses, e.g. skins) or consumable (limited uses, e.g. boosts), and each is enhancement (improves capability: speed, protection, tools, event access) or expression (personalizes: skins, emotes, pets). Know what is being sold, where, and how, and make the purpose of each item legible to the player: a purchasable item should have visible value (Roblox's example: a flashlight in *Doors* that players immediately understand aids exploration). Describe items accurately and truthfully.
+
+**Official shop design.** The shop is the experience's economy information hub, not just a market. Make it:
+- **Integrated** — consistent icon/UI, quick in and out without disrupting play;
+- **Contextual** — players need surrounding context to judge an item's value; explain items in relation to gameplay and each other (a "Revives" explanation teaches that reviving is core, limited functionality);
+- **Inviting** — a destination to linger and browse; rotating or new stock gives players a reason to revisit.
+
+Season passes are the standard delivery vehicle for cadence content. A good season pass: follows shop best practices, offers **free and premium tiers** (free keeps non-payers earning; premium is a superset rewarding payers), has **attractive rewards** previewed and tied to the core loop, a **manageable timeframe** (reward spacing relative to average session time; short and long missions; clearly communicated XP levels), and clear remaining-time communication.
+
 ### Low ARPPU or ARPDAU
 
 Low ARPPU can mean the catalog lacks depth for engaged payers, but it can also reflect audience, regional pricing, product mix, or a healthy low-pressure economy. Consider durable and consumable options, seasonal products, and meaningful catalog variety.
@@ -308,6 +364,28 @@ A useful concept should answer:
 - What remains fun without spending?
 - What production burden grows with success?
 
+### Practitioner virus checklist (supplementary)
+
+A live-game operator's five things that make a Roblox game likely to go viral and keep players. Experience-based; not official Roblox guidance.
+
+1. **Clickable idea / core fantasy.** The concept should be something a kid would imagine before falling asleep: "a hospital run by animals" (Animal Hospital), "toys that live their own life" (Toy Story), "a city run by animals" (Zootopia). If the packaged title + thumbnail makes a player on the Home page unable to resist clicking, idea works. Test a concept by asking what fantasy the player is fulfilling, not just what the mechanic is.
+2. **Great onboarding.** Not a tutorial that drags: get players emotionally invested in the *why* of their actions (title-sequence world-building, cutscenes showing a clearly felt threat), introduce one mechanic at a time, use level design to communicate danger/goals without text, and keep UI minimal during onboarding (Sell Lemons: no UI, fast progression, one mechanic at a time).
+3. **Socialization as part of the core loop.** Make the game 10x more fun with friends so friends invite friends (the word-of-mouth flywheel: kids show each other at school/bus). Leaderboards add the social flex; cosmetics and visible progress create FOMO ("that kid is zooming past me"). Even simple social elements beat a great solo incremental with zero interaction.
+4. **Simple mechanics with tons of depth.** One obvious mechanic (voxel building, boat building, role-play) that yields near-infinite player expression and session variety ("every session is different": build a new plane, new role, new PvP run). The mechanic must stay easy and frictionless on **mobile** first; on-mobile clunk caps growth even when desktop is fine.
+5. **Clippable / strong community.** Design for content creators: visualize what a YouTuber/TikToker would clip from your game, and make those moments frequent and obvious. Community-created content (build showcases, unique hiding spots, crazy plays) compounds virality; watch the moments creators actually include and double down on them. A strong community keeps a game at 8–9K CCU for years.
+
+**Study top games, copy functionality not style.** Play successful games in the genre (especially on mobile and console), understand *why* their onboarding/funnel/social choices work, and copy the function, not the aesthetic one-for-one. Diagnose toy friction by running your own game with a fresh account and watching where a new player gets stuck.
+
+### Production playbook for fast shipping (supplementary)
+
+A live-game operator's process for shipping quality fast, from a producer who runs a two-man team. Experience-based; not official Roblox guidance. Distilled from practitioner video on pumping out high-quality Roblox games quickly.
+
+- **Execution is the bottleneck, not ideas.** Ideas are cheap and everywhere; the scarce resource is reliable execution. A big team is not a flex — top studios run lean (4-person or even 2-person) teams.
+- **Get the MVP core loop done first.** Scope a minimal viable product (core loop only) so you can playtest whether the game is fun before investing in the full vision. Use AI (e.g., Claude) to prototype with basic parts and free models before hiring any dev.
+- **The game design document is the contract.** A GDD (what players do, leveling, economy, progression) doubles as the statement of work for the programmer. Turn it into per-role Trello columns and actionable tasks per system.
+- **Hire T-shaped people.** One person who does programming + UI, or building + modeling + animation, beats a bigger brittle team. Same time zone matters for fast iteration.
+- **Reputation and vetting beat money.** In the Roblox talent pool (often young), trust decides everything: hire via Twitter/YouTube presence, prefer paid-upon-completion (never pay in full up front — that kills delivery), always sign a contract, make a new contract for new scope, and don't sneak unagreed work into scope mid-project (it breeds resentment and slows the team).
+
 ### Core-loop design
 
 Write the loop as:
@@ -343,6 +421,14 @@ A first-session sequence can be:
 5. a joyful payoff;
 6. visible next goals;
 7. optional deeper explanation after motivation exists.
+
+**Official onboarding mechanics.** The FTUE succeeds on two metrics: D1 retention and onboarding goals (teaching essentials, getting to fun quickly, leaving players wanting more). Practical levers:
+
+- **Player XP-based leveling** — keep early-level XP thresholds low so players level up fast and feel progression immediately. Tune thresholds with Configs in real time without shipping an update.
+- **Starter items and currency** — free equipment/soft currency lets players sample utility or expression early. Find the balance with Experiments (gift different starting amounts), then push the winner as a Config.
+- **Goals and moments of joy** — surface short/mid/long-term goals in highly visible places (skill trees, season passes, quests, collections); end onboarding with an intentionally designed moment of joy (rewards, delightful animations, celebratory VFX).
+- **Funnel instrumentation** — list core-loop steps, track completion rate per step (with special in-game items as step markers), track negative outcomes (lost fights, blocked purchases), and fix the biggest drop-off. Target the funnel with Experiments on specific steps (shorter dialogue vs guided arrow) to get causal answers.
+- **Social FTUE** — if the game is social-first, use Experiments on matchmaking parameters during FTUE to find groupings that improve long-term engagement.
 
 Observe representative players rather than relying on teammates who know the game. When testing with minors, use appropriate consent, privacy, safeguarding, and moderated research practices. Do not collect unnecessary personal data.
 
@@ -451,6 +537,26 @@ Price optimization requires enough transactions for statistically useful data. R
 
 Cross-reference `roblox-monetization`, `roblox-security`, and `roblox-data` before implementing purchases.
 
+### Practitioner monetization mental model (supplementary)
+
+A live-game operator's playbook for dev products, from a game that grew revenue ~3x on the same player base. Experience-based; not official Roblox guidance.
+
+**Data first, then hypothesize.** Before touching products, sort dev product sales descending and identify the best seller. Form a hypothesis for the next product from data and observed behavior, ship it, check results (revenue AND side effects), keep or revert. Do not design products on instinct.
+
+**Convert valuable game passes into consumables.** 2x offline earnings, 2x cash, and similar high-value boosts are usually implemented as one-time game passes — but that caps the **7-day spend days per user** stat (number of unique days in 7 days a user spends Robux in your experience). Consumables (repeat-purchase dev products, like consumer packaged goods: toothpaste, supplements) pump that stat: players buy a 24-hour lock today, tomorrow, the next day. A consumable that solves a real friction point almost always becomes the top seller. Experiment with consumables aggressively.
+
+**Products should be must-haves that solve a pain, not nice-to-haves.** Best sellers are pain-relievers:
+- effort grind → buy speed/cash (pain of effort);
+- losing progress while AFK → base lock / protection (pain of safety);
+- fear of missing out → 2x offline earnings (pain of missing out on gains);
+- status/looks → limited-stock cosmetics (pain of "looking like a casual"). Limiteds with real scarcity (only 100 for sale) outsell unlimited cosmetics.
+
+**Place products at points of interest (POI), not just in the HUD.** Put physical dev products where foot traffic is highest (e.g., at the base entrance the player walks through constantly). Swap the paid product with the free one so the paid version sits at the highest-traffic spot. In addition: time the prompt at the decision moment (offer 2x offline earnings right when the player walks over the collect point; cheap 19-Robux upsell).
+
+**Improve purchase pathways.** Multiple ways to reach the shop increase sales: HUD shop icon, a "+" cash button next to the currency display, and (after 3 failed buy attempts) an automatic cash-shop popup. First two "not enough money" errors show a soft error; on the third, open the shop. Keep the popup non-intrusive (cap per session). UI and physical in-world pickups both count as pathways.
+
+**Check for collateral damage.** After shipping a product, check it didn't wreck other stats: playtime, D1, D7, session time, first-time user experience, and the in-game economy (over-priced currency or 2x boosts can destroy progression balance). Economy-destroying prices (e.g., $1B cash for 9 Robux) cook the game long-term.
+
 ## 8. Social Design and LiveOps
 
 Social features are not automatically retention features. Define the interaction:
@@ -474,6 +580,13 @@ LiveOps is the post-launch support that maintains engagement. Four update types,
 4. **Bug fixes** — implementation issues. Prioritize by severity (impact on gameplay), effort, and number of players affected.
 
 Blend all four; cadence keeps the game fresh, majors evolve it, QoL buys goodwill, bug fixes preserve trust. The precise cadence depends on the team's capability and the game's systems; balance player desires against what can be reliably delivered.
+
+**Content cadence sustainability (official).** Keep cadence releases cheap and maintainable:
+
+- **Choose correct content** — items, furniture, pets, vehicles, weapons, maps, quests are predominantly art-based, requiring little programming or design. Simple variants (color changes) are ideal. Themed releases (seasonal, holiday, around a central concept) unlock cross-item creativity. Use analytics and player feedback to target high-value content.
+- **Manage scope** — spend under three weeks of effort per cadence release so the schedule stays rapid and leaves room for other LiveOps. Adding new systems to support a release turns cadence into an expansion and becomes unsustainable.
+- **Establish a routine** — a regular cadence (common: every two weeks to a month) makes players check back and anticipate releases; it also makes the team more efficient with practice.
+- **Prioritize sustainability** — content should not be immediately consumable by most players, or the team is forced to over-release. Deliver sustainably through: progression (add permanent content near endgame where veterans run out of objectives), limited-time content (available to all for an event; earn via quests/milestones/event currency, balanced so it takes most players weeks to exhaust), and season passes (the standard delivery vehicle: quest-based, with free and premium tiers).
 
 ### 8.2 Planning (official)
 
@@ -596,6 +709,10 @@ Official Roblox sources, reviewed 2026-08-02 (RFY direction update reviewed 2026
 - [Core loops](https://create.roblox.com/docs/production/game-design/core-loops)
 - [Onboarding](https://create.roblox.com/docs/production/game-design/onboarding)
 - [LiveOps planning](https://create.roblox.com/docs/production/game-design/liveops-planning)
+- [LiveOps essentials](https://create.roblox.com/docs/production/game-design/liveops-essentials)
+- [Content updates](https://create.roblox.com/docs/production/game-design/content-updates)
+- [Monetization foundations](https://create.roblox.com/docs/production/game-design/monetization-foundations)
+- [Season pass design](https://create.roblox.com/docs/production/game-design/season-pass-design)
 - [Icons](https://create.roblox.com/docs/production/publishing/experience-icons)
 - [Thumbnails](https://create.roblox.com/docs/production/publishing/thumbnails)
 - [Accessibility](https://create.roblox.com/docs/production/publishing/accessibility)
@@ -603,4 +720,4 @@ Official Roblox sources, reviewed 2026-08-02 (RFY direction update reviewed 2026
 - [Price optimization](https://create.roblox.com/docs/production/monetization/price-optimization)
 - [Boost Your Discovery by Building Games People Want to Play](https://devforum.roblox.com/t/boost-your-discovery-by-building-games-people-want-to-play/4779042) (2026-08-06)
 
-Practitioner synthesis is original work derived from the submitted draft. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources.
+Practitioner synthesis is original work derived from the submitted draft. Practitioner supplementary sections are distilled from public videos by TizzyRBLX12, a live-game operator (top-100 game, ~33M visits, 60K peak CCU): [I Found 5 Things That Guarantee a Viral Roblox Game](https://www.youtube.com/watch?v=FnsIL4zPCQg), [The Roblox Algorithm Explained Like You're 5 Years Old](https://www.youtube.com/watch?v=inWzxY26NXo), [BIG UPDATE! New Roblox Algorithm Changes June 2026](https://www.youtube.com/watch?v=pu2o80prNV8), [Roblox Game Monetization Explained Like You're 5](https://www.youtube.com/watch?v=zoz3PSMqets), [Roblox's 500 Highly Engaged Players Update Explained Like You're 5](https://www.youtube.com/watch?v=Rkgbcv6omPg), [How to pump out high quality Roblox games FAST](https://www.youtube.com/watch?v=7tYPvXYlif8). Videos are supplementary experience, not official Roblox guidance. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources.
