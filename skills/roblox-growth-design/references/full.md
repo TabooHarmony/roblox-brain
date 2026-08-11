@@ -538,6 +538,8 @@ Design principles:
 
 Price optimization requires enough transactions for statistically useful data. Roblox says it usually needs at least 60,000 transactions over the preceding 30 days. Smaller games should use qualitative value research and carefully scoped experiments rather than pretending a tiny sample proves an optimal price.
 
+When the economy or monetization health is in question, load `roblox-analytics` for the telemetry-first decision layer: sink/source ratio, inflation, whale concentration, and the diagnose-with-telemetry workflow. Telemetry tells you what broke; the design fix is yours.
+
 Cross-reference `roblox-monetization`, `roblox-security`, and `roblox-data` before implementing purchases.
 
 ### Practitioner monetization mental model (supplementary)

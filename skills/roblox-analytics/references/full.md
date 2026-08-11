@@ -190,7 +190,47 @@ Creator Rewards is not an `AnalyticsService` event and should not be reconstruct
 
 Use Creator Dashboard as the authority for Creator Rewards eligibility, rewarded active spenders, signups, reactivations, and estimated payout. Do not label a local event as “Creator Reward Granted” or promise a Robux amount based on it.
 
-## 6. Best Practices
+---
+
+## 6. Economy Health Signals (Decision Layer)
+
+**Instrument before you need it.** Complex-economy games fail without telemetry: when the economy breaks (inflation, sink collapse, whale concentration) the diagnosis is only as good as the events you started logging months earlier. Log economy events from day one, not when something goes wrong. You cannot backfill history.
+
+### Which events to log for a complex economy
+
+For every currency (max 5 types), log the full loop:
+
+- **Sources (earned):** quest rewards, daily login, gameplay drops, trades in, IAP top-ups. Use distinct SKUs so you know *which* source inflates ("QuestReward_Daily" vs "QuestReward_Event").
+- **Sinks (spent):** shop purchases, upgrades, repairs, trade fees, consumables. Same SKU discipline — a missing sink is the classic hidden deflation/inflation culprit.
+- **Balance AFTER transaction:** always pass `balanceAfterTransaction` so you can reconstruct balances over time and detect hoarding or loss.
+- **Item/feature acquisition:** custom event "ItemUnlocked" with item ID field; lets you see which content drives spending.
+- **Conversion funnel:** "Purchase" funnel (OpenedShop → ViewedItem → ClickedBuy → Confirmed → Granted) plus economy sink events. This links monetization health to the purchase funnel.
+
+### Economy health signals
+
+| Signal | Formula / source | Healthy | Problem |
+|--------|------------------|---------|---------|
+| **Sink/source ratio** | total sinks ÷ total sources per currency | near 1.0 over a period | ≪1 = inflation (currency piling up), ≫1 = deflation (players can't afford items) |
+| **Inflation** | units per active player climbing over weeks | flat/stable | players earn faster than they can spend; prices need sinks or rebalancing |
+| **Whale concentration** | share of revenue from top N% payers | diversified | >75% from top 5% = revenue fragility, exploit risk, and unrepresentative feedback |
+| **Price elasticity** | purchases vs price changes (experiment or segmented A/B) | meaningful response | no response = either price too low (leaving money) or poor value communication |
+| **Sink sufficiency** | active sinks per player per session | players use sinks | no sinks = hoarding, then massive inflation once a sink opens |
+| **D1/D7 cohort cross-link** | retention by acquisition cohort vs spend | new cohorts monetize similarly | a cohort with low retention + high spend = one-time whales, not a healthy base |
+
+### Diagnose with telemetry (workflow)
+
+When the economy or retention breaks, run this before touching balance numbers:
+
+1. **Check you have the events.** Is every currency tracked as source AND sink with SKUs? Do you have balance-after-transaction? Purchase funnel? If not, that absence is itself the finding — instrument, then wait for data (24h dashboard lag; use "View Events" for real-time spot checks).
+2. **Check logging correctness.** Logged AFTER success, not attempt? Server-side only? If a sink was never logged (e.g. repair costs omitting tracking), apparent inflation may be a measurement gap.
+3. **Read the health signals above.** Pick the narrowest broken ratio first: sink/source, then concentration, then cohort cross-links.
+4. **Act on the smallest lever.** One balance change (sink price, source rate) at a time, with a hypothesis and a guardrail. Re-check the same signals after the change — the data loop is the point.
+
+Telemetry tells you the economy is broken and whether a fix worked; it does not decide what to do. The user owns the design choice. Your job is to surface what the numbers mean and flag when the data is insufficient to decide.
+
+---
+
+## 7. Best Practices
 
 - Log from server, not client. Client events can be spoofed.
 - Log AFTER the action succeeds, not when attempted.

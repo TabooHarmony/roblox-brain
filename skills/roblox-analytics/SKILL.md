@@ -1,7 +1,7 @@
 ---
 name: roblox-analytics
 description: "Use when tracking player behavior, economy events, or funnels with AnalyticsService, including event taxonomy, rate limits, and batching."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-11
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/AnalyticsService
   - https://create.roblox.com/docs/production/analytics/custom-fields
@@ -31,5 +31,14 @@ Key rules:
 - Events appear on Creator Hub dashboard after ~24 hours. Use "View Events" for real-time validation.
 - Server-side logging preferred for accuracy. Client-side only for UI interaction tracking.
 - Creator Rewards has no AnalyticsService grant event. Use analytics for leading indicators such as session duration, onboarding, and referral-flow milestones; use Creator Dashboard for reward attribution and payout data.
+
+**Economy health (decision layer):**
+- Instrument from day one. You cannot backfill history when the economy breaks.
+- For each currency log source AND sink with SKUs, plus balance-after-transaction.
+- Health signals: sink/source ratio (near 1.0 healthy), inflation (units/player climbing = earn outpacing sinks), whale concentration (>75% from top 5% = fragile), price elasticity, sink sufficiency, D1/D7 cohort cross-links.
+- When the economy breaks, first verify events exist and are logged correctly, then read the narrowest broken signal, then change ONE lever at a time and re-check.
+- Telemetry tells you what broke and whether a fix worked; the user owns the design decision.
+
+**Cross-refs:** `roblox-growth-design` for audit workflow and experimentation; `roblox-monetization` for the purchase funnel.
 
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
