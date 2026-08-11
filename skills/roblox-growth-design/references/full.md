@@ -163,7 +163,7 @@ A live-game operator's practical model of how the Home algorithm behaves. Experi
 
 **June 2026 metric change (practitioner reading of official docs).** QPTR was split into **Play-Through Rate** (PTR: % of Home impressions converting to play sessions) and **First-Play Bounce Rate** (negative stat: % of players leaving within 60s; also a 61–180s bucket). D28 is now tracked. Bounce rate is a negative signal — keep it low; clickbait/mystery-game packages that exploited QPTR are "cooked" because bounce rate now exposes them, and template clones and misleading titles suffer. **Experience detail page CTR** (users who played from detail page / users who viewed it) matters for overall PTR — put your best thumbnails and gameplay description there, not just on the Home tile.
 
-**Game-as-funnel framing (from Roblox PM, via practitioner).** Think of the game as a funnel: Home impression → detail page view → play session → engagement → retention. Optimize the whole funnel, not just the thumbnail.
+**Game-as-funnel framing (from Roblox PM, via practitioner).** Think of the game as a funnel: Home impression → detail page view → play session → engagement → retention. Optimize the whole funnel, not just the thumbnail. Find and fix the single biggest bottleneck first (impression, detail page, bounce, D1, D7, D28), not everything at once.
 
 **Diagnose with "rows" not totals.** In the Creator dashboard, slice engagement and funnels by device, platform, locale, and source. A game with good overall tutorial metrics can be terrible on console or mobile — that friction caps growth. Console players play long and often; don't skip console.
 
@@ -174,6 +174,7 @@ A live-game operator's practical model of how the Home algorithm behaves. Experi
 - The fastest path is ads for initial traffic, then Home impressions accelerate the count (engaged players come from Home faster than from ads).
 - Anecdotal spend: roughly $16/day for ~2 weeks (~$180) hit the threshold from ads alone; one dev saw 190 in 2 weeks from 210K ad visits, then 350 more from 90K Home visits in 5 days.
 - Not a huge new cost: similar to what launch ads already cost; commissions are an option if you cannot fund ads.
+- Fast track (FAQ): for games that must reach kids/Select before meeting the bar, Roblox is exploring a paid pre-launch review option (higher upfront fee, recoupable if the experience meets Community Standards). Monitor rollout details.
 
 Source: official Roblox docs FAQ + practitioner reporting, June 2026. Re-check the docs for rollout status before citing as live.
 
@@ -383,6 +384,8 @@ A live-game operator's process for shipping quality fast, from a producer who ru
 - **Execution is the bottleneck, not ideas.** Ideas are cheap and everywhere; the scarce resource is reliable execution. A big team is not a flex — top studios run lean (4-person or even 2-person) teams.
 - **Get the MVP core loop done first.** Scope a minimal viable product (core loop only) so you can playtest whether the game is fun before investing in the full vision. Use AI (e.g., Claude) to prototype with basic parts and free models before hiring any dev.
 - **The game design document is the contract.** A GDD (what players do, leveling, economy, progression) doubles as the statement of work for the programmer. Turn it into per-role Trello columns and actionable tasks per system.
+- **Sequence the build: art/UI/models first, programmer second.** Programmers are more productive in a populated workspace; delivering builds/models/UI before scripting keeps execution fast.
+- **Communicate visually and asynchronously.** Use recorded video (Loom-style), screenshots, and references to existing games rather than long text — most "wrong work" is a communication gap, not a skill gap. Prototype small ideas with AI first to avoid paid-dev round-trips.
 - **Hire T-shaped people.** One person who does programming + UI, or building + modeling + animation, beats a bigger brittle team. Same time zone matters for fast iteration.
 - **Reputation and vetting beat money.** In the Roblox talent pool (often young), trust decides everything: hire via Twitter/YouTube presence, prefer paid-upon-completion (never pay in full up front — that kills delivery), always sign a contract, make a new contract for new scope, and don't sneak unagreed work into scope mid-project (it breeds resentment and slows the team).
 
@@ -542,6 +545,8 @@ Cross-reference `roblox-monetization`, `roblox-security`, and `roblox-data` befo
 A live-game operator's playbook for dev products, from a game that grew revenue ~3x on the same player base. Experience-based; not official Roblox guidance.
 
 **Data first, then hypothesize.** Before touching products, sort dev product sales descending and identify the best seller. Form a hypothesis for the next product from data and observed behavior, ship it, check results (revenue AND side effects), keep or revert. Do not design products on instinct.
+
+**Watch live play, not just numbers.** Your game won't always be played as intended: operators found players running an active game AFK (and getting robbed in PvP), which surfaced a real friction point. Combine dashboard data with observation and player feedback (Creator Dashboard > audience feedback) to find the pains worth solving.
 
 **Convert valuable game passes into consumables.** 2x offline earnings, 2x cash, and similar high-value boosts are usually implemented as one-time game passes — but that caps the **7-day spend days per user** stat (number of unique days in 7 days a user spends Robux in your experience). Consumables (repeat-purchase dev products, like consumer packaged goods: toothpaste, supplements) pump that stat: players buy a 24-hour lock today, tomorrow, the next day. A consumable that solves a real friction point almost always becomes the top seller. Experiment with consumables aggressively.
 
