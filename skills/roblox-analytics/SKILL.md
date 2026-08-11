@@ -38,9 +38,9 @@ Key rules:
 - Instrument from day one. You cannot backfill history when the economy breaks.
 - For each currency log source AND sink with SKUs, plus balance-after-transaction.
 - Health signals: sink/source ratio, inflation (dashboard formula: `CurrencySources - CurrencySinks`), whale concentration (docs: high ARPPU + low ARPDAU), price elasticity, sink sufficiency, D1/D7 cohorts. Thresholds are heuristics, not Roblox statements.
-- When the economy breaks, first verify events exist and are logged correctly, then read the narrowest broken signal, then change ONE lever at a time and re-check.
+- When the economy breaks: verify events exist + correct, read narrowest broken signal, change ONE lever, re-check.
 - Telemetry tells you what broke and whether a fix worked; the user owns the design decision.
 
-**Cross-refs:** `roblox-growth-design` for audit workflow and experimentation; `roblox-monetization` for the purchase funnel.
+**Cross-refs:** `roblox-growth-design` for audit workflow; `roblox-monetization` for the purchase funnel.
 
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.
