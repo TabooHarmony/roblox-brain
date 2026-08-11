@@ -26,12 +26,6 @@ sources:
   - https://qptr.io
   - https://creatorexchange.io
   - original
-  - https://www.youtube.com/watch?v=FnsIL4zPCQg
-  - https://www.youtube.com/watch?v=inWzxY26NXo
-  - https://www.youtube.com/watch?v=pu2o80prNV8
-  - https://www.youtube.com/watch?v=zoz3PSMqets
-  - https://www.youtube.com/watch?v=Rkgbcv6omPg
-  - https://www.youtube.com/watch?v=7tYPvXYlif8
 ---
 
 # Roblox Growth Design

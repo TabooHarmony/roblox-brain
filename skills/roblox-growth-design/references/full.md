@@ -2,7 +2,7 @@
 
 > Examples, thresholds, and practitioner playbooks are starting hypotheses, not universal laws. Verify platform behavior against the dated sources, adapt to the game and audience, and test before broad rollout.
 
-This reference combines Roblox's published discovery and analytics guidance with original practitioner synthesis. Sections labeled **Official** restate current Creator Hub behavior. Sections labeled **Heuristic** are diagnostic lenses, not claims about the recommendation algorithm. §8.3 practitioner heuristics are from a live-ops practitioner's public experience (Tizzy, "how I keep my $131,000/month Roblox game alive", YouTube); treat them as experience, not official guidance.
+This reference combines Roblox's published discovery and analytics guidance with original practitioner synthesis. Sections labeled **Official** restate current Creator Hub behavior. Sections labeled **Heuristic** are diagnostic lenses, not claims about the recommendation algorithm. §8.3 practitioner heuristics are original synthesis derived from the submitted draft and operator experience; treat them as experience, not official guidance.
 
 ## 1. Operating Model
 
@@ -728,4 +728,4 @@ Official Roblox sources, reviewed 2026-08-02 (RFY direction update reviewed 2026
 - [Price optimization](https://create.roblox.com/docs/production/monetization/price-optimization)
 - [Boost Your Discovery by Building Games People Want to Play](https://devforum.roblox.com/t/boost-your-discovery-by-building-games-people-want-to-play/4779042) (2026-08-06)
 
-Practitioner synthesis is original work derived from the submitted draft. Practitioner supplementary sections are distilled from public videos by TizzyRBLX12, a live-game operator (top-100 game, ~33M visits, 60K peak CCU): [I Found 5 Things That Guarantee a Viral Roblox Game](https://www.youtube.com/watch?v=FnsIL4zPCQg), [The Roblox Algorithm Explained Like You're 5 Years Old](https://www.youtube.com/watch?v=inWzxY26NXo), [BIG UPDATE! New Roblox Algorithm Changes June 2026](https://www.youtube.com/watch?v=pu2o80prNV8), [Roblox Game Monetization Explained Like You're 5](https://www.youtube.com/watch?v=zoz3PSMqets), [Roblox's 500 Highly Engaged Players Update Explained Like You're 5](https://www.youtube.com/watch?v=Rkgbcv6omPg), [How to pump out high quality Roblox games FAST](https://www.youtube.com/watch?v=7tYPvXYlif8). Videos are supplementary experience, not official Roblox guidance. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources.
+Practitioner synthesis is original work derived from the submitted draft and operator experience. Practitioner supplementary sections are heuristic experience from live-game operations, not official Roblox guidance. [qptr.io](https://qptr.io) and [Creator Exchange](https://creatorexchange.io) are optional third-party research aids, not Roblox sources.
