@@ -35,11 +35,11 @@ Key rules:
 - Creator Rewards has no AnalyticsService grant event. Use analytics for leading indicators such as session duration, onboarding, and referral-flow milestones; use Creator Dashboard for reward attribution and payout data.
 
 **Economy health (decision layer):**
-- Instrument from day one. You cannot backfill history when the economy breaks.
-- For each currency log source AND sink with SKUs, plus balance-after-transaction.
+- Instrument from day one; you cannot backfill history when the economy breaks.
+- For each currency log source AND sink with SKUs + balance-after-transaction.
 - Health signals: sink/source ratio, inflation (dashboard formula: `CurrencySources - CurrencySinks`), whale concentration (docs: high ARPPU + low ARPDAU), price elasticity, sink sufficiency, D1/D7 cohorts. Thresholds are heuristics, not Roblox statements.
 - When the economy breaks: verify events exist + correct, read narrowest broken signal, change ONE lever, re-check.
-- Telemetry tells you what broke and whether a fix worked; the user owns the design decision.
+- Telemetry reports what broke; the user owns the design decision.
 
 **Cross-refs:** `roblox-growth-design` for audit workflow; `roblox-monetization` for the purchase funnel.
 
