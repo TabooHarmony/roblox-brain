@@ -147,6 +147,10 @@ Notes:
 | Replicating unnecessary instances | Join time slow | Keep Workspace lean, use ServerStorage |
 | Unthrottled property changes | Network saturation | Batch property changes, use attributes |
 
+### Replay / Delta State Recording
+
+A replay system stores compact per-delta state changes rather than full frames: record only the authoritative fields that change each tick (CFrame, velocity, health, anim), delta/dict-encode against the prior frame, then compress (e.g. ZStd) and chunk the stream for storage. Store an integrity hash (e.g. HMAC-SHA256) so chunks can't be tampered with, and version the protocol so older replays stay decodeable as the format evolves. Reconstruction happens at playback on the client, keeping the stored footprint near the delta+compression size rather than raw per-frame snapshots. [Community lead: "ReplayCore" by lathienvu7, https://devforum.roblox.com/t/replaycore-a-modern-open-source-replay-system-for-roblox/4803450 — label as practitioner design, verify specifics before adoption.]
+
 ## Optimization Patterns
 
 ### Object Pooling

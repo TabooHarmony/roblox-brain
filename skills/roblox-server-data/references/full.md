@@ -61,6 +61,10 @@ end
 - `GetSortedAsync` returns pages, not a flat list — use pagination
 - Rate limits apply same as regular DataStores
 
+### Leaderboard Alternatives: Cached DataStore
+
+OrderedDataStore is the canonical primitive, but a leaderboard can instead be stored in a standard `DataStore` kept fully loaded in memory, with writes coalesced into batched `UpdateAsync` saves. This "cached board" model trades storage size and in-memory footprint for O(1) rank lookup of arbitrary players (OrderedDataStore only exposes ~100 entries/page) and lets you define custom ordering and non-integer/custom value types. Prefer it when arbitrary-player rank lookup, custom ranking, or API-request throttling (batching many queued saves into a few writes) outweigh a smaller, paginated board. Community leaderboard modules (e.g. Leaderboards+, https://devforum.roblox.com/t/leaderboards-the-ultimate-module-for-global-leaderboards/4706939) are a lead for this pattern.
+
 ## MessagingService
 
 ### Overview
