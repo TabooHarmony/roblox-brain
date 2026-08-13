@@ -29,6 +29,22 @@ For Server Authority projects:
 
 See the [Server Authority model](https://create.roblox.com/docs/projects/server-authority) and [advanced techniques](https://create.roblox.com/docs/projects/server-authority/techniques).
 
+### Server Authority migration reality check
+
+The official docs read like a flag flip, but the real cost depends on how much simulation you author. Practitioner experience is two-sided, so do not assume either extreme:
+
+- **Stock/off-the-shelf characters with little custom simulation:** migration can be genuinely simple. A beta tester who ran the API for over a year described flipping the switch for stock Humanoids as a minor change in most cases.
+- **Authored simulation (fighting games, custom movement/physics, rollback-style mechanics):** budget like a rewrite, not a configuration change. One practitioner porting a rollback fighter that was already simulation-compatible spent over a month getting back to feature parity, and warns the integration is not something you can cleanly undo once started. If the project cannot afford that, prefer classic replication with server-side validation instead.
+
+Practical constraints once you commit:
+
+- **Sources of truth must be independent and deterministic.** Reconstruct state from synchronized `time()`-derived keys, not from live attributes. Keep a per-frame snapshot of the minimum state needed to resimulate, and after a rollback discard snapshots newer than the reconciled frame.
+- **Attributes are the serialization channel and they budget hard.** The attribute payload is roughly 1 KiB; a few CFrames or Vector3s can consume it. Pack dense numeric state into bit flags (32 bits per value; split a 64-bit Lua number with `math.fmod` if you need two) instead of storing floats.
+- **Client input can be rolled back.** Do not rely on a single input event reaching the simulation. Re-parse buffered input each frame so a misprediction retries instead of dropping the action, and expect a small input delay buffer in real-time games.
+- **Side effects are the sharpest edge.** Anything non-deterministic (UI toggles, spawns, one-shot events) fires again on resimulation unless transitions are idempotent. Beta testers call side effects the biggest pain point and recommend observing attribute changes during `PreRender` rather than reacting inside the simulation where you cannot tell a re-run from a first run.
+
+Practitioner-sourced synthesis (not official API documentation): the nightmare account that motivated this is at <https://devforum.roblox.com/t/server-authority-client-beta-was-a-damn-nightmare-heres-some-advice/4712758>; the official [Server Authority model](https://create.roblox.com/docs/projects/server-authority) and [advanced techniques](https://create.roblox.com/docs/projects/server-authority/techniques) docs remain the API source of truth.
+
 ## Exploit Vectors & Mitigations
 
 ### Movement and physics exploits

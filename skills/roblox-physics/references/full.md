@@ -345,6 +345,8 @@ When `Workspace.AuthorityMode = Server` and the required replication, fixed-simu
 
 Use `InputAction`/`InputContext` and `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio) for continuous vehicle or character input. Create gameplay-critical predicted instances, such as projectiles, inside the synchronized simulation and make hit or damage transitions idempotent across rollback and resimulation.
 
+For the migration reality check (cost scales with how much simulation you author, attribute payload budget, input buffering, and why side effects are the sharpest edge), see the Server Authority section in `roblox-security`.
+
 ## Common Mistakes
 
 - **Forgetting Anchored = false**: Constraints do nothing on anchored parts.
