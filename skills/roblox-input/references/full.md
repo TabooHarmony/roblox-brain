@@ -316,20 +316,37 @@ end
 
 ## Patterns
 
-### Platform-adaptive UI
-```luau
-local Platform = {
-    HasKeyboard = UIS.KeyboardEnabled,
-    HasMouse    = UIS.MouseEnabled,
-    IsTouch     = UIS.TouchEnabled,
-    IsGamepad   = UIS.GamepadEnabled,
-}
+### Platform-adaptive mobile UI
 
-if Platform.IsTouch then
-    showMobileButtons()
-elseif Platform.IsGamepad then
-    showGamepadPrompts()
+Don't gate mobile UI on `UIS.TouchEnabled` alone: a touchscreen laptop would show mobile controls even when the player is using mouse/keyboard. Roblox core scripts detect the **last input actually used** (`GetLastInputType` / `LastInputTypeChanged`), which adapts instantly when a player switches devices mid-session.
+
+```luau
+local UIS = game:GetService("UserInputService")
+local frame = script.Parent -- mobile button container
+
+local function updateInput()
+    local last = UIS:GetLastInputType()
+    if last == Enum.UserInputType.Focus then return end -- app focus, not an input
+    frame.Visible = (last == Enum.UserInputType.Touch)
 end
+
+updateInput()
+UIS.LastInputTypeChanged:Connect(updateInput)
+```
+
+For placement, anchor to the safe area (a child `ScreenGui` with `ScreenInsets = DeviceSafeInsets` gives the safe `AbsolutePosition`/`AbsoluteSize`). Keep custom buttons out of the thumbstick zone (left edge) and don't hard-place them relative to the default jump button, which swaps size/position at a ~500px min-axis preset.
+
+```luau
+-- Recompute position from the safe-area screen size each frame
+local RS = game:GetService("RunService")
+RS.RenderStepped:Connect(function()
+    if not frame.Visible then return end
+    local size = frame.Screen.AbsoluteSize
+    local minAxis = math.min(size.X, size.Y)
+    local buttonSize = (minAxis <= 500) and 70 or 120
+    frame.Size = UDim2.fromOffset(buttonSize, buttonSize)
+    frame.Position = UDim2.new(1, -(buttonSize * 1.5 - 10), 1, -buttonSize * 1.75)
+end)
 ```
 
 ### Switch UI on PreferredInput change

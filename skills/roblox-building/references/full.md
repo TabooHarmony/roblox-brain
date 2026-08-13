@@ -192,6 +192,21 @@ end
 - GeometryService supports Part, PartOperation, and MeshPart. Terrain is NOT supported.
 - Set `CollisionFidelity = Enum.CollisionFidelity.Box` on decorative unions for performance.
 
+## Terrain Import Workflow
+
+Roblox's built-in terrain sculpting is fine for small worlds but tedious for large open-world landscapes (tutorial guide: Large-Scale Roblox Terrain). The proven external pipeline: generate a landscape in a desktop terrain tool, import as an OBJ mesh, then convert to voxel terrain so it streams with the engine.
+
+1. Generate: Quadspinner Gaea (free tier, 1k map resolution) with a Primitive → Displace → Erosion node graph. Add a Mesher node at the end, export as `.tor` then OBJ.
+2. Optimize (optional): import OBJ into Blender, apply a Decimate modifier down to ~50-200k faces if the mesh is too heavy to import (note: too few triangles = holes after voxel conversion).
+3. Import into Studio: use the OBJ Importer plugin (converts vertex data to wedges/parts) in a blank place; this bypasses Roblox's OBJ polygon limit.
+4. Convert to terrain: run a part-to-voxel conversion script over the imported parts. Heightmap import is faster and supports higher resolutions, but the selective material-painting step below only works on the mesh path.
+
+**Material painting:** with the mesh path you can paint materials automatically by slope and altitude (e.g. rock on steep slopes, grass on flats), then the voxel conversion preserves the painted result. For imported heightmaps, paint via a color map that adheres to Roblox's colormap material set instead.
+
+Gaea is resource-hungry (8-16 GB RAM recommended; Studio uses a lot during import). Lower-end hardware can still manage the 1k free-tier resolution.
+
+> Heightmaps cannot represent overhangs or caves; use the mesh path for those.
+
 ## Platform Quirks
 
 ### Cylinder Orientation

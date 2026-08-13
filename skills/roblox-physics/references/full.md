@@ -251,6 +251,38 @@ end
 
 ## Common Patterns
 
+### CFrame: reference frames for moving-platform / vehicle-follow patterns
+
+Think of a part's `CFrame` as the transform from that part's **local space** to world space. Its `LookVector` points down its local −Z; `Vector3.zero` in its local frame is its world position. To transform between frames:
+
+| Want | Code |
+|---|---|
+| Local frame → world space (point or offset) | `part.CFrame * offset` |
+| World position → part's local frame | `part.CFrame:Inverse() * worldPos` (`ToObjectSpace`) |
+| World-space `CFrame` → part's local frame | `part.CFrame:Inverse() * worldCFrame` |
+| Move a piece with a platform, preserving orientation | `platform.CFrame * characterOffsetCFrame` |
+
+`CFrame` composition is not commutative: `A * B` means "apply A, then in A's frame apply B". For a character standing on a rotating platform, compute the character's offset in the platform's frame **once**, then reapply it each frame after rotating the platform:
+
+```luau
+local RunService = game:GetService("RunService")
+local platform = workspace:WaitForChild("Platform")
+
+RunService:BindToRenderStep("RotatePlatform", Enum.RenderPriority.Camera.Value - 50, function(dt)
+    local character = game.Players.LocalPlayer.Character
+    if not character or not character.PrimaryPart then return end
+
+    -- Keep the character fixed in the platform's reference frame
+    local characterOffset = platform.CFrame:Inverse() * character:GetPivot()
+
+    platform.CFrame *= CFrame.fromEulerAnglesXYZ(0, dt, 0)
+
+    character:PivotTo(platform.CFrame * characterOffset)
+end)
+```
+
+If you only need the position (not orientation), `character:GetPivot().Position` and `CFrame.new(platform.CFrame * characterOffset)` are enough; use the full `CFrame` when the character should keep its facing relative to the platform. For vehicles or moving platforms, prefer attachment/anchor constraints or a server-authoritative simulation over per-frame character CFrame writes.
+
 ### Elevator / Moving Platform
 
 ```luau
