@@ -95,6 +95,39 @@ The practical rule is: profile first, isolate a pure or read-heavy calculation, 
 | Excessive cloning | Memory spikes on spawn | Object pooling |
 | Uncompressed images | High texture memory | Use compressed formats, reduce resolution |
 
+#### Player/Character objects are NOT auto-destroyed
+
+`PlayerRemoving` and `CharacterRemoving` fire, but the engine does not destroy the Player or Character instances. If you hold attributes, connections, or references on them, that memory stays on the server for the life of the process — a slow leak that grows with every join/leave and eventually crashes long-lived servers.
+
+The pattern: disconnect/destroy each player's resources in those events, and destroy the instance when you are done with it. Defer the destroy (the removal event may still run cleanup) and wrap in `pcall` so cleanup can't error mid-list.
+
+```luau
+local Players = game:GetService("Players")
+
+local function destroyDeferred(instance: Instance)
+    task.defer(pcall, instance.Destroy, instance)
+end
+
+local function onCharacterRemoving(character: Model)
+    -- disconnect character-owned connections, clear attributes
+    destroyDeferred(character)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterRemoving:Connect(onCharacterRemoving)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    -- disconnect player-owned connections, clear attributes
+    destroyDeferred(player)
+    -- player is about to leave; no need to keep the object alive
+end)
+```
+
+Notes:
+- The same leak exists on the client (e.g. Player/character references from LocalScripts) — clean up there too.
+- `Workspace.PlayerCharacterDestroyBehavior` (default `Disabled`) controls whether the engine destroys characters on removal. Even if set to destroy, don't rely on it for the Player object, and explicit cleanup is harmless.
+
 ### Rendering
 
 | Problem | Symptom | Fix |

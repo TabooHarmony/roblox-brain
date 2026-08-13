@@ -1,16 +1,11 @@
 ---
 name: roblox-input
 description: "Use when handling Roblox keyboard, mouse, gamepad, touch, motion input, or cross-platform action binding."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-13
 sources:
+  - https://devforum.roblox.com/t/the-correct-way-to-design-mobile-buttons/2494558
   - https://create.roblox.com/docs/reference/engine/classes/UserInputService
-  - https://create.roblox.com/docs/reference/engine/classes/ContextActionService
-  - https://create.roblox.com/docs/reference/engine/enums/UserInputType
-  - https://create.roblox.com/docs/reference/engine/classes/GuiService
-  - https://create.roblox.com/docs/reference/engine/classes/GuiObject
   - https://create.roblox.com/docs/projects/server-authority
-  - https://create.roblox.com/docs/input/input-action-system
-  - https://raw.githubusercontent.com/Roblox/focus-navigation/main/README.md
 ---
 
 # Roblox Input

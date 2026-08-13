@@ -1,14 +1,11 @@
 ---
 name: roblox-building
 description: "Use when building geometry, maps, props, or generated assets with MCP or standalone Luau."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-13
 sources:
   - original
+  - https://devforum.roblox.com/t/large-scale-roblox-terrain-the-ultimate-guide/405672
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/mcp.md
-  - https://create.roblox.com/docs/reference/engine/classes/MeshPart
-  - https://create.roblox.com/docs/reference/engine/classes/SurfaceAppearance
-  - https://create.roblox.com/docs/tutorials/use-case-tutorials/ui/proximity-prompts
-  - https://create.roblox.com/docs/production/game-design/design-for-roblox
   - https://create.roblox.com/docs/production/game-design/core-loops
   - https://create.roblox.com/docs/production/game-design/onboarding
   - https://create.roblox.com/docs/production/game-design/onboarding-techniques

@@ -1,11 +1,10 @@
 ---
 name: roblox-physics
 description: "Use when building Roblox vehicles, ragdolls, projectiles, elevators, constraints, forces, or other physics-driven gameplay."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-13
 sources:
+  - https://devforum.roblox.com/t/cframe-operations-for-the-rest-of-us/3546477
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mechanical-constraints.md
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/physics/mover-constraints.md
-  - https://create.roblox.com/docs/projects/server-authority
 ---
 
 # Roblox Physics
