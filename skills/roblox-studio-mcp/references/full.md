@@ -3,7 +3,7 @@
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
-Two Studio MCP bridges are in active use. The official Roblox Studio MCP server is built into Studio. Chris's bridge (`@chrrxs/robloxstudio-mcp`, MIT, npm) is an open-source alternative with the same core plus runtime debugging, multiplayer playtests, profiling, and per-instance routing. This reference covers both, and the first thing to do is detect which bridge you are on. Do not assume official-only tool names work on Chris's bridge, or vice versa.
+Two Studio MCP bridges are in active use. The official Roblox Studio MCP server is built into Studio. The [`chrrxs/robloxstudio-mcp`](https://github.com/Chrrxs/robloxstudio-mcp) bridge (MIT, npm) is an open-source alternative with the same core plus runtime debugging, multiplayer playtests, profiling, and per-instance routing. This reference covers both, and the first thing to do is detect which bridge you are on. Do not assume official-only tool names work on the chrrxs bridge, or vice versa.
 
 ## Available Tools
 
@@ -235,12 +235,12 @@ Generated content is a candidate, not an acceptance decision. Keep a native Part
 Before using any tool, confirm which bridge is connected. Do not guess from a previous session.
 
 - **Official bridge** (built into Studio): connect via `mcp.bat` on Windows or `StudioMCP` on macOS. Tool names follow the official creator-docs (`list_roblox_studios`, `set_active_studio`, `start_stop_play`, `get_console_output`, `script_read`, `multi_edit`, `execute_luau`, `search_asset`, `insert_asset`). It is closed-source but documented.
-- **Chris's bridge** (`@chrrxs/robloxstudio-mcp`, npm, MIT): tool names follow its open-source definitions (`get_connected_instances`, `get_file_tree`, `eval_server_runtime`, `eval_client_runtime`, `solo_playtest`, `multiplayer_playtest`, `manage_instance`, `get_runtime_logs`, `breakpoints`, `capture_script_profiler`, `capture_micro_profiler`, `get_memory_breakdown`, `get_scene_analysis`, `get_roblox_docs`, `get_roblox_skills`, and official-compatible names like `execute_luau`). Supports per-call `instance_id` routing and per-peer runtime logs.
-- **Detect:** call `tools/list` (or `list_roblox_studios` / `get_connected_instances`). The presence of `get_connected_instances`, `eval_*`, or `multiplayer_*` identifies Chris's bridge. The presence of `list_roblox_studios`/`set_active_studio` with official tool names identifies the official bridge.
+- **chrrxs bridge** ([`chrrxs/robloxstudio-mcp`](https://github.com/Chrrxs/robloxstudio-mcp), npm, MIT): tool names follow its open-source definitions (`get_connected_instances`, `get_file_tree`, `eval_server_runtime`, `eval_client_runtime`, `solo_playtest`, `multiplayer_playtest`, `manage_instance`, `get_runtime_logs`, `breakpoints`, `capture_script_profiler`, `capture_micro_profiler`, `get_memory_breakdown`, `get_scene_analysis`, `get_roblox_docs`, `get_roblox_skills`, and official-compatible names like `execute_luau`). Supports per-call `instance_id` routing and per-peer runtime logs.
+- **Detect:** call `tools/list` (or `list_roblox_studios` / `get_connected_instances`). The presence of `get_connected_instances`, `eval_*`, or `multiplayer_*` identifies the chrrxs bridge. The presence of `list_roblox_studios`/`set_active_studio` with official tool names identifies the official bridge.
 
 ## Capability Matrix
 
-| Capability | Official bridge | Chris's bridge |
+| Capability | Official bridge | chrrxs bridge |
 |------------|-----------------|----------------|
 | Tree/script inspection, `execute_luau`, asset search/insert | ✅ | ✅ |
 | Multi-instance routing | `list_roblox_studios` + `set_active_studio` (session switch) | `get_connected_instances` + per-call `instance_id` (fine-grained) |
@@ -259,15 +259,15 @@ Treat this matrix as a map, not a guarantee. Bridges update. Inspect the live to
 Multi-place work (Lobby + Game + Tutorial open in separate Studio windows) is supported on **both** bridges, with different mechanics:
 
 - **Official bridge:** call `list_roblox_studios` to list open Studio instances (name, ID, active status). Call `set_active_studio` with the target ID. Subsequent tool calls then target that instance. Switching back requires another `set_active_studio`.
-- **Chris's bridge:** call `get_connected_instances` to list available IDs. Pass `instance_id` on each tool call to route that single call. Omit `instance_id` only when exactly one instance is connected; when multiple are connected it is required. `manage_instance` can launch, inspect, or close a specific Studio window (baseplate, local file, published place, or place revision).
+- **chrrxs bridge:** call `get_connected_instances` to list available IDs. Pass `instance_id` on each tool call to route that single call. Omit `instance_id` only when exactly one instance is connected; when multiple are connected it is required. `manage_instance` can launch, inspect, or close a specific Studio window (baseplate, local file, published place, or place revision).
 
 ### Wrong-Place Checklist
 
 Before mutating in a multi-place session, confirm the target:
 
-1. List instances: `list_roblox_studios` (official) or `get_connected_instances` (Chris).
+1. List instances: `list_roblox_studios` (official) or `get_connected_instances` (chrrxs).
 2. Confirm which Place id/name you actually intend to edit (e.g. the user said Lobby, not Game).
-3. On Chris's bridge, pass the correct `instance_id` on every call. Do not omit it when multiple places are connected.
+3. On the chrrxs bridge, pass the correct `instance_id` on every call. Do not omit it when multiple places are connected.
 4. On the official bridge, set the active instance and re-check `get_studio_state` on that instance.
 5. Read the target (tree/script/property) and verify it exists in the intended place before writing.
 6. If a call returns "not found" or an unexpected object, stop and re-list. Never assume the active instance is the one you want.
@@ -277,22 +277,22 @@ Before mutating in a multi-place session, confirm the target:
 The strongest playtest workflow uses a visible test artifact, not just "start play, read console." The pattern is bridge-agnostic: inject a test script that emits explicit START/FINISHED signals, run it, poll for the signal, stop, clean up, and report a summary.
 
 1. **Plan the assertion** — what must be true? (e.g. `SpawnLocation` exists above the ground, the NPC reaches its target, the button opens the shop.)
-2. **Inject the test** — on Chris's bridge use `eval_server_runtime` (or `eval_client_runtime` for client-side) to run Luau that sets a flag or prints a guard-signal when the assertion passes or fails. On the official bridge, create a temporary script in `ServerScriptService` (or use `subagent` with type `playtest`).
-3. **Start play** — `solo_playtest` (Chris) or `start_stop_play` (official). Prefer Run mode (F8, server-only) for server-side logic; use Play mode (F5) when client behavior or rendering matters.
-4. **Poll** — read logs (`get_runtime_logs` per peer on Chris, `get_console_output` on official) looking for the FINISHED signal, with a timeout (e.g. 60s default, max 300s).
+2. **Inject the test** — on the chrrxs bridge use `eval_server_runtime` (or `eval_client_runtime` for client-side) to run Luau that sets a flag or prints a guard-signal when the assertion passes or fails. On the official bridge, create a temporary script in `ServerScriptService` (or use `subagent` with type `playtest`).
+3. **Start play** — `solo_playtest` (chrrxs) or `start_stop_play` (official). Prefer Run mode (F8, server-only) for server-side logic; use Play mode (F5) when client behavior or rendering matters.
+4. **Poll** — read logs (`get_runtime_logs` per peer on chrrxs, `get_console_output` on official) looking for the FINISHED signal, with a timeout (e.g. 60s default, max 300s).
 5. **Stop and clean up** — always stop the playtest (`stop` on `solo_playtest`/`multiplayer_playtest`, or `start_stop_play` with `is_start: false`). Delete any injected temporary test script.
 6. **Report** — produce a short artifact: status (passed/failed), test name, mode, duration, signal count, and the relevant log tail. This is what "evidence" means for playtesting.
 
 ### Playtest Discipline (from real-field bug reports)
 
 - **Never auto-start a playtest as a debugging reflex.** Starting play mode unprompted (e.g. to "see what happens") is how sessions get stuck. Only start when there is a concrete assertion to check.
-- **If you start it, verify the stop.** A playtest that fails to stop corrupts the session (observed on multiple bridges in the wild). After stopping, confirm state via `get_studio_state` (official) or the playtest status action (Chris) before continuing.
+- **If you start it, verify the stop.** A playtest that fails to stop corrupts the session (observed on multiple bridges in the wild). After stopping, confirm state via `get_studio_state` (official) or the playtest status action (chrrxs) before continuing.
 - **Treat a stuck playtest as a known failure state:** if a stop command does not take effect, report it, do not silently continue. Restarting Studio or the MCP client may be required.
 - **Timeout + cleanup:** always bound a test with a timeout and always remove injected scripts, so no test residue survives.
 
-## Chris Bridge: Underutilized Tools Worth Surfacing
+## [chrrxs Bridge](https://github.com/Chrrxs/robloxstudio-mcp): Underutilized Tools Worth Surfacing
 
-Chris's bridge ships much more than the official core. Weighted by what actually helps real work:
+The chrrxs bridge ships much more than the official core. Weighted by what actually helps real work:
 
 - **`eval_server_runtime` / `eval_client_runtime`** — run Luau inside a live playtest's VM with the same `require` cache as game scripts. This is the single best way to inspect live state (module state, runtime values) without restarting.
 - **`multiplayer_playtest`** — start/inspect/stop multi-client playtests (1-8 players). Use when the question is "is this actually working with 2+ players" (co-op, remotes, replication). This is the biggest capability gap vs the official bridge.
@@ -310,7 +310,7 @@ When these are available, prefer them over weaker fallbacks: per-peer logs over 
 Multiplayer behavior is core development work, and agents under-cover it. Whenever the user asks whether a game feature works with friends, or any request touches remotes, replication, co-op, or shared state:
 
 - **Official bridge:** no native multiplayer tool. `start_stop_play` plus manual `StudioTestService` access is not exposed; for actual multiplayer verification, use Studio's built-in test players manually, or route the user to a bridge that exposes it.
-- **Chris's bridge:** use `multiplayer_playtest` (start with `numPlayers`, add players, leave a client, end). Combine with `get_runtime_logs` to check per-peer state and `eval_client_runtime` to inspect a specific client.
+- **chrrxs bridge:** use `multiplayer_playtest` (start with `numPlayers`, add players, leave a client, end). Combine with `get_runtime_logs` to check per-peer state and `eval_client_runtime` to inspect a specific client.
 - **Fallback:** if the bridge cannot run multiple clients, say so plainly and give the user the manual Studio test-player path. Do not claim multiplayer verification you did not do.
 
 ## MCP Mode Detection

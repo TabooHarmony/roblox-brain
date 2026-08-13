@@ -120,7 +120,7 @@ skills/roblox-gui/
 
 ## Recommended MCP servers
 
-- **[Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp):** use the official server or a [community fork with additional features](https://github.com/Chrrxs/robloxstudio-mcp).
+- **[chrrxs/robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp):** the recommended Studio MCP server. Open source (MIT), and adds runtime debugging, multiplayer playtests, profiling, per-instance routing, and more. The official [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) built into Studio works fine as well if you prefer the built-in option.
 - **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search, saves a lot of tokens.
 
 ## Contributing

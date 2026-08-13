@@ -16,7 +16,7 @@ Load when working with Roblox Studio through its MCP server: inspecting or editi
 
 ## Quick Reference
 
-**Bridge first.** Two Studio MCP bridges exist: the **official** (built into Studio, closed-source) and **Chris's** (`@chrrxs/robloxstudio-mcp`, MIT, npm). Detect which is connected (`tools/list`; Chris exposes `get_connected_instances`/`eval_*`/`multiplayer_*`; official exposes `list_roblox_studios`/`set_active_studio`).
+**Bridge first.** Two Studio MCP bridges exist: the **official** (built into Studio, closed-source) and **[chrrxs's](https://github.com/Chrrxs/robloxstudio-mcp)** (`chrrxs/robloxstudio-mcp`, MIT). Detect which is connected (`tools/list`; chrrxs's exposes `get_connected_instances`/`eval_*`/`multiplayer_*`; official exposes `list_roblox_studios`/`set_active_studio`).
 
 ### Bootstrap before mutation
 1. `list_roblox_studios` and identify the target.
