@@ -12,7 +12,7 @@ Each skill follows progressive disclosure. Compatible hosts discover skill names
 
 1. **Skill metadata** — the host discovers names and descriptions from each `SKILL.md`
 2. **SKILL.md** (~600 tokens, max 3,000 chars) — quick reference, enough for most tasks
-3. **references/full.md** (max 35,000 chars) — detailed guidance and examples for full skills
+3. **references/full.md** (max 50,000 chars) — detailed guidance and examples for full skills
 
 Thin routing skills declare `kind: router` and may omit `references/full.md` when
 their entire job is selecting the right domain skills.
@@ -23,7 +23,7 @@ The README is the human-facing catalogue. Skill hosts discover the individual `S
 skills/roblox-gui/
 ├── SKILL.md              ← Quick Reference (under 3,000 chars)
 └── references/
-    └── full.md           ← Full Reference (under 35,000 chars)
+    └── full.md           ← Full Reference (under 50,000 chars)
 ```
 
 ## Skill File Structure
@@ -59,7 +59,7 @@ Dense table or list format. The most useful info inline. Code examples in ```lua
 ## Adding a New Skill
 
 1. Create `skills/roblox-<name>/SKILL.md` following the structure above
-2. Create `skills/roblox-<name>/references/full.md` with complete reference (under 35,000 chars)
+2. Create `skills/roblox-<name>/references/full.md` with complete reference (under 50,000 chars)
 3. Add a row to `README.md` in the appropriate skills table and update the skill count badge
 4. Run `python3 validate_skills.py` — must pass
 5. If the skill makes API claims, add focused entries to `api_drift_registry.yaml`
@@ -68,7 +68,7 @@ Dense table or list format. The most useful info inline. Code examples in ```lua
 
 Run `python3 validate_skills.py` before committing. Checks:
 - SKILL.md under 3,000 chars
-- references/full.md under 35,000 chars
+- references/full.md under 50,000 chars
 - Description under 150 chars
 - Required frontmatter: name, description, last_reviewed, sources
 - sources field is not empty (use `[original]` for synthesis)
@@ -132,5 +132,5 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - Don't use ```lua — use ```luau
 - Don't add `## Overview` sections — use `## When to Load` → `## Quick Reference` directly
 - Don't create standalone reference files — all content goes in `references/full.md`
-- Don't exceed 35,000 chars in reference files
+- Don't exceed 50,000 chars in reference files
 - Don't use `github.com/blob/` URLs — use `raw.githubusercontent.com`
