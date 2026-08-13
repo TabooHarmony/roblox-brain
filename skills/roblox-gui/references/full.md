@@ -133,6 +133,32 @@ Every interactive control needs:
 - a route that works without precise mouse aiming;
 - a debounced action that cannot issue duplicate requests while busy.
 
+### Reliable hover (MouseEnter/MouseLeave pitfalls)
+
+Native `GuiObject.MouseEnter`/`MouseLeave` only re-check hover when the mouse moves, so they can miss when content scrolls under a stationary cursor (e.g. inside a `ScrollingFrame`) or occasionally fail to fire `MouseLeave`. For reliable hover, poll the cursor each frame and fire your own enter/leave on state transitions. This is a practitioner pattern (DevForum lead: "REAL MouseEnter/MouseLeave for GuiObjects", 7eoeb, https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310) — prefer `GuiService:GetGuiObjectsAtPosition()` over hardcoded top-bar offsets, and clean up the signals with the owning UI's lifetime.
+
+```luau
+local RS = game:GetService("RunService")
+local GuiService = game:GetService("GuiService")
+local UIS = game:GetService("UserInputService")
+
+local hovered = false
+RS.RenderStepped:Connect(function()
+    local pos = UIS:GetMouseLocation()
+    local isOver = false
+    for _, obj in GuiService:GetGuiObjectsAtPosition(pos.X, pos.Y) do
+        if obj == frame then isOver = true break end
+    end
+    if isOver and not hovered then
+        hovered = true
+        onEnter()
+    elseif not isOver and hovered then
+        hovered = false
+        onLeave()
+    end
+end)
+```
+
 ## 8. Gamepad focus and selection
 
 Gamepad support is not complete when a button merely reacts to `Activated`. The player also needs a predictable focus path:

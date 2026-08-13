@@ -174,6 +174,14 @@ Record at least:
 
 Do this in a test place with realistic load. A local ping measurement is not a network-budget benchmark.
 
+## 7a. Replicate state to subscribed clients
+
+For a state object that many clients must observe, avoid re-sending whole tables per change. Keep the state server-owned and let clients subscribe by a token or name; each client receives an initial snapshot plus delta updates for only the fields that changed. Community replication modules (e.g. Replica, successor to ReplicaService, https://devforum.roblox.com/t/replica-server-to-client-state-replication-module/3216980) implement this pattern; you can also build it with a single state RemoteEvent carrying a versioned delta. Keep creation and mutation server-side so the client subscription is a read-only mirror.
+
+## 7b. Shrink payloads with binary serialization
+
+When a high-frequency remote exceeds budget, replace high-precision tables with compact typed fields. Pick the smallest precision that reads correctly per field — e.g. a quantized `CFrame` or a low-bit float for positions, a small integer for counters — rather than always sending 64-bit values. Community serialization modules (e.g. Bitstream, https://devforum.roblox.com/t/bitstream-%E2%80%93-binary-framework/4788654) provide typed, precision-varied formats; keep a schema/version so both sides agree on field order and size. Prefer this for replaceable, high-frequency data (positions, aim), not for state that must be exactly once and easily debugged.
+
 ## 8. Movement and physics checks
 
 Do not compare a client's position to a fixed speed threshold without accounting for legitimate teleports, seats, network ownership, respawns, and server corrections. In a Server Authority project, do not add a blanket `Heartbeat` CFrame correction loop; keep synchronized movement logic in `BindToSimulation()` and validate only custom movement or action transitions. In classic projects, use server-side state transitions and tolerance windows. A suspicious score is usually safer than an immediate kick:

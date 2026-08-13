@@ -249,6 +249,21 @@ local function launchProjectile(origin: CFrame, velocity: Vector3, lifetime: num
 end
 ```
 
+### Homing Projectile (velocity-aiming steering)
+
+A common technique simulates homing missiles without Roblox physics by steering a velocity vector toward the target each frame, clamped to a max turn angle. This avoids physics-solver jitter and suits missiles, spells, and homing bullets. Keep the projectile anchored and interpolate its CFrame yourself (or drive `AssemblyLinearVelocity`); each frame rotate the current velocity direction toward the target direction, never exceeding the max turn rate per frame. Community projectile modules (e.g. HomingCast, https://devforum.roblox.com/t/homingcast-homing-projectiles/3786022) are a lead for this pattern.
+
+```luau
+local function steerProjectile(cframe: CFrame, velocity: Vector3, target: Vector3, maxTurn: number, dt: number)
+    local toTarget = (target - cframe.Position).Unit
+    local current = velocity.Unit
+    local angle = math.acos(math.clamp(current:Dot(toTarget), -1, 1))
+    local step = math.min(angle, maxTurn * dt)          -- clamp to max turn rate
+    local dir = current:Lerp(toTarget, step / math.max(angle, 1e-6)).Unit
+    return dir * velocity.Magnitude
+end
+```
+
 ## Common Patterns
 
 ### CFrame: reference frames for moving-platform / vehicle-follow patterns

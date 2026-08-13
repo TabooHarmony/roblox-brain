@@ -130,6 +130,12 @@ The navigation mesh is auto-generated from geometry. Debug it in Studio:
 
 Colored areas = walkable. Small arrows = jump connections. Uncolored = impassable.
 
+### Custom navmesh alternatives to PathfindingService
+
+PathfindingService auto-generates its navmesh from geometry server-side — robust but black-box, with no control over walkable geometry or generation. For full control, community modules port real navmesh generators to Luau (see the Navcast thread as a lead, https://devforum.roblox.com/t/navcast-an-attempt-to-port-recast-to-luau/4743538). Such ports are not game-ready: voxelization is far too slow for live or changing maps, so tile generation with yields between chunks is required. Use them as a reference point when PathfindingService's constraints don't fit your geometry or agent needs, not as a drop-in replacement.
+
+<!-- temporal: 2026-07 -->
+
 ## Pathfinding performance and improved search
 
 Roblox has shipped an improved pathfinding search algorithm behind the Studio-only, non-scriptable `Workspace.PathfindingUseImprovedSearch` setting. Test it against representative maps and NPC agent parameters before enabling it in a live place. A path that succeeds is not automatically a cheap path.

@@ -363,6 +363,10 @@ local screenPos, onScreen = camera:WorldToScreenPoint(worldPos)
 local viewportPos, onScreen = camera:WorldToViewportPoint(worldPos)
 ```
 
+## ViewportFrame Portals (seamless portals)
+
+Community technique (DevForum "Making seamless portals - Tutorial", thiagop123, 2026, https://devforum.roblox.com/t/making-seamless-portals-tutorial/4731945) for rendering a live portal to another location: clone the destination world Model into a `ViewportFrame` whose camera is a second `Camera` instance, and display it on the portal's face. Crossing is handled by raycasting the `HumanoidRootPart`'s movement against the portal part each frame; when the character crosses the front face (`dot ≥ 0.999`), teleport it and remap position, direction, and velocity relative to the destination surface (180° mirrored) — directionality replaces a cooldown. A per-frame "physics hole" (collision disabled within ~5 studs) lets the character pass through the opening without falling off the edges; a `CollisionGroups` server script handles portal-air collision. Verify performance — each pair costs 2 world clones + 2 clones per character + per-frame render (see the thread's common-problems table for StreamingEnabled, back-face entry, and camera-flicker/`BindToRenderStep` pitfalls).
+
 ## Mouse-to-World Raycast Pattern
 
 ```luau
