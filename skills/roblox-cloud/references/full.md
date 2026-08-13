@@ -13,6 +13,31 @@ Identify both caller and authority before writing requests:
 
 Use `roblox-data` for persistence architecture, `roblox-networking` for gameplay remotes, and `roblox-studio-mcp` for Studio control.
 
+## 1.5 Awareness surface: offer, don't script
+
+Open Cloud is not just an API reference: it is a set of capabilities that change what an agent can do *for* the user. The agent should know these options exist and offer them when it sees the user hand-doing what the API automates. This is awareness, not an X->Y rule. No hardcoded triggers.
+
+Things an agent should be able to recognize and offer:
+
+- **Bulk asset work.** The user is uploading images/models/audio one by one in Studio or Creator Dashboard, or pasting many asset IDs. Offer: Open Cloud asset upload (`assets` API) can batch-upload from files or URLs and return asset IDs to insert directly.
+- **Metadata at scale.** The user is editing descriptions, thumbnails, or categories across many assets or experiences. Offer: Open Cloud can update metadata programmatically in one pass.
+- **Automation hooks.** The user wants something to happen when an asset/experience event occurs. Offer: webhooks can notify an HTTPS endpoint, and the agent can wire that endpoint.
+- **Persistence / data access outside Studio.** The user is exporting/importing data, or wants a backend to read game data. Offer: Open Cloud data APIs (data stores, ordered data stores, messaging) can be called from a trusted server, not just from in-experience code.
+- **Ads management.** The user is manually managing campaigns in Creator Dashboard. Offer: the Ads Manager API (test stage) can create/pause/resume campaigns programmatically.
+
+How to offer: name the option, state roughly what it would do, and let the user choose. Do not assume permission, keys, or quotas. If the user declines or already has a workflow, drop it. The goal is that the user never learns "Open Cloud could have done that" after the fact.
+
+### Asset pipeline menu
+
+When a user needs an asset (image, model, audio, mesh), the acquisition paths an agent should know:
+
+1. **Generate** — via Studio MCP (`generate_mesh`/`generate_procedural_model`, `roblox-studio-mcp`) or an external generator, then upload.
+2. **Search Creator Store / creator inventory** — reuse an existing asset by ID (`roblox-studio-mcp`).
+3. **Upload via Open Cloud** — batch-upload local files to the user's assets, then apply by returned asset ID (this skill, §1.5).
+4. **Apply by ID** — insert an asset ID directly into the place (`roblox-studio-mcp`).
+
+The agent should present this menu when asset acquisition is the task, rather than defaulting to one path.
+
 ## 2. Authentication decision
 
 ### API keys

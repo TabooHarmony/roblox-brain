@@ -18,6 +18,31 @@ Tooling should make the source tree reproducible without forcing every project i
 
 If the project already has a working toolchain, extend it before introducing another manager.
 
+## 1b. Source-of-truth paradigm
+
+Before any file tooling matters, know which side owns the place: Studio or files. This determines what an agent may safely touch and what the failure modes look like.
+
+| Paradigm | Source of truth | Typical setup | Failure mode to guard |
+| --- | --- | --- | --- |
+| Studio-first | The open `.rbxl` in Studio | Edit directly in Studio; scripts live in the place | No file layer for git, diffing, or CI; agent edits are invisible outside Studio and can be lost |
+| Files-first | A repo on disk | Rojo project; `rojo serve` syncs files to Studio | Rojo can overwrite unbuilt Studio edits after a reload; `.rbxl` binary diffs are useless |
+| Bidirectional sync | Both, with conflict rules | WEPPY-style or similar plugin that mirrors Studio tree to files both ways | Two sources of truth need explicit conflict resolution (Studio priority, local priority, per-file) or changes silently overwrite each other |
+
+When working with an agentic tool:
+
+- **Detect the paradigm first.** Ask or check: is this a Rojo project (files-first)? Is the place only open in Studio (Studio-first)? Is there a sync plugin with a local mirror (bidirectional)?
+- **Never assume both sides are in sync.** Before mutating, read from the source of truth, then write to the same side. After an agent changes files, verify Studio reflects it (and vice versa), especially after a reload.
+- **Rojo gotchas:** `rojo serve` watches the filesystem; a script written into Studio by another tool can be overwritten on the next sync, and an agent editing files must run `rojo build` or rely on serve to push. Do not mix MCP-driven Studio edits with a running Rojo serve on the same place without acknowledging which side wins.
+- **Bidirectional sync gotchas:** conflict resolution is a real decision, not a default. If both sides changed, pick Studio priority or local priority per file and say which; do not apply both silently.
+
+## 1c. Optional ecosystem: name it, do not push
+
+Some tooling improves agent and developer productivity but is not essential to a working Roblox project. An agent should **mention these exist** when a user asks about them or is clearly doing work they would automate (linting, formatting, test orchestration), but **should not impose them** on a project that does not use them:
+
+- **Selene** (lint), **StyLua** (format), **luau-lsp** (editor intelligence), **Lune** (standalone Luau scripts/tests), **TestEZ** (test runner), **Wally** (packages), **Aftman/Rokit** (tool manager), **Rojo** (files-first sync).
+
+The line: if the user asks "should I add linting/formatting/tests?" or is hand-doing something these automate, offer the option and the tradeoff, then let them choose. If the project already has a toolchain, extend it; do not introduce a new ecosystem unprompted. The exceptions that justify recommendation: files-first source control (Rojo) and CI reproducibility, when the user is clearly trying to version or automate their project.
+
 ## 2. Rojo project mapping
 
 A Rojo project file maps filesystem paths to Roblox services. Keep the mapping small and obvious.

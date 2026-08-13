@@ -34,4 +34,6 @@ Load when setting up a filesystem workflow, pinning tools, adding packages, conf
 - Use Lune for standalone Luau scripts or test helpers when its standard libraries fit the task.
 - Generate a Rojo sourcemap for editor tooling when the project needs Roblox-aware navigation.
 
+**Source-of-truth first.** Know whether the place lives in Studio, in files (Rojo), or in a bidirectional sync before editing; never assume both sides match. Name optional tools (Selene, StyLua, luau-lsp, Lune, TestEZ, Wally) when relevant, but do not impose them on a project that does not use them. Details in `references/full.md` §§1b–1c.
+
 **Need the details?** Load `references/full.md` for setup, file layout, and CI examples.
