@@ -4,7 +4,7 @@
 
 **A practical skill library for Roblox Studio coding agents.**
 
-Works with Codex, Claude Code, OpenCode, Cursor, and other tools that support agent skills.
+Works with Codex, Claude Code, Cursor, and other tools that support agent skills.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=semver)](https://github.com/TabooHarmony/roblox-brain/releases)
@@ -118,17 +118,17 @@ skills/roblox-gui/
 2. **Quick reference:** the selected `SKILL.md` gives default rules and routing.
 3. **Full reference:** linked `references/full.md` material is loaded only when the task needs it.
 
-## Recommended MCP servers
+## Recommended tooling
 
 - **[chrrxs/robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp):** the recommended Studio MCP server. Open source (MIT), and adds runtime debugging, multiplayer playtests, profiling, per-instance routing, and more. The official [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) built into Studio works fine as well if you prefer the built-in option.
-- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search, saves a lot of tokens.
+- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search, saves a lot of time and tokens.
 
 ## Contributing
 
 PRs are welcome. Useful contributions include:
 
 - correcting an API reference or deprecated pattern;
-- adding a focused production pattern;
+- adding a focused, widely applicable production pattern;
 - expanding examples from a compatible license, explicit permission, or original work;
 - keeping skills small, non-overlapping, and practical.
 
