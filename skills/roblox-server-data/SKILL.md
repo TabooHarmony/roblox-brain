@@ -1,7 +1,7 @@
 ---
 name: roblox-server-data
 description: "Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds."
-last_reviewed: 2026-07-13
+last_reviewed: 2026-08-21
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/OrderedDataStore
   - https://create.roblox.com/docs/reference/engine/classes/MessagingService
@@ -15,7 +15,7 @@ sources:
 
 ## When to Load
 
-Load for server-level or cross-server data: leaderboards (OrderedDataStore), cross-server messaging (MessagingService), temporary queues and sorted maps (MemoryStoreService), shared world state, persistent non-player data, season/guild data. For player data (DataStore, ProfileStore, session locking), use `roblox-data`.
+Load for server-level or cross-server data: leaderboards (OrderedDataStore), cross-server messaging (MessagingService), temporary queues and sorted maps (MemoryStoreService), shared world state, persistent non-player data, season/guild data. For player data (DataStore, ProfileStore, session locking), use `roblox-data`; for Open Cloud and external APIs, use `roblox-cloud`.
 
 ## Quick Reference
 

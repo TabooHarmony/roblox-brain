@@ -17,22 +17,22 @@ sources:
 
 ## When to Load
 
-Load for Open Cloud, API keys, OAuth, webhooks, or supported HttpService calls. Route gameplay and Studio work to domain skills.
+Load for Open Cloud, API keys, OAuth, webhooks, or supported HttpService. Route in-game data work to `roblox-data` and `roblox-server-data`; gameplay and Studio work to domain skills.
 
 ## Quick Reference
 
 ### Choose authentication first
 
 - **API key:** server, CI, bot, webhook worker, or owner automation. Scope to required resources and operations.
-- **OAuth 2.0:** a third-party app needs user-granted access to specific Roblox resources. Use authorization code flow with PKCE.
+- **OAuth 2.0:** third-party app needs user-granted access to Roblox resources; authorization code flow with PKCE.
 - Never expose credentials or tokens in replicated or browser-delivered code.
 
 ### REST mechanics
 
-- Current resources generally use `https://apis.roblox.com/cloud/v2/...`; confirm each endpoint and legacy v1 exception.
+- Resources generally use `https://apis.roblox.com/cloud/v2/...`; confirm each endpoint and legacy v1 exceptions.
 - Read `nextPageToken`; send it back as `pageToken` unchanged.
 - Use `updateMask` only for fields intended to change.
-- Poll returned Operation resources with bounded exponential backoff.
+- Poll returned Operations with bounded backoff.
 - Treat 429 and `RESOURCE_EXHAUSTED` as quota signals; honor `Retry-After`.
 
 ### OAuth essentials
@@ -57,4 +57,4 @@ Validate paths, schemas, scopes, permissions, and resource grants separately. Re
 
 > Full auth decision rules, OAuth flow, request mechanics, webhooks, and failure handling: [references/full.md](references/full.md)
 
-**Awareness, not scripts.** When the user hand-does work Open Cloud automates (bulk uploads, metadata edits, campaigns, external data), offer the Open Cloud path. Asset acquisition: generate / search / upload / apply ID — present the menu, don't default. See `references/full.md` §1.5.
+**Awareness, not scripts.** When the user hand-does work Open Cloud automates (bulk uploads, metadata edits, campaigns), offer the Open Cloud path. Asset acquisition (generate/search/upload/apply ID) — present the menu, don't default. See `references/full.md` §1.5.

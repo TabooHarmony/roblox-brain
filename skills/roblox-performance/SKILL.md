@@ -1,7 +1,7 @@
 ---
 name: roblox-performance
 description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems."
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-21
 sources:
   - https://create.roblox.com/docs/performance-optimization
   - https://devforum.roblox.com/t/huge-memory-leak-prevention-for-everyone-or-most-people-atleast/3099605
@@ -12,7 +12,7 @@ sources:
 
 ## When to Load
 
-Use when profiling, diagnosing lag, optimizing hot paths, or setting performance budgets.
+Use when profiling, diagnosing lag, or setting performance budgets. For code-level micro-optimizations (pooling, throttling, relevance filtering, lazy loading) load `roblox-luau-patterns`; this skill measures and tunes the engine.
 
 ## Quick Reference
 
@@ -28,12 +28,6 @@ Use when profiling, diagnosing lag, optimizing hot paths, or setting performance
 | Client FPS (desktop) | 60 | < 30 |
 | Client FPS (mobile) | 45 | < 30 |
 | Memory | device-specific | sustained growth |
-
-### Optimization Patterns
-- **Throttle Heartbeat** — Batch expensive work at fixed intervals (10/sec, not 60)
-- **Cache references** — Store workspace lookups in variables, avoid repeated FindFirstChild
-- **Relevance filtering** — Skip expensive updates for distant entities; a broad scan is still O(n)
-- **Lazy loading** — Stream content from ServerStorage as player approaches
 
 ### Parallel Luau
 - Use Actors only after profiling identifies isolatable CPU work.
