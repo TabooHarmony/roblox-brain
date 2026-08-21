@@ -24,8 +24,9 @@ Two Studio MCP bridges are in active use. The official Roblox Studio MCP server 
 | `generate_material` | Generate a material variant; apply the returned base material and variant name to parts. |
 | `generate_procedural_model` | Generate a configurable primitive-part model, optionally from a reference image URI per the official procedural-models docs. |
 | `wait_job_finished` | Wait on a returned generation ID when a dependent action needs completion. |
-| `search_asset` / `search_creator_store` | Search Creator Store or creator inventory, depending on the bridge. |
-| `insert_asset` / `insert_from_creator_store` | Insert a known asset ID or Creator Store result. |
+| `search_asset` | Search Creator Store and Creator Inventory (user, group, or universe) with type, price, tag, and scope filters. |
+| `insert_asset` | Insert by numeric asset ID. The chrrxs variant removes embedded scripts and package links, verifies, then parents. |
+| `search_assets` + `get_asset_details` + `preview_asset` | chrrxs asset workflow: search, pull full metadata, then inspect an unparented asset's hierarchy, media metadata, and security scan before insert. |
 | `upload_image` | Upload permitted images from a bridge-supported source, such as documented HTTP URLs, and return asset references. |
 | `store_image` | Convert a permitted local image into a URI for another generation tool. |
 
@@ -64,20 +65,20 @@ Two Studio MCP bridges are in active use. The official Roblox Studio MCP server 
 
 | Tool | What it does |
 |------|-------------|
-| `list_roblox_studios` | List all connected Studio instances (name, ID, active status). |
-| `set_active_studio` | Set which Studio instance receives subsequent tool calls. |
+| `list_roblox_studios` | List all connected Studio instances (name, Studio instance ID, place ID). |
+| `studio_id` | Parameter on every official tool call naming the target instance. Older builds exposed `set_active_studio` (session-state switching) instead; treat that as legacy. |
 
 ## Session and Datamodel Contract
 
 1. Call `list_roblox_studios` before assuming Studio is connected.
-2. Use `set_active_studio` with the returned ID when more than one instance exists or the active flag is not the intended target.
+2. Pass the target's `studio_id` on every subsequent call. Selection is per-call; never assume the previous target persists.
 3. Call `get_studio_state` and record the current mode plus available datamodels.
 4. Select `Edit` for persistent tree/script changes. Use `Client` or `Server` only for operations whose live schema permits them.
 5. Inspect the relevant tree and scripts before mutation. After mutation, read back the script, instance, or asset result.
 
 `datamodel_type` is not universal. The live server requires it for some datamodel-scoped calls, while session management, play control, and some inspection tools expose different schemas. Inspect `tools/list` and the tool description instead of blindly adding or omitting it.
 
-The connected server exposed the official `search_asset`/`insert_asset` names. Other bridges may use `search_creator_store`/`insert_from_creator_store` or another mapping. Treat these as capability mappings, not guaranteed simultaneous tools.
+The connected server exposed the official `search_asset`/`insert_asset` names. chrrxs pairs `search_assets`/`get_asset_details`/`preview_asset` with `insert_asset`; older builds exposed `search_creator_store`/`insert_from_creator_store`. Treat all of these as capability mappings, not guaranteed simultaneous tools.
 
 ### Observed live schema notes (2026-07-12)
 
@@ -92,7 +93,7 @@ These were verified against the connected Studio server and must be rechecked wh
 - `wait_job_finished`: `generationId` is required; use it before dependent edits when generation is asynchronous.
 - `search_asset`: query is optional; useful filters include `scope`, `assetType`, `maxResults`, price/source filters, and verified-creator filtering.
 - `insert_asset`: `assetId` is required; `assetName`, `assetType`, and `parentPath` are optional but improve deterministic placement.
-- `get_console_output`, `list_roblox_studios`, and `set_active_studio` expose their own schemas rather than a universal datamodel argument.
+- `get_console_output` and `list_roblox_studios` expose their own schemas rather than a universal datamodel argument.
 
 ### Documentation and Skills
 
@@ -234,16 +235,16 @@ Generated content is a candidate, not an acceptance decision. Keep a native Part
 
 Before using any tool, confirm which bridge is connected. Do not guess from a previous session.
 
-- **Official bridge** (built into Studio): connect via `mcp.bat` on Windows or `StudioMCP` on macOS. Tool names follow the official creator-docs (`list_roblox_studios`, `set_active_studio`, `start_stop_play`, `get_console_output`, `script_read`, `multi_edit`, `execute_luau`, `search_asset`, `insert_asset`). It is closed-source but documented.
+- **Official bridge** (built into Studio): connect via `mcp.bat` on Windows or `StudioMCP` on macOS. Tool names follow the official creator-docs (`list_roblox_studios`, `start_stop_play`, `get_console_output`, `script_read`, `multi_edit`, `execute_luau`, `search_asset`, `insert_asset`), and every call takes a `studio_id` parameter naming the target instance. It is closed-source but documented.
 - **chrrxs bridge** ([`chrrxs/robloxstudio-mcp`](https://github.com/Chrrxs/robloxstudio-mcp), npm, MIT): tool names follow its open-source definitions (`get_connected_instances`, `get_file_tree`, `eval_server_runtime`, `eval_client_runtime`, `solo_playtest`, `multiplayer_playtest`, `manage_instance`, `get_runtime_logs`, `breakpoints`, `capture_script_profiler`, `capture_micro_profiler`, `get_memory_breakdown`, `get_scene_analysis`, `get_roblox_docs`, `get_roblox_skills`, and official-compatible names like `execute_luau`). Supports per-call `instance_id` routing and per-peer runtime logs.
-- **Detect:** call `tools/list` (or `list_roblox_studios` / `get_connected_instances`). The presence of `get_connected_instances`, `eval_*`, or `multiplayer_*` identifies the chrrxs bridge. The presence of `list_roblox_studios`/`set_active_studio` with official tool names identifies the official bridge.
+- **Detect:** call `tools/list` (or `list_roblox_studios` / `get_connected_instances`). The presence of `get_connected_instances`, `eval_*`, or `multiplayer_*` identifies the chrrxs bridge. The presence of `list_roblox_studios` plus per-call `studio_id` parameters identifies the official bridge; a `set_active_studio` tool instead signals an older pre-multi-instance build.
 
 ## Capability Matrix
 
 | Capability | Official bridge | chrrxs bridge |
 |------------|-----------------|----------------|
 | Tree/script inspection, `execute_luau`, asset search/insert | ✅ | ✅ |
-| Multi-instance routing | `list_roblox_studios` + `set_active_studio` (session switch) | `get_connected_instances` + per-call `instance_id` (fine-grained) |
+| Multi-instance routing | `list_roblox_studios` + per-call `studio_id` (per-call addressing) | `get_connected_instances` + per-call `instance_id` (fine-grained) |
 | Open/close a specific Studio window per place | via Studio manually | `manage_instance` |
 | Runtime Luau eval with game require-cache | ❌ | `eval_server_runtime` / `eval_client_runtime` |
 | Live breakpoints without pausing | ❌ | `breakpoints` |
@@ -258,7 +259,7 @@ Treat this matrix as a map, not a guarantee. Bridges update. Inspect the live to
 
 Multi-place work (Lobby + Game + Tutorial open in separate Studio windows) is supported on **both** bridges, with different mechanics:
 
-- **Official bridge:** call `list_roblox_studios` to list open Studio instances (name, ID, active status). Call `set_active_studio` with the target ID. Subsequent tool calls then target that instance. Switching back requires another `set_active_studio`.
+- **Official bridge:** call `list_roblox_studios` to list open Studio instances (name, Studio instance ID, place ID). Then pass the target's ID as `studio_id` on every tool call. There is no session switch to forget; wrong-place writes come from passing the wrong ID, so re-check it before mutations.
 - **chrrxs bridge:** call `get_connected_instances` to list available IDs. Pass `instance_id` on each tool call to route that single call. Omit `instance_id` only when exactly one instance is connected; when multiple are connected it is required. `manage_instance` can launch, inspect, or close a specific Studio window (baseplate, local file, published place, or place revision).
 
 ### Wrong-Place Checklist
@@ -268,7 +269,7 @@ Before mutating in a multi-place session, confirm the target:
 1. List instances: `list_roblox_studios` (official) or `get_connected_instances` (chrrxs).
 2. Confirm which Place id/name you actually intend to edit (e.g. the user said Lobby, not Game).
 3. On the chrrxs bridge, pass the correct `instance_id` on every call. Do not omit it when multiple places are connected.
-4. On the official bridge, set the active instance and re-check `get_studio_state` on that instance.
+4. On the official bridge, pass the correct `studio_id` and re-check `get_studio_state` on that instance.
 5. Read the target (tree/script/property) and verify it exists in the intended place before writing.
 6. If a call returns "not found" or an unexpected object, stop and re-list. Never assume the active instance is the one you want.
 
@@ -318,7 +319,7 @@ Multiplayer behavior is core development work, and agents under-cover it. Whenev
 Different MCP servers expose different names and schemas. Call `tools/list` and route by capability:
 
 - **Official docs baseline:** session selection, tree/script inspection, `multi_edit`, `execute_luau`, play control, console/visual evidence, input simulation, and generated/searchable assets.
-- **Observed connected server (2026-07-12):** `search_asset`/`insert_asset`; other bridges may expose `search_creator_store`/`insert_from_creator_store`.
+- **Observed connected server (2026-07-12):** `search_asset`/`insert_asset`; chrrxs exposes `search_assets`/`get_asset_details`/`preview_asset` alongside `insert_asset` (older builds: `search_creator_store`/`insert_from_creator_store`).
 - **No MCP or missing capability:** generate complete offline Luau, identify the intended insertion path, and state exactly what was not inspected or tested.
 
 If a call fails with "not found", an invalid context, a stale session, or an unavailable generation job, stop assuming the workflow succeeded. Re-discover state, choose a supported fallback, or report the blocker with the tool response.
