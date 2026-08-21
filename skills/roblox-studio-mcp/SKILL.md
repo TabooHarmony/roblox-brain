@@ -1,7 +1,7 @@
 ---
 name: roblox-studio-mcp
 description: "Use when working with Roblox Studio through built-in MCP for scripts, scenes, generated assets, input, or playtesting."
-last_reviewed: 2026-07-12
+last_reviewed: 2026-08-21
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/mcp.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/parts/procedural-models.md
@@ -16,11 +16,11 @@ Load when working with Roblox Studio through its MCP server: inspecting or editi
 
 ## Quick Reference
 
-**Bridge first.** Two Studio MCP bridges exist: the **official** (built into Studio, closed-source) and **[chrrxs's](https://github.com/Chrrxs/robloxstudio-mcp)** (`chrrxs/robloxstudio-mcp`, MIT). Detect which is connected (`tools/list`; chrrxs's exposes `get_connected_instances`/`eval_*`/`multiplayer_*`; official exposes `list_roblox_studios`/`set_active_studio`).
+**Bridge first.** Two Studio MCP bridges exist: the **official** (built into Studio, closed-source) and **[chrrxs's](https://github.com/Chrrxs/robloxstudio-mcp)** (`chrrxs/robloxstudio-mcp`, MIT). Detect which is connected (`tools/list`; chrrxs's exposes `get_connected_instances`/`eval_*`/`multiplayer_*`; official exposes `list_roblox_studios` plus per-call `studio_id` parameters).
 
 ### Bootstrap before mutation
 1. `list_roblox_studios` and identify the target.
-2. `set_active_studio` with the returned ID when selection matters.
+2. Pass the target's `studio_id` on every tool call.
 3. `get_studio_state` and confirm Edit/Client/Server availability.
 4. Inspect the target tree and scripts before changing them.
 
