@@ -2,6 +2,42 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [1.5.0] - 2026-08-12
+
+### Added
+
+- Studio MCP bridge matrix: detection guidance and a capability table for the official built-in server vs `chrrxs/robloxstudio-mcp`.
+- Studio MCP multi-place routing for both bridges, with a wrong-place checklist.
+- Structured playtest pattern (START/FINISHED signal injection, poll, stop, cleanup) plus playtest discipline from real-field bug reports.
+- Surfaced underused chrrxs tools: runtime Luau eval with game require-cache, multiplayer playtests, per-peer logs, live breakpoints, profilers, memory breakdown, scene analysis.
+- Multiplayer testing awareness section.
+- Tooling source-of-truth paradigm map (Studio-first / files-first / bidirectional sync) and optional-ecosystem guidance.
+- Open Cloud awareness surface and asset-pipeline menu (generate / search / upload / apply by ID).
+
+### Changed
+
+- Reference char cap raised from 35,000 to 50,000 in `validate_skills.py` and documented.
+- README endorses `chrrxs/robloxstudio-mcp` as the preferred bridge; official built-in noted as working.
+
+### Fixed
+
+- Studio MCP skill no longer assumes one bridge's tool surface; wrong-bridge tool calls corrected on both sides.
+
+## [1.4.0] - 2026-08-11
+
+### Added
+
+- Growth design: LiveOps guidance folded into the existing skill (planning, content cadence, monetization foundations); skill count stays 28.
+- Growth design: practitioner sections for the recommendation algorithm, the highly-engaged-player requirement, known-good practices checklist, monetization playbook, fast-shipping playbook, experiments (ConfigService configs, targeted enrollment, MDE rules), and onboarding.
+- Analytics: Economy Health Signals section (instrumentation-first, event logging for complex economies, health-signal table, diagnose-with-telemetry workflow) with explicit provenance separation of doc-backed formulas from practitioner thresholds.
+
+### Changed
+
+- Growth design updated to June 2026 algorithm behavior: QPTR now combines Play-Through Rate with First-Play Bounce Rate, D28 tracked, 28-day signals window.
+- Growth design aligned to current official docs: 16+ trial phase, 500 unique plays by highly engaged users within 60 days, separate 100-player publishing-fee refund threshold, expedited review fee and timing.
+- Growth design wording humanized (requirement instead of gate; de-viraled take-off framing) and channel/video attribution removed per sourcing policy.
+- Analytics economy-health references compressed under the SKILL.md char cap with honest provenance labels.
+
 ## [1.3.0] - 2026-08-07
 
 ### Added
