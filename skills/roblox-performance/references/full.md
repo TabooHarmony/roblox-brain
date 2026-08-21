@@ -153,99 +153,11 @@ A replay system stores compact per-delta state changes rather than full frames: 
 
 ## Optimization Patterns
 
-### Object Pooling
-
-```luau
-local Pool = {}
-Pool.__index = Pool
-
-function Pool.new(template: Instance, initialSize: number)
-    local self = setmetatable({
-        _template = template,
-        _available = {},
-        _active = {},
-    }, Pool)
-
-    for i = 1, initialSize do
-        local obj = template:Clone()
-        obj.Parent = nil
-        table.insert(self._available, obj)
-    end
-    return self
-end
-
-function Pool:get(): Instance
-    local obj = table.remove(self._available)
-    if not obj then
-        obj = self._template:Clone()
-    end
-    self._active[obj] = true
-    return obj
-end
-
-function Pool:release(obj: Instance)
-    self._active[obj] = nil
-    obj.Parent = nil
-    -- Reset state here
-    table.insert(self._available, obj)
-end
-```
-
-### Throttled Updates
-
-```luau
--- Instead of updating every frame, batch at fixed intervals
-local TICK_RATE = 1/10 -- 10 updates per second
-local accumulated = 0
-
-RunService.Heartbeat:Connect(function(dt)
-    accumulated += dt
-    if accumulated < TICK_RATE then return end
-    accumulated -= TICK_RATE
-
-    -- Do expensive work here (runs 10x/sec, not 60x)
-    updateAllNPCs()
-end)
-```
-
-### Distance-Based Relevance Filtering
-
-```luau
--- This reduces expensive updates after discovery; the scan itself remains O(n).
-local ACTIVATION_RANGE = 100
-
-local function getActiveEntities(playerPosition: Vector3): {Instance}
-    local active = {}
-    for _, entity in allEntities do
-        if (entity.Position - playerPosition).Magnitude < ACTIVATION_RANGE then
-            table.insert(active, entity)
-        end
-    end
-    return active
-end
-```
-
-For large populations or frequent queries, use a real spatial index such as a
-grid or spatial hash. Choose its cell size from the query radius and movement
-pattern; this linear filter is not spatial partitioning.
-
-### Lazy Loading
-
-```luau
--- Don't load everything at once
--- Stream content as player approaches
-local loaded = {}
-
-local function ensureLoaded(zoneName: string)
-    if loaded[zoneName] then return end
-    loaded[zoneName] = true
-
-    local zone = ServerStorage.Zones:FindFirstChild(zoneName)
-    if zone then
-        zone:Clone().Parent = workspace.ActiveZones
-    end
-end
-```
+Code-level micro-optimizations (object pooling, throttled updates,
+distance-based relevance filtering, lazy loading) now live in
+`roblox-luau-patterns` §10. Apply them only where the profiler shows cost.
+The engine-side counterparts stay in this skill: StreamingEnabled tuning and
+detect-platform guidance are under Mobile-Specific Optimization below.
 
 ## Mobile-Specific Optimization
 

@@ -1,7 +1,7 @@
 ---
 name: roblox-data
 description: "Use when implementing player data persistence with DataStore, session ownership, schemas, migrations, or save and load flows."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-21
 sources:
   - https://create.roblox.com/docs/cloud-services/data-stores
   - https://create.roblox.com/docs/cloud-services/data-stores-vs-memory-stores
@@ -18,7 +18,7 @@ sources:
 
 ## When to Load
 
-Load when designing player saves, schema migrations, retries, shutdown handling, session ownership, or cross-server state. Use `roblox-server-data` for ordered leaderboards, messaging, and global world data.
+Load when designing player saves, schema migrations, retries, shutdown handling, or session ownership. Use `roblox-server-data` for ordered leaderboards, messaging, and global world data; `roblox-cloud` for Open Cloud and external API access.
 
 ## Quick Reference
 
