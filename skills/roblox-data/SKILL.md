@@ -29,6 +29,6 @@ Load when designing player saves, schema migrations, retries, shutdown handling,
 - Use `ProfileStore.Mock` for Studio tests that must not write live DataStore keys.
 - Save on meaningful changes and on lifecycle boundaries, but do not assume `PlayerRemoving` alone is sufficient.
 - Use `BindToClose` to finish pending work within Roblox's shutdown window.
-- Store primitives, arrays, and dictionaries. Convert Instances, userdata, functions, and cyclic tables first.
+- Store primitives, arrays, and dictionaries. Convert Instances, userdata, functions, and cyclic tables first. Before persisting client-influenced values: numbers must not be NaN or infinity, strings must pass `utf8.len`, and any nested table must be re-validated, since one unsaveable value fails the whole key write.
 
 **Need the details?** Load `references/full.md` for a framework-neutral persistence design.

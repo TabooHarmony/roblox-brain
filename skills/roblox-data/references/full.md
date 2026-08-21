@@ -226,3 +226,5 @@ Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-t
 - [ ] Migrations are idempotent and tested against old records.
 - [ ] Player removal and server shutdown release or save profiles.
 - [ ] No client-provided value bypasses server validation before persistence.
+- [ ] Persisted numbers are checked for NaN/infinity; persisted strings pass `utf8.len`.
+- [ ] Client-supplied nested tables are re-validated field by field before saving.

@@ -1,7 +1,7 @@
 ---
 name: roblox-luau-types
 description: "Use for Luau annotations, generics, unions, narrowing, strictness, sealed tables, module type exports, or typed metatables."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-21
 sources:
   - https://luau-lang.org/typecheck
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/luau/type-checking.md
@@ -54,6 +54,8 @@ assert(optionalValue, "missing") -- non-nil narrowing
 **Object typing:** `export type Counter = typeof(setmetatable({} :: CounterData, Counter))` for precise self.
 
 **Casts (::):** Precision tool to narrow overly generic inference — never to hide errors.
+
+**Write types you can trust:** annotations are contracts for the compiler, not proof of runtime validity. Trust boundaries (remotes, DataStores, HttpService, attributes) still get runtime checks even when everything is annotated; inside a trusted boundary, let types carry the load instead of re-checking every call.
 
 **Key mistakes:** Unsealed `any` propagation in nonstrict, sealing tables too early, unions without discriminants, annotating every local.
 

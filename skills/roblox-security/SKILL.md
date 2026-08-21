@@ -1,13 +1,14 @@
 ---
 name: roblox-security
 description: "Use when auditing Roblox code for exploit vectors, authority models, remotes, economy, and DataStore flows."
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-21
 sources:
   - https://create.roblox.com/docs/scripting/security/security-tactics
   - https://create.roblox.com/docs/scripting/security/client-server-boundary
   - https://create.roblox.com/docs/projects/server-authority
   - https://create.roblox.com/docs/projects/server-authority/techniques
   - https://devforum.roblox.com/t/server-authority-client-beta-was-a-damn-nightmare-heres-some-advice/4712758
+  - https://gist.githubusercontent.com/TheGreatSageEqualToHeaven/e0e1dc2698307c93f6013b9825705899/raw/51c04e2d8a28b0e66d2dae0898f6ca9d32cf9a8f/READ.md
 ---
 
 # Roblox Security
