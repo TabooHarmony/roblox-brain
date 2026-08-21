@@ -1,7 +1,7 @@
 ---
 name: roblox-luau-core
 description: "Use for Luau language semantics, tables, control flow, string patterns, scope, closures, and cross-language translation errors."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-21
 sources:
   - https://luau.org/syntax
   - https://luau.org/library
@@ -26,6 +26,8 @@ Load for pure Luau syntax and semantics: truthiness, tables, iteration, function
 - Local names are scoped from their declaration onward. Forward-declare mutually recursive functions.
 - Luau string patterns are not regular expressions. Their syntax and capabilities differ.
 - Backtick interpolation and `..` concatenation are both valid. Choose the clearer form; collect many fragments and join once in a hot loop.
+- NaN does not equal itself and defeats `<`/`>` comparisons; test with `x ~= x`.
+- Binary data uses the `buffer` library: fixed size, 0-based byte offsets, explicit-width reads/writes. Avoid `buffer.readinteger`/`buffer.writeinteger` — in some type stubs, not the released runtime.
 
 ```luau
 local label = if enabled then "On" else "Off"

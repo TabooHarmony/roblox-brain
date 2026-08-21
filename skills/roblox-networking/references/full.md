@@ -77,6 +77,15 @@ end)
 
 Do not send a detailed failure reason to an untrusted caller if it reveals private state. Log enough context for operators without logging secrets or raw payloads indefinitely.
 
+### Numeric and string poison checks
+
+Two cheap checks belong next to every `typeof` guard because both defeat naive validation and both kill DataStore saves downstream:
+
+- **NaN / infinity:** `NaN ~= NaN`, so equality guards pass it through, and comparisons like `amount < limit` return false for `NaN`, skipping range checks silently. Reject with `x ~= x or math.abs(x) == math.huge`.
+- **Malformed UTF-8:** client-supplied strings may contain invalid byte sequences that DataStores refuse to serialize. `utf8.len(s)` returns `nil` plus an error position for malformed input; reject when it does not return a count.
+
+Rejecting these at the remote boundary protects both the gameplay logic and the persistence layer (`roblox-data` covers the save-side contract).
+
 ## 3. Keep outcomes server-owned
 
 The client may request “attack target X” or “buy item Y.” It must not request “deal 100 damage” or “subtract 20 coins.” The server calculates the result from current state.

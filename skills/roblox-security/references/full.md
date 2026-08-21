@@ -89,6 +89,11 @@ For the rate limiter and argument validation implementations, see `roblox-networ
 | Save spam | Force repeated saves to exhaust budget | Server-controlled save intervals only |
 | Session hijack | Fake session to duplicate across servers | Session lock with JobId verification |
 | BindToClose skip | Exploit shutdown timing | BindToClose with parallel saves + timeout |
+| Unsaveable payload | Remote accepts Instance/userdata into saved tables; save throws and rolls back | Validate every persisted field's type at the remote boundary; never store client-supplied tables unvalidated |
+| Malformed string | Invalid UTF-8 bytes pass type checks but fail serialization | `utf8.len(value)` must return a count before persisting client strings |
+| NaN rollback | NaN smuggled through settings remotes breaks serializers or comparisons, rolling back saves | Reject `x ~= x` and infinities wherever client numbers enter persisted state |
+
+Practitioner lead: TheGreatSageEqualToHeaven's "Data store vulnerabilities" gist documents these rollback vectors found in major titles. Treat as community research, not official documentation.
 
 ## Security Audit Checklist
 

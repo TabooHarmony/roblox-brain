@@ -186,6 +186,17 @@ A plausible-looking email regex translated into a Lua pattern is not robust emai
 
 Luau provides ordinary arithmetic, compound assignment such as `+=`, and floor division `//`. Be explicit around division by zero, negative values, clamping, and units.
 
+`NaN` propagates through arithmetic and is unequal to everything including itself. Range guards written as `if v < min or v > max` silently accept NaN because both comparisons are false. Guard with `v ~= v`.
+
+Floor division `//` truncates toward negative infinity (`-7 // 2 == -4`). `0/0` is NaN.
+
+### buffer library
+
+- Fixed-size binary data without table overhead: `buffer.create(size)`, then read/write typed values at offsets.
+- Offsets are 0-based, sizes in bytes. Out-of-range access errors; the buffer does not grow.
+- Reads/writes take explicit width and endianness (`readu8`/`readi16`/`readf32` family). No platform-dependent sizing.
+- Do not use `buffer.readinteger`/`buffer.writeinteger`: they appear in some type definitions but are not in the released runtime.
+
 ```luau
 local bounded = math.clamp(value, minimum, maximum)
 local whole = numerator // denominator

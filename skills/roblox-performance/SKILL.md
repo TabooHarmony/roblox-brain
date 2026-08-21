@@ -29,6 +29,8 @@ Use when profiling, diagnosing lag, or setting performance budgets. For code-lev
 | Client FPS (mobile) | 45 | < 30 |
 | Memory | device-specific | sustained growth |
 
+"Expensive" means the profiler shows it on a hot frame path (raycasts, clones, large finds, replication-heavy writes). Throttle by judgment from measurements, not a universal number, and re-measure after shipping: profile before and after on representative devices and confirm the targeted metric moved without regressions. Micro-optimizations live in `roblox-luau-patterns`.
+
 ### Parallel Luau
 - Use Actors only after profiling identifies isolatable CPU work.
 - Workers compute; synchronize before restricted DataModel writes.
