@@ -228,7 +228,7 @@ Useful hypotheses:
 - starter resources do not let players sample the fun;
 - mobile, localization, accessibility, or reliability failures affect a segment.
 
-A brief tutorial or contextual tooltips can help. “No tutorial” is not a rule. Teach only the essentials, get to meaningful play quickly, deliver a joyful first payoff, and preview future progress.
+A brief tutorial or contextual tooltips can help. "No tutorial" is not a rule. Teach only the essentials, get to meaningful play quickly, deliver a joyful first payoff, and preview future progress.
 
 **Practitioner heuristics:**
 - Instrument Funnels on every tutorial step to find the exact drop-off step, then fix that step specifically rather than redesigning the whole flow.
@@ -301,7 +301,7 @@ Season passes are a documented delivery vehicle for cadence content (official cr
 
 Low ARPPU can mean the catalog lacks depth for engaged payers, but it can also reflect audience, regional pricing, product mix, or a healthy low-pressure economy. Consider durable and consumable options, seasonal products, and meaningful catalog variety.
 
-Always inspect ARPDAU and payer concentration. High ARPPU with low ARPDAU can mean revenue depends on a narrow subset. Do not design around “whales” or use coercive scarcity, deceptive odds, pay-to-escape friction, or manipulative loss aversion.
+Always inspect ARPDAU and payer concentration. High ARPPU with low ARPDAU can mean revenue depends on a narrow subset. Do not design around "whales" or use coercive scarcity, deceptive odds, pay-to-escape friction, or manipulative loss aversion.
 
 **Practitioner heuristic:** tiered pricing ("small / medium / large fries") gives engaged payers somewhere to go: a basic pack, a pro pack, and an expensive overpowered pack. The expensive tier exists for players who want to spend; the cheap tiers keep the majority comfortable. Test whether your audience actually has a high-end segment before building for one.
 
@@ -412,7 +412,7 @@ Prototype the uncertain mechanic before building a large content shell. Prioriti
 
 ## 5. First-Time User Experience
 
-Design for **play-first teaching**, not “players never read.” Some controls and systems require text. Make instruction brief, contextual, localized, and accessible.
+Design for **play-first teaching**, not "players never read." Some controls and systems require text. Make instruction brief, contextual, localized, and accessible.
 
 Roblox's retention guidance recommends reaching the fun within about five minutes. Treat that as a diagnostic starting point, not permission to rush a complex control scheme.
 

@@ -12,7 +12,7 @@ This guide focuses on the server-side correctness of Roblox's purchase APIs. Pro
 - **Private server or paid access:** access configuration rather than an item grant.
 - **Creator Rewards and ads:** platform programs with their own eligibility and reporting rules.
 
-Do not model all of these as one “purchase” table. Their ownership, renewal, refund, and retry behavior differ.
+Do not model all of these as one "purchase" table. Their ownership, renewal, refund, and retry behavior differ.
 
 ## 2. Keep prompting separate from granting
 
@@ -41,7 +41,7 @@ local function ownsPass(player: Player, passId: number): boolean
 end
 ```
 
-Cache a successful result when appropriate, but provide an invalidation or refresh path for purchases made during the session. Handle API failure as “not confirmed yet,” not as a permanent denial or grant.
+Cache a successful result when appropriate, but provide an invalidation or refresh path for purchases made during the session. Handle API failure as "not confirmed yet," not as a permanent denial or grant.
 
 ## 3. Centralize Developer Product receipts
 
@@ -91,8 +91,8 @@ end
 
 `ApplyGrantOnce` is a project-specific persistence boundary. It must make the
 transaction ID and entitlement mutation one durable, idempotent operation, and
-must treat an already-granted ID as success. Do not implement it as “grant,
-then separately record”: a crash or failed record between those operations can
+must treat an already-granted ID as success. Do not implement it as "grant,
+then separately record": a crash or failed record between those operations can
 duplicate value on retry.
 
 ## 3a. Receipt failure tests

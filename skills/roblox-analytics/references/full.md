@@ -188,7 +188,7 @@ Creator Rewards is not an `AnalyticsService` event and should not be reconstruct
 - retention and return behavior;
 - economy sources and sinks separately from platform rewards.
 
-Use Creator Dashboard as the authority for Creator Rewards eligibility, rewarded active spenders, signups, reactivations, and estimated payout. Do not label a local event as “Creator Reward Granted” or promise a Robux amount based on it.
+Use Creator Dashboard as the authority for Creator Rewards eligibility, rewarded active spenders, signups, reactivations, and estimated payout. Do not label a local event as "Creator Reward Granted" or promise a Robux amount based on it.
 
 ---
 

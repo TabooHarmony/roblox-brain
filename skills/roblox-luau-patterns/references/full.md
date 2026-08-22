@@ -101,7 +101,7 @@ marker.CFrame = spawnCFrame
 marker.Parent = workspace
 ```
 
-This reduces exposure to partial state and unnecessary change observation. It does not solve an abstract “replication race.” Some operations require ancestry or a specific parent. Parent earlier when the API contract requires it, then make partial visibility explicit.
+This reduces exposure to partial state and unnecessary change observation. It does not solve an abstract "replication race." Some operations require ancestry or a specific parent. Parent earlier when the API contract requires it, then make partial visibility explicit.
 
 For groups of instances, build under an unparented model and parent the completed model once. Avoid repeated full-tree searches in hot paths. Cache stable ownership references, use tags for dynamic collections, and handle streamed or destroyed instances becoming unavailable.
 
@@ -162,7 +162,7 @@ end
 return value, nil
 ```
 
-Do not write a retry helper that returns only `T?`; it collapses “successful missing value” and “all attempts failed.” Preserve a result shape or separate error value.
+Do not write a retry helper that returns only `T?`; it collapses "successful missing value" and "all attempts failed." Preserve a result shape or separate error value.
 
 ```luau
 export type Attempt<T> =

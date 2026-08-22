@@ -88,7 +88,7 @@ Rejecting these at the remote boundary protects both the gameplay logic and the 
 
 ## 3. Keep outcomes server-owned
 
-The client may request “attack target X” or “buy item Y.” It must not request “deal 100 damage” or “subtract 20 coins.” The server calculates the result from current state.
+The client may request "attack target X" or "buy item Y." It must not request "deal 100 damage" or "subtract 20 coins." The server calculates the result from current state.
 
 For combat, check at least:
 

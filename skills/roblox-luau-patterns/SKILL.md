@@ -42,7 +42,7 @@ end
 return value, nil -- value may legitimately be nil
 ```
 
-Do not collapse “call succeeded and returned nil” into “call failed.” Retry only when the domain operation is safe to repeat. Persistence, HTTP, purchases, and remotes belong to their domain skills.
+Do not collapse "call succeeded and returned nil" into "call failed." Retry only when the domain operation is safe to repeat. Persistence, HTTP, purchases, and remotes belong to their domain skills.
 
 ### Schedule deliberately
 
