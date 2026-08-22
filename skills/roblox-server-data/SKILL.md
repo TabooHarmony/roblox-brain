@@ -23,7 +23,7 @@ Load for server-level or cross-server data: leaderboards (OrderedDataStore), cro
 - Sortable DataStore. Keys are strings; use a stable key such as `tostring(UserId)`.
 - Values are integers used for sorting; choose the sign and ordering intentionally.
 - `GetSortedAsync(ascending, pageSize, minValue, maxValue)` → sorted pages
-- For leaderboards ONLY — not player data
+- For leaderboards only, not player data
 
 ```luau
 local D = game:GetService("DataStoreService")
@@ -49,10 +49,10 @@ local top10 = store:GetSortedAsync(false, 10):GetCurrentPage()
 - Register servers with expiring heartbeats; use MessagingService for notifications.
 
 ### Pitfalls
-- MessagingService is fire-and-forget — no delivery guarantee, no ordering
-- GlobalDataStore has same rate limits as player DataStores — don't spam
+- MessagingService is fire-and-forget: no delivery guarantee, no ordering
+- GlobalDataStore has same rate limits as player DataStores; don't spam
 - OrderedDataStore keys are strings; values are integers used for sorting
-- Never store Instances — serialize to primitives first
+- Never store Instances; serialize to primitives first
 - UpdateAsync for any shared counter to prevent lost updates
 
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

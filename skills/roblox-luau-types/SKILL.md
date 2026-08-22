@@ -17,7 +17,7 @@ Load for Luau type system work: annotations, generics, union types, type narrowi
 
 **Strictness:** Use `--!strict` for maintained code, `--!nonstrict` while transitioning, and `--!nocheck` only for legacy/generated code. Project settings and directives select the mode; do not assume one global default.
 
-**Inference philosophy:** Infer first, annotate boundaries (params, returns, exports). Don't annotate every local — noise hides signal.
+**Inference philosophy:** Infer first, annotate boundaries (params, returns, exports). Don't annotate every local. Noise hides signal.
 
 **Sealed vs unsealed tables:**
 ```luau
@@ -53,7 +53,7 @@ assert(optionalValue, "missing") -- non-nil narrowing
 
 **Object typing:** `export type Counter = typeof(setmetatable({} :: CounterData, Counter))` for precise self.
 
-**Casts (::):** Precision tool to narrow overly generic inference — never to hide errors.
+**Casts (::):** Precision tool to narrow overly generic inference, never to hide errors.
 
 **Write types you can trust:** annotations are contracts for the compiler, not proof of runtime validity. Trust boundaries (remotes, DataStores, HttpService, attributes) still get runtime checks even when everything is annotated; inside a trusted boundary, let types carry the load instead of re-checking every call.
 

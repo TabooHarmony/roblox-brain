@@ -1,4 +1,4 @@
-# Roblox NPC & AI — Full Reference
+# Roblox NPC & AI: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
@@ -90,7 +90,7 @@ If this returns `false`, the caller should recompute from the NPC's current posi
 
 Control how the pathfinder treats specific regions:
 
-**Material costs** — make certain terrain materials expensive:
+**Material costs**: make certain terrain materials expensive:
 ```luau
 local path = PathfindingService:CreatePath({
     Costs = {
@@ -101,7 +101,7 @@ local path = PathfindingService:CreatePath({
 })
 ```
 
-**Region modifiers** — mark arbitrary zones as costly or impassable:
+**Region modifiers**: mark arbitrary zones as costly or impassable:
 1. Create an Anchored, CanCollide=false Part around the region
 2. Add a `PathfindingModifier` child with a `Label` (e.g. "DangerZone")
 3. Reference the label in Costs:
@@ -114,12 +114,12 @@ local path = PathfindingService:CreatePath({
 })
 ```
 
-**PassThrough** — pathfind through solid obstacles (e.g. doors):
+**PassThrough**: pathfind through solid obstacles (e.g. doors):
 1. Create an Anchored, CanCollide=false Part around the door
 2. Add a `PathfindingModifier` with `PassThrough = true`
 3. The path will route through the door as if it's open
 
-**PathfindingLink** — connect disconnected navmesh areas:
+**PathfindingLink**: connect disconnected navmesh areas:
 Use `PathfindingLink` to tell the pathfinder about custom traversal (teleporters, ziplines, boats). Set a Label and handle it in the waypoint loop via `waypoint.Action == Enum.PathWaypointAction.Custom`.
 
 ### Navigation Mesh
@@ -132,7 +132,7 @@ Colored areas = walkable. Small arrows = jump connections. Uncolored = impassabl
 
 ### Custom navmesh alternatives to PathfindingService
 
-PathfindingService auto-generates its navmesh from geometry server-side — robust but black-box, with no control over walkable geometry or generation. For full control, community modules port real navmesh generators to Luau (see the Navcast thread as a lead, https://devforum.roblox.com/t/navcast-an-attempt-to-port-recast-to-luau/4743538). Such ports are not game-ready: voxelization is far too slow for live or changing maps, so tile generation with yields between chunks is required. Use them as a reference point when PathfindingService's constraints don't fit your geometry or agent needs, not as a drop-in replacement.
+PathfindingService auto-generates its navmesh from geometry server-side. It is robust but black-box: no control over walkable geometry or generation. For full control, community modules port real navmesh generators to Luau (see the Navcast thread as a lead, https://devforum.roblox.com/t/navcast-an-attempt-to-port-recast-to-luau/4743538). Such ports are not game-ready: voxelization is far too slow for live or changing maps, so tile generation with yields between chunks is required. Use them as a reference point when PathfindingService's constraints don't fit your geometry or agent needs, not as a drop-in replacement.
 
 <!-- temporal: 2026-07 -->
 

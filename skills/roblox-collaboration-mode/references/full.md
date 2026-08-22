@@ -1,4 +1,4 @@
-# Collaboration Mode — Worked Examples
+# Collaboration Mode: Worked Examples
 
 Illustrative scenarios for calibrating peer vs autonomous mode and bravery
 calls. Adapt to the actual conversation; the skill's rules win over these

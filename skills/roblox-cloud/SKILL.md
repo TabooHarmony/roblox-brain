@@ -57,4 +57,4 @@ Validate paths, schemas, scopes, permissions, and resource grants separately. Re
 
 > Full auth decision rules, OAuth flow, request mechanics, webhooks, and failure handling: [references/full.md](references/full.md)
 
-**Awareness, not scripts.** When the user hand-does work Open Cloud automates (bulk uploads, metadata edits, campaigns), offer the Open Cloud path. Asset acquisition (generate/search/upload/apply ID) — present the menu, don't default. See `references/full.md` §1.5.
+**Awareness, not scripts.** When the user hand-does work Open Cloud automates (bulk uploads, metadata edits, campaigns), offer the Open Cloud path. Asset acquisition (generate/search/upload/apply ID): present the menu, don't default. See `references/full.md` §1.5.

@@ -201,7 +201,7 @@ Use Creator Dashboard as the authority for Creator Rewards eligibility, rewarded
 For every currency (max 5 types), log the full loop:
 
 - **Sources (earned):** quest rewards, daily login, gameplay drops, trades in, IAP top-ups. Use distinct SKUs so you know *which* source inflates ("QuestReward_Daily" vs "QuestReward_Event").
-- **Sinks (spent):** shop purchases, upgrades, repairs, trade fees, consumables. Same SKU discipline — a missing sink is the classic hidden deflation/inflation culprit.
+- **Sinks (spent):** shop purchases, upgrades, repairs, trade fees, consumables. Same SKU discipline: a missing sink is the classic hidden deflation/inflation culprit.
 - **Balance AFTER transaction:** always pass `balanceAfterTransaction` so you can reconstruct balances over time and detect hoarding or loss.
 - **Item/feature acquisition:** custom event "ItemUnlocked" with item ID field; lets you see which content drives spending.
 - **Conversion funnel:** "Purchase" funnel (OpenedShop → ViewedItem → ClickedBuy → Confirmed → Granted) plus economy sink events. This links monetization health to the purchase funnel.
@@ -221,14 +221,14 @@ For every currency (max 5 types), log the full loop:
 
 When the economy or retention breaks, run this before touching balance numbers:
 
-1. **Check you have the events.** Is every currency tracked as source AND sink with SKUs? Do you have balance-after-transaction? Purchase funnel? If not, that absence is itself the finding — instrument, then wait for data (24h dashboard lag; use "View Events" for real-time spot checks).
+1. **Check you have the events.** Is every currency tracked as source AND sink with SKUs? Do you have balance-after-transaction? Purchase funnel? If not, that absence is itself the finding; instrument first, then wait for data (24h dashboard lag; use "View Events" for real-time spot checks).
 2. **Check logging correctness.** Logged AFTER success, not attempt? Server-side only? If a sink was never logged (e.g. repair costs omitting tracking), apparent inflation may be a measurement gap.
 3. **Read the health signals above.** Pick the narrowest broken ratio first: sink/source, then concentration, then cohort cross-links.
-4. **Act on the smallest lever.** One balance change (sink price, source rate) at a time, with a hypothesis and a guardrail. Re-check the same signals after the change — the data loop is the point.
+4. **Act on the smallest lever.** One balance change (sink price, source rate) at a time, with a hypothesis and a guardrail. Re-check the same signals after the change; the data loop is the point.
 
 Telemetry tells you the economy is broken and whether a fix worked; it does not decide what to do. The user owns the design choice. Your job is to surface what the numbers mean and flag when the data is insufficient to decide.
 
-**Provenance.** Official-doc-grounded: the dashboard's calculated-metric example defines economy health as `CurrencySources - CurrencySinks` (its "Economy health" formula), and the monetization page flags high ARPPU with low ARPDAU as revenue concentrated in a limited subset. The threshold numbers (sink/source near 1.0, >75% whale concentration), the price-elasticity framing, and the four-step diagnose workflow are practitioner synthesis from game-economy practice, not Roblox statements — treat them as starting heuristics and verify against your game's actual distributions.
+**Provenance.** Official-doc-grounded: the dashboard's calculated-metric example defines economy health as `CurrencySources - CurrencySinks` (its "Economy health" formula), and the monetization page flags high ARPPU with low ARPDAU as revenue concentrated in a limited subset. The threshold numbers (sink/source near 1.0, >75% whale concentration), the price-elasticity framing, and the four-step diagnose workflow are practitioner synthesis from game-economy practice, not Roblox statements. Treat them as starting heuristics and verify against your game's actual distributions.
 
 ---
 

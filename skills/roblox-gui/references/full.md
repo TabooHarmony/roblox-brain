@@ -135,7 +135,7 @@ Every interactive control needs:
 
 ### Reliable hover (MouseEnter/MouseLeave pitfalls)
 
-Native `GuiObject.MouseEnter`/`MouseLeave` only re-check hover when the mouse moves, so they can miss when content scrolls under a stationary cursor (e.g. inside a `ScrollingFrame`) or occasionally fail to fire `MouseLeave`. For reliable hover, poll the cursor each frame and fire your own enter/leave on state transitions. This is a practitioner pattern (DevForum lead: "REAL MouseEnter/MouseLeave for GuiObjects", 7eoeb, https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310) — prefer `GuiService:GetGuiObjectsAtPosition()` over hardcoded top-bar offsets, and clean up the signals with the owning UI's lifetime.
+Native `GuiObject.MouseEnter`/`MouseLeave` only re-check hover when the mouse moves, so they can miss when content scrolls under a stationary cursor (e.g. inside a `ScrollingFrame`) or occasionally fail to fire `MouseLeave`. For reliable hover, poll the cursor each frame and fire your own enter/leave on state transitions. This is a practitioner pattern (DevForum lead: "REAL MouseEnter/MouseLeave for GuiObjects", 7eoeb, https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310). Prefer `GuiService:GetGuiObjectsAtPosition()` over hardcoded top-bar offsets, and clean up the signals with the owning UI's lifetime.
 
 ```luau
 local RS = game:GetService("RunService")

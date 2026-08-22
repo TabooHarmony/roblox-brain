@@ -58,7 +58,7 @@ Do not copy a blanket `Heartbeat` position checker into a Server Authority proje
 
 ### Server-side anticheat (classic replication)
 
-Server-side anticheats detect movement abuse by checking sustained airborne time and jump-ceiling violations (flight), horizontal velocity above a threshold using relative velocity so moving platforms don't false-flag (speed), single-tick jumps and accumulated positional drift (teleport), raycasts through collidable geometry (noclip), and consecutive angular/linear velocity spikes (fling). Structure checks as small modules exposing an id, weight, state, and a `check(state, delta)` function; tune thresholds with a ~1.5x multiplier to absorb replication quirks, and add a history record that lowers thresholds for repeat offenders. Treat these as weakening measures, not a silver bullet — subtle sub-threshold exploits slip through, and Server Authority remains the robust answer for physics-based exploits.
+Server-side anticheats detect movement abuse by checking sustained airborne time and jump-ceiling violations (flight), horizontal velocity above a threshold using relative velocity so moving platforms don't false-flag (speed), single-tick jumps and accumulated positional drift (teleport), raycasts through collidable geometry (noclip), and consecutive angular/linear velocity spikes (fling). Structure checks as small modules exposing an id, weight, state, and a `check(state, delta)` function; tune thresholds with a ~1.5x multiplier to absorb replication quirks, and add a history record that lowers thresholds for repeat offenders. Treat these as weakening measures, not a silver bullet: subtle sub-threshold exploits slip through, and Server Authority remains the robust answer for physics-based exploits.
 
 *Community/practitioner content (lead: https://devforum.roblox.com/t/sinas-serverside-anticheat-102/4801833).*
 
@@ -172,8 +172,8 @@ end
 
 ## What NOT to Do
 
-- **Don't obfuscate client code** — it doesn't stop exploiters and makes debugging harder
-- **Don't use _G for security state** — it's globally readable and writable
-- **Don't kick without logging** — you need data to distinguish false positives from real exploits
-- **Don't over-validate movement** — too strict = legitimate players get false-flagged on lag spikes, and blanket checks fight Server Authority prediction. Use the selected model's simulation path and tolerate legitimate corrections.
-- **Don't rely on client-side anti-cheat** — exploiters disable it first
+- **Don't obfuscate client code**: it doesn't stop exploiters and makes debugging harder
+- **Don't use _G for security state**: it's globally readable and writable
+- **Don't kick without logging**: you need data to distinguish false positives from real exploits
+- **Don't over-validate movement**: too strict = legitimate players get false-flagged on lag spikes, and blanket checks fight Server Authority prediction. Use the selected model's simulation path and tolerate legitimate corrections.
+- **Don't rely on client-side anti-cheat**: exploiters disable it first

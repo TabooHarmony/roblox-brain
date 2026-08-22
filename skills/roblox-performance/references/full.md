@@ -1,4 +1,4 @@
-# Roblox Performance — Full Reference
+# Roblox Performance: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
@@ -97,7 +97,7 @@ The practical rule is: profile first, isolate a pure or read-heavy calculation, 
 
 #### Player/Character objects are NOT auto-destroyed
 
-`PlayerRemoving` and `CharacterRemoving` fire, but the engine does not destroy the Player or Character instances. If you hold attributes, connections, or references on them, that memory stays on the server for the life of the process — a slow leak that grows with every join/leave and eventually crashes long-lived servers.
+`PlayerRemoving` and `CharacterRemoving` fire, but the engine does not destroy the Player or Character instances. If you hold attributes, connections, or references on them, that memory stays on the server for the life of the process, a slow leak that grows with every join/leave and eventually crashes long-lived servers.
 
 The pattern: disconnect/destroy each player's resources in those events, and destroy the instance when you are done with it. Defer the destroy (the removal event may still run cleanup) and wrap in `pcall` so cleanup can't error mid-list.
 
@@ -125,7 +125,7 @@ end)
 ```
 
 Notes:
-- The same leak exists on the client (e.g. Player/character references from LocalScripts) — clean up there too.
+- The same leak exists on the client (e.g. Player/character references from LocalScripts); clean up there too.
 - `Workspace.PlayerCharacterDestroyBehavior` (default `Disabled`) controls whether the engine destroys characters on removal. Even if set to destroy, don't rely on it for the Player object, and explicit cleanup is harmless.
 
 ### Rendering
@@ -149,7 +149,7 @@ Notes:
 
 ### Replay / Delta State Recording
 
-A replay system stores compact per-delta state changes rather than full frames: record only the authoritative fields that change each tick (CFrame, velocity, health, anim), delta/dict-encode against the prior frame, then compress (e.g. ZStd) and chunk the stream for storage. Store an integrity hash (e.g. HMAC-SHA256) so chunks can't be tampered with, and version the protocol so older replays stay decodeable as the format evolves. Reconstruction happens at playback on the client, keeping the stored footprint near the delta+compression size rather than raw per-frame snapshots. [Community lead: "ReplayCore" by lathienvu7, https://devforum.roblox.com/t/replaycore-a-modern-open-source-replay-system-for-roblox/4803450 — label as practitioner design, verify specifics before adoption.]
+A replay system stores compact per-delta state changes rather than full frames: record only the authoritative fields that change each tick (CFrame, velocity, health, anim), delta/dict-encode against the prior frame, then compress (e.g. ZStd) and chunk the stream for storage. Store an integrity hash (e.g. HMAC-SHA256) so chunks can't be tampered with, and version the protocol so older replays stay decodeable as the format evolves. Reconstruction happens at playback on the client, keeping the stored footprint near the delta+compression size rather than raw per-frame snapshots. [Community lead: "ReplayCore" by lathienvu7, https://devforum.roblox.com/t/replaycore-a-modern-open-source-replay-system-for-roblox/4803450; label as practitioner design and verify specifics before adoption.]
 
 ## Optimization Patterns
 
@@ -179,9 +179,9 @@ With `ModelStreamingBehavior = Improved` (recommended), a Model streams in only 
 When instances stream out, they are **parented to nil** (not destroyed). Luau references persist if they stream back in. Removal signals fire, but local-only property changes may be lost.
 
 Configuration:
-- `StreamingTargetRadius` — maximum target distance; Studio default is 1024 studs.
-- `StreamingMinRadius` — highest-priority radius; Studio default is 64 studs.
-- `StreamingIntegrityMode` — behavior when a player enters an incompletely streamed region.
+- `StreamingTargetRadius`: maximum target distance; Studio default is 1024 studs.
+- `StreamingMinRadius`: highest-priority radius; Studio default is 64 studs.
+- `StreamingIntegrityMode`: behavior when a player enters an incompletely streamed region.
 
 These settings are not scriptable. Tune them in Studio from measurements on
 representative devices; do not assume a smaller radius is automatically better.

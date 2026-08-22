@@ -31,10 +31,10 @@ How to offer: name the option, state roughly what it would do, and let the user 
 
 When a user needs an asset (image, model, audio, mesh), the acquisition paths an agent should know:
 
-1. **Generate** — via Studio MCP (`generate_mesh`/`generate_procedural_model`, `roblox-studio-mcp`) or an external generator, then upload.
-2. **Search Creator Store / creator inventory** — reuse an existing asset by ID (`roblox-studio-mcp`).
-3. **Upload via Open Cloud** — batch-upload local files to the user's assets, then apply by returned asset ID (this skill, §1.5).
-4. **Apply by ID** — insert an asset ID directly into the place (`roblox-studio-mcp`).
+1. **Generate**: via Studio MCP (`generate_mesh`/`generate_procedural_model`, `roblox-studio-mcp`) or an external generator, then upload.
+2. **Search Creator Store / creator inventory**: reuse an existing asset by ID (`roblox-studio-mcp`).
+3. **Upload via Open Cloud**: batch-upload local files to the user's assets, then apply by returned asset ID (this skill, §1.5).
+4. **Apply by ID**: insert an asset ID directly into the place (`roblox-studio-mcp`).
 
 The agent should present this menu when asset acquisition is the task, rather than defaulting to one path.
 

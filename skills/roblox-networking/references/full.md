@@ -189,7 +189,7 @@ For a state object that many clients must observe, avoid re-sending whole tables
 
 ## 7b. Shrink payloads with binary serialization
 
-When a high-frequency remote exceeds budget, replace high-precision tables with compact typed fields. Pick the smallest precision that reads correctly per field — e.g. a quantized `CFrame` or a low-bit float for positions, a small integer for counters — rather than always sending 64-bit values. Community serialization modules (e.g. Bitstream, https://devforum.roblox.com/t/bitstream-%E2%80%93-binary-framework/4788654) provide typed, precision-varied formats; keep a schema/version so both sides agree on field order and size. Prefer this for replaceable, high-frequency data (positions, aim), not for state that must be exactly once and easily debugged.
+When a high-frequency remote exceeds budget, replace high-precision tables with compact typed fields. Pick the smallest precision that reads correctly per field (a quantized `CFrame` or low-bit float for positions, a small integer for counters) rather than always sending 64-bit values. Community serialization modules (e.g. Bitstream, https://devforum.roblox.com/t/bitstream-%E2%80%93-binary-framework/4788654) provide typed, precision-varied formats; keep a schema/version so both sides agree on field order and size. Prefer this for replaceable, high-frequency data (positions, aim), not for state that must be exactly once and easily debugged.
 
 ## 8. Movement and physics checks
 

@@ -1,4 +1,4 @@
-# Roblox Server & Shared Data — Full Reference
+# Roblox Server & Shared Data: Full Reference
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
@@ -55,10 +55,10 @@ end
 ```
 
 ### Key Rules
-- Keys MUST be strings — use a stable representation such as `tostring(player.UserId)`
-- Values must be integers used for sorting — do not store strings, tables, or nested data
-- Separate from player DataStore — different key space, different purpose
-- `GetSortedAsync` returns pages, not a flat list — use pagination
+- Keys MUST be strings; use a stable representation such as `tostring(player.UserId)`
+- Values must be integers used for sorting; do not store strings, tables, or nested data
+- Separate from player DataStore (different key space, different purpose)
+- `GetSortedAsync` returns pages, not a flat list; use pagination
 - Rate limits apply same as regular DataStores
 
 ### Leaderboard Alternatives: Cached DataStore
@@ -69,7 +69,7 @@ OrderedDataStore is the canonical primitive, but a leaderboard can instead be st
 
 ### Overview
 
-Real-time communication between server instances. Fire-and-forget — no delivery guarantee, no ordering guarantee.
+Real-time communication between server instances. Fire-and-forget: no delivery guarantee, no ordering guarantee.
 
 ### API
 
@@ -136,12 +136,12 @@ end)
 ```
 
 ### Key Rules
-- Messages are fire-and-forget — design for idempotency
-- No ordering guarantee — handle out-of-order messages gracefully
+- Messages are fire-and-forget; design for idempotency
+- No ordering guarantee; handle out-of-order messages gracefully
 - Rate limit: 600 + 240 * (players in server) messages per minute
-- Message size limited — keep payloads small
+- Message size limited; keep payloads small
 - `message.Data` contains the published payload
-- Subscribe callbacks run in a separate thread — use pcall
+- Subscribe callbacks run in a separate thread; wrap them in pcall
 
 ## GlobalDataStore
 
@@ -196,10 +196,10 @@ end
 ```
 
 ### Key Rules
-- Always use `UpdateAsync` for shared state — `SetAsync` can lose updates
-- Never store Instances — serialize to primitives
+- Always use `UpdateAsync` for shared state: `SetAsync` can lose updates
+- Never store Instances; serialize to primitives
 - Same rate limits as player DataStores
-- No session locking — don't use for player data
+- No session locking, so don't use it for player data
 - Key naming: use prefixes to namespace (`guild_`, `counter_`, `season_`)
 
 ## MemoryStoreService

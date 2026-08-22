@@ -1,4 +1,4 @@
-# Roblox Input — Full Reference
+# Roblox Input: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
@@ -11,7 +11,7 @@ For a Server Authority project, inputs that affect the core simulation should us
 
 `ContextActionService` remains useful for UI-only actions and classic projects. Do not use the UI binding choice as a security boundary; the server still validates the resulting action and its game-specific permissions.
 
-## UserInputService — Properties
+## UserInputService: Properties
 
 | Property | Type | Notes |
 |----------|------|-------|
@@ -28,7 +28,7 @@ For a Server Authority project, inputs that affect the core simulation should us
 | `ModalEnabled` | bool | Block all input while a modal is active |
 | `UserHeadCFrame` / `GetUserCFrame()` | CFrame | VR head pose |
 
-## UserInputService — Methods (selection)
+## UserInputService: Methods (selection)
 
 | Method | Returns | Use for |
 |--------|---------|---------|
@@ -48,12 +48,12 @@ For a Server Authority project, inputs that affect the core simulation should us
 | `GetStringForKeyCode(KeyCode)` / `GetImageForKeyCode(KeyCode)` | string | Display labels for key bindings |
 | `RecenterUserHeadCFrame()` | () | Reset VR head to current look direction |
 
-## UserInputService — Events
+## UserInputService: Events
 
 ### Discrete (Began → Ended)
-- `InputBegan(input: InputObject, gameProcessedEvent: boolean)` — fires when input starts. Does NOT fire for mouse wheel.
-- `InputChanged(input, gameProcessedEvent)` — fires while input is changing (mouse move, thumbstick, wheel, drag).
-- `InputEnded(input, gameProcessedEvent)` — fires when input stops.
+- `InputBegan(input: InputObject, gameProcessedEvent: boolean)`: fires when input starts. Does NOT fire for mouse wheel.
+- `InputChanged(input, gameProcessedEvent)`: fires while input is changing (mouse move, thumbstick, wheel, drag).
+- `InputEnded(input, gameProcessedEvent)`: fires when input stops.
 
 All three only fire when the Roblox client window has focus.
 
@@ -67,32 +67,32 @@ All three only fire when the Roblox client window has focus.
 - `GamepadConnected(UserInputType)`, `GamepadDisconnected(UserInputType)`.
 
 ### Mobile sensors
-- `DeviceGravityChanged(Vector3, rotation)` — fires when accelerometer present + `AccelerometerEnabled`.
-- `DeviceRotationChanged(CFrame, rotation, CFrame)` — fires when gyroscope present.
-- `DeviceAccelerationChanged(Vector3, acceleration)` — fires when accelerometer present.
+- `DeviceGravityChanged(Vector3, rotation)`: fires when accelerometer present + `AccelerometerEnabled`.
+- `DeviceRotationChanged(CFrame, rotation, CFrame)`: fires when gyroscope present.
+- `DeviceAccelerationChanged(Vector3, acceleration)`: fires when accelerometer present.
 
 ### Player state
-- `JumpRequest()` — fires on jump key press. Fires multiple times per jump — debounce.
-- `LastInputTypeChanged(Enum.UserInputType)` — when the active input device changes.
-- `PointerAction(Enum.PointerAction, Vector2, number)` — middle-click navigation.
+- `JumpRequest()`: fires on jump key press. Fires multiple times per jump; debounce.
+- `LastInputTypeChanged(Enum.UserInputType)`: when the active input device changes.
+- `PointerAction(Enum.PointerAction, Vector2, number)`: middle-click navigation.
 
 ### UI focus
-- `TextBoxFocused(TextBox)`, `TextBoxFocusReleased(TextBox)` — track when text input gains/loses focus.
+- `TextBoxFocused(TextBox)`, `TextBoxFocusReleased(TextBox)`: track when text input gains/loses focus.
 
 ### Window
-- `WindowFocused()`, `WindowFocusReleased()` — fires when the Roblox window gains/loses OS focus.
+- `WindowFocused()`, `WindowFocusReleased()`: fires when the Roblox window gains/loses OS focus.
 
 ### VR
-- `UserCFrameChanged(Enum.UserCFrame, CFrame)` — head/hand motion in VR.
+- `UserCFrameChanged(Enum.UserCFrame, CFrame)`: head/hand motion in VR.
 
 ## InputObject
 
 Properties you read off the input arg:
-- `UserInputType` — Keyboard, MouseButton1..3, MouseWheel, MouseMovement, Touch, Gamepad1..8, Accelerometer, Gyro, etc.
-- `KeyCode` — the specific key/button (e.g. `Enum.KeyCode.Space`, `Enum.KeyCode.ButtonA`).
-- `UserInputState` — `Begin`, `Change`, `End`, `Cancel`. `Cancel` fires when input was in progress and another action bound over it.
-- `Position` — Vector2 in viewport (mouse, touch).
-- `Delta` — Vector3 (mouse/gamepad movement this frame).
+- `UserInputType`: Keyboard, MouseButton1..3, MouseWheel, MouseMovement, Touch, Gamepad1..8, Accelerometer, Gyro, etc.
+- `KeyCode`: the specific key/button (e.g. `Enum.KeyCode.Space`, `Enum.KeyCode.ButtonA`).
+- `UserInputState`: `Begin`, `Change`, `End`, `Cancel`. `Cancel` fires when input was in progress and another action bound over it.
+- `Position`: Vector2 in viewport (mouse, touch).
+- `Delta`: Vector3 (mouse/gamepad movement this frame).
 
 Note: when `Cancel` fires, the `InputObject` is `UserInputType.None` / `KeyCode.Unknown`.
 
@@ -103,8 +103,8 @@ Note: when `Cancel` fires, the `InputObject` is `UserInputType.None` / `KeyCode.
 Signature: `BindAction(actionName: string, handler: Function, createTouchButton: boolean, ...inputTypes)`.
 
 The handler receives `(actionName, inputState, inputObject)` and returns `Enum.ContextActionResult`:
-- `Sink` — consume the input. Stops propagation.
-- `Pass` — let lower-priority bindings also receive it.
+- `Sink`: consume the input. Stops propagation.
+- `Pass`: let lower-priority bindings also receive it.
 
 Bindings form a **stack**: most recent binding on the same input wins. When you unbind, the previous binding takes over. Use `BindActionAtPriority` to force ordering (higher priority first).
 
@@ -166,7 +166,7 @@ tool.Unequipped:Connect(function()
 end)
 ```
 
-### Bind vs InputBegan — when to use which
+### Bind vs InputBegan: when to use which
 
 Use `ContextActionService.BindAction` when:
 - The action only exists in a context (holding tool, sitting in seat, near door).
@@ -200,7 +200,7 @@ CAS:BindAction("MoveUp", handleMoveUp, true,
 )
 ```
 
-For movement bindings, prefer `Enum.PlayerActions` (e.g. `MoveForward`, `Jump`) — they automatically bind to WASD, arrows, left stick, and d-pad across platforms.
+For movement bindings, prefer `Enum.PlayerActions` (e.g. `MoveForward`, `Jump`); they automatically bind to WASD, arrows, left stick, and d-pad across platforms.
 
 ## UI Focus and Directional Selection
 
@@ -279,14 +279,14 @@ end
 ## Touch Deep Dive
 
 ### High-level gestures
-- `TouchTap` — brief single-finger tap.
-- `TouchTapInWorld` — same, with the world-space hit position (via `Camera:ScreenPointToRay`).
-- `TouchPan` — drag with one finger. Use for camera rotation/zoom in mobile games.
-- `TouchPinch` — two-finger pinch. Use for zoom.
-- `TouchRotate` — two-finger rotate gesture.
-- `TouchSwipe` — quick directional swipe.
-- `TouchLongPress` — held touch.
-- `TouchDrag` — continuous drag (useful for inventory drag-and-drop).
+- `TouchTap`: brief single-finger tap.
+- `TouchTapInWorld`: same, with the world-space hit position (via `Camera:ScreenPointToRay`).
+- `TouchPan`: drag with one finger. Use for camera rotation/zoom in mobile games.
+- `TouchPinch`: two-finger pinch. Use for zoom.
+- `TouchRotate`: two-finger rotate gesture.
+- `TouchSwipe`: quick directional swipe.
+- `TouchLongPress`: held touch.
+- `TouchDrag`: continuous drag (useful for inventory drag-and-drop).
 
 ### Multi-touch tracking
 Use raw `TouchStarted`/`TouchMoved`/`TouchEnded` and maintain your own per-touch state by `input` instance.
@@ -419,6 +419,6 @@ end)
 - **No debounce on JumpRequest.** Fires once per frame the jump key is held.
 - **Mixing `PlayerActions` with `KeyCode` in a single binding.** Use one or the other, not both. `PlayerActions` maps to the platform's natural input.
 - **Setting `MouseBehavior = LockCenter` and forgetting to reset it.** Reset on player leave or context exit.
-- **Bypassing `ContextActionService` because it "feels indirect."** Most gameplay bindings should use CAS — it correctly handles chat/text-box conflicts for free.
+- **Bypassing `ContextActionService` because it "feels indirect."** Most gameplay bindings should use CAS: it correctly handles chat/text-box conflicts for free.
 - **Auto-creating touch buttons beyond the 7 limit.** BindAction silently refuses to create the 8th button.
-- **Using `gameProcessedEvent` to filter CAS handlers.** CAS doesn't pass `gpe` to its handlers — by design, CAS handles conflicts itself.
+- **Using `gameProcessedEvent` to filter CAS handlers.** CAS doesn't pass `gpe` to its handlers; by design, CAS handles conflicts itself.

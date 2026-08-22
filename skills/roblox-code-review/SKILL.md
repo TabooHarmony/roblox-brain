@@ -18,7 +18,7 @@ Route a Roblox code review to the right domain skills and produce a structured r
 
 ## Quick Reference
 
-### Routing — Load These Skills for Each Lens
+### Routing: Load These Skills for Each Lens
 
 | Lens | Load |
 |------|------|

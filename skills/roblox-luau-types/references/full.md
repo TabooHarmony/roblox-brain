@@ -1,4 +1,4 @@
-# Luau Type System — Full Reference
+# Luau Type System: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
@@ -11,7 +11,7 @@
 - Prefer explicit exported aliases at module boundaries for stable contracts
 - Use generics when input/output relationships matter; never replace with `any`
 - Use tagged unions + refinements for multi-case structured values
-- Casts (`::`) are a precision tool, not a bypass — narrow overly generic inference, don't hide errors
+- Casts (`::`) are a precision tool, not a bypass: narrow overly generic inference, don't hide errors
 
 ## Philosophy
 
@@ -234,7 +234,7 @@ local player: Player = game.Players.LocalPlayer
 local character: Model = player.Character or player.CharacterAdded:Wait()
 local humanoid: Humanoid = character:FindFirstChildWhichIsA("Humanoid") :: Humanoid
 
--- Value types (NOT instances — value types / structs)
+-- Value types (NOT instances; value types / structs)
 local position: Vector3 = Vector3.new(10, 5, 0)
 local rotation: CFrame = CFrame.new(0, 10, 0) * CFrame.Angles(0, math.rad(90), 0)
 local color: Color3 = Color3.fromRGB(255, 0, 0)

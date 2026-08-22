@@ -16,9 +16,9 @@ Load when scripting custom camera behavior (cutscenes, third-person follow, cust
 
 ## Quick Reference
 
-**The Camera**: `workspace.CurrentCamera` — one per client. Set `CameraType = Scriptable` to disable defaults and take full control. Without it, defaults overwrite your CFrame every frame.
+**The Camera**: `workspace.CurrentCamera`: one per client. Set `CameraType = Scriptable` to disable defaults and take full control. Without it, defaults overwrite your CFrame every frame.
 
-**CameraType**: `Fixed`, `Attach`/`Watch`/`Track`/`Follow` (subject-following), `Custom` (default), `Scriptable` (no default), `Orbital` (fixed Y, rotates around player). `CameraSubject` cannot be `nil` — setting it reverts.
+**CameraType**: `Fixed`, `Attach`/`Watch`/`Track`/`Follow` (subject-following), `Custom` (default), `Scriptable` (no default), `Orbital` (fixed Y, rotates around player). `CameraSubject` cannot be `nil`: setting it reverts.
 
 **Key properties**: `CFrame`, `CameraSubject`, `FieldOfView` (deg), `FieldOfViewMode` (`Vertical`/`Diagonal`), `NearPlaneZ`, `ViewportSize`, `HeadLocked`, `HeadScale`, `Focus`.
 
@@ -33,7 +33,7 @@ Load when scripting custom camera behavior (cutscenes, third-person follow, cust
 | Interpolate | `cf:Lerp(goal, alpha)` |
 | Unit axes | `cf.LookVector`, `cf.RightVector`, `cf.UpVector` |
 
-**Custom camera loop** — always `PreRender`, never `Heartbeat`:
+**Custom camera loop**: always `PreRender`, never `Heartbeat`:
 
 ```luau
 camera.CameraType = Enum.CameraType.Scriptable
@@ -43,16 +43,16 @@ RunService.PreRender:Connect(function(dt)
 end)
 ```
 
-**Raycasting from camera**: `camera:ScreenPointToRay(mx, my)` (accounts for GUI inset) vs `camera:ViewportPointToRay(mx, my)` (raw, NO inset). `ScreenPointToRay` returns a unit Ray (1 stud) — multiply `Direction` by length for actual raycast.
+**Raycasting from camera**: `camera:ScreenPointToRay(mx, my)` (accounts for GUI inset) vs `camera:ViewportPointToRay(mx, my)` (raw, NO inset). `ScreenPointToRay` returns a unit Ray (1 stud); multiply `Direction` by length for the actual raycast.
 
 **Pitfalls**:
 - Client-only. Server sets silently dropped.
 - Without `Scriptable`, defaults overwrite your CFrame every frame.
 - `PreRender` for camera (visual sync). `Heartbeat` adds 1-frame lag. `RenderStepped` still works but is superseded by `PreRender`.
-- `Camera.CFrame` lacks VR head rotation — use `GetRenderCFrame()` for true view.
-- `SetRoll` is outdated — apply roll via `CFrame.Angles(0, 0, roll)` on CFrame.
+- `Camera.CFrame` lacks VR head rotation; use `GetRenderCFrame()` for the true view.
+- `SetRoll` is outdated; apply roll via `CFrame.Angles(0, 0, roll)` on CFrame.
 - `CameraSubject = nil` reverts to previous.
-- `CFrame.new(pos, lookAt)` is legacy (back-compat only) — use `CFrame.lookAt(at, lookAt)` for new code.
+- `CFrame.new(pos, lookAt)` is legacy (back-compat only); use `CFrame.lookAt(at, lookAt)` for new code.
 - `ScreenPointToRay` ≠ `ViewportPointToRay` (GUI inset). Use `ScreenPointToRay` for mouse input.
 
 See `references/full.md` for first/third-person recipes, cutscenes, screen shake, mouse-look, full API.
