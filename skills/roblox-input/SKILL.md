@@ -18,7 +18,7 @@ Load for keyboard, mouse, gamepad, touch, motion, or cross-platform action bindi
 
 **Core events** (`UserInputService`): `InputBegan`, `InputChanged`, `InputEnded` fire as `(input: InputObject, gameProcessedEvent: boolean)`. `InputBegan` does NOT fire for mouse wheel. Events only fire while the client window is focused.
 
-**Prefer `ContextActionService` over `InputBegan`** for gameplay — free conflict resolution (chat won't steal H) and free mobile buttons:
+**Prefer `ContextActionService` over `InputBegan`** for gameplay: free conflict resolution (chat won't steal H) and free mobile buttons:
 
 ```luau
 local CAS = game:GetService("ContextActionService")
@@ -47,7 +47,7 @@ CAS:BindAction("Jump", onAction, true,
 - `gameProcessedEvent=true` in InputBegan → UI consumed it. Filter for gameplay.
 - `BindAction` is stack-based: most-recent wins. Use `BindActionAtPriority`.
 - Client-only. Server scripts silently no-op.
-- `JumpRequest` fires multiple times per jump — debounce.
+- `JumpRequest` fires multiple times per jump; debounce.
 - Mouse wheel only fires `InputChanged`.
 
 Full event tables and polling methods: `references/full.md`.

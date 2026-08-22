@@ -18,7 +18,7 @@ Load when implementing audio playback, spatial/3D sound, background music, sound
 
 ## Quick Reference
 
-**Two Systems**: Legacy (`Sound`/`SoundGroup`/`SoundEffect`) — simpler. New modular (`AudioPlayer`/`AudioEmitter`/`Wire`/`AudioDeviceOutput`) — preferred for new projects, required for voice chat.
+**Two Systems**: Legacy (`Sound`/`SoundGroup`/`SoundEffect`): simpler. New modular (`AudioPlayer`/`AudioEmitter`/`Wire`/`AudioDeviceOutput`): preferred for new projects, required for voice chat.
 
 **Sound Placement**: BasePart child → volumetric. Attachment/MeshPart → point source. SoundService/Workspace → global (BGM/UI).
 

@@ -1,4 +1,4 @@
-# Roblox Localization — Full Reference
+# Roblox Localization: Full Reference
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
@@ -33,11 +33,11 @@ LocalizationTable stores translation entries. Each entry maps a source string to
 ### Structure
 
 Each entry in a LocalizationTable has:
-- `Key` — unique identifier (optional, can use source text as key)
-- `Source` — the original text string
-- `Context` — optional context string for disambiguation
-- `Example` — optional example with argument placeholders
-- Locale columns — `en-us`, `pt-br`, `ja-jp`, `es-es`, etc.
+- `Key`: unique identifier (optional, can use source text as key)
+- `Source`: the original text string
+- `Context`: optional context string for disambiguation
+- `Example`: optional example with argument placeholders
+- Locale columns: `en-us`, `pt-br`, `ja-jp`, `es-es`, etc.
 
 ### Setup
 
@@ -47,7 +47,7 @@ local locTable = Instance.new("LocalizationTable")
 locTable.Name = "GameTranslations"
 locTable.Parent = game:GetService("LocalizationService")
 
--- Add entries programmatically (rare — usually done via CSV import in Studio)
+-- Add entries programmatically (rare; usually done via CSV import in Studio)
 locTable:SetEntries({
     {
         Key = "welcome",
@@ -152,8 +152,8 @@ end)
 ```
 
 ### Key Rules
-- `GetCountryRegionForPlayerAsync` is async and can fail — always pcall
-- Uses IP geolocation — VPNs/proxies give wrong results
+- `GetCountryRegionForPlayerAsync` is async and can fail, so always pcall
+- Uses IP geolocation, so VPNs/proxies give wrong results
 - Returns ISO 3166-1 alpha-2 country codes (US, GB, JP, BR, etc.)
 
 ## Locale List
@@ -194,7 +194,7 @@ Check `player.LocaleId` against this list to determine which translations to pro
 
 - **Missing translations**: fall back to source text silently. Log missing keys during development.
 - **Non-GUI text**: auto-translation doesn't work on chat messages, notifications, or any non-GuiBase2d element. Use `Translator:Translate()` manually.
-- **Async calls**: `GetTranslatorForPlayerAsync` and `GetCountryRegionForPlayerAsync` are async — cache results, don't call per-frame.
+- **Async calls**: `GetTranslatorForPlayerAsync` and `GetCountryRegionForPlayerAsync` are async; cache results, don't call per-frame.
 - **VPN/proxy**: country detection via IP is unreliable behind VPNs. Don't use for security-critical decisions.
 - **Argument formatting**: use `{0}`, `{1}` placeholders in source text. `FormatByKey` replaces them in order.
 - **Locale coverage**: not all locales are supported. Check `player.LocaleId` and handle unsupported locales gracefully.

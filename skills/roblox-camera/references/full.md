@@ -1,4 +1,4 @@
-# Roblox Camera — Full Reference
+# Roblox Camera: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
@@ -60,18 +60,18 @@ camera.CameraSubject = player.Character:FindFirstChildWhichIsA("Humanoid")
 |--------|---------|-----|
 | `GetRenderCFrame()` | CFrame | The "true" rendered CFrame, including VR head rotation not reflected in `.CFrame`. |
 | `GetRoll()` | float (radians) | Roll set via `SetRoll` (not roll manually applied via CFrame). |
-| `SetRoll(rollAngle)` | () | **Outdated** — apply roll via `CFrame.Angles(0, 0, roll)` on CFrame instead. |
+| `SetRoll(rollAngle)` | () | **Outdated**: apply roll via `CFrame.Angles(0, 0, roll)` on CFrame instead. |
 | `ScreenPointToRay(x, y, depth?)` | Ray | Unit ray from screen pixel coords. Accounts for GUI inset. |
 | `ViewportPointToRay(x, y, depth?)` | Ray | Unit ray from device-safe viewport coords. Does NOT account for GUI inset. |
 | `WorldToScreenPoint(worldPos)` | Vector3 | `(x, y, onScreen)`. Pixels accounting for GUI inset. |
 | `WorldToViewportPoint(worldPos)` | Vector3 | `(x, y, onScreen)` in device-safe viewport coords. |
 | `GetPartsObscuringTarget(castPoints, ignoreList)` | {BasePart} | Parts obscuring the camera's view of given world points. |
-| `ZoomToExtents()`, `Interpolate(...)` | () | Editor camera methods — not for gameplay cameras. |
+| `ZoomToExtents()`, `Interpolate(...)` | () | Editor camera methods, not for gameplay cameras. |
 | `PanUnits`, `TiltUnits`, `GetPanSpeed`, `GetTiltSpeed` | various | Editor viewport camera controls. |
 
 ### Event
 
-`InterpolationFinished` — fires when `Interpolate` completes.
+`InterpolationFinished`: fires when `Interpolate` completes.
 
 ## ScreenPointToRay vs ViewportPointToRay
 
@@ -102,7 +102,7 @@ local result = workspace:Raycast(unitRay.Origin, unitRay.Direction * 500)
 | `CFrame.new(x, y, z)` | Position only. |
 | `CFrame.new(x, y, z, qX, qY, qZ, qW)` | Position + quaternion rotation. |
 | `CFrame.new(x, y, z, R00, R01, ..., R22)` | Position + raw 3x3 rotation matrix. |
-| `CFrame.new(pos, lookAt)` | **Legacy** (back-compat) — use `CFrame.lookAt`. |
+| `CFrame.new(pos, lookAt)` | **Legacy** (back-compat); use `CFrame.lookAt`. |
 | `CFrame.lookAt(at, lookAt, up?)` | Construct at `at` oriented toward `lookAt`. Optional `up` defaults to `(0,1,0)`. Fails if `lookAt` directly above `at` (use `lookAlong`). |
 | `CFrame.lookAlong(at, direction, up?)` | Construct at `at` oriented along `direction`. |
 | `CFrame.fromRotationBetweenVectors(from, to)` | Rotation that maps `from` to `to`. |
@@ -365,7 +365,7 @@ local viewportPos, onScreen = camera:WorldToViewportPoint(worldPos)
 
 ## ViewportFrame Portals (seamless portals)
 
-Community technique (DevForum "Making seamless portals - Tutorial", thiagop123, 2026, https://devforum.roblox.com/t/making-seamless-portals-tutorial/4731945) for rendering a live portal to another location: clone the destination world Model into a `ViewportFrame` whose camera is a second `Camera` instance, and display it on the portal's face. Crossing is handled by raycasting the `HumanoidRootPart`'s movement against the portal part each frame; when the character crosses the front face (`dot ≥ 0.999`), teleport it and remap position, direction, and velocity relative to the destination surface (180° mirrored) — directionality replaces a cooldown. A per-frame "physics hole" (collision disabled within ~5 studs) lets the character pass through the opening without falling off the edges; a `CollisionGroups` server script handles portal-air collision. Verify performance — each pair costs 2 world clones + 2 clones per character + per-frame render (see the thread's common-problems table for StreamingEnabled, back-face entry, and camera-flicker/`BindToRenderStep` pitfalls).
+Community technique (DevForum "Making seamless portals - Tutorial", thiagop123, 2026, https://devforum.roblox.com/t/making-seamless-portals-tutorial/4731945) for rendering a live portal to another location: clone the destination world Model into a `ViewportFrame` whose camera is a second `Camera` instance, and display it on the portal's face. Crossing is handled by raycasting the `HumanoidRootPart`'s movement against the portal part each frame; when the character crosses the front face (`dot ≥ 0.999`), teleport it and remap position, direction, and velocity relative to the destination surface (180° mirrored); directionality replaces a cooldown. A per-frame "physics hole" (collision disabled within ~5 studs) lets the character pass through the opening without falling off the edges; a `CollisionGroups` server script handles portal-air collision. Verify performance: each pair costs 2 world clones + 2 clones per character + per-frame render (see the thread's common-problems table for StreamingEnabled, back-face entry, and camera-flicker/`BindToRenderStep` pitfalls).
 
 ## Mouse-to-World Raycast Pattern
 
@@ -395,7 +395,7 @@ camera.CameraType = Enum.CameraType.Scriptable
 camera.CFrame = CFrame.lookAt(Vector3.new(0, 50, 50), Vector3.zero)
 ```
 
-For non-Play testing (Edit mode), `CurrentCamera` exists but the perspective doesn't render the way gameplay does — Scriptable camera changes won't be visible until Play.
+For non-Play testing (Edit mode), `CurrentCamera` exists but the perspective doesn't render the way gameplay does; Scriptable camera changes won't be visible until Play.
 
 ## Common Mistakes
 

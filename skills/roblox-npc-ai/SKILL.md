@@ -47,9 +47,9 @@ end
 
 ### Detection (distance → FOV → LOS)
 
-1. **Distance** `(a-b).Magnitude` — cheapest, always first
-2. **FOV** `forward:Dot(toTarget)` cosine — use a configured cone for the game, not a universal angle
-3. **LOS** `workspace:Raycast` — expensive, last
+1. **Distance** `(a-b).Magnitude`: cheapest, always first
+2. **FOV** `forward:Dot(toTarget)` cosine; use a configured cone for your game, not a universal angle
+3. **LOS** `workspace:Raycast`: expensive, last
 - If the design includes hearing or proximity detection, make it a separate configured signal rather than a universal FOV bypass.
 
 ### Network Ownership

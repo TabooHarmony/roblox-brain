@@ -1,9 +1,9 @@
-# Building 3D in Roblox — Full Reference
+# Building 3D in Roblox: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
 
-Use this skill when creating physical geometry in Roblox Studio — via MCP or standalone scripts. Covers single objects, room-scale structures, and multi-zone maps.
+Use this skill when creating physical geometry in Roblox Studio (via MCP or standalone scripts). Covers single objects, room-scale structures, and multi-zone maps.
 
 ## MCP Mode (if using MCP bridge)
 
@@ -85,19 +85,19 @@ Use native Parts or CSG for simple collision and blockout geometry. Use a separa
 
 ### Objects (single Model)
 
-1. **Assess** — Do you know the components, scale, and style? If not, ask.
-2. **Plan** — Declare dimensions as named variables. Choose an anchor part.
-3. **Build** — Generate parts with relative positioning. Split across calls if >20 parts.
-4. **Verify** — Run validation (check Anchored, below-floor, default colors).
+1. **Assess**: Do you know the components, scale, and style? If not, ask.
+2. **Plan**: Declare dimensions as named variables. Choose an anchor part.
+3. **Build**: Generate parts with relative positioning. Split across calls if >20 parts.
+4. **Verify**: Run validation (check Anchored, below-floor, default colors).
 
 ### Maps (multi-zone)
 
-1. **Layout** — Define total size, zone breakdown, gameplay type. If any is vague, ask.
-2. **Ground** — Floor planes, boundaries, Origin anchor, folder hierarchy.
-3. **Zone shells** — Floor sections, walls, dividers per zone.
-4. **Landmarks** — Orientation structures (towers, fountains, trees).
-5. **Fill** — Props, furniture, vegetation per zone.
-6. **Environment** — Lighting, Atmosphere, SpawnLocations.
+1. **Layout**: Define total size, zone breakdown, gameplay type. If any is vague, ask.
+2. **Ground**: Floor planes, boundaries, Origin anchor, folder hierarchy.
+3. **Zone shells**: Floor sections, walls, dividers per zone.
+4. **Landmarks**: Orientation structures (towers, fountains, trees).
+5. **Fill**: Props, furniture, vegetation per zone.
+6. **Environment**: Lighting, Atmosphere, SpawnLocations.
 
 ## Spatial Patterns
 
@@ -244,14 +244,14 @@ Always set explicitly:
 
 ## Anti-Patterns
 
-- **Guessing coordinates** — Read from workspace, don't rely on chat memory.
-- **Unanchored parts** — They fall. Always set Anchored = true.
-- **Hardcoded world positions** — Use relative offsets from anchor CFrame.
-- **Block-only for organic shapes** — Use CSG, Cylinders, Spheres, WedgeParts.
-- **Silent CSG failures** — Always pcall and verify result is BasePart.
-- **Building everything in one call** — Split by phase. 20-30 parts per call max.
-- **Floating geometry** — All structures must connect to ground or parent structure.
-- **Default colors** — Always set explicit Color and Material. Default gray = unfinished.
+- **Guessing coordinates**: Read from workspace, don't rely on chat memory.
+- **Unanchored parts**: They fall. Always set Anchored = true.
+- **Hardcoded world positions**: Use relative offsets from anchor CFrame.
+- **Block-only for organic shapes**: Use CSG, Cylinders, Spheres, WedgeParts.
+- **Silent CSG failures**: Always pcall and verify result is BasePart.
+- **Building everything in one call**: Split by phase. 20-30 parts per call max.
+- **Floating geometry**: All structures must connect to ground or parent structure.
+- **Default colors**: Always set explicit Color and Material. Default gray = unfinished.
 
 ## Validation Script
 

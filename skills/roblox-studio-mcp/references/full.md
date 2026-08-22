@@ -1,4 +1,4 @@
-# Roblox Studio MCP — Full Reference
+# Roblox Studio MCP: Full Reference
 
 
 > **Code in this reference is illustrative. Adapt to your game and verify in Studio before production use.**
@@ -195,19 +195,19 @@ Generated content is a candidate, not an acceptance decision. Keep a native Part
 
 ### Script Development
 
-1. **Explore** — Use `search_game_tree` to understand existing structure
-2. **Read** — Use `script_read` to understand existing code before modifying
-3. **Write** — Use `multi_edit` to create or modify scripts
-4. **Verify** — Use `script_read` to confirm the write succeeded
-5. **Test** — Use `start_stop_play` + `get_console_output` to test
+1. **Explore**: Use `search_game_tree` to understand existing structure
+2. **Read**: Use `script_read` to understand existing code before modifying
+3. **Write**: Use `multi_edit` to create or modify scripts
+4. **Verify**: Use `script_read` to confirm the write succeeded
+5. **Test**: Use `start_stop_play` + `get_console_output` to test
 
 ### Building Geometry
 
-1. **Plan** — Inspect the existing tree, origin, map root, coordinate conventions, and current assets.
-2. **Choose** — Reuse a compatible asset, generate a procedural model/mesh/material, or use native Parts/CSG as fallback.
-3. **Build** — Use the asset tool or `execute_luau` in bounded phases; use `multi_edit` for persistent builder scripts.
-4. **Verify** — Read back the model, counts, bounds, pivots, classes, materials, anchoring, collision, and parent paths.
-5. **Evidence** — Capture a deliberate view when supported; otherwise report structural evidence and the capture limitation.
+1. **Plan**: Inspect the existing tree, origin, map root, coordinate conventions, and current assets.
+2. **Choose**: Reuse a compatible asset, generate a procedural model/mesh/material, or use native Parts/CSG as fallback.
+3. **Build**: Use the asset tool or `execute_luau` in bounded phases; use `multi_edit` for persistent builder scripts.
+4. **Verify**: Read back the model, counts, bounds, pivots, classes, materials, anchoring, collision, and parent paths.
+5. **Evidence**: Capture a deliberate view when supported; otherwise report structural evidence and the capture limitation.
 
 ### Map and Prop Evidence
 
@@ -217,11 +217,11 @@ Generated content is a candidate, not an acceptance decision. Keep a native Part
 
 ### Debugging
 
-1. **Reproduce** — `start_stop_play` to enter play mode
-2. **Observe** — `get_console_output` to read errors/warnings
-3. **Inspect** — `inspect_instance` or `execute_luau` to check runtime state
-4. **Fix** — `multi_edit` to patch the script
-5. **Retest** — `start_stop_play` again
+1. **Reproduce**: `start_stop_play` to enter play mode
+2. **Observe**: `get_console_output` to read errors/warnings
+3. **Inspect**: `inspect_instance` or `execute_luau` to check runtime state
+4. **Fix**: `multi_edit` to patch the script
+5. **Retest**: `start_stop_play` again
 
 ### Playtesting
 
@@ -277,12 +277,12 @@ Before mutating in a multi-place session, confirm the target:
 
 The strongest playtest workflow uses a visible test artifact, not just "start play, read console." The pattern is bridge-agnostic: inject a test script that emits explicit START/FINISHED signals, run it, poll for the signal, stop, clean up, and report a summary.
 
-1. **Plan the assertion** — what must be true? (e.g. `SpawnLocation` exists above the ground, the NPC reaches its target, the button opens the shop.)
-2. **Inject the test** — on the chrrxs bridge use `eval_server_runtime` (or `eval_client_runtime` for client-side) to run Luau that sets a flag or prints a guard-signal when the assertion passes or fails. On the official bridge, create a temporary script in `ServerScriptService` (or use `subagent` with type `playtest`).
-3. **Start play** — `solo_playtest` (chrrxs) or `start_stop_play` (official). Prefer Run mode (F8, server-only) for server-side logic; use Play mode (F5) when client behavior or rendering matters.
-4. **Poll** — read logs (`get_runtime_logs` per peer on chrrxs, `get_console_output` on official) looking for the FINISHED signal, with a timeout (e.g. 60s default, max 300s).
-5. **Stop and clean up** — always stop the playtest (`stop` on `solo_playtest`/`multiplayer_playtest`, or `start_stop_play` with `is_start: false`). Delete any injected temporary test script.
-6. **Report** — produce a short artifact: status (passed/failed), test name, mode, duration, signal count, and the relevant log tail. This is what "evidence" means for playtesting.
+1. **Plan the assertion**: what must be true? (e.g. `SpawnLocation` exists above the ground, the NPC reaches its target, the button opens the shop.)
+2. **Inject the test**: on the chrrxs bridge use `eval_server_runtime` (or `eval_client_runtime` for client-side) to run Luau that sets a flag or prints a guard-signal when the assertion passes or fails. On the official bridge, create a temporary script in `ServerScriptService` (or use `subagent` with type `playtest`).
+3. **Start play**: `solo_playtest` (chrrxs) or `start_stop_play` (official). Prefer Run mode (F8, server-only) for server-side logic; use Play mode (F5) when client behavior or rendering matters.
+4. **Poll**: read logs (`get_runtime_logs` per peer on chrrxs, `get_console_output` on official) looking for the FINISHED signal, with a timeout (e.g. 60s default, max 300s).
+5. **Stop and clean up**: always stop the playtest (`stop` on `solo_playtest`/`multiplayer_playtest`, or `start_stop_play` with `is_start: false`). Delete any injected temporary test script.
+6. **Report**: produce a short artifact: status (passed/failed), test name, mode, duration, signal count, and the relevant log tail. This is what "evidence" means for playtesting.
 
 ### Playtest Discipline (from real-field bug reports)
 
@@ -295,14 +295,14 @@ The strongest playtest workflow uses a visible test artifact, not just "start pl
 
 The chrrxs bridge ships much more than the official core. Weighted by what actually helps real work:
 
-- **`eval_server_runtime` / `eval_client_runtime`** — run Luau inside a live playtest's VM with the same `require` cache as game scripts. This is the single best way to inspect live state (module state, runtime values) without restarting.
-- **`multiplayer_playtest`** — start/inspect/stop multi-client playtests (1-8 players). Use when the question is "is this actually working with 2+ players" (co-op, remotes, replication). This is the biggest capability gap vs the official bridge.
-- **`get_runtime_logs`** — per-peer logs (server, client-N), including boot-time output and structured `LogService` data. Better than a single console scrollback for finding which peer emitted an error.
-- **`breakpoints`** — instrument live code and record execution without pausing the playtest. Use for "did this line run?" questions.
-- **`capture_script_profiler` / `capture_micro_profiler`** — CPU timings on server or client. Use when the user asks "why is this slow" in a specific context.
-- **`get_memory_breakdown` / `get_scene_analysis`** — memory and scene attribution per peer.
-- **`manage_instance`** — launch/inspect/close Studio windows per place; the enabler for scripted multi-place workflows.
-- **`get_roblox_docs` / `get_roblox_skills`** — fetch official engine API docs and Roblox-authored skills as Markdown. Use instead of web search when the question is "what does this API do."
+- **`eval_server_runtime` / `eval_client_runtime`**: run Luau inside a live playtest's VM with the same `require` cache as game scripts. This is the single best way to inspect live state (module state, runtime values) without restarting.
+- **`multiplayer_playtest`**: start/inspect/stop multi-client playtests (1-8 players). Use when the question is "is this actually working with 2+ players" (co-op, remotes, replication). This is the biggest capability gap vs the official bridge.
+- **`get_runtime_logs`**: per-peer logs (server, client-N), including boot-time output and structured `LogService` data. Better than a single console scrollback for finding which peer emitted an error.
+- **`breakpoints`**: instrument live code and record execution without pausing the playtest. Use for "did this line run?" questions.
+- **`capture_script_profiler` / `capture_micro_profiler`**: CPU timings on server or client. Use when the user asks "why is this slow" in a specific context.
+- **`get_memory_breakdown` / `get_scene_analysis`**: memory and scene attribution per peer.
+- **`manage_instance`**: launch/inspect/close Studio windows per place; the enabler for scripted multi-place workflows.
+- **`get_roblox_docs` / `get_roblox_skills`**: fetch official engine API docs and Roblox-authored skills as Markdown. Use instead of web search when the question is "what does this API do."
 
 When these are available, prefer them over weaker fallbacks: per-peer logs over a single console, runtime eval over guessing state, multiplayer playtest over a solo-only check.
 

@@ -17,9 +17,9 @@ Use when profiling, diagnosing lag, or setting performance budgets. For code-lev
 ## Quick Reference
 
 ### Profiling Tools
-- **MicroProfiler (Ctrl+F6)** — Per-frame breakdown: scripts, physics, rendering. Primary tool for finding what's slow.
-- **Developer Console (F9)** — Stats tab: memory, network, render stats. Server Stats for server-side metrics.
-- **Script Profiler (Ctrl+Alt+F5)** — Per-script CPU usage and heap allocations.
+- **MicroProfiler (Ctrl+F6)**: Per-frame breakdown: scripts, physics, rendering. Primary tool for finding what's slow.
+- **Developer Console (F9)**: Stats tab: memory, network, render stats. Server Stats for server-side metrics.
+- **Script Profiler (Ctrl+Alt+F5)**: Per-script CPU usage and heap allocations.
 
 ### Performance Targets
 | Metric | Starting target | Investigate at |

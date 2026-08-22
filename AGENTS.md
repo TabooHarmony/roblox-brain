@@ -1,4 +1,4 @@
-# AGENTS.md — Guide for AI Agents and Contributors
+# AGENTS.md: Guide for AI Agents and Contributors
 
 ## What This Repo Is
 
@@ -10,9 +10,9 @@ No plugin code. No build system. No npm package. Just SKILL.md files.
 
 Each skill follows progressive disclosure. Compatible hosts discover skill names and descriptions, then load the selected entry point and references as needed.
 
-1. **Skill metadata** — the host discovers names and descriptions from each `SKILL.md`
-2. **SKILL.md** (~600 tokens, max 3,000 chars) — quick reference, enough for most tasks
-3. **references/full.md** (max 50,000 chars) — detailed guidance and examples for full skills
+1. **Skill metadata**: the host discovers names and descriptions from each `SKILL.md`
+2. **SKILL.md** (~600 tokens, max 3,000 chars): quick reference, enough for most tasks
+3. **references/full.md** (max 50,000 chars): detailed guidance and examples for full skills
 
 Thin routing skills declare `kind: router` and may omit `references/full.md` when
 their entire job is selecting the right domain skills.
@@ -61,7 +61,7 @@ Dense table or list format. The most useful info inline. Code examples in ```lua
 1. Create `skills/roblox-<name>/SKILL.md` following the structure above
 2. Create `skills/roblox-<name>/references/full.md` with complete reference (under 50,000 chars)
 3. Add a row to `README.md` in the appropriate skills table and update the skill count badge
-4. Run `python3 validate_skills.py` — must pass
+4. Run `python3 validate_skills.py`: must pass
 5. If the skill makes API claims, add focused entries to `api_drift_registry.yaml`
 
 ## Validation
@@ -81,9 +81,9 @@ Run `python3 validate_skills.py` before committing. Checks:
 - Cross-references (`` `roblox-X` `` in backticks) point to existing skills
 
 Additional CI checks:
-- `python3 verify_api_drift.py` — API claims against live Roblox creator-docs
-- `python3 verify_source_urls.py` — source URLs are reachable
-- `python3 verify_version_pins.py` — tool version pins (non-blocking)
+- `python3 verify_api_drift.py`: API claims against live Roblox creator-docs
+- `python3 verify_source_urls.py`: source URLs are reachable
+- `python3 verify_version_pins.py`: tool version pins (non-blocking)
 
 CI runs on all branches (`.github/workflows/ci.yml`).
 
@@ -103,9 +103,9 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - API names in backticks: `UserInputService`, `RemoteEvent`
 - Cross-skill references in backticks: `` `roblox-networking` ``, `` `roblox-data` ``
 - Last reviewed date: update when you verify content against current docs
-- Keep SKILL.md lean — if it hits 2,500+ chars, move detail to references/full.md
+- Keep SKILL.md lean; if it hits 2,500+ chars, move detail to references/full.md
 - Mark illustrative reference code as illustrative and require project-specific verification
-- No orphaned reference files — all content goes in `references/full.md`
+- No orphaned reference files; all content goes in `references/full.md`
 
 ## Key Files
 
@@ -128,9 +128,9 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - Don't write skills from training data without verifying against current Roblox docs
 - Don't break cross-references when renaming or splitting skills
 - Don't commit without running `python3 validate_skills.py`
-- Don't leave `sources: []` — use `[original]` for synthesis
-- Don't use ```lua — use ```luau
-- Don't add `## Overview` sections — use `## When to Load` → `## Quick Reference` directly
-- Don't create standalone reference files — all content goes in `references/full.md`
+- Don't leave `sources: []`: use `[original]` for synthesis
+- Don't use ```lua; use ```luau
+- Don't add `## Overview` sections; use `## When to Load` → `## Quick Reference` directly
+- Don't create standalone reference files; all content goes in `references/full.md`
 - Don't exceed 50,000 chars in reference files
-- Don't use `github.com/blob/` URLs — use `raw.githubusercontent.com`
+- Don't use `github.com/blob/` URLs; use `raw.githubusercontent.com`
