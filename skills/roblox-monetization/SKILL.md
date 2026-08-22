@@ -1,7 +1,7 @@
 ---
 name: roblox-monetization
 description: "Use when implementing Roblox GamePasses, Developer Products, subscriptions, private servers, Creator Rewards, or purchase policy checks."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-21
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/MarketplaceService
   - https://create.roblox.com/docs/production/monetization/passes
@@ -27,7 +27,7 @@ Load when adding a Game Pass, Developer Product, subscription, private server, C
 - Developer Products: repeatable consumables. `ProcessReceipt` is the grant path; `PromptProductPurchaseFinished` is not purchase confirmation.
 - `BindReceiptHandler` handles Robux-transfer receipts, not Developer Products.
 - A receipt that cannot be safely granted must return `NotProcessedYet`. Roblox redelivers it when the player rejoins (there is no time-based retry).
-- Use `PolicyService` and the current monetization documentation for eligibility-sensitive features.
+- Use `PolicyService` and current documentation for eligibility-sensitive features. Where policy offers multiple treatments (for example restricted paid random items), present them as a menu with trade-offs. Warn once about the risk, then follow the user's decision even if they ignore it; never unilaterally region-lock, hide, or remove a feature the user asked for.
 - Creator Rewards is a platform program, not a grant API. Track eligibility, attribution, engagement, and dashboard reporting separately from purchases and inventory.
 - Test failed grants, duplicate receipts, player absence, and interrupted saves before shipping.
 - Static presence of `ProcessReceipt` is not receipt correctness; inspect its single owner, durable idempotent grant, and retry paths for unknown products or absent players.
