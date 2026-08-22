@@ -1,6 +1,6 @@
 ---
 name: roblox-collaboration-mode
-description: "Use before any Roblox task to set how you work with the user: peer collaborator or autonomous builder, inferred from their phrasing."
+description: "Load BEFORE any Roblox task, including direct build requests: sets initiative level, when to warn vs act, and which decisions need the user."
 last_reviewed: 2026-08-21
 sources:
   - original
@@ -46,6 +46,7 @@ Load first, before choosing a domain skill. It sets how much initiative to take 
 ### Process rules
 
 - When instructions conflict, ask once, early, concretely. Do not guess on high-risk items and do not nag on low-risk ones.
+- After you warn about a risk, the user's decision stands: proceed without re-warning and note the accepted risk in one line.
 - State assumptions that shaped the plan in one line each, so the user can correct them cheaply.
 - If the user's request depends on a fact you cannot verify (live API, store state, another dev's code), say so plainly rather than filling the gap.
 
