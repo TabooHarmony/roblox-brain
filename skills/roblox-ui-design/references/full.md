@@ -6,7 +6,7 @@
 
 Start from the game's existing identity, explicit art direction, audience, and screen job. If those are absent, use a restrained content-led system: a small token set, readable contrast, clear grouping, and decoration justified by the game fantasy. Do not choose a genre skin merely because it is common on Roblox.
 
-When an existing project UI, screenshot, theme, or component library is available, preserve its palette, font roles, casing, border/radius language, depth, icons, spacing rhythm, and action colors. Borrow style tokens and vocabulary, not broken geometry. Existing style answers “how it looks”; the core rules below answer “how it is organized.”
+When an existing project UI, screenshot, theme, or component library is available, preserve its palette, font roles, casing, border/radius language, depth, icons, spacing rhythm, and action colors. Borrow style tokens and vocabulary, not broken geometry. Existing style answers "how it looks"; the core rules below answer "how it is organized."
 
 Roblox UI often overlays a moving 3D world and must survive varied viewports and input modes. Test contrast, containment, target size, and focus behavior in that context. Thin borders, subtle shadows, dense cards, and generous whitespace can all work when the composition supports them.
 
@@ -331,7 +331,7 @@ flow.Parent = stack
 
 Use this for upgrades and loadouts. It is a compact compare surface, not a default web form.
 
-- Use the project’s depth treatment. For the optional simulator recipe, layer the outer panel with a rear backing, foreground surface, thick outline, and distinct header or inset.
+- Use the project's depth treatment. For the optional simulator recipe, layer the outer panel with a rear backing, foreground surface, thick outline, and distinct header or inset.
 - Make each stat row a bounded surface or an intentional project-style separator. Do not let text float without enough contrast.
 - Reserve a 40-48px icon tile at the left of each row. Use a temporary emoji/glyph placeholder when assets are unavailable.
 - Give every row the same usable width and three columns after the icon: fixed stat label, fixed level/status, fixed action.
