@@ -2,6 +2,44 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [1.6.0] - 2026-08-22
+
+### Added
+
+- New skill: `roblox-collaboration-mode` (skill count now 29). Sets initiative level before any Roblox task: when to act, when to warn, which decisions need the user. Description tuned so hosts discover it on autonomous build requests.
+- Security: Server Authority migration reality check (cheap for stock characters, rewrite-scale for authored simulation).
+- Input: `LastInputTypeChanged` platform detection replacing TouchEnabled gates; DeviceSafeInsets anchoring + 500px min-axis jump-button preset.
+- Performance: Player/Character objects are not auto-destroyed; deferred+pcall destroy pattern for the join/leave server memory leak.
+- Performance: replay/delta state recording (delta-encode, compress, chunk, hash).
+- Physics: CFrame reference-frame section with the moving-platform composition pattern; homing projectile via velocity-aiming steering.
+- Building: terrain import workflow (Gaea -> OBJ -> importer -> voxel conversion, heightmap fast path).
+- GUI: reliable hover via per-frame cursor poll (native MouseEnter/MouseLeave miss when content scrolls under a stationary cursor).
+- Networking: replicate state to subscribed clients (snapshot + delta updates); precision-varied serialization for over-budget remotes.
+- NPC & AI: custom navmesh alternatives to PathfindingService (leads only, not game-ready).
+- Architecture: ordered player lifecycle wiring + client-ready handshake.
+- Camera: ViewportFrame seamless portals (world clone, HRP-crossing teleport).
+- Server data: cached-DataStore leaderboard alternative to OrderedDataStore.
+
+### Changed
+
+- Monetization: policy treatments are a menu for the user, not an agent mandate; no unilateral region-locking; warn once.
+- Collaboration mode: after a visible warning, the user's decision stands; no re-warning.
+- Studio MCP: official bridge synced to per-call `studio_id` routing; `set_active_studio` demoted to legacy note; chrrxs asset workflow documented.
+- Data skills de-overlapped: `roblox-data` / `roblox-server-data` / `roblox-cloud` boundaries cross-linked.
+- Micro-optimizations moved from `roblox-performance` to `roblox-luau-patterns` §10.
+- Cloud: Open Cloud awareness reframed as offer-not-default; OAuth wording tightened.
+- Docs: backfilled changelog entries for v1.4.0 and v1.5.0.
+
+### Fixed
+
+- Networking: NaN/Infinity rejection mechanics; `utf8.len` malformed-UTF-8 twin check; new poison-checks subsection.
+- Security: DataStore-failure vectors (unsaveable payloads, malformed data); replaced a dead gist link.
+- Docs: prose cleanup across all files.
+
+### Special Thanks
+
+- [@nnullcolumn](https://github.com/nnullcolumn) for detailed feedback which helped improve this release.
+
 ## [1.5.0] - 2026-08-12
 
 ### Added
