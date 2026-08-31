@@ -46,11 +46,11 @@ The line: if the user asks "should I add linting/formatting/tests?" or is hand-d
 
 ## 1d. Language choice: Luau vs Roblox-TS (for agents and greenfield projects)
 
-Verified state, August 2026 (npm + GitHub APIs): roblox-ts ~11.4k npm downloads/month, 1.3k stars, actively maintained. That is a niche within Roblox dev; most shipped experiences and nearly all community libraries (TopbarPlus, ProfileStore, FastCast, jecs) are Luau.
+Verified state, August 2026 (npm + GitHub APIs): roblox-ts ~11.4k npm downloads/month, 1.3k stars, but the canonical npm release is still 3.0.0 (Sep 2023, TS 5.2-era); a community fork (`@isentinel/roblox-ts`, 4.0.x, provenance unverified) carries newer releases. That is a niche within Roblox dev; most shipped experiences and nearly all community libraries (TopbarPlus, ProfileStore, FastCast, jecs) are Luau.
 
-- The TS advantage is real for *teams of engineers* (typed contracts, npm package ecosystem, familiar syntax; see the Last Level Studios writeup). It is a training-data advantage too: models have seen orders of magnitude more TypeScript than Luau.
-- For **AI agents specifically**, the compiler pipeline adds failure modes that raw Luau does not have: a watch process that must be running, generated files agents can wrongly edit, source maps for debugging, and `node_modules` in the way of every tool call. Luau runs directly in Studio and every engine-facing tool (luau-lsp, luaudit, Lune, Rojo sourcemap) speaks it natively.
-- Verdict an agent should give: adopt TS where the team already knows TS and wants npm; default to Luau for agent-heavy workflows and where community libraries are the point. This is a tradeoff, not a mistake either way. <!-- temporal: 2026-08 -->
+- The TS advantage is real for *teams of engineers* (typed contracts, npm package ecosystem, familiar syntax; see the Last Level Studios writeup). The training-data argument ("billions of lines of TS") is practitioner anecdote only: no controlled benchmark compares LLM output in rbxts-TS vs Luau, and rbxts is a TS dialect whose Roblox-isms erode the vanilla-TS advantage (models confidently misuse APIs that `@rbxts/types` doesn't cover, and those stubs lag the engine).
+- For **AI agents specifically**, the compiler pipeline adds failure modes that raw Luau does not have: a watch process that must be running, generated files agents can wrongly edit, Studio line numbers that don't map to source without sourcemap work, compiler-inserted runtime asserts, and lint that must run post-compile. Luau runs directly in Studio and every engine-facing tool (luau-lsp, luaudit, Lune, Rojo sourcemap) speaks it natively; `--!strict` plus a live type solver gives agents the same machine-checkable feedback loop that is the actual accuracy lever.
+- Verdict an agent should give: adopt TS where the team already knows TS and wants npm; default to Luau for agent-heavy workflows and where community libraries are the point. This is a tradeoff, not a mistake either way. Platform momentum backs the default: Roblox shipped Studio Script Sync and lists Studio Luau file sync on the 2026 roadmap, i.e. first-party tooling grows around native Luau file workflows. <!-- temporal: 2026-08 -->
 
 ## 2. Rojo project mapping
 
@@ -92,8 +92,8 @@ The package-manager question has no single winner as of 2026-08; an agent should
 
 - **Wally** (UpliftGames): the long-standing default, but the CLI's last tagged release is 2023-06 and registry growth stalled. Roblox's April 2026 "Evolving Luau OSS" announcement said new official libraries publish under `roblox/` on Wally, so the registry is not dead, but treat Wally as legacy-in-good-standing, not the future.
 - **pesde** (Danaid): the active community successor; manifest-based like Cargo, supports Roblox and Lune targets. Growing, smaller package count than Wally.
-- **Rokit**: package *tool* manager (pins CLI tools like Rojo/Aftman), not a dependency manager. Aftman fills the same role; Rokit is the more active one.
-- **Vendoring**: copying a module into `ReplicatedStorage` is still the most common real-world pattern for single-file community modules (TopbarPlus, FastCast). Legitimate; require a provenance comment with the thread URL and version.
+- **Rokit**: package *tool* manager (pins CLI tools like Rojo), not a dependency manager. The tool-manager slot is settled: **Aftman is archived** (LPGhatguy/aftman, 2025) and Rokit is the successor.
+- **Vendoring**: copying a module into `ReplicatedStorage` is still a common and respectable pattern; the Fusion maintainer publicly prefers package-manager-agnostic file bundles pending an official solution. For single-file community modules (TopbarPlus, FastCast) it is the norm. Legitimate; require a provenance comment with the thread URL and version.
 - **Direct GitHub installs**: common in agent workflows where the dependency is one clone + a Rojo path mapping.
 
 A package manifest should state whether a dependency is shared, server-only, client-only, or development-only. Keep the lockfile under version control so CI resolves the same graph.
