@@ -140,6 +140,21 @@ Missing arguments are `nil`; extra arguments can be ignored. A function that req
 
 Loop variables in a numeric or generic `for` have iteration-local behavior. Variables mutated outside the loop are shared by closures. Capture the intended value in a new local when ownership is unclear.
 
+### `const` bindings
+
+<!-- temporal: 2026-03 -->
+`const` was added in Luau 0.711 (March 2026) and is newer than most models' training cutoffs. Older tooling and lint stubs may reject it; the keyword is valid ([release notes](https://github.com/luau-lang/luau/releases/tag/0.711), [RFC](https://github.com/luau-lang/rfcs/blob/master/docs/const-keyword.md)).
+
+```luau
+const maxRetries = 3
+-- maxRetries = 5 -- rejected at compile time: constant rebinding
+
+const config = { speed = 16 } -- the binding is frozen, not the table
+config.speed = 20 -- allowed; use table.freeze for value immutability
+```
+
+A `const` binding freezes the name, not the value; it applies to the binding like `local`, and the table itself stays mutable unless frozen. It is a contextual keyword, valid only where `local` is. `const` must be initialized at declaration. Prefer `const` for module-level values and constants that must never be rebound; it lets the typechecker and tools treat the symbol as stable.
+
 ## 6. Method syntax
 
 A colon adds an implicit first argument named `self`.
@@ -212,7 +227,7 @@ Do not normalize a zero-length vector without deciding the fallback direction. R
 
 - `===` becomes `==`; `!==` becomes `~=`.
 - `null` and `undefined` do not map to two separate values; Luau uses `nil`.
-- Arrow functions, optional chaining, nullish coalescing, spread syntax, and `const`/`let` are not Luau syntax.
+- Arrow functions, optional chaining, nullish coalescing, and spread syntax are not Luau syntax. JS `const`/`let` are unrelated to Luau's `const` keyword (a binding-freezing declaration added in 0.711) and there is no `let` at all.
 - Array `.map`, `.filter`, `.find(predicate)`, `.push`, and `.length` are not methods on Luau tables.
 - Object property enumeration order is not a portable dictionary-order contract.
 - `try/catch` is not syntax; fallible execution uses `pcall` or `xpcall`, with domain-specific recovery.
