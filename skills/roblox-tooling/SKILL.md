@@ -1,7 +1,7 @@
 ---
 name: roblox-tooling
 description: "Use when configuring Roblox tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, or CI/CD."
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-31
 sources:
   - https://rojo.space/docs/
   - https://wally.run/
@@ -16,6 +16,7 @@ sources:
   - https://create.roblox.com/docs/cloud/llms.txt
   - https://create.roblox.com/docs/llms-full.txt
   - https://create.roblox.com/docs/reference/engine/deprecated.md
+  - https://devforum.roblox.com/t/evolving-luau-oss-community-contributions-more/4566806
   - original
 ---
 

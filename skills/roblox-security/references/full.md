@@ -177,3 +177,9 @@ end
 - **Don't kick without logging**: you need data to distinguish false positives from real exploits
 - **Don't over-validate movement**: too strict = legitimate players get false-flagged on lag spikes, and blanket checks fight Server Authority prediction. Use the selected model's simulation path and tolerate legitimate corrections.
 - **Don't rely on client-side anti-cheat**: exploiters disable it first
+
+## Community ecosystem (leads, not sources)
+
+- Threat history: [Exploiting Explained](https://devforum.roblox.com/t/exploiting-explained/170977) (2.9k likes — executor timeline doc); [2025 mass hacking operation PSA](https://devforum.roblox.com/t/psa-to-all-roblox-developers-massive-hacking-operation-taking-over-massive-front-page-games/3913726); [Delta Executor detection](https://devforum.roblox.com/t/instant-detection-of-delta-executor-patched/3971400) (note: patched = fingerprint rotates).
+- Backdoors: [remove backdoors](https://devforum.roblox.com/t/how-to-remove-backdoors-from-your-game/511548); [malicious scripts/plugins clearing](https://devforum.roblox.com/t/clearing-your-game-of-malicious-scripts-plugins-and-backdoors/511830).
+- Posture: [How you should secure your game](https://devforum.roblox.com/t/how-you-should-secure-your-game-a-beginner-guide-for-secure-networking-and-developing-anticheats/351775); [Client anti-cheats aren't as bad as you think](https://devforum.roblox.com/t/client-anti-cheats-arent-as-bad-as-you-think/2471974) (detector-not-punisher framing).

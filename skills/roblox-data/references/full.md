@@ -228,3 +228,12 @@ Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-t
 - [ ] No client-provided value bypasses server validation before persistence.
 - [ ] Persisted numbers are checked for NaN/infinity; persisted strings pass `utf8.len`.
 - [ ] Client-supplied nested tables are re-validated field by field before saving.
+
+## Community ecosystem (leads, not sources)
+
+Top-sorted DevForum canon for datastore libraries. Verify current status in-thread before recommending; do not lift code without license.
+
+- Lineage: [DataStore2](https://devforum.roblox.com/t/how-to-use-datastore2-data-store-caching-and-data-loss-prevention/136317) (2018, historical) → [ProfileService](https://devforum.roblox.com/t/save-your-player-data-with-profileservice-datastore-module/667805) (2020) → [ProfileStore](https://devforum.roblox.com/t/profilestore-save-your-player-data-easy-datastore-module/3190543) (2024, current standard; already integrated above).
+- [Stop using SetAsync()](https://devforum.roblox.com/t/stop-using-setasync-to-save-player-data/276457) — the canonical anti-pattern post; session-locking rationale.
+- [Suphi's DataStore Module](https://devforum.roblox.com/t/suphis-datastore-module/2425597) — lighter alternative; [DataDelve](https://devforum.roblox.com/t/datadelve-%E2%80%94-easy-free-datastore-editor/3067950) — free datastore editor for debugging live data.
+- [DataPredict](https://devforum.roblox.com/t/datapredict%E2%84%A2-3-years-release-242-revenue-game-optimization-using-machine-learning-deep-learning-and-reinforcement-learning-100-models/2196446) — ML toolkit on datastore analytics, relevant to `roblox-analytics`/growth work.

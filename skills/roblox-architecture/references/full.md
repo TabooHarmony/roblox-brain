@@ -228,3 +228,21 @@ end)
 ```
 
 Initialize existing and future tagged instances. Treat added and removed signals as lifecycle boundaries, including client streaming. Validate attribute types and defaults, keep durable or security-sensitive state server-owned, and make attach/cleanup safe to repeat.
+
+## Community ecosystem (leads, not sources)
+
+Open-source study codebases ranked by DevForum likes — read before architecting similar genres:
+
+- [Miner's Haven](https://devforum.roblox.com/t/miners-haven-open-sourced-everything-you-need-to-make-your-own-factory-game/350767) — factory/sim systems at scale.
+- [Ruddev's Battle Royale](https://devforum.roblox.com/t/os-game-ruddevs-battle-royale-open-sourced/340548) — full OS game.
+- [Mass Uncopylocked](https://devforum.roblox.com/t/mass-uncopylocked-35-free-games-and-projects/2880269) — 35 open-sourced projects (466k views).
+- FPS architecture: [Writing an FPS framework](https://devforum.roblox.com/t/writing-an-fps-framework-2020/503318) series remains the most-cited framework-design walkthrough.
+
+## ECS on Roblox: reality check
+
+ECS is not standard practice in shipped Roblox experiences. The pattern recurs for specific problems, not as a default architecture.
+
+- If a project already uses one, the leading Luau library is [jecs](https://github.com/Ukendio/jecs) (462 stars, active 2026; entity relationships as first-class). Alternatives: matter-ecs (stalled since 2024), ECX (dead, author moved on).
+- What most production games actually use: OOP tables + CollectionService tags + attribute replication + per-system update loops with rotating work cursors. That combination delivers most of the cache/iteration benefit without the discipline cost.
+- The honest case for ECS: thousands of homogeneous simulated entities (swarms, RTS units, bullets-with-state). Outside that, the abstraction tax outweighs the gain, and agent-written ECS code adds indirection without the perf need.
+- Do not recommend introducing ECS to a project that lacks one; do support projects that have one.

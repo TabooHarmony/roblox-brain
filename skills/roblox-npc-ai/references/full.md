@@ -431,3 +431,9 @@ For large NPC counts, keep a rotating work cursor or queue so not all NPCs think
 - **MoveTo timeout**: `Humanoid:MoveTo()` has an 8-second timeout. If the NPC gets stuck, `MoveToFinished` fires with `reached = false`. Handle it.
 - **Pathfinding on the client**: PathfindingService works on both client and server, but NPC movement must be server-authoritative. Compute paths on the server.
 - **No stagger for large NPC counts**: A large batch of path requests on one frame can spike the server. Stagger updates and measure the actual budget.
+
+## Community ecosystem (leads, not sources)
+
+- [SimplePath](https://devforum.roblox.com/t/simplepath-pathfinding-module/1196762) (894 likes) — the PathfindingService wrapper standard; [How 2 Make A* Pathfinding](https://devforum.roblox.com/t/how-2-make-a-pathfinding/2714504) for custom grids.
+- [BehaviorTrees3 + visual editor](https://devforum.roblox.com/t/behaviortrees3-btrees-visual-editor-v30/836158) — the BT reference implementation.
+- [Simulating thousands of moving NPCs performantly](https://devforum.roblox.com/t/simulating-thousands-of-moving-npcs-with-humanoidsphysics-performantly/4603494) (2026) — current humanoid-scale density canon.

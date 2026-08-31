@@ -243,3 +243,15 @@ A layout that looks correct at one Studio viewport size is not finished. Capture
 - [ ] Server responses, not local optimism, determine durable state.
 - [ ] The interface works with touch, mouse, keyboard, and gamepad where relevant.
 - [ ] All temporary connections, tweens, and rows have an owner lifetime.
+
+## Community ecosystem (leads, not sources)
+
+Top-sorted DevForum canon for UI libraries. Verify status in-thread before recommending.
+
+- [TopbarPlus v3](https://devforum.roblox.com/t/topbarplus-v340-construct-topbar-icons-with-ease-customise-them-with-themes-dropdowns-captions-labels-and-more/1017485) — the topbar icon standard (4.4k likes).
+- [Iris](https://devforum.roblox.com/t/iris-immediate-mode-ui-library-based-on-dear-imgui/2302802) — Dear ImGui-style immediate mode, good for debug tools/dev UIs, not player-facing polish.
+- [Screen3D](https://devforum.roblox.com/t/screen3d-a-3d-ui-framework-that-just-works/3273671) (2024); [Text+](https://devforum.roblox.com/t/text-custom-fonts-advanced-control/3521684) (2025) custom fonts.
+- [Satchel](https://devforum.roblox.com/t/satchel-open-source-modern-backpack-system/2451549) — open-source inventory/backpack, study-grade.
+- [Vanilla 3](https://devforum.roblox.com/t/vanilla-3-the-pragmatic-icon-set-for-roblox-studio/935745) — the pragmatic icon set.
+- Chat: BetterChat V3 discontinued; [NovaChat](https://devforum.roblox.com/t/novachat-v107-chat-update-part-2-a-modern-feature-rich-chat-replacement-update/4513813) (2026) is the active replacement line; [ViewportFrame masking](https://devforum.roblox.com/t/viewportframe-masking/2964839) (2024) heavily cited for UI VFX.
+- Design theory: [UI Design Starter Guide](https://devforum.roblox.com/t/ui-design-starter-guide/53461) (1.1k likes).

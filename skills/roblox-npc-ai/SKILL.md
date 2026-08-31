@@ -1,7 +1,7 @@
 ---
 name: roblox-npc-ai
 description: "Use when creating Roblox NPCs or enemies with pathfinding, state machines, line-of-sight or FOV detection, spawns, or AI update loops."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-31
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
   - https://create.roblox.com/docs/projects/server-authority

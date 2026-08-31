@@ -1,7 +1,7 @@
 ---
 name: roblox-animation-vfx
 description: "Use when implementing Roblox character animations, particles, beams, trails, tweens, camera shake, or other visual effects."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-08-31
 sources:
   - https://create.roblox.com/docs/animation/using
   - https://create.roblox.com/docs/reference/engine/classes/Animator

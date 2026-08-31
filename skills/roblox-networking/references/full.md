@@ -224,3 +224,12 @@ The goal is not to make the client impossible to modify. The goal is to make mod
 - [ ] Packet size and fire rate are measured for high-frequency remotes.
 - [ ] Player cleanup removes limiter, subscription, and connection state.
 - [ ] Suspicion handling tolerates false positives and does not expose private data.
+
+## Community ecosystem (leads, not sources)
+
+Top-sorted DevForum canon for networking libraries. Verify status in-thread; several are archived.
+
+- State replication: [Replica](https://devforum.roblox.com/t/replica-server-to-client-state-replication-module/3216980) (2024, current favorite; pairs with ProfileStore per [PlayerState](https://devforum.roblox.com/t/playerstate-profilestore-replica-without-the-headache/3766568)); [ReplicaService](https://devforum.roblox.com/t/replicate-your-states-with-replicaservice-networking-system/894736) older.
+- Remote tooling: [Packet](https://devforum.roblox.com/t/packet-networking-library/3573907) (2025), [Warp](https://devforum.roblox.com/t/warp-very-fast-powerful-networking-library/2779813) (2024), [BridgeNet](https://devforum.roblox.com/t/bridgenet-insanely-optimized-easy-to-use-networking-library-full-of-utilities-now-with-roblox-ts-v199-beta/1909935) (legacy).
+- Case study: [60x bandwidth reduction in Astro Force](https://devforum.roblox.com/t/how-we-reduced-bandwidth-usage-by-60x-in-astro-force-roblox-rts/1202300) — the practical RTS-scale optimization write-up.
+- [StreamX is DEPRECATED](https://devforum.roblox.com/t/deprecated-streamx-reduce-lag-and-prevent-map-cloning/1992484) — do not recommend; example of a once-canonical library that died.

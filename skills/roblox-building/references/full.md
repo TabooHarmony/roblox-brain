@@ -357,3 +357,9 @@ Use the report to choose the next bounded inspection or playtest. Static counts 
 - **Visual:** use `screen_capture` with a deliberate camera position when supported. If capture fails or hangs, report that and retain structural evidence rather than inventing visual conclusions.
 - **Runtime:** start play, navigate to the spawn and a representative landmark, exercise the relevant interaction, collect console output, and stop play. A clean console is evidence of no observed errors, not proof of all behavior.
 - **Recovery:** if a phase fails, preserve the last verified phase, remove only the disposable failed output, and retry with a smaller batch or native fallback.
+
+## Community ecosystem (leads, not sources)
+
+- [Large-Scale Roblox Terrain: the ultimate guide](https://devforum.roblox.com/t/large-scale-roblox-terrain-the-ultimate-guide/405672) (84k views) — still the terrain-at-scale reference.
+- [Realistic oceans via mesh deformation](https://devforum.roblox.com/t/realistic-oceans-using-mesh-deformation/1159345); [greedy meshing explainer](https://devforum.roblox.com/t/consume-everything-how-greedy-meshing-works/452717).
+- [Free texture sites](https://devforum.roblox.com/t/free-texture-sites/70131) (174k views); [City Loader plugin](https://devforum.roblox.com/t/city-loader-plugin-templates-for-real-life-buildingscities-in-studio/696886).

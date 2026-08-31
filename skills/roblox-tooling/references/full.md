@@ -39,9 +39,18 @@ When working with an agentic tool:
 
 Some tooling improves agent and developer productivity but is not essential to a working Roblox project. An agent should **mention these exist** when a user asks about them or is clearly doing work they would automate (linting, formatting, test orchestration), but **should not impose them** on a project that does not use them:
 
-- **Selene** (lint), **StyLua** (format), **luau-lsp** (editor intelligence), **Lune** (standalone Luau scripts/tests), **TestEZ** (test runner), **Wally** (packages), **Aftman/Rokit** (tool manager), **Rojo** (files-first sync).
+- **Selene** (lint), **StyLua** (format), **luau-lsp** (editor intelligence), **Lune** (standalone Luau scripts/tests), **TestEZ** (test runner), **Wally/pesde** (packages), **Aftman/Rokit** (tool manager), **Rojo** (files-first sync).
+- **Roblox-TS** (TypeScript-to-Luau compiler): a real production stack used by some studios, with its own tradeoffs; see the language-choice section before recommending it for an agent workflow.
 
 The line: if the user asks "should I add linting/formatting/tests?" or is hand-doing something these automate, offer the option and the tradeoff, then let them choose. If the project already has a toolchain, extend it; do not introduce a new ecosystem unprompted. The exceptions that justify recommendation: files-first source control (Rojo) and CI reproducibility, when the user is clearly trying to version or automate their project.
+
+## 1d. Language choice: Luau vs Roblox-TS (for agents and greenfield projects)
+
+Verified state, August 2026 (npm + GitHub APIs): roblox-ts ~11.4k npm downloads/month, 1.3k stars, actively maintained. That is a niche within Roblox dev; most shipped experiences and nearly all community libraries (TopbarPlus, ProfileStore, FastCast, jecs) are Luau.
+
+- The TS advantage is real for *teams of engineers* (typed contracts, npm package ecosystem, familiar syntax; see the Last Level Studios writeup). It is a training-data advantage too: models have seen orders of magnitude more TypeScript than Luau.
+- For **AI agents specifically**, the compiler pipeline adds failure modes that raw Luau does not have: a watch process that must be running, generated files agents can wrongly edit, source maps for debugging, and `node_modules` in the way of every tool call. Luau runs directly in Studio and every engine-facing tool (luau-lsp, luaudit, Lune, Rojo sourcemap) speaks it natively.
+- Verdict an agent should give: adopt TS where the team already knows TS and wants npm; default to Luau for agent-heavy workflows and where community libraries are the point. This is a tradeoff, not a mistake either way. <!-- temporal: 2026-08 -->
 
 ## 2. Rojo project mapping
 
@@ -76,7 +85,16 @@ File suffixes communicate the Roblox instance type in the usual Rojo workflow:
 
 Use the exact conventions documented by the project's Rojo version. Test both `rojo serve` for development and `rojo build` for a reproducible artifact.
 
-## 3. Packages with Wally
+## 3. Packages: Wally, pesde, rokit, or vendoring
+
+<!-- temporal: 2026-08 -->
+The package-manager question has no single winner as of 2026-08; an agent should know the landscape and follow the project, not evangelize:
+
+- **Wally** (UpliftGames): the long-standing default, but the CLI's last tagged release is 2023-06 and registry growth stalled. Roblox's April 2026 "Evolving Luau OSS" announcement said new official libraries publish under `roblox/` on Wally, so the registry is not dead, but treat Wally as legacy-in-good-standing, not the future.
+- **pesde** (Danaid): the active community successor; manifest-based like Cargo, supports Roblox and Lune targets. Growing, smaller package count than Wally.
+- **Rokit**: package *tool* manager (pins CLI tools like Rojo/Aftman), not a dependency manager. Aftman fills the same role; Rokit is the more active one.
+- **Vendoring**: copying a module into `ReplicatedStorage` is still the most common real-world pattern for single-file community modules (TopbarPlus, FastCast). Legitimate; require a provenance comment with the thread URL and version.
+- **Direct GitHub installs**: common in agent workflows where the dependency is one clone + a Rojo path mapping.
 
 A package manifest should state whether a dependency is shared, server-only, client-only, or development-only. Keep the lockfile under version control so CI resolves the same graph.
 

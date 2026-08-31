@@ -1,7 +1,7 @@
 ---
 name: roblox-building
 description: "Use when building geometry, maps, props, or generated assets with MCP or standalone Luau."
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-31
 sources:
   - original
   - https://devforum.roblox.com/t/large-scale-roblox-terrain-the-ultimate-guide/405672

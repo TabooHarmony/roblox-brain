@@ -1,7 +1,7 @@
 ---
 name: roblox-architecture
 description: "Use when assigning Roblox feature ownership, code location, dependencies, startup, or client-server boundaries without imposing a framework."
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-31
 sources:
   - https://create.roblox.com/docs/projects/data-model
   - https://create.roblox.com/docs/projects/client-server

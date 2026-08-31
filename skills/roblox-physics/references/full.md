@@ -403,3 +403,11 @@ For the migration reality check (cost scales with how much simulation you author
 - **No mass tuning**: Default density makes small parts too light. Use CustomPhysicalProperties.
 - **Touched for projectiles**: Touched fires for every contact. Use Raycast for hitscan, Touched only for slow physics projectiles.
 - **No lifetime on projectiles**: Forgotten projectiles accumulate and kill server performance.
+
+## Community ecosystem (leads, not sources)
+
+Top-sorted DevForum canon for combat/physics modules. Verify status in-thread.
+
+- Projectiles: [FastCast](https://devforum.roblox.com/t/making-a-combat-game-with-ranged-weapons-fastcast-may-be-the-module-for-you/133474) (3.3k likes, standard); [FastCast2](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed-a-powerful-modern-projectile-library/4093890) (2025) successor; [projectile motion math](https://devforum.roblox.com/t/modeling-a-projectiles-motion/176677) for lead-aim.
+- Melee hitboxes: [Raycast Hitbox](https://devforum.roblox.com/t/raycast-hitbox-401-for-all-your-melee-needs/374482) (3.3k likes); [ShapecastHitbox](https://devforum.roblox.com/t/shapecasthitbox-for-all-your-melee-needs-v025/3624241) successor; [ClientCast](https://devforum.roblox.com/t/clientcast-a-client-based-idiosyncratic-hitbox-system/895217) client-side variant (validate server-side).
+- Custom characters/physics: [Chickynoid](https://devforum.roblox.com/t/chickynoid-server-authoritative-character-replacement/1660558) server-authoritative character; [Chrono](https://devforum.roblox.com/t/chrono-drop-in-custom-physics-replication-library/3873294) (2025) physics replication; [Wall stick/Gravity Controller](https://devforum.roblox.com/t/wall-stickgravity-controller/432598) (2.9k likes).
