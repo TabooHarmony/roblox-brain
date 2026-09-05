@@ -546,7 +546,8 @@ def main():
     documents = sorted(Path(SKILLS_DIR).glob("*/SKILL.md"))
     documents.extend(sorted(Path(SKILLS_DIR).glob("*/references/full.md")))
     sources = sorted(Path(SKILLS_DIR).glob("*/references/**/*.luau"))
-    all_errors, luau_recognized, luau_compiled = validate_luau_syntax(documents, sources)
+    luau_errors, luau_recognized, luau_compiled = validate_luau_syntax(documents, sources)
+    all_errors.extend(luau_errors)
     print(f"Validated {skill_count} skills")
     print(
         f"Luau snippets: {luau_recognized} recognized, "

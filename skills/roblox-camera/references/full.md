@@ -344,6 +344,7 @@ If cutscenes can overlap, have a newer run adopt the first run's snapshot instea
 local shakeToken = 0 -- ownership token: only the newest shake drives state
 local shakeIntensity = 0
 local prevOffset = CFrame.identity
+local lastShakeCFrame: CFrame? = nil -- camera CFrame as our last shake write left it
 
 local function startShake(intensity: number, duration: number)
     shakeToken += 1
@@ -365,9 +366,15 @@ end
 RunService.PreRender:Connect(function()
     if shakeIntensity <= 0 then
         -- Strip the final offset exactly once so it does not stay baked in.
+        -- Only strip when the camera STILL holds our last write: another
+        -- system may have overwritten camera.CFrame since, and stripping
+        -- from that fresh base would subtract an offset it never contained.
         if prevOffset ~= CFrame.identity then
-            camera.CFrame = camera.CFrame * prevOffset:Inverse()
+            if lastShakeCFrame and camera.CFrame == lastShakeCFrame then
+                camera.CFrame = camera.CFrame * prevOffset:Inverse()
+            end
             prevOffset = CFrame.identity
+            lastShakeCFrame = nil
         end
         return
     end
@@ -376,11 +383,17 @@ RunService.PreRender:Connect(function()
         (math.random() - 0.5) * shakeIntensity,
         (math.random() - 0.5) * shakeIntensity
     )
-    -- Re-base on the CURRENT camera CFrame each frame: strip the previous
-    -- frame's offset, then apply this frame's. Never write back a stale
-    -- base snapshot taken when the shake started; other systems can move
-    -- the camera between frames.
-    camera.CFrame = camera.CFrame * prevOffset:Inverse() * offset
+    -- Re-base on the CURRENT camera CFrame each frame, and remember it: strip
+    -- the previous frame's offset only while our last write is still current.
+    -- If another system moved the camera between frames, that fresh base never
+    -- contained our offset, so subtracting it would corrupt their CFrame;
+    -- instead the stale offset is simply dropped (resets shake baseline).
+    local base = camera.CFrame
+    if lastShakeCFrame and base == lastShakeCFrame then
+        base = base * prevOffset:Inverse() -- our offset is still baked in
+    end
+    camera.CFrame = base * offset
+    lastShakeCFrame = camera.CFrame
     prevOffset = offset
 end)
 ```

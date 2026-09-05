@@ -27,8 +27,8 @@ Load for pure Luau syntax and semantics: truthiness, tables, iteration, function
 - Luau string patterns are not regular expressions. Their syntax and capabilities differ.
 - Backtick interpolation and `..` concatenation are both valid. Choose the clearer form; collect many fragments and join once in a hot loop.
 - NaN does not equal itself and defeats `<`/`>` comparisons; test with `x ~= x`.
-- Binary data uses the `buffer` library: fixed size, 0-based byte offsets, explicit-width reads/writes. Avoid `buffer.readinteger`/`buffer.writeinteger`: in some type stubs, not the released runtime.
-- For Base64, hashing, or compression use `EncodingService` (buffers, not strings; JSON still goes through `HttpService`). Math and EncodingService semantics: see full reference.
+- Binary data uses the `buffer` library: fixed size, 0-based offsets, explicit-width reads/writes. Avoid `buffer.readinteger`/`writeinteger` (stubs only, not released runtime).
+- For Base64, hashing, or compression use `EncodingService` (buffers, not strings; JSON still via `HttpService`). Details: see full reference.
 
 ```luau
 local label = if enabled then "On" else "Off"
@@ -51,6 +51,6 @@ end
 
 ### Review
 
-Valid Luau, intentional array/dictionary shape, no nil gaps in sequences, no assumed dictionary order, no accidental aliases, no cross-language syntax, and no clever boolean expression hiding `false` or `nil`.
+Valid Luau, no nil gaps in sequences, no assumed dictionary order, no accidental aliases, no cross-language syntax, no boolean expressions hiding `false` or `nil`.
 
 > Detailed language traps and translation examples: [references/full.md](references/full.md)

@@ -98,8 +98,8 @@ local function addCoins(userId: number, amount: number): boolean
         return false
     end
 
-    local ok = pcall(function()
-        store:UpdateAsync("player_" .. tostring(userId), function(old)
+    local ok, committed = pcall(function()
+        return store:UpdateAsync("player_" .. tostring(userId), function(old)
             -- Migrate BEFORE mutating: stamping the version without running
             -- migrations would mark an old record as current while its fields
             -- are still missing, and would silently downgrade a future record.
@@ -118,7 +118,10 @@ local function addCoins(userId: number, amount: number): boolean
             return data
         end)
     end)
-    return ok
+    -- A cancelled transform (nil return) makes UpdateAsync return nil: the
+    -- write never happened, so report failure even though pcall succeeded.
+    -- Returning the bare pcall flag would report success without granting.
+    return ok and committed ~= nil
 end
 ```
 

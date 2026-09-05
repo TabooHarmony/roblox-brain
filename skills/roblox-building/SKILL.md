@@ -29,12 +29,12 @@ Load for Roblox geometry, props, maps, routes, landmarks, or spatial onboarding 
 
 ### Asset Choice
 - Inspect and reuse a compatible existing asset first.
-- For Creator Store, cross-owner, or paid assets, surface source, creator, price, and licensing before insertion.
+- For Creator Store or paid assets, surface source, creator, price, and licensing before insertion.
 - Use `generate_procedural_model` for blockouts, `generate_mesh` for textured props, and `generate_material` for surfaces.
-- For meshes, read back `MeshPart`/`SurfaceAppearance`, bounds, collision fidelity, anchoring, and provenance; preview representative quality levels.
-- Use image tools only for permitted inputs and wait for the returned job before dependent work.
-- Runtime pixel/vertex editing (`EditableImage`/`EditableMesh`) is budget-gated, permission-gated, non-replicating: see full reference.
-- Fall back to native Parts/CSG and report unavailable or unsuitable generation.
+- For meshes, read back `MeshPart`/`SurfaceAppearance`, bounds, collision fidelity, anchoring; preview quality levels.
+- Use image tools only for permitted inputs; wait for the returned job before dependent work.
+- Runtime pixel/vertex editing (`EditableImage`/`EditableMesh`) is budget- and permission-gated, non-replicating: see full reference.
+- Fall back to native Parts/CSG and report unsuitable generation.
 
 ### Player Scale
 Player ~5 studs | Door 4w×7h | Ceiling 10-14 | Counter 3.5-4 | Seat 1.5 | Path 6+

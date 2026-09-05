@@ -184,8 +184,11 @@ def mirror_files(files: set[str], verbose: bool = False, refresh: bool = False) 
                 before = sha256(dest.read_bytes())
                 after = sha256(data)
                 if before == after:
-                    # Content unchanged: keep the existing file untouched and
-                    # preserve its original retrieval timestamp.
+                    # Content unchanged: keep the existing bytes untouched, but
+                    # still (re)write the sidecar so the refresh stamps this
+                    # retrieval with current snapshot identity and timestamp.
+                    # Skipping metadata here left untracked files untracked.
+                    write_metadata(dest, rel, data, note="refresh: content unchanged")
                     ok += 1
                     if verbose:
                         print(f"  = {rel} (unchanged, hash match)")

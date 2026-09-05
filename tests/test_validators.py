@@ -464,20 +464,78 @@ class ValidatorRegressionTests(unittest.TestCase):
     def test_mirror_check_reports_presence_not_freshness(self):
         # F16 regression: --check output must state it is presence-only and
         # must never use freshness wording for retained cache files.
+        # Isolated fixture: no dependence on the developer's real cache or
+        # network. Registry + mirrors are pointed at a temp directory.
         import mirror_creator_docs
 
-        missing_state = mirror_creator_docs.registry_referenced_files()  # exercises registry parse
-        self.assertTrue(missing_state)  # registry actually references files
-        stdout = io.StringIO()
-        with contextlib.redirect_stdout(stdout):
-            exit_code = mirror_creator_docs.check_mode()
-        output = stdout.getvalue()
-        self.assertEqual(exit_code, 0)
-        self.assertIn("presence", output)
-        # Presence-only output never claims a file is fresh; the --refresh
-        # flag name itself contains the substring, so mask it first.
-        self.assertNotIn("fresh", output.replace("--refresh", "<flag>"))
-        self.assertNotIn("Mirroring", output)
+        with tempfile.TemporaryDirectory() as tmp:
+            mirror_root = Path(tmp)
+            registry = mirror_root / "registry.yaml"
+            registry.write_text(
+                "entries:\n"
+                "  - id: fixture-claim\n"
+                "    claim: 'fixture'\n"
+                "    check:\n"
+                "      type: property_exists\n"
+                "      class: Part\n"
+                "      member: Anchored\n"
+            )
+            mirror_dir = mirror_root / "creator-docs"
+            (mirror_dir / "classes").mkdir(parents=True)
+            (mirror_dir / "classes" / "Part.yaml").write_text("id: Part\n")
+            original_dir = mirror_creator_docs.MIRROR_DIR
+            original_registry = mirror_creator_docs.REGISTRY_PATH
+            mirror_creator_docs.MIRROR_DIR = mirror_dir
+            mirror_creator_docs.REGISTRY_PATH = registry
+            try:
+                referenced = mirror_creator_docs.registry_referenced_files()
+                self.assertEqual(referenced, {"classes/Part.yaml"})
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = mirror_creator_docs.check_mode()
+                output = stdout.getvalue()
+                self.assertEqual(exit_code, 0)
+                self.assertIn("presence", output)
+                # Presence-only output never claims a file is fresh; the --refresh
+                # flag name itself contains the substring, so mask it first.
+                self.assertNotIn("fresh", output.replace("--refresh", "<flag>"))
+                self.assertNotIn("Mirroring", output)
+            finally:
+                mirror_creator_docs.MIRROR_DIR = original_dir
+                mirror_creator_docs.REGISTRY_PATH = original_registry
+
+    def test_mirror_check_detects_missing_registry_referenced_file(self):
+        # F16 regression: a registry entry referencing a file the mirror
+        # lacks must fail check mode. Isolated fixture, no real cache.
+        import mirror_creator_docs
+
+        with tempfile.TemporaryDirectory() as tmp:
+            mirror_root = Path(tmp)
+            registry = mirror_root / "registry.yaml"
+            registry.write_text(
+                "entries:\n"
+                "  - id: fixture-claim\n"
+                "    claim: 'fixture'\n"
+                "    check:\n"
+                "      type: property_exists\n"
+                "      class: Missing\n"
+                "      member: Nope\n"
+            )
+            mirror_dir = mirror_root / "creator-docs"
+            mirror_dir.mkdir(parents=True)
+            original_dir = mirror_creator_docs.MIRROR_DIR
+            original_registry = mirror_creator_docs.REGISTRY_PATH
+            mirror_creator_docs.MIRROR_DIR = mirror_dir
+            mirror_creator_docs.REGISTRY_PATH = registry
+            try:
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = mirror_creator_docs.check_mode()
+                self.assertEqual(exit_code, 1)
+                self.assertIn("Missing", stdout.getvalue())
+            finally:
+                mirror_creator_docs.MIRROR_DIR = original_dir
+                mirror_creator_docs.REGISTRY_PATH = original_registry
 
     def test_mirror_refresh_replaces_fixture_only_when_hash_differs(self):
         # F16 regression: explicit refresh verifies by hash before/after; an
@@ -524,7 +582,21 @@ class ValidatorRegressionTests(unittest.TestCase):
             try:
                 ok, failed = m.mirror_files({"classes/Part.yaml"}, verbose=True, refresh=True)
                 self.assertEqual((ok, failed), (1, 0))
-                self.assertEqual(m.read_metadata(dest), before_metadata)
+                # Content unchanged: bytes stay, but the sidecar must be
+                # (re)stamped with this retrieval's snapshot identity, so an
+                # untracked pre-metadata file becomes tracked after refresh
+                # and the timestamp reflects a verified upstream fetch.
+                after_metadata = m.read_metadata(dest)
+                self.assertIsNotNone(after_metadata)
+                assert after_metadata is not None
+                self.assertEqual(
+                    after_metadata["content_sha256"], m.sha256(new_bytes)
+                )
+                self.assertNotIn("previous_sha256", after_metadata)
+                self.assertIn("unchanged", after_metadata["note"])
+                self.assertGreaterEqual(
+                    after_metadata["retrieved_at"], before_metadata["retrieved_at"]
+                )
             finally:
                 m.MIRROR_DIR = original_dir
                 m.fetch = original_fetch

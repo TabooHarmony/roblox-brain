@@ -257,10 +257,14 @@ local function drain(maxItems: number): (boolean, any)
 
     local allSucceeded = true
     for _, request in items do
-        local requestOk = pcall(function()
+        -- Capture BOTH pcall's ok AND the processor's return value: the
+        -- contract is "returns true on success", so a false return is a
+        -- failed batch too. Capturing only pcall's first result lets a
+        -- false-returning processor have its batch removed anyway.
+        local requestOk, processed = pcall(function()
             return processMatchRequest(request)
         end)
-        if not requestOk then
+        if not requestOk or processed ~= true then
             allSucceeded = false
         end
     end

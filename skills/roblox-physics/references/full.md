@@ -345,10 +345,18 @@ A common technique simulates homing missiles without Roblox physics by steering 
 -- multiplying with the original magnitude. The actual turn is exactly
 -- min(budget, angle); zero-vector and antiparallel cases are defined below.
 local function steerDirection(dir: Vector3, toTarget: Vector3, maxTurn: number, dt: number): Vector3
-    if dir.Magnitude == 0 or toTarget.Magnitude == 0 then
-        return dir -- no aim to steer from/to: hold unchanged (initialize velocity before homing)
+    -- Always return a unit vector so callers multiply by speed exactly once.
+    -- Zero/invalid input directions fall back to a deterministic axis instead
+    -- of returning a non-unit vector (which re-multiplied speed in callers).
+    local current: Vector3
+    if dir.Magnitude == 0 then
+        current = Vector3.zAxis
+    else
+        current = dir.Unit
     end
-    local current = dir.Unit
+    if toTarget.Magnitude == 0 then
+        return current -- no aim: hold direction, do not re-scale speed
+    end
     local target = toTarget.Unit
     local dot = math.clamp(current:Dot(target), -1, 1)
     local angle = math.acos(dot)                       -- 0..pi
@@ -357,12 +365,14 @@ local function steerDirection(dir: Vector3, toTarget: Vector3, maxTurn: number, 
         return current                                 -- already aimed
     elseif angle >= math.pi - 1e-6 then
         -- Antiparallel: the cross-product axis is undefined. Pick any unit
-        -- axis perpendicular to `current` and turn the full budget toward it.
+        -- axis perpendicular to `current` and turn toward it, clamped to the
+        -- remaining angle (min(budget, angle)) so an oversized budget can
+        -- never rotate past the target and back.
         local axis = current:Cross(Vector3.yAxis)
         if axis.Magnitude < 1e-6 then
             axis = current:Cross(Vector3.xAxis)
         end
-        return CFrame.fromAxisAngle(axis.Unit, budget) * current
+        return CFrame.fromAxisAngle(axis.Unit, math.min(budget, angle)) * current
     end
     local axis = current:Cross(target).Unit            -- rotation axis (perpendicular to both)
     local step = math.min(budget, angle)
