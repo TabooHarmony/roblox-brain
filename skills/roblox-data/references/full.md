@@ -31,11 +31,17 @@ local TEMPLATE = {
 }
 
 local function cloneTemplate()
-    return table.clone(TEMPLATE)
+    -- Deep-construct: table.clone(TEMPLATE) is shallow and would alias the
+    -- nested `inventory` and `settings` tables across every profile built
+    -- from the template (mutating one player's inventory would corrupt all).
+    local data = table.clone(TEMPLATE)
+    data.inventory = {}
+    data.settings = table.clone(TEMPLATE.settings)
+    return data
 end
 ```
 
-Do not use a shallow clone when nested tables will be mutated. Write a small deep-copy helper or construct nested defaults explicitly. Never store Instances, functions, connections, threads, cyclic references, or values the DataStore serializer cannot represent.
+Every nested table must be rebuilt per call so no two profiles share a subtable. Write a small deep-copy helper or construct nested defaults explicitly; after loading, never mutate nested tables that might still be shared with the template. Never store Instances, functions, connections, threads, cyclic references, or values the DataStore serializer cannot represent.
 
 ## 3. Read with bounded retries
 
@@ -84,15 +90,31 @@ Use `UpdateAsync` when the new value depends on the stored value. The transform 
 
 ```luau
 local function addCoins(userId: number, amount: number): boolean
-    if amount < 0 or amount > 1_000_000 then
+    -- Reject NaN, infinity, non-integers, and out-of-range amounts.
+    if amount ~= amount or amount == math.huge or amount == -math.huge then
+        return false
+    end
+    if amount % 1 ~= 0 or amount < 0 or amount > 1_000_000 then
         return false
     end
 
     local ok = pcall(function()
         store:UpdateAsync("player_" .. tostring(userId), function(old)
-            local data = old or cloneTemplate()
+            -- Migrate BEFORE mutating: stamping the version without running
+            -- migrations would mark an old record as current while its fields
+            -- are still missing, and would silently downgrade a future record.
+            if old ~= nil then
+                if type(old) ~= "table" then
+                    return nil -- unsupported shape: cancel the write, escalate
+                end
+                local version = tonumber(old.version) or 0
+                if version > CURRENT_VERSION then
+                    return nil -- future schema: cancel the write, do not downgrade
+                end
+            end
+            local data = migrate(old)
             data.coins = (data.coins or 0) + amount
-            data.version = CURRENT_VERSION
+            data.version = CURRENT_VERSION -- stamp only after migration
             return data
         end)
     end)
@@ -100,7 +122,7 @@ local function addCoins(userId: number, amount: number): boolean
 end
 ```
 
-Do not perform network calls, yield, or mutate external state inside the transform callback. If the callback returns `nil`, the update is cancelled; use that deliberately.
+Do not perform network calls, yield, or mutate external state inside the transform callback. If the callback returns `nil`, the update is cancelled and the stored value remains unchanged; use that deliberately for unsupported schemas. A cancelled or failed write must surface to callers and observability rather than silently reporting success.
 
 ## 6. Migration
 
@@ -125,7 +147,7 @@ local function migrate(data)
 end
 ```
 
-Keep old-field handling until every supported record has migrated or until a deliberate data-retention policy says it can be removed. Test migrations against missing fields, old nested shapes, extra fields, and malformed values.
+Stamping the version is part of each migration step, never a substitute for it: a write that bumps `version` without running the migrations leaves fields missing while the record claims to be current. Conversely, if a stored version is newer than `CURRENT_VERSION`, refuse the write rather than overwriting unknown schema. Keep old-field handling until every supported record has migrated or until a deliberate data-retention policy says it can be removed. Test migrations against missing fields, old nested shapes, extra fields, and malformed values.
 
 ## 7. Save lifecycle
 
@@ -176,14 +198,29 @@ local TEMPLATE = { version = 1, coins = 0, inventory = {} }
 local PlayerStore = ProfileStore.New("PlayerData", TEMPLATE)
 local Profiles: {[Player]: any} = {}
 
+-- Supplying a Cancel callback disables ProfileStore's built-in acquisition
+-- timeout, so the example enforces its own bounded deadline.
+local ACQUISITION_TIMEOUT = 30
+
 local function loadPlayer(player: Player)
+    local startedAt = os.clock()
     local profile = PlayerStore:StartSessionAsync(tostring(player.UserId), {
         Cancel = function()
-            return player:IsDescendantOf(Players) == false
+            -- Called repeatedly while the session waits to acquire the lock.
+            -- `closing` is a shutdown flag set inside BindToClose (see the
+            -- Save lifecycle section).
+            return player:IsDescendantOf(Players) == false -- player left
+                or closing -- stop acquiring during shutdown
+                or os.clock() - startedAt > ACQUISITION_TIMEOUT -- deadline elapsed
         end,
     })
 
     if profile == nil then
+        -- Bounded acquisition failure: the player left, the server is
+        -- shutting down, or the deadline elapsed under contention. Do not
+        -- treat nil as a new empty profile, and do not assume the abandoned
+        -- acquisition is interrupted instantly. Proceed without a profile
+        -- (limited or read-only mode) or kick, per the project's policy.
         player:Kick("Your data session could not be opened. Please rejoin.")
         return
     end
@@ -212,7 +249,7 @@ Players.PlayerAdded:Connect(loadPlayer)
 Players.PlayerRemoving:Connect(releasePlayer)
 ```
 
-The important behavior is the failure path. `StartSessionAsync()` can return `nil`; never treat that as a new empty profile. `Steal = true` bypasses session protection and belongs only in controlled debugging, not normal joins. Use `ProfileStore.Mock` in Studio when live API access is enabled but writes must remain ephemeral.
+The important behavior is the failure path. `StartSessionAsync()` can return `nil`; never treat that as a new empty profile. Supplying a `Cancel` callback also disables ProfileStore's built-in acquisition timeout, so a custom `Cancel` must include its own elapsed-time deadline; without one, a connected player contending for a locked profile can wait forever. Keep the deadline bounded and define what happens on failure (proceed without a profile or kick). `Steal = true` bypasses session protection and belongs only in controlled debugging, not normal joins. Use `ProfileStore.Mock` in Studio when live API access is enabled but writes must remain ephemeral.
 
 Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-targeted delivery, such as an offline paid gift that must be delivered later, and receive it with `profile:MessageHandler(...)`. For best-effort live announcements, use MessagingService instead. Profiles also expose critical-state and error signals; route them to observability rather than silently continuing as if saves were healthy.
 
@@ -224,6 +261,9 @@ Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-t
 - [ ] `UpdateAsync` is used for read-modify-write operations.
 - [ ] Retries are finite, backoff is bounded, and failures are observable.
 - [ ] Migrations are idempotent and tested against old records.
+- [ ] Template-derived profiles never share nested default tables.
+- [ ] Version stamps are only written after migrations run; records newer than `CURRENT_VERSION` are rejected, not downgraded.
+- [ ] Custom session-acquisition `Cancel` callbacks include an explicit elapsed-time deadline.
 - [ ] Player removal and server shutdown release or save profiles.
 - [ ] No client-provided value bypasses server validation before persistence.
 - [ ] Persisted numbers are checked for NaN/infinity; persisted strings pass `utf8.len`.

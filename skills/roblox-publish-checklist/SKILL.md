@@ -13,7 +13,7 @@ sources:
 
 ## When to Load
 
-Load before publishing a new experience or updating a live one. This is a release router, not a universal coding standard. Test the surfaces that exist and the risks introduced by the change.
+Load before publishing a new experience or updating a live one. Test the surfaces that exist and the risks introduced by the change.
 
 ## Quick Reference
 
@@ -28,7 +28,7 @@ Record the changed places, scripts, assets, configuration, schemas, products, su
 - **Purchases changed:** test durable, idempotent receipt grants and retries. Load `roblox-monetization`.
 - **Cloud auth or webhooks changed:** verify secrets, scopes, callback state, retries, signatures, and deduplication. Load `roblox-cloud`.
 
-A failed high-consequence gate means NOT READY. Do not average it into a percentage.
+A failed high-consequence gate means NOT READY. Do not average it into a percentage. Precedence: user approval authorizes an otherwise permitted action; it does not satisfy a mandatory policy and does not turn a failed or unverified gate into PASS.
 
 ### 3. Exercise the shipped surface
 
@@ -36,11 +36,11 @@ A failed high-consequence gate means NOT READY. Do not average it into a percent
 - Test every supported input mode and representative viewport/device tier.
 - Inspect runtime errors, memory growth, frame/network hot spots, and streaming behavior from measurements, not fixed object-count rules.
 - Verify focus, touch targets, readable contrast, non-color state cues, reduced motion, and localized overflow where applicable.
-- Confirm experience metadata, visibility, places, thumbnails/icons, permissions, and policy declarations in the current Creator Dashboard.
+- Confirm experience metadata, visibility, places, thumbnails/icons, permissions, and policy declarations in the Creator Dashboard.
 
 ### 4. Require evidence
 
-Every PASS cites a test, log, profiler capture, readback, screenshot, or dashboard inspection. If a capability is unavailable, mark UNVERIFIED, not PASS.
+Every PASS cites a test, log, profiler capture, readback, screenshot, or dashboard inspection. UNVERIFIED if unavailable; approval is not evidence.
 
 ### Output
 

@@ -15,31 +15,31 @@ sources:
 
 ## When to Load
 
-Load when tracking player behavior, economy events, or funnels; building custom event instrumentation; or understanding AnalyticsService rate limits and batching.
+Load when tracking player behavior, economy events, or funnels, or when building AnalyticsService instrumentation.
 
 ## Quick Reference
 
-**Load Full Reference below only when you need specific API signatures or implementation patterns.**
+**Full Reference below: load only for API signatures or implementation patterns.**
 
 Key rules:
 - Use `AnalyticsService` (built-in). No third-party analytics SDK needed.
 - Three event types: Custom (counters/values), Economy (currency flow), Funnel (step progression)
 - Rate limit: 120 + (20 × CCU) calls per minute. Batch where possible.
 - Max 100 custom events, 5 unique currency types, 10 funnels, 3 custom fields per event.
-- Log events AFTER successful operations, not on attempt (avoids inflated metrics).
-- Custom fields (up to 3) let you slice data without burning event cardinality.
+- Log events AFTER successful operations, not on attempt. Failed attempts log nothing.
+- Report the balance the authoritative mutation RETURNED at commit, unchanged. Never recompute it from the `leaderstats` replica: it already reflects the grant; re-adding double-counts.
+- Custom fields (up to 3) slice data without burning event cardinality.
 - Economy events track sources (earned) and sinks (spent) separately.
-- Funnel steps do not need to fire in order. If a later step is logged without earlier ones, the skipped intermediate steps are automatically back-filled as completed.
+- Funnel steps need not fire in order; skipped intermediate steps are auto-back-filled as completed when a later step logs.
 - Events appear on Creator Hub dashboard after ~24 hours. Use "View Events" for real-time validation.
-- Server-side logging preferred for accuracy. Client-side only for UI interaction tracking.
-- Creator Rewards has no AnalyticsService grant event. Use analytics for leading indicators such as session duration, onboarding, and referral-flow milestones; use Creator Dashboard for reward attribution and payout data.
+- Prefer server-side logging for accuracy; client-side only for UI interaction tracking.
+- Creator Rewards: no AnalyticsService grant event. Analytics for leading indicators (session duration, onboarding, referral milestones); Creator Dashboard for payout attribution.
 
 **Economy health (decision layer):**
 - Instrument from day one; you cannot backfill history when the economy breaks.
-- For each currency log source AND sink with SKUs + balance-after-transaction.
-- Health signals: sink/source ratio, inflation (dashboard formula: `CurrencySources - CurrencySinks`), whale concentration (docs: high ARPPU + low ARPDAU), price elasticity, sink sufficiency, D1/D7 cohorts. Thresholds are heuristics, not Roblox statements.
-- When the economy breaks: verify events exist + correct, read narrowest broken signal, change ONE lever, re-check.
-- Telemetry reports what broke; the user owns the design decision.
+- Log source AND sink per currency with SKUs + the committed mutation's returned balance.
+- Health signals: sink/source ratio, inflation (`CurrencySources - CurrencySinks`), whale concentration (high ARPPU + low ARPDAU), price elasticity, sink sufficiency, D1/D7 cohorts. Thresholds are heuristics, not Roblox statements.
+- Economy breaks: verify events exist + correct, read narrowest broken signal, change ONE lever, re-check. Telemetry reports what broke; the user owns the design decision.
 
 **Cross-refs:** `roblox-growth-design` for audit workflow; `roblox-monetization` for the purchase funnel.
 

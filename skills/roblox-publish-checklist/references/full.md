@@ -25,6 +25,10 @@ Use four states:
 
 Do not convert Not Applicable or Unverified into PASS. Do not calculate a readiness percentage that can hide one data-loss or purchase blocker.
 
+### Policy precedence
+
+User approval authorizes an otherwise permitted action; it does not satisfy a mandatory policy and does not turn a failed or unverified gate into PASS. A mandatory platform policy (for example, paid-random-item restrictions) is not risk-acceptable: "I accept the risk; ship unchanged" maps to NOT READY, not to READY WITH ACCEPTED RISK. READY WITH ACCEPTED RISK exists for non-policy risks (named risk, impact, owner, rollback); approval is never evidence and never upgrades UNVERIFIED or FAILED to PASS.
+
 ## 3. High-consequence gates
 
 ### Persistence, conditional on stored state

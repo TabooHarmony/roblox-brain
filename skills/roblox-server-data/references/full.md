@@ -155,12 +155,22 @@ GlobalDataStore is the same DataStore API but used for shared, non-player state.
 local DataStoreService = game:GetService("DataStoreService")
 local guildStore = DataStoreService:GetDataStore("GuildData")
 
-local function getGuild(guildId: string): table?
-    local success, data = pcall(function()
+-- Tagged outcome so failure and absence stay distinct:
+-- (true, data) -> read succeeded, guild exists
+-- (true, nil)  -> read succeeded, guild not created yet (legitimate nil)
+-- (false, err) -> DataStore outage; do NOT treat this as "no guild"
+-- Never silently return nil on error.
+local function getGuild(guildId: string): (boolean, any)
+    return pcall(function()
         return guildStore:GetAsync("guild_" .. guildId)
     end)
-    if success then return data end
-    return nil
+end
+
+local ok, data = getGuild("guild123")
+if not ok then
+    -- DataStore failure: retry, back off, or serve stale cache. Do not create/overwrite.
+elseif data then
+    print("guild name", data.name)
 end
 
 local function updateGuild(guildId: string, callback: (data: table) -> table)
@@ -186,12 +196,18 @@ end)
 ```luau
 local counterStore = DataStoreService:GetDataStore("GlobalCounters")
 
-local function incrementCounter(name: string, delta: number)
-    pcall(function()
+-- Tagged outcome: returns (false, err) instead of just failing silently; the
+-- caller decides whether to retry, queue, or alert. Errors are preserved, not swallowed.
+local function incrementCounter(name: string, delta: number): (boolean, any)
+    local ok, err = pcall(function()
         counterStore:UpdateAsync("counter_" .. name, function(oldValue)
             return (oldValue or 0) + delta
         end)
     end)
+    if not ok then
+        warn(("counter increment failed for %s: %s"):format(name, tostring(err)))
+    end
+    return ok, err
 end
 ```
 
@@ -201,12 +217,19 @@ end
 - Same rate limits as player DataStores
 - No session locking, so don't use it for player data
 - Key naming: use prefixes to namespace (`guild_`, `counter_`, `season_`)
+- Read helpers must preserve failure information: tag outcomes (ok/error/missing) or return `(success, data-or-err)`; never collapse an outage into nil, and never synthesize authoritative-looking fallback data on a failed read
 
 ## MemoryStoreService
 
 MemoryStore is for temporary, high-throughput coordination. Its values expire, so it is a poor place for authoritative player progress or a permanent leaderboard.
 
 ### Queue pattern
+
+Processor contract: `processMatchRequest(request)` returns `true` only when the
+batch's durable effect has fully succeeded, and returns `false` or throws when
+it has not. `drain` removes the read batch only when every request returned
+`true`. If any request fails, the whole batch stays queued; redelivery must be
+safe, so processing stays idempotent and includes a stable request identifier.
 
 ```luau
 local MemoryStoreService = game:GetService("MemoryStoreService")
@@ -218,27 +241,43 @@ local function enqueue(request: table)
     end)
 end
 
-local function drain(maxItems: number)
+-- Contract: processMatchRequest(request) returns true on success.
+-- Returning false or throwing means "did not complete"; drain then
+-- keeps the batch queued instead of removing it.
+local function drain(maxItems: number): (boolean, any)
     local ok, items, readId = pcall(function()
         return queue:ReadAsync(maxItems, false, 0)
     end)
-    if not ok then return end
+    if not ok then
+        -- items holds the error message here; propagate it instead of
+        -- returning silently and losing the failure.
+        return false, items
+    end
 
-    local processed = true
+    local allSucceeded = true
     for _, request in items do
         local requestOk = pcall(function()
-            processMatchRequest(request)
+            return processMatchRequest(request)
         end)
         if not requestOk then
-            processed = false
+            allSucceeded = false
         end
     end
 
-    if processed and #items > 0 then
-        pcall(function()
+    -- Remove only when every request durably succeeded. A failed batch is
+    -- left queued (invisible until the timeout expires) and must be safe
+    -- to redeliver: process idempotently.
+    if allSucceeded and #items > 0 then
+        local removed = pcall(function()
             queue:RemoveAsync(readId)
         end)
+        if not removed then
+            return false, "batch processed but RemoveAsync failed; it will be redelivered"
+        end
+    elseif not allSucceeded then
+        return false, "one or more requests failed; batch left queued"
     end
+    return true
 end
 ```
 
@@ -280,12 +319,25 @@ end
 ```luau
 local seasonStore = DataStoreService:GetDataStore("SeasonData")
 
-local function getSeasonInfo(): table
-    local success, data = pcall(function()
+-- Tagged outcome: (true, data) on a successful read, (false, err) on failure.
+-- A successful read with nil data means no season has been written yet.
+-- Never synthesize a fallback season here: fabricated data ({ season = 1, ... })
+-- gets consumed as authoritative and silently corrupts rewards and schedules.
+local function getSeasonInfo(): (boolean, any)
+    return pcall(function()
         return seasonStore:GetAsync("current_season")
     end)
-    if success and data then return data end
-    return { season = 1, startedAt = os.time(), endsAt = os.time() + 604800 }
+end
+
+local ok, season = getSeasonInfo()
+if not ok then
+    -- Read failed: retry, serve a cached copy, or fail the request.
+    -- Do not fall back to invented season state.
+elseif season then
+    -- Normal path: use the stored season data.
+else
+    -- Read succeeded but no season exists yet: bootstrap the first season
+    -- with an explicit write, don't fabricate one for this request.
 end
 ```
 

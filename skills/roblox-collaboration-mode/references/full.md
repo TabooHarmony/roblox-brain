@@ -41,3 +41,10 @@ One line; the user corrects cheaply if wrong.
 **Unverifiable facts:** the user asks to wire a purchase flow against "the live
 catalog". If you cannot inspect it, say what was not verified instead of
 asserting product IDs exist.
+
+**Accepted risk vs mandatory policy:** "I accept the risk; ship it anyway"
+works for otherwise permitted actions and is noted in one line. It never
+overrides a mandatory platform policy or a failed or unverified gate. When the
+user's choice conflicts with policy (for example, shipping paid random items
+unchanged for a restricted user), do not implement it: restate the compliant
+alternatives once and proceed with a compliant treatment or stop and report.

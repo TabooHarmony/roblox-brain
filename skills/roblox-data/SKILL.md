@@ -22,7 +22,7 @@ Load when designing player saves, schema migrations, retries, shutdown handling,
 
 ## Quick Reference
 
-- Define a serializable template and a version field before storing player state.
+- Define a serializable template and a version field before storing player state. Deep-copy templates so nested defaults are not shared between profiles, and run migrations before stamping the version.
 - Use `UpdateAsync` for read-modify-write operations and handle throttling or transient errors.
 - Prevent two servers from mutating the same player's profile at once, either with a well-understood wrapper or an equivalent session protocol.
 - If using ProfileStore, use `StartSessionAsync`, `Profile.OnSessionEnd`, and `EndSession` as documented. Do not use its `Steal` option for normal player loading.

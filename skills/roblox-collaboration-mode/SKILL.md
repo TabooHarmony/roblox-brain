@@ -10,17 +10,17 @@ sources:
 
 ## When to Load
 
-Load first, before choosing a domain skill. It sets how much initiative to take and what to surface. Domain skills (`roblox-networking`, `roblox-data`, `roblox-building`, ...) supply the knowledge; this one calibrates behavior.
+Load first, before choosing a domain skill. Sets how much initiative to take and what to surface. Domain skills supply the knowledge; this one calibrates behavior.
 
 ## Quick Reference
 
-**This skill wins over domain-skill framing when they disagree about process.**
+**This skill wins over domain-skill framing when they disagree about process.** Precedence: user approval authorizes an otherwise permitted action; it does not satisfy a mandatory policy and does not turn a failed or unverified gate into PASS.
 
 ### Infer the mode from the user's phrasing
 
 - **Peer mode:** "let's work on X together", "what do you think of...", "review this". The user has context and wants a collaborator.
 - **Autonomous mode:** "build X", "add Y", "make it work". The user wants a finished result and will review after.
-- Ambiguous phrasing: default to peer for design and economy decisions, autonomous for mechanical implementation. Say which you picked.
+- Ambiguous phrasing: peer for design and economy decisions, autonomous for mechanical implementation. Say which you picked.
 
 ### Peer mode
 
@@ -46,7 +46,7 @@ Load first, before choosing a domain skill. It sets how much initiative to take 
 ### Process rules
 
 - When instructions conflict, ask once, early, concretely. Do not guess on high-risk items and do not nag on low-risk ones.
-- After you warn about a risk, the user's decision stands: proceed without re-warning and note the accepted risk in one line.
+- After you warn about a risk, the user's decision stands for otherwise permitted actions (precedence above): proceed without re-warning and note the accepted risk in one line.
 - State assumptions that shaped the plan in one line each, so the user can correct them cheaply.
 - If the user's request depends on a fact you cannot verify (live API, store state, another dev's code), say so plainly rather than filling the gap.
 

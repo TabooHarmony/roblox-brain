@@ -32,14 +32,32 @@ AnalyticsService:LogCustomEvent(player, "EnemyDefeated", 1, {
 
 Track virtual currency flow. Enables revenue analysis, inflation detection, economy health.
 
+Three stages stay separate: the **attempted** transaction, the **committed**
+result (what the authoritative mutation actually wrote), and the **reported**
+balance (what the event carries). The mutation runs first and RETURNS the
+committed balance; logging consumes that returned value unchanged. Never
+recompute the reported balance from `leaderstats`: it is a UI replica that
+already shows the committed grant, so adding the amount again reports a wrong
+balance (100 + 50 commits 150; a recomputed sample logs 200). An idempotent
+purchase does not make the telemetry exactly-once, so failed or refunded
+attempts log nothing.
+
 ```luau
--- Player EARNED currency (source)
+-- The authoritative mutation commits the durable balance and RETURNS it.
+local function grantCoins(player, amount)
+    local committed = CurrencyStore:Grant(player, "Coins", amount) -- durable write
+    player.leaderstats.Coins.Value = committed -- UI replica; never the source of truth
+    return committed
+end
+
+-- Player EARNED currency (source): log AFTER the grant commits
+local committedBalance = grantCoins(player, 50)
 AnalyticsService:LogEconomyEvent(
     player,
     Enum.AnalyticsEconomyFlowType.Source, -- Source = earned/gained
     "Coins",                               -- Currency name (max 5 types)
     50,                                    -- Amount
-    player.leaderstats.Coins.Value + 50,   -- Balance AFTER transaction
+    committedBalance,                      -- Balance AFTER transaction (returned by the grant, unchanged)
     Enum.AnalyticsEconomyTransactionType.Gameplay.Name, -- Transaction type
     "QuestReward_Daily",                   -- Item SKU (what triggered it)
     {
@@ -47,13 +65,21 @@ AnalyticsService:LogEconomyEvent(
     }
 )
 
--- Player SPENT currency (sink)
+-- Player SPENT currency (sink): the authoritative mutation returns the
+-- committed balance; logging consumes it unchanged.
+local function spendCoins(player, amount)
+    local committed = CurrencyStore:Spend(player, "Coins", amount) -- durable write
+    player.leaderstats.Coins.Value = committed -- UI replica only
+    return committed
+end
+
+local committedBalance = spendCoins(player, 200)
 AnalyticsService:LogEconomyEvent(
     player,
     Enum.AnalyticsEconomyFlowType.Sink, -- Sink = spent/consumed
     "Coins",
     200,
-    player.leaderstats.Coins.Value - 200,
+    committedBalance, -- Balance AFTER transaction (returned by the spend, unchanged)
     Enum.AnalyticsEconomyTransactionType.Shop.Name,
     "SpeedBoost_30min"
 )
@@ -202,7 +228,7 @@ For every currency (max 5 types), log the full loop:
 
 - **Sources (earned):** quest rewards, daily login, gameplay drops, trades in, IAP top-ups. Use distinct SKUs so you know *which* source inflates ("QuestReward_Daily" vs "QuestReward_Event").
 - **Sinks (spent):** shop purchases, upgrades, repairs, trade fees, consumables. Same SKU discipline: a missing sink is the classic hidden deflation/inflation culprit.
-- **Balance AFTER transaction:** always pass `balanceAfterTransaction` so you can reconstruct balances over time and detect hoarding or loss.
+- **Balance AFTER transaction:** always pass `balanceAfterTransaction` so you can reconstruct balances over time and detect hoarding or loss. Take the value from what the authoritative mutation RETURNED when it committed; do not recompute it from the `leaderstats` UI replica or re-apply the amount to it.
 - **Item/feature acquisition:** custom event "ItemUnlocked" with item ID field; lets you see which content drives spending.
 - **Conversion funnel:** "Purchase" funnel (OpenedShop → ViewedItem → ClickedBuy → Confirmed → Granted) plus economy sink events. This links monetization health to the purchase funnel.
 
@@ -222,7 +248,7 @@ For every currency (max 5 types), log the full loop:
 When the economy or retention breaks, run this before touching balance numbers:
 
 1. **Check you have the events.** Is every currency tracked as source AND sink with SKUs? Do you have balance-after-transaction? Purchase funnel? If not, that absence is itself the finding; instrument first, then wait for data (24h dashboard lag; use "View Events" for real-time spot checks).
-2. **Check logging correctness.** Logged AFTER success, not attempt? Server-side only? If a sink was never logged (e.g. repair costs omitting tracking), apparent inflation may be a measurement gap.
+2. **Check logging correctness.** Logged AFTER success, not attempt? Server-side only? Is the reported balance the value the authoritative mutation returned at commit, not a recomputation from the `leaderstats` replica? If a sink was never logged (e.g. repair costs omitting tracking), apparent inflation may be a measurement gap.
 3. **Read the health signals above.** Pick the narrowest broken ratio first: sink/source, then concentration, then cohort cross-links.
 4. **Act on the smallest lever.** One balance change (sink price, source rate) at a time, with a hypothesis and a guardrail. Re-check the same signals after the change; the data loop is the point.
 
