@@ -176,6 +176,30 @@ if part then
 end
 ```
 
+### Mutation Records and Ambiguous Timeouts
+
+Treat every mutating call (`multi_edit`, write-path `execute_luau`, `insert_asset`) as a reconciliation unit. Before the call, record:
+
+- **Target identity:** place (`studio_id`/`instance_id`) plus instance or script path.
+- **Relevant pre-state:** the readback the change is based on.
+- **Intended change:** the exact post-state.
+- **Operation identity:** tool name and arguments, or an idempotency marker in the change.
+- **Verification evidence:** the readback confirming the outcome; filled in after reconcile.
+- **Compensating action:** the inverse edit or delete that restores the pre-state.
+
+If a mutating call times out or the connection drops, the edit may still have applied. Never blind-retry a possibly-applied mutation: read the target back and reconcile against the record first.
+
+Worked example (timeout after apply):
+
+1. Record: target `ServerScriptService.CoinService`, pre-state `local RATE = 1`, intended `local RATE = 5`, compensation: restore `RATE = 1`.
+2. `multi_edit` times out. The outcome is unknown, not failed.
+3. Reconcile: `script_read` the path. `RATE = 5` means the edit applied, do not re-apply; `RATE = 1` means it is absent, re-apply once.
+4. Verify with a second readback, then record the verification evidence, or apply the compensating action if the result is wrong.
+
+### Destructive-Test Preflight
+
+Before dirty or destructive tests (data wipes, failure injection, load scripts), identify the ACTUAL persistence and external-service destinations the test will touch: DataStore, OrderedDataStore, and MemoryStore names the scripts reference, Open Cloud or `HttpService` endpoints, MessagingService topics, and webhook URLs. A place named "test" is a label, not isolation. Confirm the code does not share production store names, endpoints, or webhook destinations, and list the confirmed destinations in the record before the first destructive call.
+
 ## Asset Generation Workflow
 
 Use this order for a map or prop:

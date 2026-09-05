@@ -157,4 +157,6 @@ Use this structure:
 7. **Not applicable:** skipped gates with reasons.
 8. **Rollback:** owner, trigger, and procedure.
 
+Group evidence by class in the report: edits that succeeded (readback-confirmed), runtime behavior actually observed, and checks that could not run (reported as Unverified). A successful edit is not runtime proof. The checklist documents rollback; it does not supply transactional rollback. Recovery relies on the compensating action recorded per mutation (`roblox-studio-mcp`).
+
 `READY WITH ACCEPTED RISK` requires a named risk, impact, owner, and rollback or mitigation. It is not a softer spelling of NOT READY.

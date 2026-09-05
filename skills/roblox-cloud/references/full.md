@@ -136,7 +136,7 @@ If an endpoint returns an Operation, poll that resource. Use bounded exponential
 - `RESOURCE_EXHAUSTED` / HTTP 429: honor `Retry-After` when present and reduce request pressure.
 - `UNAVAILABLE` and transport failures: retry within a bounded policy.
 
-Retry only transient failures. Authentication, authorization, and validation failures need correction, not repetition. Give non-idempotent operations an idempotency boundary before retrying.
+Retry only transient failures. Authentication, authorization, and validation failures need correction, not repetition. Give non-idempotent operations an idempotency boundary before retrying. An ambiguous timeout (no status received) is not a failure: read the resource back and reconcile before repeating a non-idempotent write. Keep a mutation record with a compensating action; full pattern in `roblox-studio-mcp`.
 
 ## 5. In-experience HttpService
 
@@ -168,6 +168,8 @@ Treat delivery as at-least-once and potentially delayed:
 The exact signature algorithm and headers belong to the current webhook documentation. Do not invent verification from a generic webhook provider.
 
 Deduplication must survive process restarts if repeating the side effect would be harmful. A memory-only set is insufficient for durable grants or destructive actions.
+
+Cross-owner atomicity: durable acceptance and deduplication must not acknowledge an event before its work is recoverable; see `roblox-data` full reference, section Cross-owner atomicity limits.
 
 ## 7. Security review
 

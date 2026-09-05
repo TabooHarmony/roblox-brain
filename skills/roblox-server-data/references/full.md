@@ -218,6 +218,7 @@ end
 - No session locking, so don't use it for player data
 - Key naming: use prefixes to namespace (`guild_`, `counter_`, `season_`)
 - Read helpers must preserve failure information: tag outcomes (ok/error/missing) or return `(success, data-or-err)`; never collapse an outage into nil, and never synthesize authoritative-looking fallback data on a failed read
+- Cross-owner atomicity: per-key atomicity does not span profiles or services; for the two-profile exchange limit, quiescence, and recovery patterns, see `roblox-data` full reference, section Cross-owner atomicity limits
 
 ## MemoryStoreService
 

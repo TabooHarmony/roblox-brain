@@ -1,6 +1,11 @@
+import contextlib
+import hashlib
+import io
+import json
 import re
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 import validate_skills
@@ -455,6 +460,259 @@ class ValidatorRegressionTests(unittest.TestCase):
         self.assertIn("generate_*", compact)  # entry point abbreviates the generate tool family
         self.assertIn("wait_job_finished", compact)
         self.assertIn("read back", compact.lower())
+
+    def test_mirror_check_reports_presence_not_freshness(self):
+        # F16 regression: --check output must state it is presence-only and
+        # must never use freshness wording for retained cache files.
+        import mirror_creator_docs
+
+        missing_state = mirror_creator_docs.registry_referenced_files()  # exercises registry parse
+        self.assertTrue(missing_state)  # registry actually references files
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            exit_code = mirror_creator_docs.check_mode()
+        output = stdout.getvalue()
+        self.assertEqual(exit_code, 0)
+        self.assertIn("presence", output)
+        # Presence-only output never claims a file is fresh; the --refresh
+        # flag name itself contains the substring, so mask it first.
+        self.assertNotIn("fresh", output.replace("--refresh", "<flag>"))
+        self.assertNotIn("Mirroring", output)
+
+    def test_mirror_refresh_replaces_fixture_only_when_hash_differs(self):
+        # F16 regression: explicit refresh verifies by hash before/after; an
+        # identical payload is a no-op, a changed payload is replaced with the
+        # old hash recorded.
+        import mirror_creator_docs as m
+
+        with tempfile.TemporaryDirectory() as tmp:
+            mirror_dir = Path(tmp)
+            dest = mirror_dir / "classes" / "Part.yaml"
+            dest.parent.mkdir(parents=True)
+            dest.write_bytes(b"old: true\n")
+            old_bytes = dest.read_bytes()
+            new_bytes = b"new: true\n"
+            recorded: dict[str, bytes] = {}
+
+            def fake_fetch(url):
+                return new_bytes
+
+            original_fetch = m.fetch
+            original_dir = m.MIRROR_DIR
+            m.MIRROR_DIR = mirror_dir
+            m.fetch = fake_fetch
+            try:
+                ok, failed = m.mirror_files({"classes/Part.yaml"}, verbose=True, refresh=True)
+                self.assertEqual((ok, failed), (1, 0))
+                self.assertEqual(dest.read_bytes(), new_bytes)
+                metadata = m.read_metadata(dest)
+                self.assertIsNotNone(metadata)
+                self.assertEqual(metadata["content_sha256"], m.sha256(new_bytes))
+                self.assertIn("previous_sha256", metadata)
+                self.assertEqual(metadata["previous_sha256"], m.sha256(old_bytes))
+                self.assertIn("replaced", metadata["note"])
+                self.assertEqual(recorded, {})  # nothing else fetched
+            finally:
+                m.MIRROR_DIR = original_dir
+                m.fetch = original_fetch
+
+            # Same hash before and after: no replacement, timestamp preserved.
+            before_metadata = m.read_metadata(dest)
+            dest.write_bytes(new_bytes)  # simulate unchanged upstream
+            m.MIRROR_DIR = mirror_dir
+            m.fetch = fake_fetch
+            try:
+                ok, failed = m.mirror_files({"classes/Part.yaml"}, verbose=True, refresh=True)
+                self.assertEqual((ok, failed), (1, 0))
+                self.assertEqual(m.read_metadata(dest), before_metadata)
+            finally:
+                m.MIRROR_DIR = original_dir
+                m.fetch = original_fetch
+
+    def test_mirror_interrupted_fetch_leaves_no_complete_looking_file(self):
+        # F16 regression: fetch failure mid-write must not leave the cached
+        # path holding partial bytes that look complete.
+        import mirror_creator_docs as m
+
+        with tempfile.TemporaryDirectory() as tmp:
+            mirror_dir = Path(tmp)
+            original_dir = m.MIRROR_DIR
+            m.MIRROR_DIR = mirror_dir
+            m.fetch = lambda url: (_ for _ in ()).throw(RuntimeError("connection reset"))
+            try:
+                ok, failed = m.mirror_files({"classes/Part.yaml"}, verbose=False)
+                self.assertEqual((ok, failed), (0, 1))
+            finally:
+                m.MIRROR_DIR = original_dir
+            self.assertFalse((mirror_dir / "classes" / "Part.yaml").exists())
+            leftovers = list(mirror_dir.rglob("*"))
+            self.assertEqual([p for p in leftovers if p.is_file()], [])  # no tmp debris either
+
+    def test_mirror_metadata_sidecar_records_retrieval_identity(self):
+        # F16 regression: successful fetches record source, timestamp, hash in
+        # an additive sidecar; read_metadata tolerates missing/corrupt ones.
+        import mirror_creator_docs as m
+
+        with tempfile.TemporaryDirectory() as tmp:
+            mirror_dir = Path(tmp)
+            original_dir = m.MIRROR_DIR
+            m.MIRROR_DIR = mirror_dir
+            m.fetch = lambda url: b"engine: docs\n"
+            try:
+                ok, failed = m.mirror_files({"enums/RunService.yaml"}, verbose=False)
+                self.assertEqual((ok, failed), (1, 0))
+            finally:
+                m.MIRROR_DIR = original_dir
+            dest = mirror_dir / "enums" / "RunService.yaml"
+            metadata = m.read_metadata(dest)
+            self.assertIsNotNone(metadata)
+            self.assertEqual(metadata["source_url"], f"{m.BASE_URL}/enums/RunService.yaml")
+            self.assertIn("retrieved_at", metadata)
+            self.assertEqual(metadata["content_sha256"], m.sha256(b"engine: docs\n"))
+            # Sidecar is additive: cache layout stays plain, no implicit naming coupling.
+            self.assertTrue(dest.is_file())
+            self.assertTrue(m.sidecar_path(dest).is_file())
+            self.assertEqual(m.read_metadata(dest.parent / "absent.yaml"), None)
+
+            corrupt = mirror_dir / "enums" / "Broken.yaml"
+            corrupt.write_text("x: y")
+            m.sidecar_path(corrupt).write_text("{not json")
+            self.assertEqual(m.read_metadata(corrupt), None)
+
+    def test_api_drift_reports_snapshot_identity_and_age(self):
+        # F16 regression: mirror reads surface snapshot identity and warn on
+        # stale or metadata-less snapshots, without any network activity.
+        import verify_api_drift as v
+
+        with tempfile.TemporaryDirectory() as tmp:
+            mirror_dir = Path(tmp) / "creator-docs"
+            class_dir = mirror_dir / "classes"
+            class_dir.mkdir(parents=True)
+            (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")
+            fresh_meta = {
+                "source_url": "https://example.com/Part.yaml",
+                "retrieved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "content_sha256": hashlib.sha256(b"id: Part\nproperties:\n  - name: Part.Position\n").hexdigest(),
+            }
+            (class_dir / "Part.yaml.meta.json").write_text(json.dumps(fresh_meta))
+            stale_meta = dict(fresh_meta, retrieved_at="2020-01-01T00:00:00Z")
+            (class_dir / "Old.yaml").write_text("id: Old\n")
+            (class_dir / "Old.yaml.meta.json").write_text(json.dumps(stale_meta))
+            (class_dir / "Mystery.yaml").write_text("id: Mystery\n")  # no sidecar
+
+            original_dir = v.MIRROR_DIR
+            v.MIRROR_DIR = mirror_dir
+            try:
+                self.assertTrue(
+                    str(v.snapshot_identity("classes", "Part")).startswith("snapshot ")
+                )
+                self.assertIn("metadata", v.snapshot_identity("classes", "Mystery"))
+                self.assertEqual(v.snapshot_age_days("classes", "Part"), 0)
+                old_age = v.snapshot_age_days("classes", "Old")
+                assert old_age is not None
+                self.assertGreater(old_age, 30)
+                self.assertEqual(v.snapshot_age_days("classes", "Mystery"), None)
+            finally:
+                v.MIRROR_DIR = original_dir
+
+    def test_api_drift_main_annotates_mirror_snapshot_without_fetching(self):
+        # F16 regression: a mirror-backed run annotates results with the
+        # snapshot date and warns about metadata-less files; no network call
+        # is made and exit code stays 0 for passing claims.
+        import verify_api_drift as v
+
+        def fail_network(category, name):  # any fetch attempt fails the test
+            raise AssertionError(f"unexpected network fetch: {category}/{name}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mirror_dir = root / "vendor" / "creator-docs"
+            class_dir = mirror_dir / "classes"
+            class_dir.mkdir(parents=True)
+            (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")
+            metadata = {
+                "source_url": "https://example.com/Part.yaml",
+                "retrieved_at": "2020-01-01T00:00:00Z",
+                "content_sha256": hashlib.sha256(b"id: Part\nproperties:\n  - name: Part.Position\n").hexdigest(),
+            }
+            (class_dir / "Part.yaml.meta.json").write_text(json.dumps(metadata))
+
+            original_dir = v.MIRROR_DIR
+            original_registry = v.REGISTRY_PATH
+            original_fetch = v.fetch_doc
+            v.MIRROR_DIR = mirror_dir
+            v.REGISTRY_PATH = root / "registry.yaml"
+            v.fetch_doc = fail_network
+            (root / "registry.yaml").write_text(
+                "entries:\n"
+                "  - id: part-exists\n"
+                "    claim: 'Part exists'\n"
+                "    teaching_needles: ['Workspace']\n"
+                "    files:\n"
+                "      - path: skills/roblox-networking/SKILL.md\n"
+                "    check:\n"
+                "      type: member_exists\n"
+                "      class: Part\n"
+                "      member: Position\n"
+            )
+            try:
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = v.main()
+                output = stdout.getvalue()
+            finally:
+                v.MIRROR_DIR = original_dir
+                v.REGISTRY_PATH = original_registry
+                v.fetch_doc = original_fetch
+            self.assertEqual(exit_code, 0)
+            self.assertIn("Snapshot: checked against local mirror retrieved 2020-01-01T00:00:00Z", output)
+            self.assertIn("not live docs", output)
+            self.assertIn("older than 30 days", output)
+            self.assertIn("1 pass, 0 drift, 0 error", output)
+
+    def test_api_drift_main_reports_unknown_snapshot_identity(self):
+        # F16 regression: a mirror file without retrieval metadata is reported
+        # as an unknown snapshot instead of passing as fresh.
+        import verify_api_drift as v
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mirror_dir = root / "vendor" / "creator-docs"
+            class_dir = mirror_dir / "classes"
+            class_dir.mkdir(parents=True)
+            (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")  # no sidecar
+
+            original_dir = v.MIRROR_DIR
+            original_registry = v.REGISTRY_PATH
+            original_fetch = v.fetch_doc
+            v.MIRROR_DIR = mirror_dir
+            v.REGISTRY_PATH = root / "registry.yaml"
+            v.fetch_doc = original_fetch
+            (root / "registry.yaml").write_text(
+                "entries:\n"
+                "  - id: part-exists\n"
+                "    claim: 'Part exists'\n"
+                "    teaching_needles: ['Workspace']\n"
+                "    files:\n"
+                "      - path: skills/roblox-networking/SKILL.md\n"
+                "    check:\n"
+                "      type: member_exists\n"
+                "      class: Part\n"
+                "      member: Position\n"
+            )
+            try:
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = v.main()
+                output = stdout.getvalue()
+            finally:
+                v.MIRROR_DIR = original_dir
+                v.REGISTRY_PATH = original_registry
+                v.fetch_doc = original_fetch
+            self.assertEqual(exit_code, 0)
+            self.assertIn("no retrieval metadata", output)
+            self.assertIn("snapshot date unknown", output)
+
 
 
 if __name__ == "__main__":

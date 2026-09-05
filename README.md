@@ -30,7 +30,14 @@ npx skills add TabooHarmony/roblox-brain
 npx skills add TabooHarmony/roblox-brain --skill roblox-building
 ```
 
-You can also copy an individual `SKILL.md` into `.claude/skills/`, `.codex/skills/`, `.cursor/skills/`, or another compatible skill directory.
+To install manually, copy the whole skill directory, not just the file. A `SKILL.md` is an entry point, not the whole skill: skills link `references/full.md` for depth and examples, and a file-only copy loses that material.
+
+```bash
+# whole directory, references included
+cp -r skills/roblox-growth-design ~/.claude/skills/
+```
+
+Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible skill directories. A directory copy is self-contained: everything the entry point links ships with it. If an agent hits a link to a `references/full.md` that was not copied, the right response is to say the reference is missing and ask the user to copy that skill's whole directory from this repo. Never summarize reference material that is not there, and never present it as loaded.
 
 ## Skills (29)
 

@@ -95,6 +95,8 @@ must treat an already-granted ID as success. Do not implement it as "grant,
 then separately record": a crash or failed record between those operations can
 duplicate value on retry.
 
+Cross-owner atomicity: atomic receipt recording for one profile is not an atomic exchange between two profiles; for trading or gifting across profiles, see `roblox-data` full reference, section Cross-owner atomicity limits.
+
 ## 3a. Receipt failure tests
 
 For every receipt implementation, force these cases in a test place:

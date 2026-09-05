@@ -124,6 +124,41 @@ end
 
 Do not perform network calls, yield, or mutate external state inside the transform callback. If the callback returns `nil`, the update is cancelled and the stored value remains unchanged; use that deliberately for unsupported schemas. A cancelled or failed write must surface to callers and observability rather than silently reporting success.
 
+## 5a. Cross-owner atomicity limits
+
+The guarantees above are per profile. One `UpdateAsync` either commits its whole transform or none of it, and one session owner serializes writes to one key. None of that extends across profiles, across keys, or across services. Name the boundary in any design that crosses it:
+
+- **Atomic receipt recording for one profile is not an atomic exchange between two profiles.** A receipt ID and its grant can be one durable write for one key. There is no DataStore primitive that debits one profile and credits another in a single commit, so any transfer is two or more independent writes with a crash window between them. The same limit applies to a profile paired with any other durable record, such as a shared guild store or global counter (see `roblox-server-data`).
+- **A proposed multi-owner transfer must either explicitly exclude the guarantee or show a durable operation identity plus recovery state.** Excluding it means the design states that a crash between the two writes loses or duplicates value. Supporting it means writing a transfer record with a stable operation ID, both owners, the amount, and a state field before the first mutation, so recovery can find half-completed transfers and finish or reverse them. A small idempotent operation record like this is enough; no generic transaction framework is required or assumed.
+- **Administrative or external mutation must coordinate with the active owner.** An Open Cloud write, backend script, or manual editor fix applied while a live server still owns the session will be overwritten by that owner's next save. Either route the change through the active owner, or use a documented quiescence protocol: confirm the session is released and cannot be re-acquired mid-repair, mutate, then let the next owner load the repaired data (see `roblox-cloud` for the API-key side).
+- **Webhook acceptance is not completion.** For Roblox webhooks received off-platform, durable acceptance and deduplication must not acknowledge away an event before its work is recoverable. If the dedup marker is durable but the grant or enqueue behind it is not, the success response converts a retryable delivery into silent loss (see `roblox-cloud`).
+
+### Worked failure sequence
+
+Each case names its recovery owner, or is labeled unsupported.
+
+**(a) Debit committed, credit absent.** A transfer debits player A, then the server crashes before crediting player B. Recovery owner: the transfer coordinator, through the durable operation record written before the debit. Recovery is a restart or periodic sweep that reads `pending` records, checks both profiles against the operation ID, and completes the credit or refunds the debit, then marks the record `done` or `reversed`. Every step must be idempotent by operation ID so a crash during recovery is safe to retry. Without such a record this flow is unsupported: two session-locked profiles cannot be reconciled after the crash, and the design must document that exclusion instead of shipping the loss.
+
+```luau
+-- Durable operation identity, illustrative shape only
+local transfer = {
+    id = "xfer_0f3e",   -- stable operation ID, generated once
+    from = 111,
+    to = 222,
+    amount = 500,
+    state = "pending",  -- pending -> done | reversed
+}
+-- 1. Write the transfer record durably before any mutation.
+-- 2. Debit A via UpdateAsync (skip if already debited for this id).
+-- 3. Credit B via UpdateAsync (skip if already credited for this id).
+-- 4. Mark the record done.
+-- Recovery: sweep pending records and resume at the first incomplete step.
+```
+
+**(b) Owner save after external repair.** A support script repairs a value through Open Cloud while player A's live server still owns the session. The owner's next autosave writes its stale in-memory copy and the repair is gone. Coordination requirement: the actor performing the external mutation is the recovery owner and must quiesce the session first, meaning verify the lock is released, prevent re-acquisition during the repair window, apply the fix, then let the next owner load. If quiescence is impossible, the mutation must be routed through the active owner instead; writing anyway does not risk the loss, it guarantees it.
+
+**(c) Dedup written, enqueue absent.** A webhook receiver records the notification ID in a durable dedup store, then crashes before the grant or enqueue is durable. If Roblox redelivers, the dedup hit drops the event: acknowledged but never acted on. Recovery owner: the receiver's own worker, and the fix is ordering. Make the work record itself the dedup record by writing the job or grant keyed by notification ID in one durable write before acking, or write the work record first and keep the worker idempotent by notification ID. A durable work record without an ack is safe, because the worker can still process or retry it; the reverse order is the loss.
+
 ## 6. Migration
 
 Migrate data after it is loaded and before gameplay sees it. Each migration should be small, ordered, and testable.
@@ -268,6 +303,8 @@ Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-t
 - [ ] No client-provided value bypasses server validation before persistence.
 - [ ] Persisted numbers are checked for NaN/infinity; persisted strings pass `utf8.len`.
 - [ ] Client-supplied nested tables are re-validated field by field before saving.
+
+Before destructive tests (wipe scripts, migration replays, bulk-key writes), confirm the actual destinations: exact DataStore, OrderedDataStore, and MemoryStore names, plus Open Cloud endpoints or webhooks the code calls. A test-place label is not isolation; a shared store name reaches production records. Keep a mutation record with a compensating action per `roblox-studio-mcp`.
 
 ## Community ecosystem (leads, not sources)
 

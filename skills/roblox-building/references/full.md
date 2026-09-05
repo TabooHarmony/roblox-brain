@@ -43,6 +43,8 @@ Use the shared `roblox-studio-mcp` session contract. Before changing a place:
 5. Read back the tree and properties before starting the next phase.
 6. Start play only when runtime behavior matters. Capture console, navigation, and visual evidence, then stop play.
 
+Keep a one-line mutation record per mutating step (target, pre-state, intended change, compensating action) and reconcile ambiguous tool timeouts by reading the target back before retrying; destructive tests must confirm actual store and endpoint destinations rather than trusting the place label. Full pattern: `roblox-studio-mcp`.
+
 If a capability is unavailable, switch to the offline Luau path and identify the missing evidence instead of claiming the build was verified.
 
 ## Asset-Aware Prop Workflow

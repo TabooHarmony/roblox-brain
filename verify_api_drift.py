@@ -12,9 +12,11 @@ Exit 1 means drift, parse errors, or network/doc fetch errors were found.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -26,14 +28,62 @@ BASE_URL = "https://raw.githubusercontent.com/Roblox/creator-docs/main/content/e
 MIRROR_DIR = ROOT / "vendor" / "creator-docs"
 CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
+# Snapshot identity: mirror_creator_docs.py records retrieval metadata in a
+# sidecar per cached file. Reading the local mirror is a snapshot read, not a
+# freshness guarantee; the helpers below surface snapshot identity without
+# ever triggering a network fetch.
+
+
+def mirror_sidecar_path(category: str, name: str) -> Path:
+    return MIRROR_DIR / category / f"{name}.yaml.meta.json"
+
+
+def read_snapshot_metadata(category: str, name: str) -> dict[str, Any] | None:
+    """Return the mirror sidecar metadata for a doc, or None when absent/unreadable."""
+    try:
+        parsed = json.loads(mirror_sidecar_path(category, name).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def snapshot_identity(category: str, name: str) -> str:
+    """One-line identity of the local snapshot backing a doc lookup.
+
+    Reports retrieval date and source when sidecar metadata exists, so results
+    can state which snapshot they were checked against instead of implying the
+    live docs. Without sidecar metadata the snapshot is unknown: the file's
+    presence alone says nothing about when its content was retrieved.
+    """
+    metadata = read_snapshot_metadata(category, name)
+    if metadata:
+        retrieved = str(metadata.get("retrieved_at") or "unknown date")
+        source = str(metadata.get("source_url") or "unknown source")
+        return f"snapshot {retrieved} from {source}"
+    return "snapshot date unknown (no retrieval metadata sidecar; run mirror_creator_docs.py --refresh to record it)"
+
+
+def snapshot_age_days(category: str, name: str) -> int | None:
+    """Age of the cached snapshot in whole days, or None when not recorded."""
+    metadata = read_snapshot_metadata(category, name)
+    if not metadata:
+        return None
+    try:
+        retrieved = datetime.strptime(str(metadata.get("retrieved_at")), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    return max((datetime.now(timezone.utc) - retrieved).days, 0)
+
 
 def fetch_doc(category: str, name: str) -> dict[str, Any]:
     key = (category, name)
     if key in CACHE:
         return CACHE[key]
     # Prefer the local mirror (populated by mirror_creator_docs.py) so the
-    # checker runs offline and against a pinned snapshot. Fall back to live
-    # creator-docs when the mirror is absent.
+    # checker runs offline and against a pinned snapshot. This is a snapshot
+    # read, not a freshness guarantee: snapshot identity is reported via
+    # snapshot_identity(). Falling back to live creator-docs happens only
+    # when the mirror lacks the file; the mirror is never refreshed here.
     mirror_path = MIRROR_DIR / category / f"{name}.yaml"
     if mirror_path.is_file():
         data = yaml.safe_load(mirror_path.read_text(encoding="utf-8"))
@@ -313,39 +363,106 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
     return "error", f"unknown check type: {check_type}"
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    # argv=None means "called programmatically with default flags"; the CLI
+    # entry point below passes sys.argv[1:] explicitly.
     parser = argparse.ArgumentParser(description="Verify Roblox API drift registry")
     parser.add_argument("--verbose", action="store_true", help="show passing checks")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--no-mirror-annotations", action="store_true",
+        help="skip snapshot identity/age annotations for mirror-backed doc reads",
+    )
+    args = parser.parse_args([] if argv is None else argv)
 
     registry = yaml.safe_load(REGISTRY_PATH.read_text(encoding="utf-8"))
     entries = registry.get("entries") or []
     print(f"Checking {len(entries)} registry entries...\n")
 
-    counts = {"pass": 0, "fail": 0, "error": 0}
-    for entry in entries:
-        try:
-            missing_paths = validate_file_paths(entry)
-            if missing_paths:
-                status = "error"
-                message = "missing repository path(s): " + ", ".join(missing_paths)
-            else:
-                untethered = validate_claim_tether(entry)
-                if untethered:
+    # Track which doc lookups were served by the local mirror snapshot so the
+    # results can state the snapshot identity explicitly. Reading the mirror
+    # never triggers a network refresh; refreshing stays opt-in via
+    # mirror_creator_docs.py --refresh.
+    served_from_mirror: set[tuple[str, str]] = set()
+    original_fetch_doc = fetch_doc
+
+    def tracking_fetch_doc(category: str, name: str) -> dict[str, Any]:
+        mirror_path = MIRROR_DIR / category / f"{name}.yaml"
+        if mirror_path.is_file():
+            served_from_mirror.add((category, name))
+            # Serve the snapshot directly: reading the mirror must never
+            # trigger a network fetch, even when fetch_doc has been stubbed.
+            data = yaml.safe_load(mirror_path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise RuntimeError(f"{mirror_path} did not parse as a YAML mapping")
+            return data
+        return original_fetch_doc(category, name)
+
+    # verify() resolves fetch_doc at call time through this module's global
+    # namespace, so rebinding the module attribute installs the tracking
+    # wrapper for the duration of the run; the finally block restores it.
+    globals()["fetch_doc"] = tracking_fetch_doc
+    try:
+        counts = {"pass": 0, "fail": 0, "error": 0}
+        for entry in entries:
+            try:
+                missing_paths = validate_file_paths(entry)
+                if missing_paths:
                     status = "error"
-                    message = "registry identifier(s) absent from teaching files: " + ", ".join(untethered)
+                    message = "missing repository path(s): " + ", ".join(missing_paths)
                 else:
-                    status, message = verify(entry)
-        except Exception as exc:  # noqa: BLE001, surface exact failing entry
-            status, message = "error", str(exc)
-        counts[status] += 1
-        if status != "pass" or args.verbose:
-            icon = {"pass": "✅", "fail": "❌", "error": "⚠️"}[status]
-            print(f"  {icon} {entry.get('id', '<missing id>')}: {message}")
-            if status != "pass":
-                print(f"     Claim: {entry.get('claim', '?')}")
-                for file_ref in entry.get("files") or []:
-                    print(f"     File: {file_ref.get('path', '?')}")
+                    untethered = validate_claim_tether(entry)
+                    if untethered:
+                        status = "error"
+                        message = "registry identifier(s) absent from teaching files: " + ", ".join(untethered)
+                    else:
+                        status, message = verify(entry)
+            except Exception as exc:  # noqa: BLE001, surface exact failing entry
+                status, message = "error", str(exc)
+            counts[status] += 1
+            if status != "pass" or args.verbose:
+                icon = {"pass": "✅", "fail": "❌", "error": "⚠️"}[status]
+                print(f"  {icon} {entry.get('id', '<missing id>')}: {message}")
+                if status != "pass":
+                    print(f"     Claim: {entry.get('claim', '?')}")
+                    for file_ref in entry.get("files") or []:
+                        print(f"     File: {file_ref.get('path', '?')}")
+    finally:
+        globals()["fetch_doc"] = original_fetch_doc
+
+    if not args.no_mirror_annotations and served_from_mirror:
+        stale_threshold = 30
+        aged: list[tuple[str, str, int]] = []
+        unknown_date: set[str] = set()
+        for category, name in sorted(served_from_mirror):
+            age = snapshot_age_days(category, name)
+            if age is None:
+                unknown_date.add(f"{category}/{name}.yaml")
+            elif age > stale_threshold:
+                aged.append((category, name, age))
+        snapshot_dates = sorted({
+            str(metadata.get("retrieved_at"))
+            for category, name in served_from_mirror
+            for metadata in [read_snapshot_metadata(category, name)]
+            if metadata
+        })
+        if snapshot_dates:
+            dates = ", ".join(snapshot_dates)
+            print(f"Snapshot: checked against local mirror retrieved {dates} (not live docs)")
+        if aged:
+            print(
+                f"⚠️ Snapshot age warning: {len(aged)} mirror file(s) older than "
+                f"{stale_threshold} days; run mirror_creator_docs.py --refresh to update:"
+            )
+            for category, name, age in aged:
+                print(f"   {category}/{name}.yaml ({age}d)")
+        if unknown_date:
+            print(
+                f"⚠️ Snapshot identity warning: {len(unknown_date)} mirror file(s) have no "
+                "retrieval metadata; snapshot date unknown:"
+            )
+            for rel in sorted(unknown_date):
+                print(f"   {rel}")
+            print("Run: mirror_creator_docs.py --refresh to record retrieval metadata")
 
     print(f"\nResults: {counts['pass']} pass, {counts['fail']} drift, {counts['error']} error")
     if counts["fail"] or counts["error"]:
@@ -356,4 +473,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
