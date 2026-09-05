@@ -70,8 +70,10 @@ Two Studio MCP bridges are in active use. The official Roblox Studio MCP server 
 
 ## Session and Datamodel Contract
 
-1. Call `list_roblox_studios` before assuming Studio is connected.
-2. Pass the target's `studio_id` on every subsequent call. Selection is per-call; never assume the previous target persists.
+Route by capability BEFORE bridge-specific bootstrap. Call `tools/list` first: `get_connected_instances`/`eval_*`/`multiplayer_*` identifies the chrrxs bridge; `list_roblox_studios` plus per-call `studio_id` parameters identifies the official bridge. Then, on the detected bridge:
+
+1. List connected Studio instances the detected way (`list_roblox_studios` official / `get_connected_instances` chrrxs) before assuming a connection.
+2. Pass the target's `studio_id` (official) or `instance_id` (chrrxs) on every subsequent call. Selection is per-call; never assume the previous target persists.
 3. Call `get_studio_state` and record the current mode plus available datamodels.
 4. Select `Edit` for persistent tree/script changes. Use `Client` or `Server` only for operations whose live schema permits them.
 5. Inspect the relevant tree and scripts before mutation. After mutation, read back the script, instance, or asset result.
@@ -135,26 +137,24 @@ print(check and "OK" or "FAILED: Floor not created")
 
 ### Script Truncation
 
-When writing scripts via `multi_edit` or `execute_luau` with `script.Source = ...`, the connected bridge has an observed command-code limit around 4-5 KB as of 2026-07-12. This is bridge-specific, not an official Roblox limit; recheck after bridge updates. For larger modules:
+When writing scripts via `multi_edit` or `execute_luau` with `script.Source = ...`, the connected bridge has an observed command-code limit around 4-5 KB as of 2026-07-12. This is bridge-specific, not an official Roblox limit; recheck after bridge updates and after switching bridges. For larger modules:
 
-1. Split into logical chunks or write the module with `multi_edit`
-2. Execute only a short `require()` or test call
-3. Read back the tail to verify no truncation
+1. Create the script with one short bounded call (for example `multi_edit` with `className`), or write the first bounded segment.
+2. Extend the source with additional `multi_edit` edits, each a separate bounded request. Never assemble one large string in a single `execute_luau` payload; that only renames the limit.
+3. Read back the full written source and compare it against the intended content before running anything.
+4. Execute only a short `require()` or test call.
 
 ```luau
--- Chunked write pattern
-local s = game.ServerScriptService.MyScript
-local part1 = [=[
--- chunk 1: services and config
-local Players = game:GetService("Players")
-...
-]=]
-local part2 = [=[
--- chunk 2: main logic
-...
-]=]
-s.Source = part1 .. part2
+-- Bounded write pattern: each request stays small; the SOURCE lives
+-- on disk/edits, not inside one oversized execute_luau payload.
+-- 1) multi_edit: create ServerScriptService.MyScript with a small
+--    first segment (services + config).
+-- 2) multi_edit: append the main logic as a second bounded edit.
+-- 3) script_read: read back the full source and diff against intent.
+-- 4) execute_luau: require(...) and run a minimal smoke test.
 ```
+
+Bridge limits differ: some bridges accept longer command payloads than others, and `multi_edit` batch limits are separate from `execute_luau` command limits. Probe the connected bridge with a small write first rather than assuming a universal byte budget.
 
 ### Batching
 
@@ -233,7 +233,7 @@ Generated content is a candidate, not an acceptance decision. Keep a native Part
 
 ## Bridge Detection
 
-Before using any tool, confirm which bridge is connected. Do not guess from a previous session.
+Before using any bridge-specific bootstrap or tool, call `tools/list` and route by capability. Do not guess from a previous session.
 
 - **Official bridge** (built into Studio): connect via `mcp.bat` on Windows or `StudioMCP` on macOS. Tool names follow the official creator-docs (`list_roblox_studios`, `start_stop_play`, `get_console_output`, `script_read`, `multi_edit`, `execute_luau`, `search_asset`, `insert_asset`), and every call takes a `studio_id` parameter naming the target instance. It is closed-source but documented.
 - **chrrxs bridge** ([`chrrxs/robloxstudio-mcp`](https://github.com/Chrrxs/robloxstudio-mcp), npm, MIT): tool names follow its open-source definitions (`get_connected_instances`, `get_file_tree`, `eval_server_runtime`, `eval_client_runtime`, `solo_playtest`, `multiplayer_playtest`, `manage_instance`, `get_runtime_logs`, `breakpoints`, `capture_script_profiler`, `capture_micro_profiler`, `get_memory_breakdown`, `get_scene_analysis`, `get_roblox_docs`, `get_roblox_skills`, and official-compatible names like `execute_luau`). Supports per-call `instance_id` routing and per-peer runtime logs.
@@ -246,14 +246,22 @@ Before using any tool, confirm which bridge is connected. Do not guess from a pr
 | Tree/script inspection, `execute_luau`, asset search/insert | ✅ | ✅ |
 | Multi-instance routing | `list_roblox_studios` + per-call `studio_id` (per-call addressing) | `get_connected_instances` + per-call `instance_id` (fine-grained) |
 | Open/close a specific Studio window per place | via Studio manually | `manage_instance` |
-| Runtime Luau eval with game require-cache | ❌ | `eval_server_runtime` / `eval_client_runtime` |
+| Live Luau eval inside a running playtest VM (game require-cache) | ❌ (`execute_luau` targets the Edit context; inject a temp script, then start play) | `eval_server_runtime` / `eval_client_runtime` |
 | Live breakpoints without pausing | ❌ | `breakpoints` |
 | Per-peer logs (server, client-N) | `get_console_output` (single log) | `get_runtime_logs` (per peer) |
 | Solo / multiplayer playtest | `start_stop_play` (single client) | `solo_playtest` / `multiplayer_playtest` |
 | CPU profiler / memory breakdown / scene analysis | ❌ | `capture_script_profiler`, `capture_micro_profiler`, `get_memory_breakdown`, `get_scene_analysis` |
 | Fetch Roblox docs / Roblox-authored skills as tools | `http_get` / `skill` | `get_roblox_docs` / `get_roblox_skills` |
 
-Treat this matrix as a map, not a guarantee. Bridges update. Inspect the live tool list before relying on a specific name; route by capability first, then confirm the exact tool name on the connected bridge.
+Treat this matrix as a map, not a guarantee. Bridges update. Inspect the live tool list before relying on a specific name; route by capability first, then confirm the exact tool name on the connected bridge. Do not assume one universal byte limit across bridges: command-size limits are bridge-specific, so probe with a small write and read back to verify.
+
+### Edit-time injection vs live evaluation
+
+These are different operations with different preconditions; never substitute one for the other.
+
+- **Edit-time script injection** writes or patches scripts while play is stopped: `multi_edit`, `script_read`, and `execute_luau` with the `Edit` context. The changes persist in the place file and take effect the next time play starts. A stopped VM is never a live-evaluation target: Edit-context calls cannot see playtest runtime state.
+- **Live evaluation** reads or drives a running playtest VM: start play (`start_stop_play` or `solo_playtest`), wait for the intended VM to exist (`get_studio_state` / `get_connected_instances` confirming the `Client` or `Server` context you mean, not just any peer), then evaluate: `eval_server_runtime`/`eval_client_runtime` (chrrxs) or a temporary injected script plus `execute_luau` on the running `Client`/`Server` context where the live schema permits it. Evaluate only after the intended VM is confirmed; evaluating the wrong or a not-yet-started context silently answers a question about a different VM.
+- **Order matters:** edit-time mutation, read-back, then start play, then evaluate live. Do not reorder live evaluation ahead of starting play, and do not leave the playtest running; stop and clean up injected scripts.
 
 ## Multi-Place Routing
 
@@ -278,8 +286,9 @@ Before mutating in a multi-place session, confirm the target:
 The strongest playtest workflow uses a visible test artifact, not just "start play, read console." The pattern is bridge-agnostic: inject a test script that emits explicit START/FINISHED signals, run it, poll for the signal, stop, clean up, and report a summary.
 
 1. **Plan the assertion**: what must be true? (e.g. `SpawnLocation` exists above the ground, the NPC reaches its target, the button opens the shop.)
-2. **Inject the test**: on the chrrxs bridge use `eval_server_runtime` (or `eval_client_runtime` for client-side) to run Luau that sets a flag or prints a guard-signal when the assertion passes or fails. On the official bridge, create a temporary script in `ServerScriptService` (or use `subagent` with type `playtest`).
-3. **Start play**: `solo_playtest` (chrrxs) or `start_stop_play` (official). Prefer Run mode (F8, server-only) for server-side logic; use Play mode (F5) when client behavior or rendering matters.
+2. **Inject the test (edit-time)**: while play is stopped, create a temporary script in `ServerScriptService` (or use `subagent` with type `playtest`) that sets a flag or prints a START/FINISHED guard-signal when the assertion passes or fails. `eval_server_runtime`/`eval_client_runtime` cannot run before play exists; do not use them in this step.
+3. **Start play and wait for the VM**: `solo_playtest` (chrrxs) or `start_stop_play` (official). Confirm the intended VM is running (`get_studio_state` or `get_connected_instances`; the expected `Client`/`Server` peer, not just any context) before evaluating. Prefer Run mode (F8, server-only) for server-side logic; use Play mode (F5) when client behavior or rendering matters.
+3b. **Evaluate live (optional)**: with the intended VM confirmed, use `eval_server_runtime`/`eval_client_runtime` (chrrxs) to inspect runtime state against the assertion. If the playtest never started or the VM is not the intended one, stop; a stopped VM is never a live-evaluation target.
 4. **Poll**: read logs (`get_runtime_logs` per peer on chrrxs, `get_console_output` on official) looking for the FINISHED signal, with a timeout (e.g. 60s default, max 300s).
 5. **Stop and clean up**: always stop the playtest (`stop` on `solo_playtest`/`multiplayer_playtest`, or `start_stop_play` with `is_start: false`). Delete any injected temporary test script.
 6. **Report**: produce a short artifact: status (passed/failed), test name, mode, duration, signal count, and the relevant log tail. This is what "evidence" means for playtesting.
@@ -295,7 +304,7 @@ The strongest playtest workflow uses a visible test artifact, not just "start pl
 
 The chrrxs bridge ships much more than the official core. Weighted by what actually helps real work:
 
-- **`eval_server_runtime` / `eval_client_runtime`**: run Luau inside a live playtest's VM with the same `require` cache as game scripts. This is the single best way to inspect live state (module state, runtime values) without restarting.
+- **`eval_server_runtime` / `eval_client_runtime`**: run Luau inside a live playtest's VM with the same `require` cache as game scripts; only after the intended playtest VM is confirmed running. This is the single best way to inspect live state (module state, runtime values) without restarting.
 - **`multiplayer_playtest`**: start/inspect/stop multi-client playtests (1-8 players). Use when the question is "is this actually working with 2+ players" (co-op, remotes, replication). This is the biggest capability gap vs the official bridge.
 - **`get_runtime_logs`**: per-peer logs (server, client-N), including boot-time output and structured `LogService` data. Better than a single console scrollback for finding which peer emitted an error.
 - **`breakpoints`**: instrument live code and record execution without pausing the playtest. Use for "did this line run?" questions.

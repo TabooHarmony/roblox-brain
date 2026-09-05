@@ -145,9 +145,23 @@ end)
 
 ### Activate Ragdoll (replace Motor6Ds with BallSockets)
 
+Enable creates attachments, sockets, and disables motors; disable must undo
+exactly that set. Track ownership: which instances were created and which
+motors were disabled, so recovery never re-enables a motor that was already
+disabled before ragdolling, never destroys an unrelated socket, and repeated
+or interleaved calls stay idempotent.
+
 ```luau
+local ragdollState: { [Model]: { created: {Instance}, disabledMotors: { {motor: Motor6D, wasEnabled: boolean} } } } = {}
+
 local function enableRagdoll(character: Model)
+    if ragdollState[character] then return end -- already ragdolled
+
     local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    local record = { created = {}, disabledMotors = {} }
+    ragdollState[character] = record
+
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
     for _, motor in character:GetDescendants() do
@@ -167,26 +181,52 @@ local function enableRagdoll(character: Model)
             socket.UpperAngle = 45 -- prevent unnatural bending
             socket.Parent = motor.Part0
 
+            table.insert(record.created, att0)
+            table.insert(record.created, att1)
+            table.insert(record.created, socket)
+            table.insert(record.disabledMotors, { motor = motor, wasEnabled = motor.Enabled })
             motor.Enabled = false
         end
     end
 end
 
 local function disableRagdoll(character: Model)
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local record = ragdollState[character]
+    if not record then return end -- not ragdolled by us
+    ragdollState[character] = nil
 
-    -- Remove sockets, re-enable motors
-    for _, obj in character:GetDescendants() do
-        if obj:IsA("BallSocketConstraint") then
+    -- Destroy only instances enableRagdoll created; other sockets in the
+    -- character belong to someone else and survive.
+    for _, obj in record.created do
+        if obj.Parent then
             obj:Destroy()
-        elseif obj:IsA("Motor6D") then
-            obj.Enabled = true
         end
     end
 
-    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    -- Restore only motors this enable cycle disabled, to their prior state.
+    for _, entry in record.disabledMotors do
+        if entry.motor.Parent then
+            entry.motor.Enabled = entry.wasEnabled
+        end
+    end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    end
 end
+
+-- Tolerate characters destroyed mid-ragdoll: drop the record so it cannot
+-- leak. Illustrative; wire this when the character spawns:
+local connection = character.AncestryChanged:Connect(function()
+    if not character.Parent then
+        ragdollState[character] = nil
+        connection:Disconnect()
+    end
+end)
 ```
+
+For production use, store `ragdollState` inside your character/maid module rather than a module-level table, and wire the destruction cleanup into that maid so records cannot outlive their character.
 
 ## Projectiles
 
@@ -254,12 +294,38 @@ end
 A common technique simulates homing missiles without Roblox physics by steering a velocity vector toward the target each frame, clamped to a max turn angle. This avoids physics-solver jitter and suits missiles, spells, and homing bullets. Keep the projectile anchored and interpolate its CFrame yourself (or drive `AssemblyLinearVelocity`); each frame rotate the current velocity direction toward the target direction, never exceeding the max turn rate per frame. Community projectile modules (e.g. HomingCast, https://devforum.roblox.com/t/homingcast-homing-projectiles/3786022) are a lead for this pattern.
 
 ```luau
+-- Illustrative; tune for your projectile model. Steer `dir` toward `toTarget`
+-- by at most `maxTurn * dt` radians, rotating about the current/target axis.
+-- Direction-only: returns the new unit direction, so speed is preserved by
+-- multiplying with the original magnitude. The actual turn is exactly
+-- min(budget, angle); zero-vector and antiparallel cases are defined below.
+local function steerDirection(dir: Vector3, toTarget: Vector3, maxTurn: number, dt: number): Vector3
+    if dir.Magnitude == 0 or toTarget.Magnitude == 0 then
+        return dir -- no aim to steer from/to: hold unchanged (initialize velocity before homing)
+    end
+    local current = dir.Unit
+    local target = toTarget.Unit
+    local dot = math.clamp(current:Dot(target), -1, 1)
+    local angle = math.acos(dot)                       -- 0..pi
+    local budget = maxTurn * dt
+    if angle <= 1e-6 then
+        return current                                 -- already aimed
+    elseif angle >= math.pi - 1e-6 then
+        -- Antiparallel: the cross-product axis is undefined. Pick any unit
+        -- axis perpendicular to `current` and turn the full budget toward it.
+        local axis = current:Cross(Vector3.yAxis)
+        if axis.Magnitude < 1e-6 then
+            axis = current:Cross(Vector3.xAxis)
+        end
+        return CFrame.fromAxisAngle(axis.Unit, budget) * current
+    end
+    local axis = current:Cross(target).Unit            -- rotation axis (perpendicular to both)
+    local step = math.min(budget, angle)
+    return CFrame.fromAxisAngle(axis, step) * current  -- exact bounded rotation
+end
+
 local function steerProjectile(cframe: CFrame, velocity: Vector3, target: Vector3, maxTurn: number, dt: number)
-    local toTarget = (target - cframe.Position).Unit
-    local current = velocity.Unit
-    local angle = math.acos(math.clamp(current:Dot(toTarget), -1, 1))
-    local step = math.min(angle, maxTurn * dt)          -- clamp to max turn rate
-    local dir = current:Lerp(toTarget, step / math.max(angle, 1e-6)).Unit
+    local dir = steerDirection(velocity, target - cframe.Position, maxTurn, dt)
     return dir * velocity.Magnitude
 end
 ```

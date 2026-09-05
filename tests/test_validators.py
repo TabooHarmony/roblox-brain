@@ -236,21 +236,21 @@ class ValidatorRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             document = Path(tmp) / "invalid.md"
             document.write_text("```luau\nlocal function broken(\n```\n")
-            errors = validate_skills.validate_luau_syntax([document])
+            errors, _recognized, _compiled = validate_skills.validate_luau_syntax([document])
             self.assertTrue(any("Luau syntax error" in error for error in errors))
 
     def test_annotated_luau_fence_compilation_rejects_invalid_syntax(self):
         with tempfile.TemporaryDirectory() as tmp:
             document = Path(tmp) / "invalid.md"
             document.write_text("```luau,linenos\nlocal function broken(\n```\n")
-            errors = validate_skills.validate_luau_syntax([document])
+            errors, _recognized, _compiled = validate_skills.validate_luau_syntax([document])
             self.assertTrue(any("Luau syntax error" in error for error in errors))
 
     def test_standalone_luau_reference_rejects_invalid_syntax(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "invalid.luau"
             source.write_text("local function broken(\n")
-            errors = validate_skills.validate_luau_syntax([], [source])
+            errors, _recognized, _compiled = validate_skills.validate_luau_syntax([], [source])
             self.assertTrue(any("Luau syntax error" in error for error in errors))
 
     def test_lua_fence_annotations_fail_without_heading_false_positive(self):
@@ -337,6 +337,84 @@ class ValidatorRegressionTests(unittest.TestCase):
             finally:
                 validate_skills.SKILLS_DIR = original
 
+    def test_four_backtick_and_tilde_luau_fences_compile_and_reject_invalid_syntax(self):
+        # F15 regression: alternate fences must be extracted and compiled, so
+        # malformed Luau inside them is caught instead of silently skipped.
+        with tempfile.TemporaryDirectory() as tmp:
+            cases = {
+                "````luau": "````",
+                "~~~luau": "~~~",
+            }
+            for opener, closer in cases.items():
+                with self.subTest(fence=opener):
+                    valid = Path(tmp) / f"valid-{opener[0]}.md"
+                    valid.write_text(f"{opener}\nlocal x = 1\n{closer}\n")
+                    errors, recognized, compiled = validate_skills.validate_luau_syntax([valid])
+                    self.assertEqual(errors, [])
+                    self.assertEqual(recognized, 1)
+                    self.assertEqual(compiled, 1)
+
+                    invalid = Path(tmp) / f"invalid-{opener[0]}.md"
+                    invalid.write_text(f"{opener}\nlocal function broken(\n{closer}\n")
+                    errors, _recognized, _compiled = validate_skills.validate_luau_syntax([invalid])
+                    self.assertTrue(any("Luau syntax error" in error for error in errors))
+
+    def test_leading_dot_slash_local_reference_fails_like_plain_spelling(self):
+        # F15 regression: ./references/missing.md must fail exactly like
+        # references/missing.md.
+        with tempfile.TemporaryDirectory() as tmp:
+            skills = Path(tmp) / "skills"
+            skill_dir = skills / "roblox-example"
+            (skill_dir / "references").mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "See [full](./references/missing.md).\n"
+            )
+            original = validate_skills.SKILLS_DIR
+            validate_skills.SKILLS_DIR = str(skills)
+            try:
+                errors = validate_skills.validate_local_references()
+            finally:
+                validate_skills.SKILLS_DIR = original
+            self.assertEqual(len(errors), 1)
+            self.assertIn("missing local reference 'references/missing.md'", errors[0])
+
+    def test_parent_path_escape_reference_fails_containment(self):
+        # F15 regression: a ../ reference resolving outside the skill dir is
+        # a containment violation, not a valid link.
+        with tempfile.TemporaryDirectory() as tmp:
+            skills = Path(tmp) / "skills"
+            skill_dir = skills / "roblox-example"
+            (skill_dir / "references").mkdir(parents=True)
+            (Path(tmp) / "outside.md").write_text("outside\n")
+            (skill_dir / "references" / "full.md").write_text(
+                "See [escape](../../../outside.md).\n"
+            )
+            original = validate_skills.SKILLS_DIR
+            validate_skills.SKILLS_DIR = str(skills)
+            try:
+                errors = validate_skills.validate_local_references()
+            finally:
+                validate_skills.SKILLS_DIR = original
+            self.assertEqual(len(errors), 1)
+            self.assertIn("escapes skill directory", errors[0])
+
+    def test_valid_nested_leading_dot_slash_reference_resolves(self):
+        # F15 regression: ./references/full.md resolves like references/full.md.
+        with tempfile.TemporaryDirectory() as tmp:
+            skills = Path(tmp) / "skills"
+            skill_dir = skills / "roblox-example"
+            (skill_dir / "references").mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "See [full](./references/full.md).\n"
+            )
+            (skill_dir / "references" / "full.md").write_text("# Full\n")
+            original = validate_skills.SKILLS_DIR
+            validate_skills.SKILLS_DIR = str(skills)
+            try:
+                self.assertEqual(validate_skills.validate_local_references(), [])
+            finally:
+                validate_skills.SKILLS_DIR = original
+
     def test_validator_includes_promoted_ui_design_skill(self):
         with tempfile.TemporaryDirectory() as tmp:
             skills = Path(tmp) / "skills"
@@ -365,15 +443,17 @@ class ValidatorRegressionTests(unittest.TestCase):
         self.assertNotIn("```luau\n\n```luau", receipts)
 
     def test_mcp_contract_names_asset_generation_and_completion(self):
-        compact = (ROOT / "skills/roblox-studio-mcp" / "SKILL.md").read_text()
         full = (ROOT / "skills/roblox-studio-mcp" / "references" / "full.md").read_text()
         building = (ROOT / "skills/roblox-building" / "SKILL.md").read_text()
         for token in ("generate_procedural_model", "generate_mesh", "generate_material"):
-            self.assertIn(token, compact)
+            self.assertIn(token, full)
             self.assertIn(token, building)
         self.assertIn("search_asset", full)
         self.assertIn("insert_asset", full)
         self.assertIn("generationId", full)
+        compact = (ROOT / "skills/roblox-studio-mcp" / "SKILL.md").read_text()
+        self.assertIn("generate_*", compact)  # entry point abbreviates the generate tool family
+        self.assertIn("wait_job_finished", compact)
         self.assertIn("read back", compact.lower())
 
 

@@ -228,10 +228,10 @@ function Pool.new(template: Instance, initialSize: number)
     local self = setmetatable({
         _template = template,
         _available = {},
-        _active = {},
+        _leases = {}, -- Instance -> token held by its current borrower
     }, Pool)
 
-    for i = 1, initialSize do
+    for _ = 1, initialSize do
         local obj = template:Clone()
         obj.Parent = nil
         table.insert(self._available, obj)
@@ -239,22 +239,33 @@ function Pool.new(template: Instance, initialSize: number)
     return self
 end
 
-function Pool:get(): Instance
+function Pool:get(): (Instance, any)
     local obj = table.remove(self._available)
     if not obj then
         obj = self._template:Clone()
     end
-    self._active[obj] = true
-    return obj
+    local lease = {} -- a fresh token per acquisition
+    self._leases[obj] = lease
+    return obj, lease
 end
 
-function Pool:release(obj: Instance)
-    self._active[obj] = nil
+function Pool:release(obj: Instance, lease: any): boolean
+    -- Only the live lease may return obj: duplicate releases (same token
+    -- twice), stale tokens from delayed callbacks after the object was
+    -- re-acquired, and foreign objects all fail this check, so none of
+    -- them can create an available entry.
+    if self._leases[obj] ~= lease then
+        return false
+    end
+    self._leases[obj] = nil
     obj.Parent = nil
     -- Reset state here
     table.insert(self._available, obj)
+    return true
 end
 ```
+
+Callers must hold the token from `get` and pass it back to `release`. Membership tracking alone is not enough: a delayed callback holding only the object reference can release it after it was re-acquired, double-booking it. The per-acquisition token rejects that stale release instead.
 
 ### Throttled Updates
 

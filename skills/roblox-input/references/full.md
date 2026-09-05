@@ -183,12 +183,19 @@ Use `UserInputService.InputBegan` when:
 Bind one logical action to keyboard + gamepad + touch in one call:
 
 ```luau
-local function handleMoveUp(name, state, input)
-    if input.KeyCode == Enum.KeyCode.Unknown then return Enum.ContextActionResult.Pass end
+local moving = false
+
+local function handleMoveUp(_name, state, _input)
+    -- Process stop states FIRST, before any key-code filtering:
+    -- ContextActionService delivers End/Cancel with KeyCode.Unknown
+    -- (e.g. unbound mid-press, synthesized touch-button release), and a
+    -- key-code gate would skip the stop path and strand the action active.
+    if state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+        moving = false -- idempotent: safe even if Begin never ran
+        return Enum.ContextActionResult.Sink
+    end
     if state == Enum.UserInputState.Begin then
-        -- start moving up
-    else
-        -- stop
+        moving = true
     end
     return Enum.ContextActionResult.Sink
 end
@@ -199,6 +206,8 @@ CAS:BindAction("MoveUp", handleMoveUp, true,
     Enum.PlayerActions.MoveUp   -- also binds default WASD / stick
 )
 ```
+
+Gate handlers on `state`, not on `input.KeyCode`: touch-button input also arrives with `KeyCode.Unknown`, so a key-code filter on the start path would drop mobile presses too. Call `UnbindAction` on context exit; the `Cancel` delivery then clears the running state.
 
 For movement bindings, prefer `Enum.PlayerActions` (e.g. `MoveForward`, `Jump`); they automatically bind to WASD, arrows, left stick, and d-pad across platforms.
 
@@ -378,23 +387,34 @@ end)
 
 ### Touch camera drag
 ```luau
-local dragging = false
+-- One finger owns the drag: identify it by its InputObject instance, which
+-- stays the same across that touch's Started/Moved/Ended events.
+local activeTouch: InputObject? = nil
 local lastPos = Vector2.zero
 
 UIS.TouchStarted:Connect(function(input, gpe)
     if gpe then return end
-    dragging = true
+    if activeTouch then return end -- a second finger never hijacks the drag
+    activeTouch = input
     lastPos = input.Position
 end)
 
 UIS.TouchMoved:Connect(function(input, gpe)
-    if not dragging or gpe then return end
+    if input ~= activeTouch or gpe then return end
     local delta = input.Position - lastPos
     -- rotate camera by delta
     lastPos = input.Position
 end)
 
-UIS.TouchEnded:Connect(function() dragging = false end)
+UIS.TouchEnded:Connect(function(input)
+    if input ~= activeTouch then return end -- a different finger lifting is ignored
+    activeTouch = nil
+end)
+
+-- Clear ownership on teardown so a stale touch can't block future drags.
+script.Destroying:Connect(function()
+    activeTouch = nil
+end)
 ```
 
 ### Disable default jump and handle custom

@@ -94,33 +94,58 @@ Do not nest an automatically growing scroll region inside another automatic scro
 The UI should render a snapshot or view model. It may request an action, but the server response determines the final display.
 
 ```luau
+local HttpService = game:GetService("HttpService")
+
 local state = {
-    busy = false,
+    requestId = nil, -- non-nil while a purchase is pending or its outcome is unknown
     selectedId = nil,
 }
 
 local function render()
-    buyButton.Active = not state.busy and state.selectedId ~= nil
-    spinner.Visible = state.busy
+    local busy = state.requestId ~= nil
+    buyButton.Active = not busy and state.selectedId ~= nil
+    spinner.Visible = busy
 end
 
+local REQUEST_TIMEOUT = 8 -- seconds
+
 buyButton.Activated:Connect(function()
-    if state.busy or not state.selectedId then
+    if state.requestId or not state.selectedId then
         return
     end
-    state.busy = true
+    state.requestId = HttpService:GenerateGUID(false)
     render()
-    BuyItem:FireServer(state.selectedId)
+    BuyItem:FireServer(state.requestId, state.selectedId)
+
+    -- Bound the pending state: silence can mean a lost request OR a
+    -- committed purchase whose response never arrived.
+    task.delay(REQUEST_TIMEOUT, function()
+        if state.requestId then
+            statusLabel.Text = "Purchase outcome unknown. Refreshing..."
+            render()
+            RefreshPurchases:FireServer() -- reconcile; never blind-retry
+        end
+    end)
 end)
 
-PurchaseResult.OnClientEvent:Connect(function(ok, message)
-    state.busy = false
+PurchaseResult.OnClientEvent:Connect(function(id, ok, message)
+    if id ~= state.requestId then
+        return -- stale, duplicate, or already-reconciled result
+    end
+    state.requestId = nil
     statusLabel.Text = message
+    render()
+end)
+
+-- Authoritative state wins: reconcile durable displays from the server snapshot.
+InventorySync.OnClientEvent:Connect(function(snapshot)
+    state.requestId = nil
+    statusLabel.Text = snapshot.ownsItem and "Purchased" or "Not purchased"
     render()
 end)
 ```
 
-Do not grant currency, inventory, or ownership because a local button handler ran. The UI is an input surface, not a trust boundary. In Server Authority projects, the client may briefly render predicted state that is later corrected by rollback. Keep durable displays tied to confirmed server or synchronized state, and mark optimistic feedback as pending when the distinction matters.
+Do not grant currency, inventory, or ownership because a local button handler ran. The UI is an input surface, not a trust boundary. Correlate each request with an id, treat "no response yet" as a bounded unknown rather than a failure to retry, and reconcile against authoritative server state: a timed-out purchase may still have committed, so a blind retry can double-spend. In Server Authority projects, the client may briefly render predicted state that is later corrected by rollback. Keep durable displays tied to confirmed server or synchronized state, and mark optimistic feedback as pending when the distinction matters.
 
 ## 7. Input and interaction
 
@@ -135,18 +160,20 @@ Every interactive control needs:
 
 ### Reliable hover (MouseEnter/MouseLeave pitfalls)
 
-Native `GuiObject.MouseEnter`/`MouseLeave` only re-check hover when the mouse moves, so they can miss when content scrolls under a stationary cursor (e.g. inside a `ScrollingFrame`) or occasionally fail to fire `MouseLeave`. For reliable hover, poll the cursor each frame and fire your own enter/leave on state transitions. This is a practitioner pattern (DevForum lead: "REAL MouseEnter/MouseLeave for GuiObjects", 7eoeb, https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310). Prefer `GuiService:GetGuiObjectsAtPosition()` over hardcoded top-bar offsets, and clean up the signals with the owning UI's lifetime.
+Native `GuiObject.MouseEnter`/`MouseLeave` only re-check hover when the mouse moves, so they can miss when content scrolls under a stationary cursor (e.g. inside a `ScrollingFrame`) or occasionally fail to fire `MouseLeave`. For reliable hover, poll the cursor each frame and fire your own enter/leave on state transitions. This is a practitioner pattern (DevForum lead: "REAL MouseEnter/MouseLeave for GuiObjects", 7eoeb, https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310). Prefer `PlayerGui:GetGuiObjectsAtPosition()` over hardcoded top-bar offsets, and clean up the signals with the owning UI's lifetime.
 
 ```luau
+local Players = game:GetService("Players")
 local RS = game:GetService("RunService")
-local GuiService = game:GetService("GuiService")
 local UIS = game:GetService("UserInputService")
+
+local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local hovered = false
 RS.RenderStepped:Connect(function()
     local pos = UIS:GetMouseLocation()
     local isOver = false
-    for _, obj in GuiService:GetGuiObjectsAtPosition(pos.X, pos.Y) do
+    for _, obj in playerGui:GetGuiObjectsAtPosition(pos.X, pos.Y) do
         if obj == frame then isOver = true break end
     end
     if isOver and not hovered then

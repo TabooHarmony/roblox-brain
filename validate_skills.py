@@ -63,34 +63,94 @@ def extract_description(content: str) -> str:
     return str(fm.get("description", ""))
 
 
+BACKTICK_FENCE_RE = re.compile(r"^ *(?P<fence>`{3,})(?P<info>[^`]*)$")
+TILDE_FENCE_RE = re.compile(r"^ *(?P<fence>~{3,})(?P<info>.*)$")
+
+
+def _fence_line(line: str):
+    """Return (fence_char, fence_length, language) for a fence line, else None."""
+    for pattern in (BACKTICK_FENCE_RE, TILDE_FENCE_RE):
+        match = pattern.match(line)
+        if match:
+            fence = match.group("fence")
+            return fence[0], len(fence), match.group("info").strip()
+    return None
+
+
+def _closes_fence(line: str, fence_char: str, fence_length: int) -> bool:
+    """True when line closes a fence opened with fence_char x fence_length."""
+    fence = _fence_line(line)
+    if fence is None or fence[0] != fence_char or fence[1] < fence_length:
+        return False
+    return fence[2] == ""  # closing fences carry no info string
+
+
+def _iter_fenced_blocks(content: str):
+    """Yield (open_line, language, code, close_line) for complete fenced blocks.
+
+    Recognizes 3+ backtick and 3+ tilde fences (CommonMark: a block closes
+    at a fence of the same character that is at least as long and carries
+    no info string).
+    """
+    lines = content.splitlines()
+    open_fence = None  # (char, length, language, open_line)
+    for line_number, line in enumerate(lines, 1):
+        fence = _fence_line(line)
+        if open_fence is None:
+            if fence is not None:
+                open_fence = (*fence, line_number)
+        elif _closes_fence(line, open_fence[0], open_fence[1]):
+            _char, _length, language, open_line = open_fence
+            code = "\n".join(lines[open_line : line_number - 1])
+            yield open_line, language, code, line_number
+            open_fence = None
+    # A fence left open at EOF is not yielded here; unclosed detection
+    # lives in validate_code_fences.
+
+
 def extract_luau_blocks(content: str):
-    """Yield (line, code) for complete Luau fences."""
-    pattern = re.compile(
-        r"^ *```luau(?:[ ,][^`\r\n]*)?\r?\n(.*?)^ *```\s*$",
-        re.MULTILINE | re.DOTALL,
-    )
-    for match in pattern.finditer(content):
-        yield content.count("\n", 0, match.start()) + 1, match.group(1)
+    """Yield (line, code) for complete Luau fences.
+
+    Recognizes ```luau, longer backtick fences such as ````luau, and tilde
+    fences such as ~~~luau, each with optional comma/space annotations
+    (```luau,linenos).
+    """
+    for open_line, language, code, _close_line in _iter_fenced_blocks(content):
+        if language == "luau" or language.startswith(("luau ", "luau,")):
+            yield open_line, code
 
 
 def validate_luau_syntax(
     documents: list[Path], sources: list[Path] | None = None
-) -> list[str]:
-    """Compile Luau fences and standalone source references."""
+) -> tuple[list[str], int, int]:
+    """Compile Luau fences and standalone source references.
+
+    Returns (errors, snippets_recognized, snippets_compiled) so callers can
+    surface a silent zero (recognition misses) in the validator output.
+    """
     compiler = shutil.which("luau-compile")
     if compiler is None:
-        return ["luau-compile not found; install the pinned Luau release before validation"]
+        return (
+            ["luau-compile not found; install the pinned Luau release before validation"],
+            0,
+            0,
+        )
 
     errors = []
+    recognized = 0
+    compiled = 0
     with tempfile.TemporaryDirectory() as temp_dir:
         for document in documents:
             content = document.read_text(encoding="utf-8")
-            for index, (line, code) in enumerate(extract_luau_blocks(content)):
-                fixture = Path(temp_dir) / f"block-{len(errors)}-{index}.luau"
+            blocks = list(extract_luau_blocks(content))
+            recognized += len(blocks)
+            for index, (line, code) in enumerate(blocks):
+                fixture = Path(temp_dir) / f"block-{compiled}-{index}.luau"
                 fixture.write_text(code, encoding="utf-8")
                 result = subprocess.run(
                     [compiler, str(fixture)], capture_output=True, text=True, check=False
                 )
+                compiled += 1
                 if result.returncode:
                     detail = (result.stderr or result.stdout).strip().splitlines()[0]
                     try:
@@ -104,6 +164,7 @@ def validate_luau_syntax(
             result = subprocess.run(
                 [compiler, str(source)], capture_output=True, text=True, check=False
             )
+            compiled += 1
             if result.returncode:
                 detail = (result.stderr or result.stdout).strip().splitlines()[0]
                 try:
@@ -111,32 +172,41 @@ def validate_luau_syntax(
                 except ValueError:
                     label = source
                 errors.append(f"{label}: Luau syntax error: {detail}")
-    return errors
+    return errors, recognized, compiled
 
 
 def validate_code_fences(content: str, label: str) -> list[str]:
-    """Reject unclosed fences and language-tagged nested openings."""
+    """Reject unclosed fences and language-tagged nested openings.
+
+    Recognizes 3+ backtick and 3+ tilde fences so alternate Luau fence
+    spellings (````luau, ~~~luau) get the same structural checks.
+    """
     errors = []
-    fence_pattern = re.compile(r"^ *```([^`]*)? *$")
     open_line = None
+    open_char = ""
+    open_length = 0
     open_language = ""
 
     for line_number, line in enumerate(content.splitlines(), 1):
-        match = fence_pattern.match(line)
-        if not match:
+        fence = _fence_line(line)
+        if fence is None:
             continue
-        language = (match.group(1) or "").strip()
+        fence_char, fence_length, language = fence
         if open_line is None:
             open_line = line_number
+            open_char = fence_char
+            open_length = fence_length
             open_language = language
+        elif _closes_fence(line, open_char, open_length):
+            open_line = None
+            open_char = ""
+            open_length = 0
+            open_language = ""
         elif language:
             errors.append(
                 f"{label}:{line_number}: nested fenced block '{language}' "
                 f"inside {open_language or 'untyped'} fence opened at line {open_line}"
             )
-        else:
-            open_line = None
-            open_language = ""
 
     if open_line is not None:
         errors.append(
@@ -342,16 +412,27 @@ def validate_cross_references(all_skill_names: set[str]) -> list[str]:
     return errors
 
 
+def _normalize_local_reference(reference: str) -> str:
+    """Strip redundant leading ./ segments without erasing ../ meaning."""
+    while reference.startswith("./"):
+        reference = reference[2:]
+    return reference
+
+
 def _resolve_local_reference(filepath: Path, reference: str) -> Path:
     """Resolve a reference as written from SKILL.md or references/full.md."""
-    reference = reference.lstrip("./")
-    if filepath.parent.name == "references" and reference.startswith("references/"):
-        return filepath.parent.parent / reference
-    return filepath.parent / reference
+    normalized = _normalize_local_reference(reference)
+    if filepath.parent.name == "references" and normalized.startswith("references/"):
+        return filepath.parent.parent / normalized
+    return filepath.parent / normalized
 
 
 def _local_reference_matches(filepath: Path, content: str):
-    """Yield (reference, position) for local reference paths in a document."""
+    """Yield (reference, position) for local reference paths in a document.
+
+    The yielded reference is normalized (leading ./ stripped) so the
+    `references/x.md` and `./references/x.md` spellings classify alike.
+    """
     patterns = [
         re.compile(r"\]\((?!https?://|mailto:|#)([^)#\s]+)"),
         re.compile(
@@ -362,15 +443,29 @@ def _local_reference_matches(filepath: Path, content: str):
     for pattern in patterns:
         for match in pattern.finditer(content):
             reference = match.group(1) if pattern is patterns[0] else match.group(0)
-            reference = reference.strip("<>")
-            if not reference.startswith("references/") or reference in seen:
+            reference = _normalize_local_reference(reference.strip("<>"))
+            is_local_doc = (
+                reference.startswith("references/")
+                or reference.startswith("../")
+                or (reference.startswith("./") and "/../" in reference)
+            )
+            if not is_local_doc or reference in seen:
                 continue
             seen.add(reference)
             yield reference, match.start()
 
 
+def _display_path(path: Path) -> str:
+    """Path relative to the repo root when possible, else the absolute path."""
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def validate_local_references() -> list[str]:
-    """Ensure local references mentioned by skills actually exist."""
+    """Ensure local references mentioned by skills actually exist and stay
+    inside their skill directory."""
     errors = []
     for skill_dir in sorted(Path(SKILLS_DIR).iterdir()):
         if not skill_dir.is_dir():
@@ -385,11 +480,19 @@ def validate_local_references() -> list[str]:
             content = filepath.read_text(encoding="utf-8")
             for reference, position in _local_reference_matches(filepath, content):
                 target = _resolve_local_reference(filepath, reference)
+                line = content[:position].count("\n") + 1
                 if not target.is_file():
-                    line = content[:position].count("\n") + 1
                     errors.append(
                         f"{skill_dir.name}: missing local reference '{reference}' "
-                        f"at {filepath.relative_to(REPO_ROOT)}:{line}"
+                        f"at {_display_path(filepath)}:{line}"
+                    )
+                    continue
+                try:
+                    target.resolve().relative_to(skill_dir.resolve())
+                except ValueError:
+                    errors.append(
+                        f"{skill_dir.name}: local reference escapes skill directory "
+                        f"'{reference}' at {_display_path(filepath)}:{line}"
                     )
     return errors
 
@@ -443,8 +546,12 @@ def main():
     documents = sorted(Path(SKILLS_DIR).glob("*/SKILL.md"))
     documents.extend(sorted(Path(SKILLS_DIR).glob("*/references/full.md")))
     sources = sorted(Path(SKILLS_DIR).glob("*/references/**/*.luau"))
-    all_errors.extend(validate_luau_syntax(documents, sources))
+    all_errors, luau_recognized, luau_compiled = validate_luau_syntax(documents, sources)
     print(f"Validated {skill_count} skills")
+    print(
+        f"Luau snippets: {luau_recognized} recognized, "
+        f"{luau_compiled} compiled"
+    )
 
     if all_errors:
         print(f"\n❌ {len(all_errors)} error(s):\n")

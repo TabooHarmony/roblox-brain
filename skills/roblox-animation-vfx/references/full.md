@@ -106,7 +106,14 @@ local tween = TweenService:Create(
 )
 
 tween:Play()
-tween.Completed:Once(function()
+
+-- `Completed` also fires with Enum.PlaybackState.Cancelled when the tween is
+-- stopped early, including when a replacement setup cancels it. Check state
+-- and ownership before destroying a target another effect may now use.
+tween.Completed:Connect(function(playbackState)
+    if playbackState ~= Enum.PlaybackState.Completed then
+        return -- cancelled: leave cleanup to the current owner
+    end
     if flashPart.Parent then
         flashPart:Destroy()
     end
@@ -114,6 +121,21 @@ end)
 ```
 
 Do not start a new tween every render frame for a value that could be computed once. When a state changes quickly, cancel or replace the old tween rather than allowing several competing animations to finish.
+
+`Completed` fires for cancelled tweens too. Destroying the target on cancellation is fine when it is a genuinely disposable one-shot object that no other effect can reuse; shared, pooled, or reused targets belong to their current owner:
+
+```luau
+local puff = Instance.new("Part")
+puff.Anchored = true
+puff.Parent = workspace
+
+local puffTween = TweenService:Create(puff, TweenInfo.new(0.3), {Transparency = 1})
+puffTween.Completed:Once(function(_playbackState)
+    if puff.Parent then
+        puff:Destroy() -- one-shot part: no other effect can reuse it
+    end
+end)
+```
 
 ## 7. Lighting and camera feedback
 
@@ -145,6 +167,7 @@ Preload only the assets needed for an imminent experience state. Preloading an e
 - [ ] Bursts have bounded count and lifetime.
 - [ ] Beam and trail attachments survive for the effect's lifetime.
 - [ ] Tweens are replaced or cancelled when state changes.
+- [ ] `Completed` handlers check `PlaybackState` and effect ownership before destroying shared or pooled instances.
 - [ ] Temporary instances, connections, and tasks have an owner.
 - [ ] Effects are tested on the target device class and in a real playtest.
 

@@ -38,16 +38,13 @@ Use when profiling, diagnosing lag, or setting performance budgets. For code-lev
 
 ### Object Pooling
 ```luau
--- Core pattern: pre-clone, reuse, avoid GC pressure
-local Pool = {}
-function Pool:get(): Instance
-    return table.remove(self._available) or self._template:Clone()
-end
-function Pool:release(obj: Instance)
-    obj.Parent = nil
-    table.insert(self._available, obj)
-end
+-- Pre-clone, reuse. get() returns a lease token; release() requires it,
+-- so duplicate or foreign releases never re-list the object.
+local obj, lease = pool:get()
+-- ... use obj ...
+pool:release(obj, lease)
 ```
+Canonical pool code (token-lease ownership): `roblox-luau-patterns`.
 
 ### StreamingEnabled Essentials
 - **On by default**. Container-scoped: only Workspace descendants stream. `ModelStreamingBehavior = Improved` streams non-BasePart descendants with their parent Model; Legacy streams only BaseParts.

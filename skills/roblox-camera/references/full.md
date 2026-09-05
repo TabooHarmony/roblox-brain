@@ -282,6 +282,8 @@ end)
 local TweenService = game:GetService("TweenService")
 local camera = workspace.CurrentCamera
 
+-- Snapshot the current mode; restoration must put back what the player had.
+local prevCameraType = camera.CameraType
 camera.CameraType = Enum.CameraType.Scriptable
 
 local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
@@ -291,15 +293,29 @@ local tween = TweenService:Create(camera, tweenInfo, {CFrame = targetCFrame})
 tween:Play()
 tween.Completed:Wait()
 
-camera.CameraType = Enum.CameraType.Custom
+-- Restore the mode the player actually had, not a hardcoded default.
+camera.CameraType = prevCameraType
 ```
 
 ### Multi-shot cutscene with input lock
 
 ```luau
+local cutsceneId = 0 -- ownership token: a newer cutscene supersedes older ones
+
 local function playCutscene(cameraPath: {CFrame}, duration: number)
-    camera.CameraType = Enum.CameraType.Scriptable
+    cutsceneId += 1
+    local myId = cutsceneId
+
+    -- Snapshot every value this function will modify, so restoration puts
+    -- back the player's actual state (custom walk speed, any camera mode).
     local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+    local saved = {
+        cameraType = camera.CameraType,
+        walkSpeed = humanoid.WalkSpeed,
+        jumpPower = humanoid.JumpPower,
+    }
+
+    camera.CameraType = Enum.CameraType.Scriptable
     humanoid.WalkSpeed = 0
     humanoid.JumpPower = 0
 
@@ -307,46 +323,65 @@ local function playCutscene(cameraPath: {CFrame}, duration: number)
         local info = TweenInfo.new(duration / #cameraPath, Enum.EasingStyle.Sine)
         local tween = TweenService:Create(camera, info, {CFrame = target})
         tween:Play()
-        tween.Completed:Wait()
+        tween.Completed:Wait() -- also resumes if a newer tween cancels this one
+        if cutsceneId ~= myId then
+            return -- superseded: the newer cutscene owns camera and movement
+        end
     end
 
-    humanoid.WalkSpeed = 16
-    humanoid.JumpPower = 50
-    camera.CameraType = Enum.CameraType.Custom
+    -- Restore the snapshot, never hardcoded defaults.
+    humanoid.WalkSpeed = saved.walkSpeed
+    humanoid.JumpPower = saved.jumpPower
+    camera.CameraType = saved.cameraType
 end
 ```
+
+If cutscenes can overlap, have a newer run adopt the first run's snapshot instead of re-snapshotting values it finds already locked to zero.
 
 ### Screen shake
 
 ```luau
-local shakeActive = false
+local shakeToken = 0 -- ownership token: only the newest shake drives state
 local shakeIntensity = 0
-local baseCFrame: CFrame
+local prevOffset = CFrame.identity
 
 local function startShake(intensity: number, duration: number)
-    shakeActive = true
+    shakeToken += 1
+    local myToken = shakeToken
     shakeIntensity = intensity
-    baseCFrame = camera.CFrame
 
     task.spawn(function()
         local t = 0
         while t < duration do
             t += task.wait()
+            if myToken ~= shakeToken then return end -- a newer shake owns state
             shakeIntensity = intensity * (1 - t / duration)
         end
-        shakeActive = false
-        camera.CFrame = baseCFrame
+        if myToken ~= shakeToken then return end
+        shakeIntensity = 0
     end)
 end
 
 RunService.PreRender:Connect(function()
-    if not shakeActive then return end
+    if shakeIntensity <= 0 then
+        -- Strip the final offset exactly once so it does not stay baked in.
+        if prevOffset ~= CFrame.identity then
+            camera.CFrame = camera.CFrame * prevOffset:Inverse()
+            prevOffset = CFrame.identity
+        end
+        return
+    end
     local offset = CFrame.new(
         (math.random() - 0.5) * shakeIntensity,
         (math.random() - 0.5) * shakeIntensity,
         (math.random() - 0.5) * shakeIntensity
     )
-    camera.CFrame = baseCFrame * offset
+    -- Re-base on the CURRENT camera CFrame each frame: strip the previous
+    -- frame's offset, then apply this frame's. Never write back a stale
+    -- base snapshot taken when the shake started; other systems can move
+    -- the camera between frames.
+    camera.CFrame = camera.CFrame * prevOffset:Inverse() * offset
+    prevOffset = offset
 end)
 ```
 

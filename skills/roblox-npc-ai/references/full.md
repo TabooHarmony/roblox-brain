@@ -248,22 +248,32 @@ end
 Only check LOS after distance check passes (raycasts are expensive):
 
 ```luau
-local function hasLineOfSight(from: Vector3, to: Vector3, ignore: {Instance}): boolean
+local function hasLineOfSight(from: Vector3, to: Vector3, ignore: {Instance}, target: Instance?): boolean
     local direction = to - from
     local params = RaycastParams.new()
     params.FilterDescendantsInstances = ignore
     params.FilterType = Enum.RaycastFilterType.Exclude
 
     local result = workspace:Raycast(from, direction, params)
-    -- nil result means nothing blocked the ray
-    return result == nil
+    -- Nothing between the endpoints: sight is clear.
+    if result == nil then return true end
+    -- The segment can clip the target's own queryable parts (aiming at the
+    -- head grazes a hat or hand). A hit inside the target means the ray
+    -- REACHED it: that is sight, not an obstruction. Only a hit on some
+    -- other instance (a wall) blocks.
+    if target and result.Instance:IsDescendantOf(target) then
+        return true
+    end
+    return false
 end
 
--- Usage: check if NPC can see player
+-- Usage: check if NPC can see player. Exclude the NPC's own character but
+-- NOT the target's: pass the target as the last argument instead.
 local canSee = hasLineOfSight(
     npc.rootPart.Position + Vector3.new(0, 2, 0), -- eye height
     targetRoot.Position + Vector3.new(0, 2, 0),   -- target eye height
-    {npc.rootPart.Parent, targetRoot.Parent}       -- ignore both endpoint characters
+    {npc.rootPart.Parent},                        -- ignore the NPC itself
+    targetRoot.Parent                             -- hits within the target are visibility
 )
 ```
 
@@ -299,11 +309,13 @@ local function canDetectPlayer(npc: NPCState, player: Player): boolean
         end
     end
 
-    -- 3. Line of sight (expensive, do last)
+    -- 3. Line of sight (expensive, do last); pass the target so hits on
+    -- the player's own parts read as visibility, not obstruction
     return hasLineOfSight(
         npc.rootPart.Position + Vector3.new(0, 2, 0),
         root.Position + Vector3.new(0, 2, 0),
-        {npc.rootPart.Parent}
+        {npc.rootPart.Parent},
+        root.Parent
     )
 end
 ```
