@@ -1,11 +1,13 @@
 ---
 name: roblox-input
 description: "Use when handling Roblox keyboard, mouse, gamepad, touch, motion input, or cross-platform action binding."
-last_reviewed: 2026-08-13
+last_reviewed: 2026-09-05
 sources:
   - https://devforum.roblox.com/t/the-correct-way-to-design-mobile-buttons/2494558
   - https://create.roblox.com/docs/reference/engine/classes/UserInputService
   - https://create.roblox.com/docs/projects/server-authority
+  - https://create.roblox.com/docs/ui/3D-drag-detectors
+  - https://create.roblox.com/docs/ui/ui-drag-detectors
 ---
 
 # Roblox Input
@@ -42,6 +44,8 @@ CAS:BindAction("Jump", onAction, true,
 **Gamepad:** use `GetConnectedGamepads()` and listen to connection changes.
 
 **Touch:** use high-level gesture events or raw `TouchStarted`/`TouchMoved`/`TouchEnded` when tracking fingers.
+
+**Dragging:** `DragDetector` (3D parts/models, physics-capable) and `UIDragDetector` (UI) make objects draggable with zero code; events `DragStart`/`DragContinue`/`DragEnd`.
 
 **Pitfalls**:
 - `gameProcessedEvent=true` in InputBegan → UI consumed it. Filter for gameplay.

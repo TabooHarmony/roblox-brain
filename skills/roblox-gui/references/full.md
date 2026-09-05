@@ -282,3 +282,72 @@ Top-sorted DevForum canon for UI libraries. Verify status in-thread before recom
 - [Vanilla 3](https://devforum.roblox.com/t/vanilla-3-the-pragmatic-icon-set-for-roblox-studio/935745) — the pragmatic icon set.
 - Chat: BetterChat V3 discontinued; [NovaChat](https://devforum.roblox.com/t/novachat-v107-chat-update-part-2-a-modern-feature-rich-chat-replacement-update/4513813) (2026) is the active replacement line; [ViewportFrame masking](https://devforum.roblox.com/t/viewportframe-masking/2964839) (2024) heavily cited for UI VFX.
 - Design theory: [UI Design Starter Guide](https://devforum.roblox.com/t/ui-design-starter-guide/53461) (1.1k likes).
+
+## Pagination (UIPageLayout)
+
+A `UIPageLayout` parented to a `GuiObject` (usually a `Frame`) stacks its children as full-size pages; only the current page is visible. Members: `JumpTo(page)`, `JumpToIndex(index)`, `Next()`, `Previous()`, plus the `CurrentPage` property. Set `Circular = true` for wraparound looping and tune motion with `TweenTime`, `EasingStyle`, `EasingDirection` (`Animated = false` for instant snaps). The layout provides no buttons — wire input yourself:
+
+```luau
+local layout = Instance.new("UIPageLayout")
+layout.TweenTime = 0.25
+layout.EasingStyle = Enum.EasingStyle.Quad
+layout.Parent = pageContainer
+
+nextButton.Activated:Connect(function() layout:Next() end)
+prevButton.Activated:Connect(function() layout:Previous() end)
+layout.PageEnter:Connect(function(page)
+    updateDots(page) -- one dot per child; highlight CurrentPage
+end)
+```
+
+`PageEnter`/`PageLeave` fire on page transitions and `Stopped` when a tween settles; that is the hook for a page-indicator/paginator pattern. `ScrollWheelInputEnabled`, `TouchInputEnabled`, and `GamepadInputEnabled` control the built-in pan input.
+
+## Selection outlines (SelectionBox)
+
+`SelectionBox` renders a 3D box outline around its `Adornee` (inherited from `InstanceAdornment`); it is purely visual and captures no input. Style with `LineThickness` (studs), `Color3` (outline color, from `GuiBase3d`), and `SurfaceColor3`/`SurfaceTransparency` (faces; surface transparency defaults to 1). Prefer the `Highlight` class when you need fill/outline effects over non-primitive geometry such as `MeshPart`.
+
+```luau
+local box = Instance.new("SelectionBox")
+box.LineThickness = 0.05
+box.Color3 = Color3.new(1, 1, 0)
+box.SurfaceTransparency = 1
+box.Parent = workspace
+
+local mouse = Players.LocalPlayer:GetMouse()
+mouse.Move:Connect(function()
+    box.Adornee = mouse.Target -- nil when pointing at nothing
+end)
+```
+
+## Decals (Decal, Texture)
+
+`Decal` draws a single image on one face of a part (`Face = Enum.NormalId.Front`, etc.). The separate `Texture` class shares face placement and repeats/tiles the image via `StudsPerTileU/V` and `OffsetStudsU/V` — use `Texture` for tiled surfaces, `Decal` for posters and signs. The image property `Texture` (ContentId) is deprecated in favor of `ColorMap`/`ColorMapContent` but still functional. `Transparency`, `Color3`, and `Face` are runtime-writable: tween decals, or swap images in response to gameplay. User-uploaded image assets go through moderation; a failed review renders nothing, so ship a placeholder and handle it.
+
+```luau
+local decal = Instance.new("Decal")
+decal.Face = Enum.NormalId.Front
+decal.Texture = "rbxassetid://699259085"
+decal.Parent = part
+```
+
+## Video (VideoFrame, VideoPlayer)
+
+`VideoFrame` is the simple path: parent it to a `SurfaceGui` and set `Video` (ContentId) to a video-type asset — image IDs will not play. Control with `Play()`, `Pause()`, `Looped`, and `Volume`; wait for `IsLoaded` (or the `Loaded` event) before playing. `Ended`/`DidLoop` report playback progress.
+
+`VideoPlayer` is the newer wire-based source: set `VideoContent` (Content), then connect `Wire` instances to a `VideoDisplay` inside a `SurfaceGui` for visuals and an `AudioEmitter` for sound. It adds `PlaybackSpeed`, `TimePosition`, `LoadAsync()`, and a `PlayFailed` event for fetch failures. Prefer `VideoFrame` unless you need the video/audio wire split.
+
+```luau
+local gui = Instance.new("SurfaceGui")
+gui.Parent = screenPart
+
+local video = Instance.new("VideoFrame")
+video.Size = UDim2.fromScale(1, 1)
+video.Looped = true
+video.Video = "rbxassetid://5608359401"
+video.Parent = gui
+
+if not video.IsLoaded then
+    video.Loaded:Wait()
+end
+video:Play()
+```

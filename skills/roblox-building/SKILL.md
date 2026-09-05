@@ -5,6 +5,8 @@ last_reviewed: 2026-08-31
 sources:
   - original
   - https://devforum.roblox.com/t/large-scale-roblox-terrain-the-ultimate-guide/405672
+  - https://devforum.roblox.com/t/a-complete-guide-to-editableimages/3858566
+  - https://create.roblox.com/docs/reference/engine/classes/EditableImage
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/mcp.md
   - https://create.roblox.com/docs/production/game-design/core-loops
   - https://create.roblox.com/docs/production/game-design/onboarding
@@ -31,6 +33,7 @@ Load for Roblox geometry, props, maps, routes, landmarks, or spatial onboarding 
 - Use `generate_procedural_model` for blockouts, `generate_mesh` for textured props, and `generate_material` for surfaces.
 - For meshes, read back `MeshPart`/`SurfaceAppearance`, bounds, collision fidelity, anchoring, and provenance; preview representative quality levels.
 - Use image tools only for permitted inputs and wait for the returned job before dependent work.
+- Runtime pixel/vertex editing (`EditableImage`/`EditableMesh`) is budget-gated, permission-gated, non-replicating: see full reference.
 - Fall back to native Parts/CSG and report unavailable or unsuitable generation.
 
 ### Player Scale

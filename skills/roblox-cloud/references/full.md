@@ -211,6 +211,51 @@ Roblox announced an Ads Manager API on Open Cloud (DevForum, 2026-07-30, test st
 
 This is a marketing-surface API, not an in-experience engine API: it lives on the Open Cloud side, so the standard rules of this skill apply (least-privilege keys, no keys in game code, server-side storage). As a test-stage API it may change before Beta; verify the current surface against the official docs before building on it, and treat anything beyond campaign CRUD as unverified.
 
+## 8.6 TeleportService (in-experience)
+
+Server-only teleports between places. Does not work during Studio playtesting — test in a published experience.
+
+- `TeleportService:TeleportAsync(placeId, players, teleportOptions?)` is the current method for every teleport (different place, specific server, reserved server); `Teleport`, `TeleportToPlaceInstance`, and `TeleportToPrivateServer` are legacy. Server scripts only — route client requests through a `RemoteEvent`. Max 50 players per call; a group must teleport within one experience.
+- Yields and can throw: always wrap in `pcall` and retry failures (official guidance recommends retries, especially for reserved-server teleports). A teleport can also fail after the call returns without throwing — handle that in `TeleportService.TeleportInitFailed` (player, `Enum.TeleportResult`, errorMessage, placeId, teleportOptions). There is no `TeleportFailed` event.
+- Options come from `Instance.new("TeleportOptions")` — there is no `CreateTeleportOptions`:
+  - `SetTeleportData(data)`: non-secure payload, visible to the client — never send secrets.
+  - `ShouldReserveServer = true` for a new reserved server, `ReservedServerAccessCode = code` for an existing one, `ServerInstanceId = jobId` for a specific public server. Mutually exclusive pairs error: `ReservedServerAccessCode`+`ServerInstanceId`, `ShouldReserveServer`+either.
+- Read data on arrival: server `player:GetJoinData().TeleportData`; client `TeleportService:GetLocalPlayerTeleportData()`.
+
+```luau
+-- Server: teleport a player with data
+local opts = Instance.new("TeleportOptions")
+opts:SetTeleportData({ round = 3 })
+local ok, err = pcall(function()
+    TeleportService:TeleportAsync(PLACE_ID, { player }, opts)
+end)
+if not ok then warn("teleport failed:", err) end
+
+-- Client on arrival
+local data = TeleportService:GetLocalPlayerTeleportData()
+if data then print("round:", data.round) end
+```
+
+## 8.7 BadgeService (in-experience)
+
+Server-side badge awarding and lookup. Awarding succeeds only when: caller is a server script, the place belongs to the badge's experience, the player is connected, the badge is enabled, and the player does not already have it (award-once per user).
+
+- `BadgeService:AwardBadgeAsync(userId, badgeId)` → boolean; yields, so wrap in `pcall`. `AwardBadge` is deprecated — do not use it. Rate limit: `50 + 35 × player count` awards per minute.
+- `BadgeService:GetBadgeInfoAsync(badgeId)` → dictionary (`Name`, `Description`, `IsEnabled`, `IconImageId`); yields. Check `IsEnabled` before awarding.
+- Ownership checks: `UserHasBadgeAsync(userId, badgeId)` for one badge; `CheckUserBadgesAsync(userId, badgeIds)` for batches. `GetUserBadgesAsync` is not deprecated but serves batch (≤100) lookups with award dates. BadgeService exposes no events — call `AwardBadgeAsync` directly; there is nothing to poll and no `BadgeAwarded` event.
+- Studio: only disabled badges can be awarded there for testing; awarding an enabled badge in Studio returns true without awarding.
+
+```luau
+-- Server: award a kill-streak badge
+local function onKillStreak(player, BADGE_ID)
+    local info = BadgeService:GetBadgeInfoAsync(BADGE_ID)
+    if not info.IsEnabled then return end
+    if BadgeService:UserHasBadgeAsync(player.UserId, BADGE_ID) then return end
+    local ok, awarded = pcall(BadgeService.AwardBadgeAsync, BadgeService, player.UserId, BADGE_ID)
+    if ok and awarded then print(player.Name, "earned the badge") end
+end
+```
+
 ## 9. Completion checklist
 
 - Caller and authority model are explicit.

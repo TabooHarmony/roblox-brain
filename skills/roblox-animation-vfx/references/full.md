@@ -155,11 +155,22 @@ Pool effects that fire frequently, such as muzzle flashes, hit sparks, and foots
 
 Use `Debris` for a simple one-shot lifetime. Use an explicit owner object when the effect has multiple connections or must be cancelled early.
 
-## 9. Preloading and runtime failure
+## 9. Legacy effect classes: Sparkles (and Fire, Smoke)
+
+`Sparkles` is a minimal particle emitter: parent to a `BasePart` or an `Attachment` in one. It has essentially three knobs (`Enabled`, `SparkleColor`, `Color`) and no lifetime, texture, rate, or `Emit()` control. Use it for quick placeholder effects only; any real effect should be a `ParticleEmitter`.
+
+Two behaviors matter:
+
+- Setting `Enabled = false` stops new emission, but existing particles render until their lifetime expires. Destroying the object (`Parent = nil` or `:Destroy()`) kills all particles instantly. To stop cleanly, disable first, then `Debris:AddItem(sparkles, a few seconds)`.
+- Particles emit from the center of the parent part. Parent to an `Attachment` when the start position matters.
+
+`Fire` and `Smoke` are the same story: fixed look, few knobs, superseded by `ParticleEmitter` for anything custom.
+
+## 10. Preloading and runtime failure
 
 Preload only the assets needed for an imminent experience state. Preloading an entire catalog increases memory pressure and still does not make an unavailable asset valid. Show a fallback when an animation, image, sound, or particle texture cannot load.
 
-## 10. Review checklist
+## 11. Review checklist
 
 - [ ] Every animation uses an `Animator` and a verified asset ID.
 - [ ] Track priority and stopping behavior are intentional.

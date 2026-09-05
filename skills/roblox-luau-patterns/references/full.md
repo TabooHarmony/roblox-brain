@@ -328,6 +328,35 @@ local function ensureLoaded(zoneName: string)
 end
 ```
 
+## 11. ValueBase objects
+
+`StringValue`, `NumberValue`, `IntValue`, `BoolValue`, `ObjectValue`, and
+`CFrameValue` are typed single-value containers parented in the DataModel.
+The value lives in the `.Value` property; assigning it fires the object's
+`Changed` signal with the new value (not the property name).
+
+Prefer instance attributes (`SetAttribute`/`GetAttribute`) for small static
+data on an instance. Reach for a ValueBase object for legacy compatibility
+or when a shared, replicated container with its own `Changed` signal is the
+point.
+
+- `StringValue`: shared strings — game state, current minigame name.
+  `.Value` accepts at most 200,000 characters; longer raises
+  `String too long`.
+- `CFrameValue`: rarely used; stores one CFrame. Attributes already store
+  CFrames, so use it only when `Changed` signaling on a replicated
+  container is the requirement.
+
+```luau
+-- Server: currentGame is a StringValue in workspace
+currentGame.Value = "Lobby"
+
+-- Client: statusLabel is a TextLabel
+workspace.CurrentGame.Changed:Connect(function(newName: string)
+    statusLabel.Text = newName
+end)
+```
+
 ## Community ecosystem (leads, not sources)
 
 Top-sorted DevForum canon for language patterns. These are the posts experienced scripters still cite.

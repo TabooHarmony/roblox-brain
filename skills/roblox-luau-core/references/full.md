@@ -221,6 +221,30 @@ Floating-point equality is often the wrong test for derived values. Use a tolera
 
 Do not normalize a zero-length vector without deciding the fallback direction. Roblox datatype math belongs in the relevant camera, physics, or building skill.
 
+### math library quick map
+
+One-line semantics; full reference at [luau.org/library](https://luau.org/library). Angles are radians; use `math.rad`/`math.deg` to convert.
+
+- `math.abs`, `math.floor`, `math.ceil`, `math.sqrt` (NaN on negative input), `math.exp`, `math.log(n, base?)` (base defaults to e; NaN on negative, `-inf` on 0), `math.log10(n)`.
+- Trig: `math.sin`/`math.cos`/`math.tan` take radians; `math.asin`/`math.acos` return NaN outside `[-1, 1]`; `math.atan2(y, x)` resolves the quadrant from both signs (range `[-pi, pi]`) and is the correct angle from a displacement, not `math.atan(y/x)` which loses quadrant. Hyperbolic: `sinh`, `cosh`, `tanh`. `math.atan(n)` returns `[-pi/2, pi/2]`.
+- `math.round` rounds to nearest, halfway away from zero; `math.floor`/`math.ceil` bound it. `math.fmod(x, y)` truncates toward zero and returns NaN when y is 0, unlike `x % y` which follows the sign of y. `math.modf(n)` returns integer and fractional parts, both with the input's sign. `math.frexp`/`math.ldexp` split/rebuild a significand and binary exponent.
+- `math.clamp(n, min, max)` errors when `min > max`. `math.sign(n)` is `-1`/`1`/`0` (0 for NaN too). `math.max`/`math.min` require at least one argument and error otherwise.
+- `math.random()` returns `[0, 1]`; `math.random(n)` returns `[1, n]`; `math.random(min, max)` returns `[min, max]`. Arguments are truncated to integers, so `math.random(1.5)` always returns 1. `math.randomseed(seed)` reseeds the generator for a deterministic sequence.
+- `math.isnan`, `math.isinf`, `math.isfinite` classify problem values without `x ~= x` tricks.
+- `math.noise(x, y?, z?)` is 3D Perlin noise, roughly `[-1, 1]`, inputs defaulting to 0. Smooth; use for procedural terrain and variation, not as a hash. For whole-terrain generation prefer a dedicated terrain or noise skill.
+- Luau adds `math.lerp(a, b, t)` (`a + (b - a) * t`; at exactly `t == 1` returns `b`) and `math.map(x, inMin, inMax, outMin, outMax)` (linear range remap); neither exists in plain Lua 5.x.
+
+### EncodingService
+
+Roblox's engine service for Base64, hashing, and compression: `game:GetService("EncodingService")`. It operates on `buffer` values (use `buffer.fromstring`/`buffer.tostring` to convert), not strings, except the string hash. Docs: [EncodingService](https://create.roblox.com/docs/reference/engine/classes/EncodingService). <!-- temporal: 2026-08 -->
+
+- `EncodingService:Base64Encode(input: buffer): buffer` and `:Base64Decode(input: buffer): buffer` (decode throws on invalid input).
+- `EncodingService:ComputeBufferHash(input: buffer, algorithm: HashAlgorithm): buffer` and `:ComputeStringHash(input: string, algorithm: HashAlgorithm): string`. These are fast hashes (the `HashAlgorithm` enum), not password hashes or key derivation; use server-validated tokens or an external KDF for credential purposes.
+- `EncodingService:CompressBuffer(input, CompressionAlgorithm, compressionLevel?)`: Zstd levels -7 to 22; higher compresses more, costs more time.
+- `EncodingService:DecompressBuffer(input, CompressionAlgorithm)` throws when the size header is missing/corrupt or exceeds 1GB. For untrusted compressed data (e.g. from a client RemoteEvent), call `:GetDecompressedBufferSize(input, algorithm)` first; when it returns nil, refuse to decompress. Cap sizes by input source: compression amplification is a DoS vector.
+- This is the engine alternative to hand-rolled Base64 or `HttpService:JSONEncode` misuse for binary payloads. For JSON, still use `HttpService`; EncodingService is for bytes.
+
+
 ## 9. Cross-language translation traps
 
 ### JavaScript to Luau

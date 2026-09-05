@@ -28,6 +28,7 @@ Load for pure Luau syntax and semantics: truthiness, tables, iteration, function
 - Backtick interpolation and `..` concatenation are both valid. Choose the clearer form; collect many fragments and join once in a hot loop.
 - NaN does not equal itself and defeats `<`/`>` comparisons; test with `x ~= x`.
 - Binary data uses the `buffer` library: fixed size, 0-based byte offsets, explicit-width reads/writes. Avoid `buffer.readinteger`/`buffer.writeinteger`: in some type stubs, not the released runtime.
+- For Base64, hashing, or compression use `EncodingService` (buffers, not strings; JSON still goes through `HttpService`). Math and EncodingService semantics: see full reference.
 
 ```luau
 local label = if enabled then "On" else "Off"

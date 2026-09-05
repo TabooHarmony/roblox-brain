@@ -26,6 +26,7 @@
 | `LinearVelocity` | Constant velocity in direction | Conveyor belts, moving platforms |
 | `AngularVelocity` | Constant rotation speed | Spinning obstacles, fans |
 | `VectorForce` | Apply constant force | Gravity modification, thrust |
+| `LineForce` | Constant force along the Attachment0→Attachment1 axis | Tractor beams, magnetics, tethers |
 | `Torque` | Apply constant torque | Spinning objects |
 
 ### Spring/Rope
@@ -35,6 +36,26 @@
 | `SpringConstraint` | Bouncy connection | Suspension, trampolines, bouncy bridges |
 | `RopeConstraint` | Max distance (slack allowed) | Grappling hooks, hanging objects |
 | `RodConstraint` | Fixed distance (rigid) | Rigid linkages, pendulum arms |
+
+## LineForce
+
+`LineForce` applies a constant force along the axis between `Attachment0` and `Attachment1` — it pulls (or pushes) one assembly toward the other, and the direction tracks the parts as they move. Compare `VectorForce`: a fixed `Vector3` (world or attachment-relative) whose direction never changes. Use LineForce when the pull must follow a target part; use VectorForce for constant world-direction thrust.
+
+```luau
+local lf = Instance.new("LineForce")
+lf.Attachment0 = anchorAtt     -- on the anchor part
+lf.Attachment1 = pulledAtt     -- pulled toward Attachment0 when Magnitude > 0
+lf.Magnitude = 5000            -- force along the attachment axis
+lf.MaxForce = 10000            -- cap the applied force
+lf.ReactionForceEnabled = true -- equal/opposite force on the anchor part
+lf.ApplyAtCenterOfMass = true  -- apply at CoM instead of Attachment1
+lf.InverseSquareLaw = true     -- falloff with distance (gravity/magnet feel)
+lf.Parent = anchorPart
+```
+
+- `Magnitude`: signed force; sign sets pull vs push.
+- `MaxForce`: upper clamp (no `MinForce` property — limit in scripts if needed).
+- `InverseSquareLaw`: force scales as 1/distance² between the attachments.
 
 ## Attachment Pattern
 
@@ -227,6 +248,30 @@ end)
 ```
 
 For production use, store `ragdollState` inside your character/maid module rather than a module-level table, and wire the destruction cleanup into that maid so records cannot outlive their character.
+
+## IKControl
+
+`IKControl` runs procedural inverse kinematics on a Motor6D rig — no baked animation needed. Parent it under the rig's `Humanoid`; it bends the joint chain from `ChainRoot` (e.g. `LeftUpperArm`) so `EndEffector` (e.g. `LeftHand`) reaches `Target` (usually an `Attachment` or `BasePart`). Common uses: foot placement on stairs/slopes, hands gripping rails or ladders, head look-at.
+
+```luau
+local ik = Instance.new("IKControl")
+ik.Type = Enum.IKControlType.Position -- see types below
+ik.ChainRoot = character.LeftUpperArm
+ik.EndEffector = character.LeftHand
+ik.Target = railAttachment -- Attachment on the rail
+ik.SmoothTime = 0.05       -- target smoothing; 0 = snap instantly
+ik.Weight = 1
+ik.Parent = humanoid
+
+-- Stop the solve when the grip ends
+ik.Enabled = false
+```
+
+- `Type`: `Position` (move effector to target), `Rotation` (match orientation), `Transform` (position + rotation), `LookAt` (aim the chain, e.g. head/eyes at a point).
+- `SmoothTime`: seconds of smoothing toward the target; lower = snappier.
+- `EndEffectorOffset` / `Offset`: CFrame adjustments to effector and target placement.
+- `Pole`: optional part hinting elbow/knee bend direction.
+- The chain must run through `Motor6D` joints from `ChainRoot` to `EndEffector`; inspect with `GetChainLength()` / `GetChainCount()`.
 
 ## Projectiles
 
@@ -421,6 +466,29 @@ local function createSwing(platform: BasePart, pivot: Vector3, maxAngle: number)
     hinge.Parent = platform
 
     return hinge
+end
+```
+
+## Collision groups: PhysicsService
+
+`PhysicsService` manages collision groups: named sets of `BasePart`s whose mutual collision rules you control. Assign a part by setting `part.CollisionGroup = "GroupName"` (the name, not an object).
+
+Key facts (official):
+
+- `RegisterCollisionGroup(name)` — name cannot be `"Default"`. Registration has slight overhead proportional to workspace part count, so register at edit time in Studio when possible; register/rename/unregister at runtime sparingly.
+- `CollisionGroupSetCollidable(name1, name2, bool)` — throws if either group is unregistered; check `IsCollisionGroupRegistered` first.
+- Creating, deleting, or modifying collision relationships is server-only (Scripts); clients can only assign parts to existing groups.
+- Max 32 groups (`GetMaxCollisionGroups`). `GetRegisteredCollisionGroups()` returns `{name, mask}` entries.
+- `CollisionGroupsAreCollidable` returns true if either group is unregistered (default mask collides with everything).
+
+```luau
+local PhysicsService = game:GetService("PhysicsService")
+if not PhysicsService:IsCollisionGroupRegistered("Ghosts") then
+    PhysicsService:RegisterCollisionGroup("Ghosts")
+end
+PhysicsService:CollisionGroupSetCollidable("Ghosts", "Ghosts", false) -- ghosts pass through ghosts
+for _, part in character:GetDescendants() do
+    if part:IsA("BasePart") then part.CollisionGroup = "Ghosts" end
 end
 ```
 

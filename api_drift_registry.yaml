@@ -385,3 +385,283 @@ entries:
       property: ColorMap
       expected: PluginSecurity
     verified: 2026-08-02
+
+  - id: luau-core-encodingservice-base64
+    claim: "EncodingService:Base64Encode and :Base64Decode exist and operate on buffers"
+    files:
+      - path: skills/roblox-luau-core/references/full.md
+    check:
+      type: member_exists
+      class: EncodingService
+      member: Base64Encode
+    verified: 2026-09-05
+
+  - id: luau-core-encodingservice-compress
+    claim: "EncodingService:CompressBuffer exists (Zstd, compression levels -7 to 22)"
+    files:
+      - path: skills/roblox-luau-core/references/full.md
+    check:
+      type: member_exists
+      class: EncodingService
+      member: CompressBuffer
+    verified: 2026-09-05
+
+  - id: luau-core-encodingservice-hash
+    claim: "EncodingService:ComputeStringHash exists (fast hashes, not password hashing)"
+    files:
+      - path: skills/roblox-luau-core/references/full.md
+    check:
+      type: member_exists
+      class: EncodingService
+      member: ComputeStringHash
+    verified: 2026-09-05
+
+  - id: luau-core-encodingservice-decompressed-size
+    claim: "EncodingService:GetDecompressedBufferSize exists; returns nil on corrupt input"
+    files:
+      - path: skills/roblox-luau-core/references/full.md
+    check:
+      type: member_exists
+      class: EncodingService
+      member: GetDecompressedBufferSize
+    verified: 2026-09-05
+
+  - id: building-createeditableimage-exists
+    claim: "AssetService:CreateEditableImage exists (options table with Size)"
+    files:
+      - path: skills/roblox-building/references/full.md
+    check:
+      type: member_exists
+      class: AssetService
+      member: CreateEditableImage
+    verified: 2026-09-05
+
+  - id: building-editableimage-writepixelsbuffer
+    claim: "EditableImage:WritePixelsBuffer exists and takes a buffer"
+    files:
+      - path: skills/roblox-building/references/full.md
+    check:
+      type: member_exists
+      class: EditableImage
+      member: WritePixelsBuffer
+    verified: 2026-09-05
+
+  - id: building-editableimage-size-property
+    claim: "EditableImage has a read-only Size property (Vector2)"
+    files:
+      - path: skills/roblox-building/references/full.md
+    check:
+      type: property_exists
+      class: EditableImage
+      property: Size
+    verified: 2026-09-05
+
+  - id: building-editablemesh-raycastlocal
+    claim: "EditableMesh:RaycastLocal exists (used for paint-on-mesh UV lookup)"
+    files:
+      - path: skills/roblox-building/references/full.md
+    check:
+      type: member_exists
+      class: EditableMesh
+      member: RaycastLocal
+    verified: 2026-09-05
+
+  - id: input-dragdetector-dragstart-exists
+    claim: "DragDetector exposes DragStart/DragContinue/DragEnd events (not DragStarted/DragMoved/DragEnded)"
+    files:
+      - path: skills/roblox-input/references/full.md
+    check:
+      type: member_exists
+      class: DragDetector
+      member: DragStart
+    verified: 2026-09-05
+
+  - id: input-dragdetector-setdragstylefunction-exists
+    claim: "DragDetector:SetDragStyleFunction exists; function receives the cursor Ray (Scriptable DragStyle)"
+    files:
+      - path: skills/roblox-input/references/full.md
+    check:
+      type: member_exists
+      class: DragDetector
+      member: SetDragStyleFunction
+    verified: 2026-09-05
+
+  - id: input-uidragdetector-dragcontinue-exists
+    claim: "UIDragDetector exposes DragStart/DragContinue/DragEnd events carrying a Vector2 input position"
+    files:
+      - path: skills/roblox-input/references/full.md
+    check:
+      type: member_exists
+      class: UIDragDetector
+      member: DragContinue
+    verified: 2026-09-05
+
+  - id: gui-uipagelayout-jumptopage
+    claim: "UIPageLayout.JumpTo exists (page-step methods are Next/Previous; 'JumpToPage' is not a real member)"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: member_exists
+      class: UIPageLayout
+      member: JumpTo
+    verified: 2026-09-05
+
+  - id: gui-selectionbox-adornee
+    claim: "SelectionBox.Adornee is inherited from InstanceAdornment (defined there, not on SelectionBox itself)"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: InstanceAdornment
+      property: Adornee
+    verified: 2026-09-05
+
+  - id: gui-decal-texture
+    claim: "Decal.Texture exists (ContentId; deprecated in favor of ColorMap/ColorMapContent)"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: Decal
+      property: Texture
+    verified: 2026-09-05
+
+  - id: gui-videoplayer-video
+    claim: "VideoPlayer.VideoContent exists (Content); VideoPlayer has no 'Video' property (that is VideoFrame)"
+    files:
+      - path: skills/roblox-gui/references/full.md
+    check:
+      type: property_exists
+      class: VideoPlayer
+      property: VideoContent
+    verified: 2026-09-05
+
+  - id: npc-humanoid-applydescription-exists
+    claim: "Humanoid:ApplyDescription(description) applies avatar appearance at runtime"
+    files:
+      - path: skills/roblox-npc-ai/references/full.md
+    check:
+      type: member_exists
+      class: Humanoid
+      member: ApplyDescription
+    verified: 2026-09-05
+
+  - id: npc-humanoiddescription-shirt-exists
+    claim: "HumanoidDescription.Shirt holds the classic shirt asset ID"
+    files:
+      - path: skills/roblox-npc-ai/references/full.md
+    check:
+      type: property_exists
+      class: HumanoidDescription
+      property: Shirt
+    verified: 2026-09-05
+
+  - id: npc-shirt-shirttemplate-exists
+    claim: "Shirt.ShirtTemplate is the classic clothing content ID"
+    files:
+      - path: skills/roblox-npc-ai/references/full.md
+    check:
+      type: property_exists
+      class: Shirt
+      property: ShirtTemplate
+    verified: 2026-09-05
+
+  - id: luau-patterns-stringvalue-value-exists
+    claim: "StringValue.Value is a string property; Changed fires with the new value"
+    files:
+      - path: skills/roblox-luau-patterns/references/full.md
+    check:
+      type: property_exists
+      class: StringValue
+      property: Value
+    verified: 2026-09-05
+
+  - id: luau-patterns-cframevalue-value-exists
+    claim: "CFrameValue.Value is a CFrame property; Changed fires with the new value"
+    files:
+      - path: skills/roblox-luau-patterns/references/full.md
+    check:
+      type: property_exists
+      class: CFrameValue
+      property: Value
+    verified: 2026-09-05
+
+  - id: physics-lineforce-inversesquarelaw-exists
+    claim: "LineForce.InverseSquareLaw applies 1/distance^2 force falloff along the Attachment0-Attachment1 axis"
+    files:
+      - path: skills/roblox-physics/references/full.md
+    check:
+      type: property_exists
+      class: LineForce
+      property: InverseSquareLaw
+    verified: 2026-09-05
+
+  - id: physics-ikcontrol-type-exists
+    claim: "IKControl.Type takes Enum.IKControlType (Position/Rotation/Transform/LookAt) and selects the solve mode"
+    files:
+      - path: skills/roblox-physics/references/full.md
+    check:
+      type: property_exists
+      class: IKControl
+      property: Type
+    verified: 2026-09-05
+
+  - id: physics-ikcontrol-smoothtime-exists
+    claim: "IKControl.SmoothTime controls seconds of target smoothing"
+    files:
+      - path: skills/roblox-physics/references/full.md
+    check:
+      type: property_exists
+      class: IKControl
+      property: SmoothTime
+    verified: 2026-09-05
+
+  - id: teleport-teleportasync-exists
+    claim: "TeleportService:TeleportAsync(placeId, players, teleportOptions?) is the current server-side teleport method (Teleport/TeleportToPlaceInstance are legacy); yields and can throw, so wrap in pcall"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    check:
+      type: member_exists
+      class: TeleportService
+      member: TeleportAsync
+    verified: 2026-09-05
+
+  - id: teleport-getlocalplayerteleportdata-exists
+    claim: "TeleportService:GetLocalPlayerTeleportData() is the client-side call for reading teleport data on arrival (not GetTeleportData)"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    check:
+      type: member_exists
+      class: TeleportService
+      member: GetLocalPlayerTeleportData
+    verified: 2026-09-05
+
+  - id: teleport-teleportinitfailed-exists
+    claim: "TeleportService.TeleportInitFailed is the event for teleports that fail after initiating (no TeleportFailed event exists)"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    check:
+      type: member_exists
+      class: TeleportService
+      member: TeleportInitFailed
+    verified: 2026-09-05
+
+  - id: badge-awardbadgeasync-exists
+    claim: "BadgeService:AwardBadgeAsync(userId, badgeId) returns a success boolean and is the current awarding method; AwardBadge is deprecated"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    check:
+      type: member_exists
+      class: BadgeService
+      member: AwardBadgeAsync
+    verified: 2026-09-05
+
+  - id: badge-getbadgeinfoasync-exists
+    claim: "BadgeService:GetBadgeInfoAsync(badgeId) yields a dictionary including IsEnabled; check it before awarding"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    check:
+      type: member_exists
+      class: BadgeService
+      member: GetBadgeInfoAsync
+    verified: 2026-09-05
