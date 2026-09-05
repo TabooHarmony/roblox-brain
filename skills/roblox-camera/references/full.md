@@ -301,19 +301,33 @@ camera.CameraType = prevCameraType
 
 ```luau
 local cutsceneId = 0 -- ownership token: a newer cutscene supersedes older ones
+-- The snapshot of the state this cutscene locks. At most one cutscene owns
+-- it: a newer run ADOPTS the pending snapshot instead of re-snapshotting
+-- values it already finds locked to zero.
+local cutsceneSnapshot: {
+    cameraType: Enum.CameraType,
+    walkSpeed: number,
+    jumpPower: number,
+}? = nil
 
 local function playCutscene(cameraPath: {CFrame}, duration: number)
     cutsceneId += 1
     local myId = cutsceneId
 
-    -- Snapshot every value this function will modify, so restoration puts
-    -- back the player's actual state (custom walk speed, any camera mode).
-    local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-    local saved = {
-        cameraType = camera.CameraType,
-        walkSpeed = humanoid.WalkSpeed,
-        jumpPower = humanoid.JumpPower,
-    }
+    -- Adopt the prior run's snapshot if one is pending; only the FIRST
+    -- cutscene reads the player's live values. A replacement re-snapshot
+    -- would capture our own locked zeros and restore them as if they were
+    -- the player's real state.
+    local saved = cutsceneSnapshot
+    if not saved then
+        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+        saved = {
+            cameraType = camera.CameraType,
+            walkSpeed = humanoid.WalkSpeed,
+            jumpPower = humanoid.JumpPower,
+        }
+        cutsceneSnapshot = saved
+    end
 
     camera.CameraType = Enum.CameraType.Scriptable
     humanoid.WalkSpeed = 0
@@ -325,18 +339,24 @@ local function playCutscene(cameraPath: {CFrame}, duration: number)
         tween:Play()
         tween.Completed:Wait() -- also resumes if a newer tween cancels this one
         if cutsceneId ~= myId then
-            return -- superseded: the newer cutscene owns camera and movement
+            return -- superseded: the newer cutscene owns camera, movement,
+                  -- AND the pending snapshot — leave it pending for that run
         end
     end
 
-    -- Restore the snapshot, never hardcoded defaults.
+    -- Restore the snapshot, never hardcoded defaults. Only the newest run
+    -- reaches here (older runs returned early), and the snapshot still
+    -- pending is the original player state.
     humanoid.WalkSpeed = saved.walkSpeed
     humanoid.JumpPower = saved.jumpPower
     camera.CameraType = saved.cameraType
+    cutsceneSnapshot = nil -- state is restored: nothing pending
 end
 ```
 
-If cutscenes can overlap, have a newer run adopt the first run's snapshot instead of re-snapshotting values it finds already locked to zero.
+Overlapping runs are safe by construction: the first run snapshots the live
+values; every superseding run reuses that same snapshot; only the run that
+finishes last (the current owner) restores it and clears the pending slot.
 
 ### Screen shake
 

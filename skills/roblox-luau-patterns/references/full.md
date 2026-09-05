@@ -250,10 +250,12 @@ function Pool:get(): (Instance, any)
 end
 
 function Pool:release(obj: Instance, lease: any): boolean
-    -- Only the live lease may return obj: duplicate releases (same token
-    -- twice), stale tokens from delayed callbacks after the object was
-    -- re-acquired, and foreign objects all fail this check, so none of
-    -- them can create an available entry.
+    -- Only the live lease may return obj. A nil lease must NEVER validate:
+    -- for an unowned object _leases[obj] is nil, so a nil lease would
+    -- compare equal and admit a duplicate pool entry.
+    if lease == nil then
+        return false
+    end
     if self._leases[obj] ~= lease then
         return false
     end

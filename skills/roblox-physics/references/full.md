@@ -238,8 +238,12 @@ local function disableRagdoll(character: Model)
 end
 
 -- Tolerate characters destroyed mid-ragdoll: drop the record so it cannot
--- leak. Illustrative; wire this when the character spawns:
-local connection = character.AncestryChanged:Connect(function()
+-- leak. Illustrative; wire this when the character spawns. Declare the
+-- local FIRST so the handler closes over a real upvalue instead of its own
+-- initializer — referencing `connection` inside its own `local` declaration
+-- reads a nil upvalue in the handler body.
+local connection: RBXScriptConnection
+connection = character.AncestryChanged:Connect(function()
     if not character.Parent then
         ragdollState[character] = nil
         connection:Disconnect()

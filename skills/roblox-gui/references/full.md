@@ -107,24 +107,36 @@ local function render()
     spinner.Visible = busy
 end
 
-local REQUEST_TIMEOUT = 8 -- seconds
+local REQUEST_TIMEOUT = 8 -- seconds; bounds both the request and the refresh
 
 buyButton.Activated:Connect(function()
     if state.requestId or not state.selectedId then
         return
     end
     state.requestId = HttpService:GenerateGUID(false)
+    local myId = state.requestId -- token: only THIS purchase's timers act
     render()
-    BuyItem:FireServer(state.requestId, state.selectedId)
+    BuyItem:FireServer(myId, state.selectedId)
 
     -- Bound the pending state: silence can mean a lost request OR a
     -- committed purchase whose response never arrived.
     task.delay(REQUEST_TIMEOUT, function()
-        if state.requestId then
-            statusLabel.Text = "Purchase outcome unknown. Refreshing..."
-            render()
-            RefreshPurchases:FireServer() -- reconcile; never blind-retry
+        -- Token check: if this purchase already resolved, or a NEWER
+        -- purchase is now pending, this old timer must do nothing.
+        if state.requestId ~= myId then
+            return
         end
+        statusLabel.Text = "Purchase outcome unknown. Refreshing..."
+        RefreshPurchases:FireServer(myId) -- reconcile; never blind-retry
+        -- Bound the refresh too: if no correlated answer arrives, settle
+        -- into an explicit unknown state instead of pending forever.
+        task.delay(REQUEST_TIMEOUT, function()
+            if state.requestId == myId then
+                state.requestId = nil -- release the UI; the outcome stays unknown
+                statusLabel.Text = "Purchase outcome unknown. Check your inventory later."
+                render()
+            end
+        end)
     end)
 end)
 
@@ -137,9 +149,18 @@ PurchaseResult.OnClientEvent:Connect(function(id, ok, message)
     render()
 end)
 
--- Authoritative state wins: reconcile durable displays from the server snapshot.
+-- Authoritative state wins, but only when it is actually NEWER than the
+-- pending request: an unrelated background snapshot (fired before the
+-- purchase committed) must not clear the pending state. The server echoes
+-- the reconciled request id in the snapshot it sends in response to
+-- RefreshPurchases; only that correlation settles a pending request.
 InventorySync.OnClientEvent:Connect(function(snapshot)
-    state.requestId = nil
+    if state.requestId then
+        if snapshot.reconciledRequestId ~= state.requestId then
+            return -- older or unrelated snapshot: leave the pending state alone
+        end
+        state.requestId = nil -- correlated reconciliation settles the request
+    end
     statusLabel.Text = snapshot.ownsItem and "Purchased" or "Not purchased"
     render()
 end)
