@@ -755,6 +755,60 @@ class ValidatorRegressionTests(unittest.TestCase):
             self.assertIn("Snapshot: checked against local mirror retrieved 2020-01-01T00:00:00Z", output)
             self.assertIn("not live docs", output)
             self.assertIn("older than 30 days", output)
+
+    def test_api_drift_main_does_not_date_snapshot_from_mismatched_sidecar(self):
+        # R10 regression: main()'s snapshot banner must verify the sidecar
+        # hash against the cached bytes; a tampered sidecar must produce the
+        # hash-mismatch warning, never a dated "retrieved ..." claim.
+        import verify_api_drift as v
+
+        def fail_network(category, name):
+            raise AssertionError(f"unexpected network fetch: {category}/{name}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mirror_dir = root / "vendor" / "creator-docs"
+            class_dir = mirror_dir / "classes"
+            class_dir.mkdir(parents=True)
+            (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")
+            metadata = {
+                "source_url": "https://example.com/Part.yaml",
+                "retrieved_at": "2026-01-01T00:00:00Z",
+                "content_sha256": "0" * 64,  # does not match the cached bytes
+            }
+            (class_dir / "Part.yaml.meta.json").write_text(json.dumps(metadata))
+
+            original_dir = v.MIRROR_DIR
+            original_registry = v.REGISTRY_PATH
+            original_fetch = v.fetch_doc
+            v.MIRROR_DIR = mirror_dir
+            v.REGISTRY_PATH = root / "registry.yaml"
+            v.fetch_doc = fail_network
+            (root / "registry.yaml").write_text(
+                "entries:\n"
+                "  - id: part-exists\n"
+                "    claim: 'Part exists'\n"
+                "    teaching_needles: ['Workspace']\n"
+                "    files:\n"
+                "      - path: skills/roblox-networking/SKILL.md\n"
+                "    check:\n"
+                "      type: member_exists\n"
+                "      class: Part\n"
+                "      member: Position\n"
+            )
+            try:
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = v.main()
+                output = stdout.getvalue()
+            finally:
+                v.MIRROR_DIR = original_dir
+                v.REGISTRY_PATH = original_registry
+                v.fetch_doc = original_fetch
+            self.assertEqual(exit_code, 0)
+            self.assertNotIn("retrieved 2026-01-01", output)
+            self.assertIn("do not match the retrieval metadata hash", output)
+            self.assertIn("snapshot date unknown", output)
             self.assertIn("1 pass, 0 drift, 0 error", output)
 
     def test_api_drift_main_reports_unknown_snapshot_identity(self):

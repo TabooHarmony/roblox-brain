@@ -455,7 +455,26 @@ def main(argv: list[str] | None = None) -> int:
             str(metadata.get("retrieved_at"))
             for category, name in served_from_mirror
             for metadata in [read_snapshot_metadata(category, name)]
+            # R10: only trust a sidecar date when its recorded content hash
+            # matches the actual cached bytes; a mismatched sidecar is a
+            # corrupt/mismatched identity and must not date the snapshot.
             if metadata
+            and str(metadata.get("content_sha256") or "")
+            and (MIRROR_DIR / category / f"{name}.yaml").is_file()
+            and hashlib.sha256((MIRROR_DIR / category / f"{name}.yaml").read_bytes()).hexdigest()
+            == str(metadata.get("content_sha256"))
+        })
+        hash_mismatch = sorted({
+            f"{category}/{name}.yaml"
+            for category, name in served_from_mirror
+            for metadata in [read_snapshot_metadata(category, name)]
+            if metadata
+            and str(metadata.get("content_sha256") or "")
+            and (
+                not (MIRROR_DIR / category / f"{name}.yaml").is_file()
+                or hashlib.sha256((MIRROR_DIR / category / f"{name}.yaml").read_bytes()).hexdigest()
+                != str(metadata.get("content_sha256"))
+            )
         })
         if snapshot_dates:
             dates = ", ".join(snapshot_dates)
@@ -467,6 +486,14 @@ def main(argv: list[str] | None = None) -> int:
             )
             for category, name, age in aged:
                 print(f"   {category}/{name}.yaml ({age}d)")
+        if hash_mismatch:
+            print(
+                f"⚠️ Snapshot identity warning: {len(hash_mismatch)} mirror file(s) whose "
+                "cached bytes do not match the retrieval metadata hash; snapshot date unknown:"
+            )
+            for rel in hash_mismatch:
+                print(f"   {rel}")
+            print("Run: mirror_creator_docs.py --refresh to record verified retrieval metadata")
         if unknown_date:
             print(
                 f"⚠️ Snapshot identity warning: {len(unknown_date)} mirror file(s) have no "
