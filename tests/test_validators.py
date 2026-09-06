@@ -609,6 +609,7 @@ class ValidatorRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             mirror_dir = Path(tmp)
             original_dir = m.MIRROR_DIR
+            original_fetch = m.fetch
             m.MIRROR_DIR = mirror_dir
             m.fetch = lambda url: (_ for _ in ()).throw(RuntimeError("connection reset"))
             try:
@@ -616,6 +617,7 @@ class ValidatorRegressionTests(unittest.TestCase):
                 self.assertEqual((ok, failed), (0, 1))
             finally:
                 m.MIRROR_DIR = original_dir
+                m.fetch = original_fetch
             self.assertFalse((mirror_dir / "classes" / "Part.yaml").exists())
             leftovers = list(mirror_dir.rglob("*"))
             self.assertEqual([p for p in leftovers if p.is_file()], [])  # no tmp debris either
@@ -628,28 +630,32 @@ class ValidatorRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             mirror_dir = Path(tmp)
             original_dir = m.MIRROR_DIR
+            original_fetch = m.fetch
             m.MIRROR_DIR = mirror_dir
             m.fetch = lambda url: b"engine: docs\n"
             try:
                 ok, failed = m.mirror_files({"enums/RunService.yaml"}, verbose=False)
                 self.assertEqual((ok, failed), (1, 0))
+
+                dest = mirror_dir / "enums" / "RunService.yaml"
+                metadata = m.read_metadata(dest)
+                self.assertIsNotNone(metadata)
+                assert metadata is not None
+                self.assertEqual(metadata["source_url"], f"{m.BASE_URL}/enums/RunService.yaml")
+                self.assertIn("retrieved_at", metadata)
+                self.assertEqual(metadata["content_sha256"], m.sha256(b"engine: docs\n"))
+                # Sidecar is additive: cache layout stays plain, no implicit naming coupling.
+                self.assertTrue(dest.is_file())
+                self.assertTrue(m.sidecar_path(dest).is_file())
+                self.assertEqual(m.read_metadata(dest.parent / "absent.yaml"), None)
+
+                corrupt = mirror_dir / "enums" / "Broken.yaml"
+                corrupt.write_text("x: y")
+                m.sidecar_path(corrupt).write_text("{not json")
+                self.assertEqual(m.read_metadata(corrupt), None)
             finally:
                 m.MIRROR_DIR = original_dir
-            dest = mirror_dir / "enums" / "RunService.yaml"
-            metadata = m.read_metadata(dest)
-            self.assertIsNotNone(metadata)
-            self.assertEqual(metadata["source_url"], f"{m.BASE_URL}/enums/RunService.yaml")
-            self.assertIn("retrieved_at", metadata)
-            self.assertEqual(metadata["content_sha256"], m.sha256(b"engine: docs\n"))
-            # Sidecar is additive: cache layout stays plain, no implicit naming coupling.
-            self.assertTrue(dest.is_file())
-            self.assertTrue(m.sidecar_path(dest).is_file())
-            self.assertEqual(m.read_metadata(dest.parent / "absent.yaml"), None)
-
-            corrupt = mirror_dir / "enums" / "Broken.yaml"
-            corrupt.write_text("x: y")
-            m.sidecar_path(corrupt).write_text("{not json")
-            self.assertEqual(m.read_metadata(corrupt), None)
+                m.fetch = original_fetch
 
     def test_api_drift_reports_snapshot_identity_and_age(self):
         # F16 regression: mirror reads surface snapshot identity and warn on
@@ -671,6 +677,11 @@ class ValidatorRegressionTests(unittest.TestCase):
             (class_dir / "Old.yaml").write_text("id: Old\n")
             (class_dir / "Old.yaml.meta.json").write_text(json.dumps(stale_meta))
             (class_dir / "Mystery.yaml").write_text("id: Mystery\n")  # no sidecar
+            # R10 regression: a sidecar whose recorded hash does not match the
+            # cached bytes must NOT be reported as a verified snapshot.
+            (class_dir / "Tampered.yaml").write_text("id: Tampered\n")
+            tampered_meta = dict(fresh_meta, content_sha256="0" * 64)
+            (class_dir / "Tampered.yaml.meta.json").write_text(json.dumps(tampered_meta))
 
             original_dir = v.MIRROR_DIR
             v.MIRROR_DIR = mirror_dir
@@ -679,6 +690,10 @@ class ValidatorRegressionTests(unittest.TestCase):
                     str(v.snapshot_identity("classes", "Part")).startswith("snapshot ")
                 )
                 self.assertIn("metadata", v.snapshot_identity("classes", "Mystery"))
+                self.assertIn("do not match", v.snapshot_identity("classes", "Tampered"))
+                self.assertTrue(
+                    str(v.snapshot_identity("classes", "Tampered")).startswith("snapshot date unknown")
+                )
                 self.assertEqual(v.snapshot_age_days("classes", "Part"), 0)
                 old_age = v.snapshot_age_days("classes", "Old")
                 assert old_age is not None

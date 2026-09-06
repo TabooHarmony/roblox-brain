@@ -86,9 +86,26 @@ Do not silently take a lock just because a player is joining. A false takeover c
 
 ## 5. Atomic updates
 
-Use `UpdateAsync` when the new value depends on the stored value. The transform should be deterministic, small, and safe to run more than once if the service retries it.
+Use `UpdateAsync` when the new value depends on the stored value. The transform should be deterministic, small, and safe to run more than once if the service retries it. The migration it runs must already be in scope, so define `migrate` before this function (see the migration snippet in `## 6. Migration`):
 
 ```luau
+local function migrate(data)
+    data = data or cloneTemplate()
+    data.version = data.version or 1
+
+    if data.version < 2 then
+        data.coins = data.coins or data.gold or 0
+        data.gold = nil
+        data.version = 2
+    end
+    if data.version < 3 then
+        data.settings = data.settings or { music = true, sensitivity = 1 }
+        data.version = 3
+    end
+
+    return data
+end
+
 local function addCoins(userId: number, amount: number): boolean
     -- Reject NaN, infinity, non-integers, and out-of-range amounts.
     if amount ~= amount or amount == math.huge or amount == -math.huge then
@@ -164,26 +181,7 @@ local transfer = {
 
 ## 6. Migration
 
-Migrate data after it is loaded and before gameplay sees it. Each migration should be small, ordered, and testable.
-
-```luau
-local function migrate(data)
-    data = data or cloneTemplate()
-    data.version = data.version or 1
-
-    if data.version < 2 then
-        data.coins = data.coins or data.gold or 0
-        data.gold = nil
-        data.version = 2
-    end
-    if data.version < 3 then
-        data.settings = data.settings or { music = true, sensitivity = 1 }
-        data.version = 3
-    end
-
-    return data
-end
-```
+Migrate data after it is loaded and before gameplay sees it. Each migration should be small, ordered, and testable; the `migrate` shown with `addCoins` in `## 5. Atomic updates` is the pattern:
 
 Stamping the version is part of each migration step, never a substitute for it: a write that bumps `version` without running the migrations leaves fields missing while the record claims to be current. Conversely, if a stored version is newer than `CURRENT_VERSION`, refuse the write rather than overwriting unknown schema. Keep old-field handling until every supported record has migrated or until a deliberate data-retention policy says it can be removed. Test migrations against missing fields, old nested shapes, extra fields, and malformed values.
 

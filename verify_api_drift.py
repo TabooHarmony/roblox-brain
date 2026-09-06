@@ -12,6 +12,7 @@ Exit 1 means drift, parse errors, or network/doc fetch errors were found.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -52,11 +53,22 @@ def snapshot_identity(category: str, name: str) -> str:
 
     Reports retrieval date and source when sidecar metadata exists, so results
     can state which snapshot they were checked against instead of implying the
-    live docs. Without sidecar metadata the snapshot is unknown: the file's
-    presence alone says nothing about when its content was retrieved.
+    live docs. The sidecar's content hash is verified against the actual
+    cached bytes before its identity is trusted: metadata that does not match
+    the file it describes is a corrupt or mismatched sidecar, and is reported
+    as unknown rather than passed off as a verified snapshot. Without sidecar
+    metadata the snapshot is unknown: the file's presence alone says nothing
+    about when its content was retrieved.
     """
     metadata = read_snapshot_metadata(category, name)
     if metadata:
+        mirror_path = MIRROR_DIR / category / f"{name}.yaml"
+        recorded = str(metadata.get("content_sha256") or "")
+        if not mirror_path.is_file() or not recorded:
+            return "snapshot date unknown (retrieval metadata does not describe a verifiable cache; run mirror_creator_docs.py --refresh)"
+        actual = hashlib.sha256(mirror_path.read_bytes()).hexdigest()
+        if actual != recorded:
+            return "snapshot date unknown (cached bytes do not match the retrieval metadata hash; run mirror_creator_docs.py --refresh)"
         retrieved = str(metadata.get("retrieved_at") or "unknown date")
         source = str(metadata.get("source_url") or "unknown source")
         return f"snapshot {retrieved} from {source}"
