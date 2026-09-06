@@ -2,162 +2,35 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [1.7.0] - 2026-09-06
+
+### Added
+
+- Coverage for 23 previously undocumented foundational classes: `EncodingService` and the Math library (luau-core), `EditableImage`/`EditableMesh` procedural geometry and painting (building), `DragDetector`/`UIDragDetector` (input), `TextChatService` routing (networking), `TeleportService` and `BadgeService` with `AwardBadgeAsync` deprecation status (cloud), `UIPageLayout`, `SelectionBox`, `Decal`, and `VideoPlayer` (gui), `HumanoidDescription`, `BodyColors`, `Shirt`, and `Pants` (npc-ai), `LineForce` and `IKControl` (physics), the `ValueBase` family (luau-patterns), `PhysicsService` collision groups, `ProximityPrompt`/`ProximityPromptService`, and `VRService` (physics/interaction).
+- New design contracts in the architecture and Studio MCP references: cross-owner durability limits and recovery contracts, per-call mutation records with destination preflight, and a regression/negative-control test suite.
+- Luau: `const` keyword documentation (Luau 0.711) replacing the stale "const is not Luau syntax" note.
+- Tooling: TS/ECS/package-manager reality checks with receipts (rbxts static at 3.0.0 since 2023, dialect-vs-vanilla caveat, Script Sync release status, Fusion vendor stance); ECS architecture section.
+
+### Changed
+
+- Reference infrastructure hardened: API drift registry expanded to 61 entries pinning new claims; mirror snapshots now verified by SHA-256 against cached bytes before their retrieval dates are trusted.
+- Test suite isolation: mirror/drift tests no longer touch the real developer cache or network; `validate_skills.py` no longer silently drops structural validator errors.
+- Data skills de-overlapped: `roblox-data` / `roblox-server-data` / `roblox-cloud` boundaries cross-linked; micro-optimizations moved from performance to `roblox-luau-patterns`.
+- Studio MCP: official bridge synced to per-call `studio_id` routing.
+- Security: Server Authority migration reality check (cheap for stock characters, rewrite-scale for authored simulation).
+
+### Fixed
+
+- Data persistence: migrations now run before the schema version is stamped; `addCoins` reports cancellation honestly via tagged failure outcomes; deep-copied templates so nested defaults are not shared between profiles; acquisition deadlines enforced; committed balance logged, not pending.
+- Physics: homing steering no longer squares speed on degenerate vectors; antiparallel rotation clamped.
+- Camera: cutscene snapshot restores the correct humanoid when the character changed mid-cutscene; shake rebase strips stale offsets only while the camera still holds our last written CFrame.
+- GUI/monetization: purchase timeout retains the request ID so a correlated response can still resolve (no unsafe retry); spinner stops and buying stays blocked while unresolved.
+- Lifecycle: pool lease validation rejects unowned objects; owned ragdoll cleanup and state restoration; effect cancellation replaced correctly.
+- Server data: queue drain honors the processor's explicit `false` return, not just the `pcall` boolean.
+- Validators and tests: error aggregation no longer silently drops structural failures; interrupted-fetch tests restore monkeypatched state; mirror metadata stamping and hash verification corrected.
+
 ## [1.6.0] - 2026-08-22
 
 ### Added
 
 - New skill: `roblox-collaboration-mode` (skill count now 29). Sets initiative level before any Roblox task: when to act, when to warn, which decisions need the user. Description tuned so hosts discover it on autonomous build requests.
-- Security: Server Authority migration reality check (cheap for stock characters, rewrite-scale for authored simulation).
-- Input: `LastInputTypeChanged` platform detection replacing TouchEnabled gates; DeviceSafeInsets anchoring + 500px min-axis jump-button preset.
-- Performance: Player/Character objects are not auto-destroyed; deferred+pcall destroy pattern for the join/leave server memory leak.
-- Performance: replay/delta state recording (delta-encode, compress, chunk, hash).
-- Physics: CFrame reference-frame section with the moving-platform composition pattern; homing projectile via velocity-aiming steering.
-- Building: terrain import workflow (Gaea -> OBJ -> importer -> voxel conversion, heightmap fast path).
-- GUI: reliable hover via per-frame cursor poll (native MouseEnter/MouseLeave miss when content scrolls under a stationary cursor).
-- Networking: replicate state to subscribed clients (snapshot + delta updates); precision-varied serialization for over-budget remotes.
-- NPC & AI: custom navmesh alternatives to PathfindingService (leads only, not game-ready).
-- Architecture: ordered player lifecycle wiring + client-ready handshake.
-- Camera: ViewportFrame seamless portals (world clone, HRP-crossing teleport).
-- Server data: cached-DataStore leaderboard alternative to OrderedDataStore.
-
-### Changed
-
-- Monetization: policy treatments are a menu for the user, not an agent mandate; no unilateral region-locking; warn once.
-- Collaboration mode: after a visible warning, the user's decision stands; no re-warning.
-- Studio MCP: official bridge synced to per-call `studio_id` routing; `set_active_studio` demoted to legacy note; chrrxs asset workflow documented.
-- Data skills de-overlapped: `roblox-data` / `roblox-server-data` / `roblox-cloud` boundaries cross-linked.
-- Micro-optimizations moved from `roblox-performance` to `roblox-luau-patterns` §10.
-- Cloud: Open Cloud awareness reframed as offer-not-default; OAuth wording tightened.
-- Docs: backfilled changelog entries for v1.4.0 and v1.5.0.
-
-### Fixed
-
-- Networking: NaN/Infinity rejection mechanics; `utf8.len` malformed-UTF-8 twin check; new poison-checks subsection.
-- Security: DataStore-failure vectors (unsaveable payloads, malformed data); replaced a dead gist link.
-- Docs: prose cleanup across all files.
-
-### Special Thanks
-
-- [@nnullcolumn](https://github.com/nnullcolumn) for detailed feedback which helped improve this release.
-
-## [1.5.0] - 2026-08-12
-
-### Added
-
-- Studio MCP bridge matrix: detection guidance and a capability table for the official built-in server vs `chrrxs/robloxstudio-mcp`.
-- Studio MCP multi-place routing for both bridges, with a wrong-place checklist.
-- Structured playtest pattern (START/FINISHED signal injection, poll, stop, cleanup) plus playtest discipline from real-field bug reports.
-- Surfaced underused chrrxs tools: runtime Luau eval with game require-cache, multiplayer playtests, per-peer logs, live breakpoints, profilers, memory breakdown, scene analysis.
-- Multiplayer testing awareness section.
-- Tooling source-of-truth paradigm map (Studio-first / files-first / bidirectional sync) and optional-ecosystem guidance.
-- Open Cloud awareness surface and asset-pipeline menu (generate / search / upload / apply by ID).
-
-### Changed
-
-- Reference char cap raised from 35,000 to 50,000 in `validate_skills.py` and documented.
-- README endorses `chrrxs/robloxstudio-mcp` as the preferred bridge; official built-in noted as working.
-
-### Fixed
-
-- Studio MCP skill no longer assumes one bridge's tool surface; wrong-bridge tool calls corrected on both sides.
-
-## [1.4.0] - 2026-08-11
-
-### Added
-
-- Growth design: LiveOps guidance folded into the existing skill (planning, content cadence, monetization foundations); skill count stays 28.
-- Growth design: practitioner sections for the recommendation algorithm, the highly-engaged-player requirement, known-good practices checklist, monetization playbook, fast-shipping playbook, experiments (ConfigService configs, targeted enrollment, MDE rules), and onboarding.
-- Analytics: Economy Health Signals section (instrumentation-first, event logging for complex economies, health-signal table, diagnose-with-telemetry workflow) with explicit provenance separation of doc-backed formulas from practitioner thresholds.
-
-### Changed
-
-- Growth design updated to June 2026 algorithm behavior: QPTR now combines Play-Through Rate with First-Play Bounce Rate, D28 tracked, 28-day signals window.
-- Growth design aligned to current official docs: 16+ trial phase, 500 unique plays by highly engaged users within 60 days, separate 100-player publishing-fee refund threshold, expedited review fee and timing.
-- Growth design wording humanized (requirement instead of gate; de-viraled take-off framing) and channel/video attribution removed per sourcing policy.
-- Analytics economy-health references compressed under the SKILL.md char cap with honest provenance labels.
-
-## [1.3.0] - 2026-08-07
-
-### Added
-
-- Predictive Streaming guidance, including spawn prefetching and CFrame return optimization.
-- Studio-beta instance-reference attributes and streaming-aware `ObjectValue` behavior.
-- Ads Manager Open Cloud API guidance with test-stage and credential boundaries.
-- Roblox agent documentation indexes for Engine, Open Cloud, full docs, and deprecated APIs.
-- Current Recommended-for-You guidance for retention, monetization, and Home impressions.
-- Tag-driven composition with `CollectionService`, plus player-route and spawn acceptance in existing architecture and building skills.
-- Mesh-backed prop acceptance with `SurfaceAppearance`, collision, provenance, and representative quality-level readback.
-
-### Changed
-
-- Added failure-oriented checks for custom loading, receipt retries, feature-slice review, and large-place readback.
-- Added validation for public catalog drift, annotated Luau fences, empty or future-dated metadata, and exact identifier tethers.
-- Inventoried the release-driving official sources and added a live check for `Workspace.PredictiveStreamingMode` scriptability.
-- Updated GitHub Actions to current Node 24-based runtimes.
-
-## [1.2.1] - 2026-07-29
-
-### Fixed
-
-- Corrected six behavioral claims flagged by community audit in analytics, building, camera, monetization, and performance.
-
-## [1.2.0] - 2026-07-26
-
-### Added
-
-- Added `roblox-growth-design` for evidence-backed discovery, positioning, onboarding, retention, experiments, packaging, and LiveOps diagnosis.
-- Added Luau compilation, claim-to-teaching-file tethering, negative validator tests, and exact installed-content comparison to the release contract.
-
-### Changed
-
-- Reworked architecture around feature ownership, explicit dependencies, bounded startup, and client/server authority instead of service/controller hierarchy.
-- Rewrote Luau core and patterns to remove generic tutorials, framework defaults, inheritance catalogues, and misleading lifecycle advice.
-- Replaced the universal publish checklist with change-scoped, evidence-backed release gates.
-- Consolidated Roblox OAuth guidance into `roblox-cloud` and production footguns into their owning domain skills.
-- Converted `roblox-code-review` to a thin router and made the README the human-facing catalogue.
-- Corrected current analytics, networking, localization, lighting, camera, pathfinding, streaming, monetization, and Server Authority claims.
-
-### Removed
-
-- Removed the generic `roblox-debug` skill. Debugging methodology belongs to the host agent rather than a Roblox-specific knowledge package.
-- Removed `roblox-oauth` after its Roblox-specific material moved into `roblox-cloud`.
-- Removed `roblox-sharp-edges` after its concrete hazards moved into networking, data, monetization, architecture, performance, and Luau skills.
-- Removed the generated `skill_index.md`, its generator, the duplicated code-review reference, and the hidden-loop analytics batcher example.
-
-## [1.1.0] - 2026-07-14
-
-### Changed
-
-- Removed the generic `roblox-economy` skill. Its Roblox-specific material is already covered by monetization, analytics, networking, and security.
-- Refreshed Server Authority guidance across security, networking, physics, NPC AI, animation/VFX, input, and UI references.
-
-## [1.0.0] - 2026-07-13
-
-Initial public release of the Roblox Studio skill library.
-
-### Added
-
-- 31 focused skills covering Luau, architecture, networking, data, UI, physics, animation, audio, lighting, cloud, tooling, localization, debugging, and publishing.
-- `roblox-ui-design` for simulator-style defaults, existing-style inheritance, visual hierarchy, composition, density, and bounded layouts.
-- Progressive disclosure through compact `SKILL.md` files and deeper `references/full.md` references.
-- Roblox Studio MCP guidance for scripting, scene inspection, generated assets, runtime checks, and evidence-based workflows.
-- Current guidance for UnreliableRemoteEvent, packet budgets, ProfileStore, MemoryStore queues, gamepad focus, Parallel Luau, pathfinding performance, and Creator Rewards.
-
-### Improved
-
-- Server-authoritative networking, validation, rate limits, and NaN or infinity handling.
-- Data persistence guidance for session ownership, migrations, failed saves, and profile lifecycle.
-- Cross-platform UI guidance for safe areas, responsive layouts, gamepad navigation, and accessibility.
-- Monetization guidance for Passes, Developer Products, receipts, subscriptions, policy checks, and Creator Rewards.
-- Tooling guidance for Rojo, Wally, Selene, StyLua, Lune, optional RbxUtil modules, and archived-tool caveats.
-
-### Quality and provenance
-
-- Added skill structure validation, regression tests, API drift checks, source URL checks, and version pin checks.
-- Added package installation checks for the published skill set.
-- Re-authored overlapping material independently and removed the unlicensed upstream snapshot.
-- Kept source URLs and temporal platform claims visible for future maintenance.
-
-### Scope
-
-This release is a practical starting point for Roblox Studio work, not a complete reference for every Roblox API or game genre. Platform behavior and policy can change, so current Creator Hub documentation remains authoritative.
