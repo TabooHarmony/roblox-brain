@@ -319,8 +319,10 @@ local function playCutscene(cameraPath: {CFrame}, duration: number)
     -- would capture our own locked zeros and restore them as if they were
     -- the player's real state.
     local saved = cutsceneSnapshot
+    -- Function scope: both the snapshot branch and the lock/restore below
+    -- need the humanoid, so the lookup must not live inside the conditional.
+    local humanoid = character:FindFirstChildWhichIsA("Humanoid")
     if not saved then
-        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
         saved = {
             cameraType = camera.CameraType,
             walkSpeed = humanoid.WalkSpeed,

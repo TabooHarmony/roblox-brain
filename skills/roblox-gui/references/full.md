@@ -99,12 +99,20 @@ local HttpService = game:GetService("HttpService")
 local state = {
     requestId = nil, -- non-nil while a purchase is pending or its outcome is unknown
     selectedId = nil,
+    -- True once the timeout window closed without a correlated answer. The
+    -- request stays recorded (requestId holds) so the UI blocks a FRESH
+    -- same-intent purchase that could double-spend a purchase that may
+    -- still have committed. Reconciliation can still settle it.
+    unresolved = false,
 }
 
 local function render()
     local busy = state.requestId ~= nil
-    buyButton.Active = not busy and state.selectedId ~= nil
-    spinner.Visible = busy
+    -- While a request is recorded — pending OR unresolved — a fresh
+    -- same-intent purchase must stay blocked. Only a correlated result or
+    -- snapshot may release it.
+    buyButton.Active = not busy and not state.unresolved and state.selectedId ~= nil
+    spinner.Visible = busy and not state.unresolved
 end
 
 local REQUEST_TIMEOUT = 8 -- seconds; bounds both the request and the refresh
@@ -128,11 +136,15 @@ buyButton.Activated:Connect(function()
         end
         statusLabel.Text = "Purchase outcome unknown. Refreshing..."
         RefreshPurchases:FireServer(myId) -- reconcile; never blind-retry
-        -- Bound the refresh too: if no correlated answer arrives, settle
-        -- into an explicit unknown state instead of pending forever.
+        -- Bound the refresh too: if no correlated answer arrives, stop the
+        -- spinner but DO NOT discard the operation. The request id stays
+        -- recorded and unresolved=true keeps Buy blocked, because the
+        -- original purchase may still have committed — a fresh same-intent
+        -- purchase could double-spend. Reconciliation (a correlated
+        -- PurchaseResult or echoed InventorySync) can still settle it.
         task.delay(REQUEST_TIMEOUT, function()
             if state.requestId == myId then
-                state.requestId = nil -- release the UI; the outcome stays unknown
+                state.unresolved = true
                 statusLabel.Text = "Purchase outcome unknown. Check your inventory later."
                 render()
             end
@@ -145,6 +157,7 @@ PurchaseResult.OnClientEvent:Connect(function(id, ok, message)
         return -- stale, duplicate, or already-reconciled result
     end
     state.requestId = nil
+    state.unresolved = false
     statusLabel.Text = message
     render()
 end)
@@ -153,13 +166,15 @@ end)
 -- pending request: an unrelated background snapshot (fired before the
 -- purchase committed) must not clear the pending state. The server echoes
 -- the reconciled request id in the snapshot it sends in response to
--- RefreshPurchases; only that correlation settles a pending request.
+-- RefreshPurchases; only that correlation settles a pending request —
+-- including one already marked unresolved.
 InventorySync.OnClientEvent:Connect(function(snapshot)
     if state.requestId then
         if snapshot.reconciledRequestId ~= state.requestId then
             return -- older or unrelated snapshot: leave the pending state alone
         end
         state.requestId = nil -- correlated reconciliation settles the request
+        state.unresolved = false
     end
     statusLabel.Text = snapshot.ownsItem and "Purchased" or "Not purchased"
     render()
