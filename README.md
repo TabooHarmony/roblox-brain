@@ -4,7 +4,7 @@
 
 **A practical skill library for Roblox Studio coding agents.**
 
-Works with Codex, Claude Code, Cursor, and other tools that support agent skills.
+Works with Codex, Claude Code, Cursor, Roblox Assistant, and other tools that support agent skills.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=semver)](https://github.com/TabooHarmony/roblox-brain/releases)
@@ -129,7 +129,6 @@ skills/roblox-gui/
 ## Recommended tooling
 
 - **[chrrxs/robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp):** the recommended Studio MCP server. Open source (MIT), and adds runtime debugging, multiplayer playtests, profiling, per-instance routing, and more. The official [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) built into Studio works fine as well if you prefer the built-in option.
-- **[codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp):** local codebase memory and structural search, saves a lot of time and tokens.
 
 ## Contributing
 
