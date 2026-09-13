@@ -1,58 +1,52 @@
 ---
 name: roblox-server-data
 description: "Use for Roblox server or cross-server data: OrderedDataStore leaderboards, MessagingService, world state, seasons, or guilds."
-last_reviewed: 2026-08-21
+last_reviewed: 2026-09-13
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/OrderedDataStore
   - https://create.roblox.com/docs/reference/engine/classes/MessagingService
-  - https://create.roblox.com/docs/reference/engine/classes/GlobalDataStore
   - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreService
-  - https://create.roblox.com/docs/reference/engine/classes/MemoryStoreQueue
-  - https://devforum.roblox.com/t/partyservice-plus-party-matchmaking-framework/4668883
+  - https://create.roblox.com/docs/reference/engine/classes/DataStoreService
+  - https://create.roblox.com/docs/cloud-services/data-stores/right-to-be-forgotten
+  - https://create.roblox.com/docs/cloud-services/data-stores/error-codes-and-limits
 ---
 
 # Roblox Server & Shared Data
 
 ## When to Load
 
-Load for server-level or cross-server data: leaderboards (OrderedDataStore), cross-server messaging (MessagingService), temporary queues and sorted maps (MemoryStoreService), shared world state, persistent non-player data, season/guild data. For player data (DataStore, ProfileStore, session locking), use `roblox-data`; for Open Cloud and external APIs, use `roblox-cloud`.
+Load for server-level or cross-server data: leaderboards (OrderedDataStore), cross-server messaging (MessagingService), queues and sorted maps (MemoryStoreService), shared world state, non-player persistence, season or guild data. For player data, use `roblox-data`; for Open Cloud, use `roblox-cloud`.
 
 ## Quick Reference
 
 ### OrderedDataStore (Leaderboards)
-- Sortable DataStore. Keys are strings; use a stable key such as `tostring(UserId)`.
-- Values are integers used for sorting; choose the sign and ordering intentionally.
+- Sortable DataStore. Keys are strings (`tostring(UserId)`); values are integers used for sorting.
 - `GetSortedAsync(ascending, pageSize, minValue, maxValue)` → sorted pages
-- For leaderboards only, not player data
-
-```luau
-local D = game:GetService("DataStoreService")
-local store = D:GetOrderedDataStore("LeaderboardCoins")
-store:SetAsync(tostring(player.UserId), playerCoins)
-local top10 = store:GetSortedAsync(false, 10):GetCurrentPage()
-```
+- `BatchGetAsync(keys)`: multi-key read, ordered stores only; missing keys are omitted
+- Budget: poll `GetRequestBudgetForRequestType(OrderedWrite)` before bursts (per server: 30 + numPlayers x 5 writes/min)
+- For leaderboards only, never for player saves
+- Keep the user ID a static substring in keys (`player_<UserId>`) so RTBF templates match; hashed keys make erasure manual
 
 ### MessagingService (Cross-Server)
-- Real-time server communication: `SubscribeAsync` / `PublishAsync`
-- No delivery or ordering guarantee; design for idempotency.
+- `SubscribeAsync` / `PublishAsync`; no delivery or ordering guarantee, so design for idempotency.
 
 ### GlobalDataStore (Shared State)
-- Persistent non-player state such as guilds, seasons, and counters.
-- Use `UpdateAsync`; never use it for player session data.
+- Persistent non-player state (guilds, seasons, counters). Use `UpdateAsync`; never for player session data.
 
 ### MemoryStoreService (Temporary Coordination)
-- Queues and sorted maps for expiring matchmaking, leases, and coordination.
+- Queues and sorted maps for expiring matchmaking, leases, coordination.
 - Remove a read batch only after successful, idempotent processing.
-- Use MessagingService or TeleportData for notification and handoff.
 
 ### Cross-Server Patterns
 - Register servers with expiring heartbeats; use MessagingService for notifications.
 
+### User Identity
+- New code identifies users with `player.User` (`User.Id`, `DomainType`, `DomainId`); `UserId` stays valid. Domain IDs are per-experience, so keep cross-server keys on `UserId` and never mix the two.
+
 ### Pitfalls
-- MessagingService is fire-and-forget: no delivery guarantee, no ordering
-- GlobalDataStore has same rate limits as player DataStores; don't spam
-- OrderedDataStore keys are strings; values are integers used for sorting
+- MessagingService: fire-and-forget, unordered, cross-server latency; not for time-critical work
+- GlobalDataStore: same rate limits as player DataStores
 - Never store Instances; serialize to primitives first
-- UpdateAsync for any shared counter to prevent lost updates
+- `SetAsync` overwrites without reading; use `UpdateAsync` for shared counters
 
 **Need more detail?** Load `references/full.md` for the complete reference with code examples, API tables, and edge cases.

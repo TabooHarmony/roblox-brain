@@ -61,6 +61,48 @@ end
 - `GetSortedAsync` returns pages, not a flat list; use pagination
 - Rate limits apply same as regular DataStores
 
+### Batch reads: `BatchGetAsync`
+
+`GlobalDataStore:BatchGetAsync(keys, options?)` retrieves multiple ordered-data-store keys in a single request. Per the docs it is currently only supported on `OrderedDataStore`; calling it on a standard `GlobalDataStore` or `DataStore` throws an error. Unlike `GetAsync`, it returns no `DataStoreKeyInfo`, because ordered stores do not support versioning or metadata. <!-- temporal: 2026-09 -->
+
+- Returns a dictionary mapping each key to a table with a `value` field (for example `coins = { value = 100 }`).
+- Keys that do not exist or have empty values are omitted from the result, not returned as nil.
+- The `keys` array needs at least one key, at most a server-configured maximum (default 100). Exceeding it throws.
+- Each call counts against the ordered read budget based on the number of keys requested.
+
+```luau
+local keys = {"player_111", "player_222", "player_333"}
+local success, results = pcall(function()
+    return coinStore:BatchGetAsync(keys)
+end)
+if success then
+    for _, key in keys do
+        local entry = results[key]
+        if entry then
+            print(key .. " : " .. tostring(entry.value))
+        else
+            print(key .. " has no saved entry")
+        end
+    end
+end
+```
+
+### Reading request budgets
+
+`DataStoreService:GetRequestBudgetForRequestType(requestType)` returns the number of requests the current place can still make for a `DataStoreRequestType` (for ordered stores: `OrderedRead`, `OrderedWrite`, `OrderedList`, `OrderedRemove`). Requests beyond the budget are throttled. Poll it before bursts instead of assuming quota headroom; ordered writes default to only 30 + numPlayers x 5 per minute per server.
+
+```luau
+local function waitForBudget(requestType: Enum.DataStoreRequestType)
+    while DataStoreService:GetRequestBudgetForRequestType(requestType) <= 0 do
+        task.wait(1)
+    end
+end
+
+waitForBudget(Enum.DataStoreRequestType.OrderedWrite)
+```
+
+Quota formulas (read, write, list, remove; experience-level and per-server) and the rest of the limits tables are in the `roblox-data` full reference, section Limits and quotas.
+
 ### Leaderboard Alternatives: Cached DataStore
 
 OrderedDataStore is the canonical primitive, but a leaderboard can instead be stored in a standard `DataStore` kept fully loaded in memory, with writes coalesced into batched `UpdateAsync` saves. This "cached board" model trades storage size and in-memory footprint for O(1) rank lookup of arbitrary players (OrderedDataStore only exposes ~100 entries/page) and lets you define custom ordering and non-integer/custom value types. Prefer it when arbitrary-player rank lookup, custom ranking, or API-request throttling (batching many queued saves into a few writes) outweigh a smaller, paginated board. Community leaderboard modules (e.g. Leaderboards+, https://devforum.roblox.com/t/leaderboards-the-ultimate-module-for-global-leaderboards/4706939) are a lead for this pattern.
@@ -354,3 +396,10 @@ end
 - **Lost updates with SetAsync**: always use `UpdateAsync` for shared state. `SetAsync` overwrites without reading.
 - **Serialization**: DataStores only store JSON-compatible types (string, number, boolean, table, nil). No Instances, no functions, no userdata.
 - **Cross-server timing**: MessagingService has latency. Don't rely on it for time-critical operations.
+- **RTBF template matching**: leaderboard keys that embed the user ID as a static string (for example `player_<UserId>`) can be matched by automated right-to-be-forgotten deletion templates; hashed or random keys cannot, making erasure manual. See the `roblox-data` full reference, section Right-to-be-forgotten deletion templates.
+
+## User identity: Player.User versus UserId
+
+`Player.User` is a read-only `User` value: `Id` (a domain-scoped user ID), `DomainType` (`EXPERIENCE` or `OAUTH`), and `DomainId` (the universe ID for experiences). The docs designate it as the standard way to identify users in new code, and engine APIs that accept user IDs also accept `User` values. `UserId` remains valid and is not deprecated. <!-- temporal: 2026-09 -->
+
+For this skill's key schemes the consequence is concrete: a domain user ID is unique per experience, not per account, so it cannot serve as a cross-experience or cross-place identifier. Keep leaderboard keys and cross-server payloads keyed on `UserId`, and never mix `UserId`-based and `User.Id`-based keys in one store: they form disjoint populations with no migration path. If identity must be persisted or transmitted as a value, `User:ToString()` produces a stable, URL-safe string that round-trips through `User.fromString()`.

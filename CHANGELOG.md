@@ -2,6 +2,24 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [1.8.0] - 2026-09-13
+
+### Added
+
+- UI: the styling system (`StyleSheet`, `StyleLink`, `StyleDerive`, `StyleRule`, `StyleQuery`, `$token` usage and the one-sheet-per-tree limit), flex layout with `UIFlexItem` and `UIListLayout.HorizontalFlex`/`VerticalFlex`, and per-corner `UICorner` radii with their beta gate.
+- Luau: new type-solver features (`keyof`, `rawkeyof`, `setmetatable<T, M>`, `type function`, `read` members) with the `UseNewLuauTypeSolver` gate, native code generation gates and instruction ceilings, `@deprecated` syntax, the Lua 5.1 sandbox restrictions, the naming conventions, and a deprecated API catalog (`spawn`, `delay`, `Body*` movers, `LoadAnimation`, `tick()`, `SetPrimaryPartCFrame`, `Part.Velocity`).
+- Data: right-to-be-forgotten deletion templates and their 30-day windows, `DataStoreGetOptions.UseCache`, `BatchGetAsync` (ordered stores), version history (`ListVersionsAsync`/`GetVersionAsync`/`GetVersionAtTimeAsync`/`RemoveVersionAsync`), per-server and per-experience budget formulas, storage limits, and `Player.User` as the domain-scoped identity value.
+- Security: `BanAsync`/`UnbanAsync`/`GetBanHistoryAsync` with `BanConfigType`, the `BanningEnabled` gate, device-block semantics and their limits, sandboxed capabilities (`Instance.Sandboxed`, `Instance.Capabilities`), and client-triggerable interaction instances (`ProximityPrompt`, `ClickDetector`, `DragDetector`) treated as untrusted input.
+- Networking: what does and does not survive a remote call (functions, metatables, mixed tables, `nil` truncation, table copies) and the Server Authority settings bundle with `RunService:SetPredictionMode`.
+- Cloud: the experience secrets store (`HttpService:GetSecret`) covering non-printable `Secret` values, prefix/suffix transforms, per-experience secret count and domain allowlists, and the local playtest failure mode.
+- Tooling: a verification procedure for API claims that works without launching Studio, using the raw creator-docs markdown suffix and the engine class YAML that the drift registry checks against.
+
+### Changed
+
+- Performance: the claim that compressed image formats reduce texture memory is replaced with the documented guidance (match image resolution to on-screen size, trim sheets, transcoding happens on upload). The light-count and remote-fire-rate figures are now labeled practitioner heuristics instead of engine limits, and the documented MicroProfiler frame-time thresholds are listed.
+- Studio MCP: the legacy `set_active_studio` note is reworded to match the current tool set, which routes by `studio_id`.
+- Reference infrastructure: API drift registry expanded to 78 entries; the vendor note records the two MIT skill sources reviewed for this pass and the claims rejected from them.
+
 ## [1.7.0] - 2026-09-06
 
 ### Added

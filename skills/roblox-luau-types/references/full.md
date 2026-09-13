@@ -275,7 +275,114 @@ return Counter
 - When the method is defined with `.` but called with `:` (rare, avoid if possible)
 - In type definitions (function signatures in type aliases always need explicit self)
 
+## New Solver Type Features
+
+<!-- temporal: 2026-09 -->
+Everything in this section requires the **new type solver**. The old solver cannot resolve these constructs: do not delete them, rewrite them into old-solver idioms, or report them as missing in a project still running the old solver. Roblox generalized the new solver on November 20, 2025 (see Strictness Modes above): `nocheck`/`nonstrict` projects were migrated automatically, while strict projects stay on the old solver until they opt in. Opt in per experience with the Workspace property `UseNewLuauTypeSolver` (Scripting category, set to `Enabled`); the Studio beta-feature toggle was removed on January 7, 2026. The separate `LuauTypeCheckMode` property sets the default strictness mode, not the solver. Check which solver a project uses, or set the property explicitly, before editing these features.
+
+### keyof and rawkeyof
+
+Built-in type functions on table types. `keyof<T>` returns the keys of `T` as a union of singleton types; `rawkeyof<T>` ignores metatables.
+
+```luau
+local config = { health = 10, range = 20, team = "red" }
+type ConfigKey = keyof<typeof(config)> -- "health" | "range" | "team"
+
+local function read(key: ConfigKey) -- callers can only pass real keys
+end
+```
+
+### setmetatable<T, M>
+
+The new solver promotes `setmetatable` to a type constructor: `setmetatable<T, M>` builds the table type `T` carrying metatable `M`, without routing through `typeof(setmetatable(...))`.
+
+```luau
+local Mt = {}
+Mt.__index = Mt
+
+type Object = setmetatable<{ value: number }, { __index: typeof(Mt) }>
+
+function Mt.new(value: number): Object
+    return setmetatable({ value = value }, Mt)
+end
+```
+
+The old-solver idiom `typeof(setmetatable({} :: T, Mt))` still works under the new solver; `setmetatable<T, M>` is the clearer form there. In old-solver projects keep the `typeof` idiom, because `setmetatable<T, M>` in type position does not resolve.
+
+### User-defined type functions
+
+Functions that run during analysis and compute a type from types. Declared with `type function`; called with angle brackets like built-ins.
+
+```luau
+type function keyofLike(ty: type)
+    if not ty:is("table") then
+        error("keyofLike expects a table type")
+    end
+    local union = nil
+    for key in ty:properties() do
+        union = if union then types.unionof(union, key) else key
+    end
+    return if union then union else types.singleton(nil)
+end
+
+type Keys = keyofLike<{ name: string, level: number }> -- "name" | "level"
+```
+
+- Runs at analysis time only: no runtime presence, no runtime cost, and no access to runtime functions or script locals.
+- The environment is sandboxed and restricted: the `types` library (constructors and inspectors such as `types.unionof`, `types.singleton`, `types.newtable`, `tabletype:properties()`, `setreadproperty`/`readproperty`) plus `assert`, `error`, `print`, `next`, `ipairs`, `pairs`, `select`, `unpack`, `getmetatable`, `setmetatable`, `rawget`, `rawset`, `rawlen`, `raweq`, `tonumber`, `tostring`, `type`, `typeof`, and the `math`, `table`, `string`, `bit32`, `utf8`, and `buffer` libraries. Nothing else is available.
+- `error()` inside a type function surfaces as a type error at the call site.
+- Status: shipped upstream (luau.org/types/type-functions) and usable on Roblox under the new solver; Roblox staff have confirmed experiences can be published with them, but editor tooling inside type-function bodies is still maturing.
+
+### read table members
+
+The new solver tracks read and write types per property. Prefix a member with `read` to make it read-only:
+
+```luau
+local function describe(box: { read part: Instance })
+    print(box.part.Name)
+    -- box.part = Instance.new("Part") -- type error: read-only
+end
+```
+
+Reads are allowed and writes are type errors, so callers can pass a narrower table (a `{ part: Part }` where `{ read part: Instance }` is expected). Functions defined with `function T.name()` syntax are inferred as read-only members. The read/write split is also visible to user-defined type functions: `ty:properties()` returns `{ [key]: { read: type?, write: type? } }`.
+
+## Function Attributes
+
+### @deprecated
+
+Marks a named function or property as deprecated. The linter warns at every call site and the LSP shows the entry in a distinct style in autocomplete. Both optional string parameters customize the warning: `use` names the replacement, `reason` explains.
+
+```luau
+@deprecated local function oldApi()
+end
+
+@[deprecated { use = "newApi()", reason = "oldApi miscounts negative values" }]
+local function olderApi()
+end
+```
+
+| Form | Warning |
+| --- | --- |
+| `@deprecated` | `Function 'oldApi' is deprecated.` |
+| `use = "newApi()"` | adds `use 'newApi()' instead.` |
+| member function | `Member 'class.func' is deprecated` |
+
+Attributes apply to functions only and are not user-definable. Status: documented upstream at luau.org/attributes and parsed by Studio since release 669; upstream release 0.668 fixed propagation to anonymous functions under the new solver. Treat actual Studio warning behavior as still settling; do not claim it errors or blocks anything.
+
+### Native codegen (--!native / @native)
+
+Roblox-only compiler feature: server-side scripts compile to machine code instead of bytecode. Covered in full in `roblox-luau-core`; the type-relevant facts:
+
+- `--!native` at the top of a Script enables it for all functions in the script (top-level scope only if deemed profitable). `@native` above an individual function enables it per function.
+- Enable `--!optimize 2` alongside: `--!native` benefits from aggressive optimization, and the pairing is the common performance idiom.
+- Annotate hot parameters (`v: Vector3`, not `v`): codegen specializes on type annotations, and wrong or missing hints add runtime checks or drop the function back to the interpreter.
+- Server scoping: documented for server-side scripts. Do not add `--!native` to client scripts expecting the same benefit.
+- Roblox publishes no official speedup number; measure with the Script Profiler instead of claiming a ratio.
+
 ## Common Mistakes
+
+- Using `keyof`, `setmetatable<T, M>`, type functions, or `read` members in an old-solver project and "fixing" the resulting errors by deleting them; they need the new solver (`UseNewLuauTypeSolver`)
+- Assuming upstream-only Luau features are live in the Roblox VM without checking deployment status
 
 - Leaving variables unannotated in `--!nonstrict` → unintentional `any` propagation
 - Replacing useful generic relationships with `any` or overly broad unions
@@ -287,6 +394,11 @@ return Counter
 - Annotating every local variable (noise that hides the important annotations)
 - Exporting internal helper types that clutter the module's public surface
 
+## Solver Migration Rules
+
+- Never delete or "modernize away" new-solver syntax (`keyof`, `setmetatable<T, M>`, `type function`, `read` members) because a toolchain or collaborator reports it as unknown; see [New Solver Type Features](#new-solver-type-features) for the opt-in.
+- Do not add new-solver syntax to a project that has not opted in; the old solver will reject or mangle it.
+
 ## Quality Checklist
 
 - [ ] File has appropriate strictness mode (`--!strict` for maintained code)
@@ -297,3 +409,5 @@ return Counter
 - [ ] Exported types are named, focused, and documented
 - [ ] Casts (`::`) are justified (narrowing, not hiding errors)
 - [ ] No sealed table violations (fields added after annotation)
+- [ ] New-solver features are only used where the new solver is enabled
+- [ ] Time-sensitive claims (solver rollout, attributes, Studio behavior) carry a `<!-- temporal: YYYY-MM -->` marker

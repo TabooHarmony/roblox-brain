@@ -1,8 +1,9 @@
 ---
 name: roblox-tooling
 description: "Use when configuring Roblox tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, luau-lsp, or CI/CD."
-last_reviewed: 2026-08-31
+last_reviewed: 2026-09-13
 sources:
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/Players.yaml
   - https://rojo.space/docs/
   - https://wally.run/
   - https://kampfkarren.github.io/selene/

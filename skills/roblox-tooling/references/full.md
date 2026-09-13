@@ -221,6 +221,17 @@ Roblox publishes LLM-oriented documentation indexes that route an agent to the c
 
 The Engine API and Open Cloud API are separate systems. Engine APIs are Luau objects via `game:GetService()` inside a running experience; Open Cloud APIs are HTTP endpoints called with an `x-api-key` from outside Roblox. Fetching the wrong index produces non-functional code, so route first.
 
+### Verifying one API claim
+
+An index tells you where to look; it does not settle whether a member exists today. To check a specific claim without opening Studio (all verified reachable 2026-09):
+
+- Append `.md` to any docs URL to get the page source instead of the rendered site, for example `https://create.roblox.com/docs/en-us/reference/engine/classes/Players.md`. Class pages carry signatures, parameter tables, security and capability notes, and deprecation tags.
+- For machine-readable answers use the engine reference YAML that backs those pages: `https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/<Class>.yaml`. It lists every property, method, and event with types, thread-safety, security, capabilities, and `Deprecated` tags, which is enough to distinguish "this API exists" from "this API existed".
+- Cross-check community mirrors such as `https://robloxapi.github.io/ref/` when you want a diff view between engine versions. Label it as community-maintained and expect lag; it is not the authority.
+- Practitioners also dump the installed engine's API surface, but a dump only reflects the client you have, so treat it as a local artifact rather than the platform contract.
+
+A verified claim is worth pinning: if you maintain an agent-facing skill library, record the claim with the doc path and the date you checked it, so a later reviewer can re-run the check instead of re-litigating the API.
+
 ## Tooling checklist
 
 - [ ] The project has one documented source-to-Studio workflow.

@@ -1,6 +1,6 @@
 # Luau Core Language: Full Reference
 
-This reference covers the language. Roblox engine behavior belongs in the domain skills.
+This reference covers the language plus the Roblox-facing facts agents need most often: engine deprecations, sandbox deltas from Lua 5.1, the native codegen directives, and Roblox naming conventions. Deeper engine behavior belongs in the domain skills.
 
 ## 1. Values, truthiness, and equality
 
@@ -267,7 +267,124 @@ Roblox's engine service for Base64, hashing, and compression: `game:GetService("
 
 Translate the data model and control flow, not token by token.
 
-## 10. Review checklist
+## 10. Deprecated and inherited APIs
+
+Roblox deprecation is a spectrum. **Deprecated** here means the API carries an official Deprecated tag (creator docs show it struck through). **Discouraged** means it works today, has no tag, but Roblox documents a reason to avoid it. Both get replacements; only the first group will ever show deprecation tooling.
+
+<!-- temporal: 2026-09 -->
+Verify current tags against the class pages before quoting them in reviews; Roblox adds tags over time and legacy globals live in [Roblox globals](https://create.roblox.com/docs/reference/engine/globals/RobloxGlobals).
+
+### Officially deprecated (tagged)
+
+| Deprecated | Replacement | Notes |
+| --- | --- | --- |
+| `wait(seconds)` | `task.wait(seconds)` | Old global throttles to ~29 ms minimum and returns `(elapsed, gameTime)`; `task.wait` resumes on the next Heartbeat step without throttling. |
+| `spawn(f)` | `task.spawn(f)` | Old global throttles the first resumption and passes extra args; `task.spawn` runs immediately. |
+| `delay(t, f)` | `task.delay(t, f)` | Same throttling issues as `spawn`. |
+| `:connect` / `:wait` (lowercase) | `:Connect` / `:Wait` | Legacy lowercase aliases on `RBXScriptSignal`; PascalCase names are canonical and get new behavior. |
+| `BodyPosition` | `AlignPosition` | Legacy `BodyMover` family, all deprecated. |
+| `BodyGyro` | `AlignOrientation` | |
+| `BodyVelocity` | `LinearVelocity` | |
+| `BodyForce`, `BodyThrust` | `VectorForce` | |
+| `BodyAngularVelocity` | `AngularVelocity` (or `Torque`) | |
+| `RocketPropulsion` | `LineForce` / `AlignPosition` + `AlignOrientation` | |
+| `Humanoid:LoadAnimation` | `Animator:LoadAnimation` | Create the `Animator` on the server; calling the deprecated method from a client can create a client-only `Animator` that never replicates. Same applies to `AnimationController:LoadAnimation`. |
+| `Part.Velocity` / `Part.RotVelocity` | `AssemblyLinearVelocity` / `AssemblyAngularVelocity` | Assembly-level physics; per-part behavior was inconsistent for non-root parts. Use `BasePart:GetVelocityAtPosition()` for a specific point. |
+| `Model:SetPrimaryPartCFrame` | `PVInstance:PivotTo` | `GetPrimaryPartCFrame` → `PVInstance:GetPivot`. `PivotTo` needs no `PrimaryPart` and preserves offsets. |
+
+Roblox's own deprecated-to-modern quick reference (creator docs `reference/engine/llms.txt`) confirms the mover and task rows above.
+
+### Functional but discouraged (no official tag)
+
+| API | Why discouraged | Use instead |
+| --- | --- | --- |
+| `tick()` | Not officially deprecated, but can be off by up to one second and returns inconsistent results across time zones and operating systems (Roblox's own docs say this). | `os.time()` (Unix seconds), `os.clock()` (benchmarks), global `time()` (session time), `workspace:GetServerTimeNow()` (synced), `DateTime` for timestamps. |
+| `Instance.new(class, parent)` | Works, but the docs mark the parent argument as not recommended: parenting first makes every later property write replicate and re-run listeners. | Create, set properties, then assign `.Parent` last. Setting parent in the constructor is acceptable only when no properties are set afterwards or the parent is not yet replicated. |
+
+Treat "deprecated" and "discouraged" as distinct when editing code: rewrite deprecated calls, and flag discouraged ones only when the surrounding code is already being touched.
+
+## 11. Luau sandbox versus Lua 5.1
+
+Luau starts from Lua 5.1 and subtracts. When porting Lua code or answering "why is X missing," these removals are intentional sandbox design, not bugs (sources: [luau.org/sandbox](https://luau.org/sandbox), [Luau globals](https://create.roblox.com/docs/reference/engine/globals/LuaGlobals)).
+
+| Removed or reduced | Detail |
+| --- | --- |
+| `io` library | Removed entirely (file and process access). |
+| `package` library | Removed entirely (native module loading). |
+| `dofile` / `loadfile` | Removed (filesystem access). |
+| `string.dump` | Removed; bytecode access is unsafe to validate. `loadstring` accepts source only, never bytecode. |
+| `debug` library | Removed to a large extent; only `debug.traceback` and `debug.info` remain. |
+| `os` | Reduced to `os.clock`, `os.date`, `os.difftime`, `os.time`. No `os.execute`, `os.exit`, `os.getenv`, `os.rename`, `os.remove`, `os.tmpname`. |
+| `collectgarbage` | Only `"count"` works; other options are rejected because GC manipulation breaks isolation. `collectgarbage()` is effectively a weaker `gcinfo()` and deprecated in Roblox. |
+| `newproxy` | Accepts `nil`/`false` (bare userdata) or `true` (empty metatable); the generator-function form is gone. |
+| Builtin globals | Libraries, the string metatable, and the builtin globals table are read-only; monkey-patching `string` or `_G` builtin tables fails. Each script gets its own globals table that reads through to the builtins, so per-script globals still work. |
+| `getfenv` / `setfenv` | Still present (legacy code relies on them) but costly to isolation: they can inject globals into callers on the stack. Avoid in new code; `debug.info`/upvalues and module returns cover the legitimate cases. |
+
+## 12. The vector library
+
+Luau's native `vector` type underlies `Vector3`-style math. In Roblox, the library is the 3-wide VM type that `Vector3` interoperates with; the library itself is small ([luau.org/library](https://luau.org/library)).
+
+```luau
+local v = vector.create(1, 2, 3)
+local m = vector.magnitude(v)
+local n = vector.normalize(v)
+local d = vector.dot(v, n)
+local c = vector.cross(v, n)
+local a = vector.angle(v, n)
+-- componentwise: vector.floor / ceil / abs / sign / clamp / min / max
+-- constants: vector.zero, vector.one
+```
+
+- Components are `x`/`y`/`z` (case-insensitive access); vectors are immutable, so there is no component write.
+- Operator support: `+`, `-`, `*`, `/`, unary minus, and indexing are built into the VM, which is why vector math is fast under `--!native`.
+- **There is no `vector.lerp`.** Linear interpolation is not in the library; use `math.lerp(a, b, t)` per component, or Roblox's `Vector3:Lerp()` for the engine datatype. Do not invent `vector.lerp` when translating code.
+- 4-wide mode (`LUA_VECTOR_SIZE`) exists for other embedders, not for Roblox, which is 3-wide.
+
+## 13. Naming conventions
+
+Roblox's official Lua style guide ([roblox.github.io/lua-style-guide](https://roblox.github.io/lua-style-guide/), verified 2026-09) sets the house conventions for Luau code:
+
+| Construct | Convention | Example |
+| --- | --- | --- |
+| Classes, enum-like objects, module publics | `PascalCase` | `DataLoader`, `RobuxShop` |
+| Locals, member values, functions | `camelCase` | `currentRound`, `beginVote()` |
+| Local constants | `UPPER_SNAKE_CASE` | `MAX_RETRIES = 5` |
+| Private members | underscore-prefixed camelCase | `_connection` |
+| Acronyms inside a name | Only capitalize the first letter | `aJsonVariable`, `MakeHttpCall` |
+| Abbreviation as a set | Keep it fully capitalized | `anRGBValue`, `GetXYZ` |
+| All words | Spell words out; avoid abbreviations | `label`, not `lbl` |
+
+The acronym rule has two cases: an acronym like `JSON` or `HTTP` becomes `Json`/`Http` mid-name, while a set abbreviation like `RGB` or `XYZ` stays uppercase because it stands for full words. Spell-out is a readability rule, not a length limit; prefer the clearer name even when it is longer.
+
+## 14. Native codegen (--!native / @native)
+
+Roblox compiler feature: server-side Luau compiles to machine code instead of VM bytecode. Best for numeric, table, and `buffer` heavy code with few library or API calls. Sources: [native code generation](https://create.roblox.com/docs/luau/native-code-gen), [Luau comments](https://create.roblox.com/docs/luau/comments). <!-- temporal: 2026-09 -->
+
+```luau
+--!native
+--!optimize 2
+
+local function kernel(v: Vector3, n: number): number
+    local sum = 0
+    for i = 1, n do
+        sum += v.X * i
+    end
+    return sum
+end
+```
+
+- **Scoping: server-side.** The docs describe `--!native` for server-side scripts; do not add it to client scripts expecting the documented behavior.
+- `--!native` on a Script compiles all of its functions (and the top-level scope only if deemed profitable). `@native` above an individual function narrows it to that function.
+- **Pair with `--!optimize 2`.** Level 2 enables optimizations that harm debuggability (Studio test default is 1, live games default to 2); the pairing is the standard native idiom.
+- **Instruction ceilings** (hit = Output window error, fix by splitting functions):
+  - 64K instructions in a single code block (`exceeded single code block instruction limit`)
+  - 32K internal blocks in one function (`exceeded function code block limit`)
+  - 1M instructions per script (`exceeded total module instruction limit`)
+  - A memory limit for natively compiled code, separate from the 1M instruction ceiling; the docs warn that a natively compiled module consuming near a million instructions "takes up a lot of memory and you may exceed the memory limit."
+- **No official speedup number is published.** Roblox says only that it can improve execution speed for some server scripts. Never quote a benchmark ratio as official; measure with the Script Profiler (native functions are marked) and `debug.dumpcodesize()`.
+- Deoptimizers that drop functions back to the interpreter: `getfenv`/`setfenv`, builtin calls with non-numeric arguments, and passing values that violate annotated parameter types. Annotate hot parameters (especially `Vector3`) so codegen can specialize.
+
+## 15. Review checklist
 
 - Syntax is Luau, not JavaScript, Python, or a different Lua version.
 - Only `false` and `nil` are treated as falsy.
@@ -280,4 +397,7 @@ Translate the data model and control flow, not token by token.
 - Method definition and call syntax agree.
 - Multiple return values preserve success, absence, and error states.
 - String patterns are Lua patterns, not unverified regex translations.
+- Removed globals (`io`, `package`, `string.dump`, absent `os` members) are treated as sandbox design, not ported from Lua 5.1 assumptions.
+- Deprecated APIs use their replacements; discouraged APIs are flagged with reasons, not called silently.
+- Names follow the Roblox style guide: PascalCase types/publics, camelCase locals, `LOUD_SNAKE_CASE` constants (often written UPPER_SNAKE_CASE elsewhere), first-letter-only acronyms, spelled-out words.
 - Engine behavior and project architecture are routed to their canonical skills.

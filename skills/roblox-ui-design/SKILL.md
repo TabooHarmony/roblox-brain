@@ -1,11 +1,13 @@
 ---
 name: roblox-ui-design
 description: "Use for Roblox UI composition, hierarchy, visual systems, style inheritance, accessibility, and design review."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-09-13
 sources:
   - https://create.roblox.com/docs/production/publishing/adaptive-design
-  - https://create.roblox.com/docs/production/publishing/accessibility
   - https://create.roblox.com/docs/ui/styling
+  - https://create.roblox.com/docs/ui/list-flex-layouts
+  - https://create.roblox.com/docs/reference/engine/classes/UIFlexItem
+  - https://create.roblox.com/docs/reference/engine/classes/UICorner
   - original
 ---
 
@@ -13,36 +15,41 @@ sources:
 
 ## When to Load
 
-Load for UI design or review. Existing style and art direction take priority. Otherwise derive a restrained system from the game fantasy and screen job. Load `roblox-gui` for mechanics.
+Load for UI design or review. Existing art direction takes priority; otherwise derive a restrained system from game fantasy and screen job. Load `roblox-gui` for mechanics.
 
 ## Quick Reference
 
 ### Establish the visual system
 
-1. Inspect existing surfaces, type roles, borders, depth, icons, spacing, and action colors. Reuse consistent tokens.
-2. If no style exists, name the screen job and game fantasy before choosing colors, fonts, or decoration.
-3. Define a small token set: background, surface, raised surface, text, muted text, accent, danger, border, radius, spacing, and type roles.
-4. Choose density from the task and device. A HUD, inventory grid, settings list, and purchase prompt should not share one topology.
-5. Use simulator styling only when the game or art direction calls for it. The full reference keeps an optional recipe.
+1. Inspect existing surfaces, type roles, borders, depth, icons, spacing, and action colors; reuse tokens.
+2. If no style exists, name the screen job and game fantasy before choosing colors or decoration.
+3. Define a small token set: surfaces, text roles, accent, danger, border, radius, spacing.
+4. Match density to task and device; a HUD, inventory grid, and purchase prompt need different topologies.
 
 ### Core principles
 
-- **Topology:** choose single-focus, collection, compare, HUD, list, or another justified shape. Do not force every task into a centered modal.
-- **Hierarchy:** one object, state, or action gets the strongest contrast and scale. Quiet secondary content.
-- **Flow:** each repeated flow has one owner: `UIListLayout`, `UIGridLayout`, or shared-column math.
-- **Density:** size the complete panel around useful content. Do not stretch shells or add metadata to occupy space.
-- **Bounds:** sum widths, gaps, padding, borders, and minimums. Keep strokes and backings inside parents.
-- **Alignment:** use shared layouts, fixed icon slots, and matching anchors.
-- **State:** active, available, locked, completed, selected, and disabled states need more than color.
-- **Input:** design hover only where it exists. Touch, gamepad focus, keyboard, and reduced motion need equivalent feedback.
-- **Verification:** inspect representative target viewports for clipping, overflow, dead space, type, hierarchy, and focus order.
+- **Topology:** one justified shape per screen job; not everything is a centered modal.
+- **Hierarchy:** one object or action gets the strongest contrast and scale.
+- **Flow:** one owner per repeated flow: `UIListLayout`, `UIGridLayout`, or shared-column math.
+- **Density:** size panels around useful content, not viewport space.
+- **Bounds:** sum widths, gaps, padding, borders, and minimums.
+- **Alignment:** shared layouts, fixed icon slots, matching anchors.
+- **State:** active, locked, selected, and disabled states need more than color.
+- **Input:** hover only where it exists; touch, gamepad, keyboard, and reduced motion need equivalents.
+- **Verification:** inspect target viewports for clipping, overflow, hierarchy, and focus order.
+
+### Styling, flex, and corners
+
+- Stylesheets: `StyleSheet` rules attach via `StyleLink`, overriding properties globally. Tokens are sheet attributes used as `$Token`; themes swap via `StyleDerive`. Prefer styles for shared values, `:Hover` states, and `@Query` rules (input, text size, reduced motion).
+- Flex: `UIListLayout.HorizontalFlex`/`VerticalFlex` at container level, `UIFlexItem` per child. No `UIFlexLayout` class exists.
+- Per-corner `UICorner` radii (`TopLeftRadius` etc.) need the New UI Capabilities beta; never style `CornerRadius` and individual radii together.
 
 ### Neutral fallback
 
-Use one restrained surface and border language, one display role, one body role, and one accent. Let game content, artwork, and action importance create identity. Prefer readable contrast and clear grouping over thick outlines, ornamental depth, or genre assumptions.
+One restrained surface and border language, one display role, one body role, one accent. Prefer readable contrast over ornamental depth.
 
 ### Anti-patterns
 
-Oversized shells, guessed offsets in managed layouts, drifting actions, blank item boxes, color-only state, mouse-only feedback, decoration before hierarchy, and a familiar simulator skin pasted over unrelated art direction.
+Oversized shells, guessed offsets in managed layouts, blank item boxes, color-only state, mouse-only feedback, decoration before hierarchy.
 
-> Style inference, optional simulator recipe, composition, interaction states, and QA: [references/full.md](references/full.md)
+> Stylesheets, flex, per-corner radii, composition, states, and QA: [references/full.md](references/full.md)

@@ -59,7 +59,7 @@ Use radius hierarchy, not one value everywhere:
 - Badge: circular
 - Combat/action tab: optionally angular or slanted
 
-Applying the same radius to every nested element erases hierarchy. A square outer shell with rounded inner cards (Blox Fruits) is stronger than uniform 16px rounding everywhere.
+Applying the same radius to every nested element erases hierarchy. A square outer shell with rounded inner cards (Blox Fruits) is stronger than uniform 16px rounding everywhere. For per-corner radii, beta status, and stylesheet interaction, see Per-Corner Radii below.
 
 ### Typography
 
@@ -495,6 +495,140 @@ end
 
 `Activated` covers mouse, touch, and gamepad activation. Selection events provide a non-hover focus state. Add a separate disabled-state path that sets `Active = false` and changes more than color.
 
+## Style Sheets, Tokens, and Queries
+
+Roblox's styling system is a CSS-like engine feature that applies property overrides from stylesheets instead of per-instance writes. It is the foundation of the Style Editor and the token pipeline.
+
+### Core Instances
+
+| Instance | Role |
+|---|---|
+| `StyleSheet` | Holds rules and token attributes. Tokens are instance attributes whose values may be any property-compatible type. |
+| `StyleRule` | One selector plus overridden properties, set through `SetProperties()` or `SetProperty()`. Parent rules to a `StyleSheet`. |
+| `StyleLink` | Attaches one stylesheet and its rules to a `ScreenGui` and every `GuiObject` inside it. Only one stylesheet can apply to a given tree. |
+| `StyleDerive` | Parented under a `StyleSheet`; points at another stylesheet whose rules and tokens the parent inherits. `Priority` breaks ties (higher wins). |
+| `StyleQuery` | Named conditions that enable an `@name` rule while they hold. |
+
+Sheets live outside the UI tree. The documented layout puts a tokens sheet, theme sheets, and the design sheet in `ReplicatedStorage` (a Style Editor design sheet lands in its `Design` folder), with a `StyleLink` under the `ScreenGui` doing the attaching. A sheet may exist outside the DataModel, but then it cannot be derived or linked.
+
+### Attaching and Deriving
+
+```luau
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Tokens sheet: attributes are the tokens
+local tokens = Instance.new("StyleSheet")
+tokens.Name = "Tokens"
+tokens.Parent = ReplicatedStorage
+tokens:SetAttribute("Accent", Color3.fromHex("FF0099"))
+
+-- Theme sheet derives the tokens and re-exports themed values
+local theme = Instance.new("StyleSheet")
+theme.Name = "ThemeDark"
+theme.Parent = ReplicatedStorage
+theme:SetDerives({ tokens }) -- spawns StyleDerive instances in priority order
+theme:SetAttribute("PrimaryAction", "$Accent") -- $token reference
+
+-- Link the sheet that owns the rules
+local link = Instance.new("StyleLink")
+link.StyleSheet = theme
+link.Parent = screenGui
+```
+
+Deriving can also be configured with a `StyleDerive` instance: parent it to the deriving sheet and set `StyleSheet`; `Priority` decides precedence when multiple derives define the same token or rule (higher wins). When calling `SetDerives()` on a Style Editor design sheet, include the `BaseStyleSheet` in the last (lowest-priority) position. Swap themes at runtime by pointing the derive's `StyleSheet` at the other theme sheet.
+
+### Selectors and Cascade
+
+A `StyleRule.Selector` string mixes the following matchers (combinators like `>` encode hierarchy, e.g. `".Container > ImageLabel.BlueOnHover:Hover"`):
+
+| Selector kind | Syntax | Matches |
+|---|---|---|
+| Class | `Frame`, `TextButton` | Every `GuiObject` of that class |
+| Tag | `.ButtonPrimary` | Instances tagged via `CollectionService` |
+| Name | `MenuButton` | Instances by `Instance.Name` |
+| State | `:Hover`, `:Press` | The four `Enum.GuiState` values (also `Idle`, `NonInteractable`) |
+| UI modifier | `::UICorner`, `::UIStroke` | A phantom UIComponent of the matched instance; a modifier rule is parented under the base rule |
+| Query | `@SmallTouch` | Fires while a `StyleQuery` of that name is active |
+
+Property overrides are not a second property system: affected properties show a warning flag in the Properties window, and an instance-level write on top of a styled value shows as a bold override (right-click, Reset to Default, to revert to the styled value). Specificity ordering across competing rules is not enumerated in the docs; treat last-defined/highest-priority as a hypothesis and verify in Studio.
+
+### Style Queries (adaptive + accessibility)
+
+`StyleQuery` conditions are set with `SetCondition()`/`SetConditions()` and the query's name is the `@` selector:
+
+| Condition | Type | True when |
+|---|---|---|
+| `AspectRatioRange` | `NumberRange` | Parent width/height ratio within `[Min, Max)` |
+| `MinSize` / `MaxSize` | `Vector2` | Parent `AbsoluteSize` >= min / < max |
+| `ViewportDisplaySize` | `Enum.DisplaySize` | Matches `GuiService.ViewportDisplaySize` |
+| `PreferredInput` | `Enum.PreferredInput` | Matches `UserInputService.PreferredInput` (`KeyboardAndMouse`, `Gamepad`, `Touch`, `MicroGamepad`) |
+| `PreferredTextSize` | `Enum.PreferredTextSize` | Matches `GuiService.PreferredTextSize` |
+| `ReducedMotionEnabled` | `boolean` | Matches `GuiService.ReducedMotionEnabled` |
+
+Style the same property under different queries to get adaptive layouts and reduced-motion/accessibility variants without scripts.
+
+```luau
+local query = Instance.new("StyleQuery")
+query.Name = "SmallTouch"
+query.Parent = screenGui
+query:SetConditions({
+    MaxSize = Vector2.new(640, math.huge),
+    PreferredInput = Enum.PreferredInput.Touch,
+})
+-- A rule whose Selector contains "@SmallTouch" now applies.
+```
+
+<!-- temporal: 2026-09 --> Silent failure is documented behavior: `SetCondition()`/`SetConditions()` with an invalid condition name (e.g. `"Size"`) or a mismatched value type (e.g. `UDim2` for `MaxSize`) fail without an error. When a query rule never fires, suspect a typo'd condition name or wrong value type; `GetConditions()` returns what actually got set.
+
+## Flex Layout
+
+Flex behavior belongs to two places: the `UIListLayout` (container level) and `UIFlexItem` (per child).
+
+**Container level.** On a `UIListLayout`, `HorizontalFlex` (used when `FillDirection` is Horizontal) and `VerticalFlex` (used when Vertical) take an `Enum.UIFlexAlignment` value: `None` (default, siblings keep their defined size), `Fill` (siblings resize to fill the container), `SpaceAround`, `SpaceBetween`, or `SpaceEvenly`. `ItemLineAlignment` aligns siblings cross-directionally within a line (`Stretch` equalizes uneven tiles). Classic equal-width tab bars are the canonical `Fill` use; `UIGridLayout` remains the right choice when items must align to a strict grid.
+
+**Per-child flex.** Insert a `UIFlexItem` under a child `GuiObject` of a `UIListLayout` to override the container's flex behavior for that one child. Properties:
+
+- `FlexMode` (`Enum.UIFlexMode`): `Grow` (grows from basis when there is free space, never shrinks), `Shrink` (shrinks on overflow, never grows), `Fill` (`1:1` grow-shrink, always fills), or `Custom`.
+- `GrowRatio` / `ShrinkRatio` (float): relative growth/shrink versus other flex items; only apply with `FlexMode = Custom`.
+- `ItemLineAlignment`: cross-axis alignment for this one item, overriding the layout's.
+
+```luau
+-- Slider row: fixed labels, flexing track between them
+local track = Instance.new("Frame")
+track.Size = UDim2.new(0, 100, 0, 8) -- basis size; flex grows/shrinks from here
+track.Parent = row
+
+local flex = Instance.new("UIFlexItem")
+flex.FlexMode = Enum.UIFlexMode.Fill
+flex.Parent = track
+```
+
+There is no `UIFlexLayout` class. Flex on Roblox is configured through `UIListLayout` plus `UIFlexItem`; a tool or AI suggesting `Instance.new("UIFlexLayout")` is inventing a member and the script will error.
+
+Flex adds a slight performance cost above non-flex list layouts, especially while resizing or adding/removing flex items. Do not apply it without purpose.
+
+## Per-Corner Radii
+
+`UICorner` exposes individual radii `TopLeftRadius`, `TopRightRadius`, `BottomRightRadius`, and `BottomLeftRadius` (each a `UDim`). `CornerRadius` remains a convenience shorthand: writing it sets all four corners to the same value, and reading it returns `TopLeftRadius`.
+
+<!-- temporal: 2026-09 --> Beta caveat: the four per-corner properties require enabling **New UI Capabilities** in Studio's beta features window. Verify availability before shipping them in team projects; `CornerRadius` is not beta-gated.
+
+Established `UICorner` behavior still applies to every radius: scale rounding applies to the minimum width or height, radii are internally forced circular (X radius equals Y radius), and values beyond half the minimum dimension produce a pill shape. `UICorner` still cannot be applied to a `ScrollingFrame`, and descendants are not clipped to the rounded area (input is).
+
+When styling `UICorner` through a stylesheet, avoid configuring both `CornerRadius` and the individual corner radii in style rules at the same time; the docs call out unexpected results from mixing them. Pick one spelling per sheet.
+
+```luau
+local corner = Instance.new("UICorner")
+corner.TopLeftRadius = UDim.new(0, 24)
+corner.BottomLeftRadius = UDim.new(0, 24)
+-- right corners stay square (requires New UI Capabilities beta)
+corner.Parent = panel
+```
+
+## When to Style Instead of Writing Properties
+
+Reach for stylesheets and tokens when a value is shared across screens or must respond to context: one token edit updates every surface using it, themes swap by repointing a derive, and `:Hover`/`@query` rules cover state and adaptation that per-instance writes would otherwise spread across many scripts. Reach for direct property writes for one-off geometry, prototyping, and behavior tied to runtime data that styling cannot express. Styling properties are engine-level and cross-platform (the same sheet applies on phone, console, and PC, and queries adapt to each), but tooling maturity is a real consideration: the per-corner radii above are still beta, so verify any new capability in the Studio beta channel before standardizing on it.
+
 ## Mobile Adaptation
 
 Mobile is not desktop scaled down. Change the layout:
@@ -576,4 +710,7 @@ Before finalizing, check:
 - Adaptive design and accessibility guidance: [Roblox Creator Docs](https://create.roblox.com/docs/production/publishing/adaptive-design) (CC-BY-4.0)
 - Font deprecation (Gotham/Arial, Builder Font introduction): verified against current Roblox creator docs, 2026-07
 - UIShadow properties (BlurRadius, Offset, Transparency, Color, Spread): verified against [Roblox Creator Docs](https://create.roblox.com/docs/ui/styling) (CC-BY-4.0)
+- Styling system (StyleSheet, StyleRule, StyleLink, StyleDerive, StyleQuery, selector kinds, token/derives workflow, StyleQuery silent failure): verified against [UI styling](https://create.roblox.com/docs/ui/styling) and the [StyleSheet](https://create.roblox.com/docs/reference/engine/classes/StyleSheet), [StyleRule](https://create.roblox.com/docs/reference/engine/classes/StyleRule), [StyleDerive](https://create.roblox.com/docs/reference/engine/classes/StyleDerive), and [StyleQuery](https://create.roblox.com/docs/reference/engine/classes/StyleQuery) class pages (CC-BY-4.0), 2026-09
+- Flex layout (UIFlexItem, UIListLayout HorizontalFlex/VerticalFlex/ItemLineAlignment, UIFlexAlignment enum, no UIFlexLayout class, flex performance cost): verified against the [UIFlexItem](https://create.roblox.com/docs/reference/engine/classes/UIFlexItem) and [UIListLayout](https://create.roblox.com/docs/reference/engine/classes/UIListLayout) class pages and [List and flex layouts](https://create.roblox.com/docs/ui/list-flex-layouts) (CC-BY-4.0), 2026-09
+- Per-corner UICorner radii (TopLeftRadius, TopRightRadius, BottomLeftRadius, BottomRightRadius; CornerRadius shorthand semantics; New UI Capabilities beta): verified against the [UICorner](https://create.roblox.com/docs/reference/engine/classes/UICorner) class page (CC-BY-4.0), 2026-09
 - Stud UI grammar, pack market analysis, and anti-clone guidance: original synthesis from BuiltByBit marketplace analysis and DevForum community discussions (2026-07)

@@ -14,6 +14,24 @@ Server Authority is an opt-in Roblox model configured through `Workspace.Authori
 
 For simulation-affecting input, use the Input Action System (`InputAction` and `InputContext`) and mirror synchronized logic through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio). Use `RemoteEvent` for discrete requests or notifications, not as a replacement for the continuous input path. The model does not remove server-side validation for custom attacks, purchases, teleports, permissions, or other game-specific actions.
 
+### Settings bundle and debug surface
+
+Server Authority is only real when the whole settings bundle travels together. Setting `Workspace.AuthorityMode = Enum.AuthorityMode.Server` automatically sets the other five; verify all six during review because a place file can drift:
+
+1. `Workspace.AuthorityMode` = `Enum.AuthorityMode.Server`
+2. `Workspace.NextGenerationReplication` enabled
+3. `Workspace.PlayerScriptsUseInputActionSystem` enabled
+4. `Workspace.SignalBehavior` = `Enum.SignalBehavior.Deferred`
+5. `Workspace.UseFixedSimulation` enabled
+6. `Workspace.StreamingEnabled` enabled
+
+Misprediction and rollback are normal operation, not defects: clients cannot predict other players' inputs, so corrections should be small and imperceptible when tuned. On a detected misprediction the client resets to the server's authoritative state and resimulates its predicted frames.
+
+Debug surface for review sessions:
+
+- Studio ships a server authority visualization overlay for review sessions, but its shortcuts, counters, and per-reason input-drop tallies are not documented on the pages reviewed here. Do not quote specific numbers from it as if they were published thresholds; describe what you observed instead.
+- Read prediction state from the scriptable surface instead: `RunService:SetPredictionMode()` forces prediction for a given instance and is client-only, and `Instance.PredictionMode` reflects the mode applied to that instance.
+
 ## 1. Define the request contract
 
 Write the contract before writing the handler:
@@ -85,6 +103,24 @@ Two cheap checks belong next to every `typeof` guard because both defeat naive v
 - **Malformed UTF-8:** client-supplied strings may contain invalid byte sequences that DataStores refuse to serialize. `utf8.len(s)` returns `nil` plus an error position for malformed input; reject when it does not return a count.
 
 Rejecting these at the remote boundary protects both the gameplay logic and the persistence layer (`roblox-data` covers the save-side contract).
+
+## 2a. What survives a remote call
+
+Remote arguments are serialized, not shared. Verified against the [remote events and functions](https://create.roblox.com/docs/scripting/events/remote) docs:
+
+| What you send | What arrives | Consequence |
+|---------------|--------------|-------------|
+| Function | `nil` | Functions are not replicated; the receiving argument is `nil`. |
+| Table with a metatable | Plain table, metatable lost | All metatable information is stripped in transfer; `__index`-backed methods are gone on arrival. |
+| Mixed table (numeric + string keys) | Mangled data | Pass all key-value (dictionary) or all numeric indices, never both. Non-string indices (Instance, userdata, function) are converted to strings. |
+| Table with `nil` in an index | Truncated payload | Avoid `nil` values in any index of a passed table. |
+| Table | Copy, not a reference | Table identity differs on arrival and on return; mutating a "shared" table only mutates the local copy. |
+| Instance only the sender can see | `nil` | Server-only instances (e.g. under `ServerStorage`) and client-created parts are not replicable across the boundary. |
+
+Practical consequences:
+
+- **Type checking:** a `typeof` guard per argument is only the entry check. Because functions arrive as `nil`, non-string keys get stringified, and any "table" can be any shape, validate the fields and values of every table against the contract, not just its type.
+- **State sharing:** tables arrive as copies, so remotes cannot share mutable state. Keep authoritative state on the server and replicate explicit snapshots or deltas, or send stable identifiers (`UserId`, item ids) and re-resolve them from server state.
 
 ## 3. Keep outcomes server-owned
 
@@ -306,12 +342,15 @@ When a sent message matches a `TextChatCommand` alias, the command sinks it serv
 
 - [ ] Every remote has a documented contract.
 - [ ] Server handlers validate type, range, ownership, state, and rate.
+- [ ] Handlers never rely on remote tables being references: state is re-resolved server-side.
+- [ ] Handlers do not assume functions, metatables, or mixed-key tables survive the boundary.
 - [ ] Trusted values come from server definitions or server state.
 - [ ] Long work cannot be forced through an unbounded `RemoteFunction`.
 - [ ] Reliable and unreliable transports are chosen by data semantics, not by a blanket performance claim.
 - [ ] Packet size and fire rate are measured for high-frequency remotes.
 - [ ] Player cleanup removes limiter, subscription, and connection state.
 - [ ] Suspicion handling tolerates false positives and does not expose private data.
+- [ ] Server Authority projects: the six-setting bundle verified and prediction/rollback behavior understood before review sign-off.
 
 ## Community ecosystem (leads, not sources)
 

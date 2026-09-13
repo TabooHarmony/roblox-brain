@@ -1,9 +1,9 @@
 ---
 name: roblox-performance
 description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems."
-last_reviewed: 2026-08-31
+last_reviewed: 2026-09-13
 sources:
-  - https://create.roblox.com/docs/performance-optimization
+  - https://create.roblox.com/docs/en-us/performance-optimization/microprofiler
   - https://devforum.roblox.com/t/huge-memory-leak-prevention-for-everyone-or-most-people-atleast/3099605
   - https://devforum.roblox.com/t/full-release-of-parallel-luau-v1/1836187
 ---

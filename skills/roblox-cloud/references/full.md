@@ -145,13 +145,26 @@ An Open Cloud endpoint is not automatically callable from an experience. Confirm
 For supported calls:
 
 - use HTTPS;
-- retrieve `x-api-key` from a Roblox Secret rather than a plain string;
+- retrieve `x-api-key` from a Roblox Secret rather than a plain string (`HttpService:GetSecret("name")`, see the secrets store below);
 - send only headers supported by the engine and endpoint;
 - validate path parameters and reject traversal-like input;
 - keep the call server-side;
 - bound retries and request volume.
 
 Do not route a request through a client to bypass server-side restrictions.
+
+### The secrets store
+
+Credentials live in the experience's secrets store, not in the place file. `HttpService:GetSecret(key): Secret` returns a `Secret` value, verified against the docs (https://create.roblox.com/docs/en-us/cloud-services/secrets and the `Secret` datatype page):
+
+- `Secret` is non-printable and non-loggable: printing it yields `Secret(<name>)`, so a leaked log line is not a leaked credential. Build the request value with `Secret:AddPrefix()` and `Secret:AddSuffix()` instead of concatenating strings.
+- Secrets are available on live servers and in collaborative testing only. Local playtesting raises `Can't find secret with given key`, and a client script raises the same error, so a `GetSecret` call belongs in a server script and must be tested on a server, not in Play Solo.
+- For local testing, define the value in Studio under File, Experience Settings, Security, Local Secrets.
+- Add secrets in the Creator Dashboard under the game's Secrets tab, or manage them through Open Cloud. Only the game or group owner can view, create, or edit them; a game holds up to 500.
+- Each secret carries an allowed domain, and the domain can be narrowed to a specific host such as `my.example.com`. Always set the narrowest domain the integration supports: an unrestricted secret is accepted by any endpoint that receives it.
+- `Allow HTTP Requests` must be enabled in Studio's Security settings for any of this to run.
+
+A true secret belongs here. A value that only needs to be hidden from players still belongs here too, but the anti-pattern to avoid is putting anything credential-shaped in `ReplicatedStorage`, a `StringValue`, or a module script, where clients can read it.
 
 ## 6. Webhooks
 

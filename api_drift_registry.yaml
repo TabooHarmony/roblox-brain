@@ -665,3 +665,207 @@ entries:
       class: BadgeService
       member: GetBadgeInfoAsync
     verified: 2026-09-05
+
+  - id: httpservice-getsecret-exists
+    claim: "HttpService:GetSecret(key) returns the experience secret store value and works from server scripts"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    teaching_needles:
+      - HttpService:GetSecret
+    check:
+      type: member_exists
+      class: HttpService
+      member: GetSecret
+    verified: 2026-09-13
+
+  - id: httpservice-getsecret-returns-secret
+    claim: "HttpService:GetSecret returns a Secret datatype, not a plain string"
+    files:
+      - path: skills/roblox-cloud/references/full.md
+    check:
+      type: method_return_type
+      class: HttpService
+      method: GetSecret
+      return_index: 0
+      expected: Secret
+    verified: 2026-09-13
+
+  - id: datastoregetoptions-usecache-exists
+    claim: "DataStoreGetOptions.UseCache exists, defaults to true, and lets GetAsync return a locally cached value"
+    files:
+      - path: skills/roblox-data/references/full.md
+    teaching_needles:
+      - UseCache
+    check:
+      type: property_exists
+      class: DataStoreGetOptions
+      property: UseCache
+    verified: 2026-09-13
+
+  - id: player-user-domain-scoped-identity
+    claim: "Player.User is the domain-scoped identity value and the documented standard for identifying users in new code"
+    files:
+      - path: skills/roblox-data/references/full.md
+      - path: skills/roblox-server-data/references/full.md
+    teaching_needles:
+      - player.User
+    check:
+      type: property_exists
+      class: Player
+      property: User
+    verified: 2026-09-13
+
+  - id: players-banasync-exists
+    claim: "Players:BanAsync is the native enforcement API and is gated by Players.BanningEnabled"
+    files:
+      - path: skills/roblox-security/references/full.md
+    teaching_needles:
+      - BanAsync
+      - BanningEnabled
+    check:
+      type: member_exists
+      class: Players
+      member: BanAsync
+    verified: 2026-09-13
+
+  - id: players-banningenabled-gate-exists
+    claim: "Players.BanningEnabled is the property that enables and disables the ban API"
+    files:
+      - path: skills/roblox-security/references/full.md
+    check:
+      type: member_exists
+      class: Players
+      member: BanningEnabled
+    verified: 2026-09-13
+
+  - id: players-unbanasync-exists
+    claim: "Players:UnbanAsync lifts a ban, including a device block that only unban can clear"
+    files:
+      - path: skills/roblox-security/references/full.md
+    check:
+      type: member_exists
+      class: Players
+      member: UnbanAsync
+    verified: 2026-09-13
+
+  - id: players-getbanhistoryasync-exists
+    claim: "Players:GetBanHistoryAsync reads an account's ban history"
+    files:
+      - path: skills/roblox-security/references/full.md
+    check:
+      type: member_exists
+      class: Players
+      member: GetBanHistoryAsync
+    verified: 2026-09-13
+
+  - id: datastore-version-history-members
+    claim: "Data store version history is read through ListVersionsAsync, GetVersionAsync, GetVersionAtTimeAsync, and RemoveVersionAsync"
+    files:
+      - path: skills/roblox-data/references/full.md
+    teaching_needles:
+      - ListVersionsAsync
+      - GetVersionAtTimeAsync
+    check:
+      type: member_exists
+      class: DataStore
+      member: ListVersionsAsync
+    verified: 2026-09-13
+
+
+  - id: stylesheet-setderives-exists
+    claim: "StyleSheet:SetDerives creates derived stylesheets and is the sheet-side counterpart of StyleDerive"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    teaching_needles:
+      - SetDerives
+    check:
+      type: member_exists
+      class: StyleSheet
+      member: SetDerives
+    verified: 2026-09-13
+
+  - id: stylequery-setcondition-exists
+    claim: "StyleQuery:SetCondition applies a query condition and StyleQuery:GetConditions reads the active set"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    teaching_needles:
+      - SetCondition
+    check:
+      type: member_exists
+      class: StyleQuery
+      member: SetCondition
+    verified: 2026-09-13
+
+  - id: uiflexitem-properties-exist
+    claim: "UIFlexItem children control flex layout through FlexMode, GrowRatio, ShrinkRatio, and ItemLineAlignment"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    teaching_needles:
+      - UIFlexItem
+    check:
+      type: property_exists
+      class: UIFlexItem
+      property: FlexMode
+    verified: 2026-09-13
+
+  - id: uilistlayout-flex-properties-exist
+    claim: "UIListLayout gains UIListLayout.HorizontalFlex and UIListLayout.VerticalFlex for flex-based list layout"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    teaching_needles:
+      - HorizontalFlex
+    check:
+      type: property_exists
+      class: UIListLayout
+      property: HorizontalFlex
+    verified: 2026-09-13
+
+  - id: uicorner-per-corner-properties-exist
+    claim: "UICorner exposes per-corner radii (TopLeftRadius, TopRightRadius, BottomLeftRadius, BottomRightRadius) with CornerRadius as the shorthand"
+    files:
+      - path: skills/roblox-ui-design/references/full.md
+    teaching_needles:
+      - TopLeftRadius
+    check:
+      type: property_exists
+      class: UICorner
+      property: TopLeftRadius
+    verified: 2026-09-13
+
+  - id: globaldatastore-batchgetasync-exists
+    claim: "GlobalDataStore:BatchGetAsync reads multiple keys in one call and is supported on ordered data stores"
+    files:
+      - path: skills/roblox-data/references/full.md
+      - path: skills/roblox-server-data/references/full.md
+    teaching_needles:
+      - BatchGetAsync
+    check:
+      type: member_exists
+      class: GlobalDataStore
+      member: BatchGetAsync
+    verified: 2026-09-13
+
+  - id: instance-sandboxed-property-exists
+    claim: "Instance.Sandboxed marks an instance as sandboxed and Instance.Capabilities grants its thread a capability set"
+    files:
+      - path: skills/roblox-security/references/full.md
+    teaching_needles:
+      - Sandboxed
+    check:
+      type: property_exists
+      class: Instance
+      property: Sandboxed
+    verified: 2026-09-13
+
+  - id: runservice-setpredictionmode-exists
+    claim: "RunService:SetPredictionMode forces prediction for an instance and is a client-side call"
+    files:
+      - path: skills/roblox-security/references/full.md
+      - path: skills/roblox-networking/references/full.md
+    teaching_needles:
+      - SetPredictionMode
+    check:
+      type: member_exists
+      class: RunService
+      member: SetPredictionMode
+    verified: 2026-09-13

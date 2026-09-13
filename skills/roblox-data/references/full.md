@@ -13,6 +13,41 @@ This guide uses raw `DataStoreService` concepts and does not require a particula
 
 Keep the store name, schema version, and key format in one module. Use stable keys such as `player_<UserId>` and convert numeric IDs to strings at the boundary.
 
+## 1a. User identity: Player.User and UserId
+
+`Player.User` is a read-only `User` value with three fields: `Id` (a domain-scoped user ID), `DomainType` (`EXPERIENCE` or `OAUTH`), and `DomainId` (the universe ID for experiences, the application ID for OAuth). The docs designate `Player.User` as the standard way to identify users in new code, and engine APIs that accept user ID parameters also accept `User` values directly. <!-- temporal: 2026-09 -->
+
+`Player.UserId` is not deprecated: it remains the read-only integer that uniquely and consistently identifies the account, and the docs call it essential for saving and loading player data. The distinction matters for key design:
+
+- A domain user ID is scoped to one experience, not to the account, so `User.Id` cannot serve as a cross-experience or cross-place identifier scheme. Domain user IDs are guaranteed not to collide with global user IDs.
+- If you must persist or transmit identity, `User:ToString()` encodes domain type, domain ID, and user ID into a stable, URL-safe string that round-trips through `User.fromString()`.
+- Do not mix identifiers in one key scheme: a key built from `player.UserId` and one built from `User.Id` form two disjoint populations with no migration path between them. Pick one deliberately and document it (the RTBF section below adds another constraint).
+
+## 1b. Right-to-be-forgotten deletion templates
+
+When a user requests deletion of their personal data, Roblox notifies creators, who remain responsible for permanently erasing it. Automated deletion does the bulk of the work if your keys are shaped for it: you declare up to 100 deletion templates telling Roblox which keys or whole data stores hold a user's data, and when Roblox processes an RTBF request it substitutes the requester's ID for the `{UserId}` token and deletes matches automatically. <!-- temporal: 2026-09 -->
+
+Eligibility requirements from the docs:
+
+- Data must live in a standard or ordered data store. Whole-data-store deletion is supported for standard data stores only.
+- The user ID must be part of the `Name` or the `Scope` of the data store or key, matched via a static string pattern such as `player_{UserId}`. The `{UserId}` token is case-sensitive; `{userId}` is not accepted.
+- If the store uses the default scope, set the template's `scope_pattern` to `"global"`; an omitted or blank scope pattern also defaults to `global`.
+
+| Template kind | Required fields | Notes |
+| ---- | ---- | ---- |
+| Key template | `data_store_type` (`STANDARD` or `ORDERED`), `data_store_name`, `key_pattern` | `scope_pattern` optional but recommended |
+| Data store template | `data_store_type` (`STANDARD` only), `data_store_pattern` | Deletes an entire data store matching the pattern |
+
+Configure templates either visually (Creator Dashboard, Configure > Data Stores Manager, RTBF Deletion tab, Create Template) or programmatically through the Open Cloud Configs API: edit the `user_data_templates` JSON configuration in the `DataStoresConfig` repository, draft it with a `PUT`, verify with a `GET`, then `POST publish`. The API key needs `universe:read` and `universe:write` permissions, and group games require group-side publish permissions.
+
+The connection to this skill's key convention is direct: `player_<UserId>` is exactly the shape template matching requires, because the ID appears in the key name as a static pattern. A random, hashed, or encoded key format silently makes the experience non-compliant: the template system can no longer map a requester's ID onto your keys, so every request needs manual deletion. If you store identity as an encoded `User:ToString()` value inside the payload instead of the ID in the key name, the same problem applies.
+
+Handling the request once it arrives:
+
+- Roblox sends a daily message listing RTBF requests requiring action. When one appears, verify the corresponding data is removed within 30 days. <!-- temporal: 2026-09 -->
+- For data outside your templates (custom schemas, non-data-store storage), configure a creator webhook with the Right to Erasure Request trigger. Its payload carries `EventPayload.UserId` and `EventPayload.GameIds`; verify the `Roblox-Signature` header before acting on it.
+- A `RemoveAsync` deletion is a soft delete: the key reads back `nil`, but older versions stay retrievable during their retention window (see section 5b). Decide whether your erasure flow must also cover version history.
+
 ## 2. Define a serializable schema
 
 A template makes missing fields predictable and gives migrations a target.
@@ -71,6 +106,24 @@ end
 ```
 
 A failed read is not an empty profile. Keep the player in a safe loading state or fail the join rather than overwriting an existing record with defaults.
+
+### The 4-second read cache (`DataStoreGetOptions.UseCache`)
+
+`GetAsync` caches values locally for 4 seconds after the first read. A `GetAsync` call within those 4 seconds returns the cached value without hitting the backend; writes through `SetAsync`, `UpdateAsync`, and `IncrementAsync` update the cache immediately and restart the timer. The `DataStoreGetOptions.UseCache` property (default `true`) controls this: set it to `false` to bypass the cache and always fetch from the backend. Cached reads do not count against server or throughput limits; cache-bypassing reads always do. Caching is local to a data store instance, so two instances of the same store (for example, one scoped and one with `AllScopes`) can hold different cached states for the same key. <!-- temporal: 2026-09 -->
+
+Consequences:
+
+- **Verify-after-write must bypass the cache.** After a failed or uncertain write, a normal `GetAsync` can return the pre-write cached value and mislead your recovery logic. Read back with `UseCache = false` to decide retry or refund from backend state.
+- **Cross-server reads are not synchronized by the cache.** The cache only reflects writes made through this server's data store instance; another server's recent write stays invisible to a cached read for up to 4 seconds. Do not build cross-server consistency expectations on plain `GetAsync`.
+
+```luau
+local options = Instance.new("DataStoreGetOptions")
+options.UseCache = false
+local success, value, keyInfo = pcall(function()
+    return store:GetAsync(key, options)
+end)
+```
+
 
 ## 4. Session ownership
 
@@ -178,6 +231,35 @@ local transfer = {
 **(b) Owner save after external repair.** A support script repairs a value through Open Cloud while player A's live server still owns the session. The owner's next autosave writes its stale in-memory copy and the repair is gone. Coordination requirement: the actor performing the external mutation is the recovery owner and must quiesce the session first, meaning verify the lock is released, prevent re-acquisition during the repair window, apply the fix, then let the next owner load. If quiescence is impossible, the mutation must be routed through the active owner instead; writing anyway does not risk the loss, it guarantees it.
 
 **(c) Dedup written, enqueue absent.** A webhook receiver records the notification ID in a durable dedup store, then crashes before the grant or enqueue is durable. If Roblox redelivers, the dedup hit drops the event: acknowledged but never acted on. Recovery owner: the receiver's own worker, and the fix is ordering. Make the work record itself the dedup record by writing the job or grant keyed by notification ID in one durable write before acking, or write the work record first and keep the worker idempotent by notification ID. A durable work record without an ack is safe, because the worker can still process or retry it; the reverse order is the loss.
+
+## 5b. Batch reads and request budgets
+
+`GlobalDataStore:BatchGetAsync(keys, options?)` retrieves multiple keys in a single request, but per the docs it is currently only supported on `OrderedDataStore`: calling it on a standard `GlobalDataStore` or `DataStore` throws an error. It returns a dictionary mapping each key to a table with a `value` field; keys that do not exist are omitted from the result rather than returned as nil. The `keys` array must contain at least one key and no more than a server-configured maximum (default 100); each call counts against the ordered read budget based on the number of keys requested.
+
+```luau
+local ordered = DataStoreService:GetOrderedDataStore("PlayerScores")
+local success, results = pcall(function()
+    return ordered:BatchGetAsync({"player_111", "player_222", "player_333"})
+end)
+if success then
+    for _, key in {"player_111", "player_222", "player_333"} do
+        local entry = results[key]
+        if entry then print(key, entry.value) end
+    end
+end
+```
+
+`DataStoreService:GetRequestBudgetForRequestType(requestType)` returns how many data store requests the current place can still make for a `DataStoreRequestType` such as `StandardRead`, `StandardWrite`, or `OrderedWrite`. Requests beyond the budget are throttled. Poll this instead of guessing against the formulas: read headroom before issuing batched or burst work and defer or shed load when it runs low.
+
+```luau
+local function waitForBudget(requestType: Enum.DataStoreRequestType)
+    while DataStoreService:GetRequestBudgetForRequestType(requestType) <= 0 do
+        task.wait(1)
+    end
+end
+```
+
+`UpdateAsync` consumes from both the read and the write budget. Experience-level and game-server budgets are shared with Open Cloud traffic; see section 10 for the formulas.
 
 ## 6. Migration
 
@@ -289,6 +371,32 @@ The important behavior is the failure path. `StartSessionAsync()` can return `ni
 
 Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-targeted delivery, such as an offline paid gift that must be delivered later, and receive it with `profile:MessageHandler(...)`. For best-effort live announcements, use MessagingService instead. Profiles also expose critical-state and error signals; route them to observability rather than silently continuing as if saves were healthy.
 
+## 8a. Version history
+
+Standard data stores version every key. `SetAsync`, `UpdateAsync`, and `IncrementAsync` create a versioned backup on the first write to each key in each UTC hour; successive writes within the same UTC hour permanently overwrite the previous data. Versioned backups expire 30 days after a newer write supersedes them; the latest version never expires. Ordered data stores do not support versioning or metadata. <!-- temporal: 2026-09 -->
+
+| Method | Purpose |
+| ---- | ---- |
+| `DataStore:ListVersionsAsync(key, sortDirection?, minDate?, maxDate?, pageSize?)` | Enumerate a key's versions (paged, optional time-range filter) |
+| `DataStore:GetVersionAsync(key, version)` | Read a specific version; version IDs come from `ListVersionsAsync` or the return of `SetAsync` |
+| `DataStore:GetVersionAtTimeAsync(key, timestamp)` | Read the version current at a Unix-millisecond timestamp (must be positive, at most 10 minutes in the future) |
+| `DataStore:RemoveVersionAsync(key, version)` | Deprecated; permanently deletes one version with no tombstone and no recovery |
+
+Restoring means reading an old version and writing it back as a new current version, so the restore itself is versioned and auditable:
+
+```luau
+local pages = store:ListVersionsAsync(key, Enum.SortDirection.Descending, nil, maxDate.UnixTimestampMillis)
+local closest = pages:GetCurrentPage()[1]
+if closest then
+    local value, info = store:GetVersionAsync(key, closest.Version)
+    local setOptions = Instance.new("DataStoreSetOptions")
+    setOptions:SetMetadata(info:GetMetadata())
+    store:SetAsync(key, value, nil, setOptions)
+end
+```
+
+Interaction with soft delete: `RemoveAsync` does not erase anything by itself. It appends a tombstone version, so subsequent `GetAsync` calls return `nil`, while older versions stay readable via `ListVersionsAsync` and `GetVersionAsync` until they expire. Two consequences: data thought deleted can still be retrievable (relevant to erasure obligations, section 1b), and an accidental `RemoveAsync` is recoverable by reading the prior version and rewriting it. Only the latest version counts toward the storage limit (section 10).
+
 ## 9. Data safety checklist
 
 - [ ] A failed load cannot overwrite an existing record with defaults.
@@ -304,8 +412,49 @@ Use `ProfileStore:MessageAsync(profileKey, message)` only for critical profile-t
 - [ ] No client-provided value bypasses server validation before persistence.
 - [ ] Persisted numbers are checked for NaN/infinity; persisted strings pass `utf8.len`.
 - [ ] Client-supplied nested tables are re-validated field by field before saving.
+- [ ] Player keys embed the user ID as a static string (for example `player_<UserId>`) so RTBF deletion templates can match them.
+- [ ] Verify-after-write reads use `DataStoreGetOptions.UseCache = false` so recovery decisions use backend state, not the 4-second cache.
+- [ ] Request bursts are gated on `GetRequestBudgetForRequestType` headroom instead of assumed quota.
 
 Before destructive tests (wipe scripts, migration replays, bulk-key writes), confirm the actual destinations: exact DataStore, OrderedDataStore, and MemoryStore names, plus Open Cloud endpoints or webhooks the code calls. A test-place label is not isolation; a shared store name reaches production records. Keep a mutation record with a compensating action per `roblox-studio-mcp`.
+
+## 10. Limits and quotas (verified formulas)
+
+All formulas below come from the data store error-codes-and-limits page and scale with concurrent users; they are current as of the last_reviewed date. Do not hardcode sampled values; read live headroom with `GetRequestBudgetForRequestType` (section 5b). <!-- temporal: 2026-09 -->
+
+Experience-level shared limits (requests per minute, all servers plus Open Cloud combined). `concurrentUsers` is the experience's total concurrent user count:
+
+| Request type | Standard stores | Ordered stores |
+| ---- | ---- | ---- |
+| Read | 300 + concurrentUsers x 40 | 300 + concurrentUsers x 40 |
+| Write | 300 + concurrentUsers x 20 | 300 + concurrentUsers x 20 |
+| List | 300 + concurrentUsers x 2 | 300 + concurrentUsers x 2 |
+| Remove | 300 + concurrentUsers x 40 | 300 + concurrentUsers x 40 |
+
+Per-server default limits (requests per minute, `numPlayers` = players in that server; creators can reconfigure with `SetRateLimitForRequestType`):
+
+| Request type | Standard stores | Ordered stores |
+| ---- | ---- | ---- |
+| Read | 60 + numPlayers x 40 | 60 + numPlayers x 40 |
+| Write | 60 + numPlayers x 40 | 30 + numPlayers x 5 |
+| List | 5 + numPlayers x 2 | 5 + numPlayers x 2 |
+| Remove | 60 + numPlayers x 40 | 30 + numPlayers x 5 |
+
+Data limits:
+
+| Component | Limit |
+| ---- | ---- |
+| Data store name | 50 characters |
+| Key name | 50 characters |
+| Scope | 50 characters |
+| Value (key data) | 4,194,304 characters per key |
+
+Other verified limits:
+
+- **Per-key throughput:** reads 25 MB per minute and writes 4 MB per minute per key across all servers, rounded up to the next kilobyte per request.
+- **Storage:** `Total latest version storage limit = 500 MB + 1 MB x lifetime user count`, where a lifetime user is anyone who has joined at least once. Usage is measured as the compressed size of each key's latest version; do not pre-compress data.
+- **UpdateAsync consumes from both the read and write budgets**, at experience and server level.
+- **Studio Run mode** has separate, possibly lower static limits; test rate limits in Studio Team Create instead.
 
 ## Community ecosystem (leads, not sources)
 

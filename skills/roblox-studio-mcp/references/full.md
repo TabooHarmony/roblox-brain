@@ -66,7 +66,7 @@ Two Studio MCP bridges are in active use. The official Roblox Studio MCP server 
 | Tool | What it does |
 |------|-------------|
 | `list_roblox_studios` | List all connected Studio instances (name, Studio instance ID, place ID). |
-| `studio_id` | Parameter on every official tool call naming the target instance. Older builds exposed `set_active_studio` (session-state switching) instead; treat that as legacy. |
+| `studio_id` | Parameter on every official tool call naming the target instance. Older builds reportedly exposed `set_active_studio` (session-state switching); that name is absent from the current official tool set, so route on `studio_id` and confirm against `tools/list`. |
 
 ## Session and Datamodel Contract
 

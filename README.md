@@ -46,7 +46,7 @@ Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible ski
 | Skill | What it covers |
 | --- | --- |
 | `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, scope, closures, idioms, and language traps |
-| `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, and Roblox-aware typing |
+| `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, new type-solver features (`keyof`, type functions, `read`), and Roblox-aware typing |
 | `roblox-luau-patterns` | Module boundaries, object lifecycles, signals, scheduling, fallible calls, and cleanup |
 | `roblox-architecture` | Feature ownership, runtime location, dependencies, startup, and client/server authority |
 
@@ -68,8 +68,8 @@ Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible ski
 | Skill | What it covers |
 | --- | --- |
 | `roblox-networking` | Server-authoritative networking, remote validation, rate limits, and exploit resistance |
-| `roblox-security` | Anti-exploit design, movement, remote, economy, and data hardening |
-| `roblox-data` | Player persistence, schemas, migrations, retries, and session ownership |
+| `roblox-security` | Anti-exploit design, movement, remote, economy, and data hardening, plus platform bans and capability sandboxing |
+| `roblox-data` | Player persistence, schemas, migrations, retries, session ownership, budgets, and data-deletion compliance |
 | `roblox-server-data` | OrderedDataStore, MessagingService, global state, and cross-server coordination |
 | `roblox-analytics` | Custom events, economy tracking, funnels, rate limits, and event taxonomy |
 | `roblox-npc-ai` | Pathfinding, state machines, detection, spawning, and network ownership |
@@ -87,7 +87,7 @@ Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible ski
 | `roblox-building` | Roblox geometry, maps, props, generated assets, MCP workflows, and acceptance gates |
 | `roblox-physics` | Constraints, vehicles, ragdolls, projectiles, elevators, and network ownership |
 | `roblox-gui` | Screen, surface, and world UI; layout, responsiveness, input, and UI state |
-| `roblox-ui-design` | Content-led visual systems, existing-style inheritance, optional simulator styling, composition, and hierarchy |
+| `roblox-ui-design` | Content-led visual systems, styling sheets and tokens, flex layout, existing-style inheritance, composition, and hierarchy |
 | `roblox-animation-vfx` | Animations, particles, beams, trails, tweens, camera feedback, and cleanup |
 | `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, and day/night cycles |
 | `roblox-audio` | SoundService, spatial audio, music systems, SFX, ambient layers, and volume management |
@@ -99,7 +99,7 @@ Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible ski
 | Skill | What it covers |
 | --- | --- |
 | `roblox-studio-mcp` | Studio MCP capabilities, bridge-neutral routing, reliability, building, and testing workflows |
-| `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth 2.0, PKCE, webhooks, HttpService, and token lifecycle |
+| `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth 2.0, PKCE, webhooks, `HttpService`, secrets, and token lifecycle |
 
 ### Workflow and tooling
 

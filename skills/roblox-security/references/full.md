@@ -45,6 +45,24 @@ Practical constraints once you commit:
 
 Practitioner-sourced synthesis (not official API documentation): the nightmare account that motivated this is at <https://devforum.roblox.com/t/server-authority-client-beta-was-a-damn-nightmare-heres-some-advice/4712758>; the official [Server Authority model](https://create.roblox.com/docs/projects/server-authority) and [advanced techniques](https://create.roblox.com/docs/projects/server-authority/techniques) docs remain the API source of truth.
 
+### Settings bundle and debug surface
+
+Server Authority is only real when the whole settings bundle travels together. Setting `Workspace.AuthorityMode = Enum.AuthorityMode.Server` automatically sets the other five; verify all six during review because a place file can drift:
+
+1. `Workspace.AuthorityMode` = `Enum.AuthorityMode.Server`
+2. `Workspace.NextGenerationReplication` enabled
+3. `Workspace.PlayerScriptsUseInputActionSystem` enabled
+4. `Workspace.SignalBehavior` = `Enum.SignalBehavior.Deferred`
+5. `Workspace.UseFixedSimulation` enabled
+6. `Workspace.StreamingEnabled` enabled
+
+Debug surface for review sessions:
+
+- Studio ships a server authority visualization overlay for review sessions, but its shortcuts, counters, and per-reason input-drop tallies are not documented on the pages reviewed here. Do not quote specific numbers from it as if they were published thresholds; describe what you observed instead.
+- Read prediction state from the scriptable surface instead: `RunService:SetPredictionMode()` forces prediction for a given instance and is client-only, and `Instance.PredictionMode` reflects the mode applied to that instance.
+
+Misprediction and rollback are normal operation in this model, not defects: clients cannot predict other players' inputs, so corrections should be small and imperceptible when tuned.
+
 ## Exploit Vectors & Mitigations
 
 ### Movement and physics exploits
@@ -116,6 +134,9 @@ HIGH (exploitable if missing):
 [ ] Trading system uses atomic operations
 [ ] No trusting client-reported values (damage, position, items)
 [ ] RemoteFunction return values not trusted by server
+[ ] ProximityPrompt/ClickDetector/DragDetector handlers validated like remotes
+[ ] DragDetector.RunLocally is false or its client path is re-validated server-side
+[ ] Ban flows use the native Players ban API with appeal path documented
 
 MEDIUM (quality/fairness):
 [ ] Cooldowns enforced server-side (not just client UI)
@@ -169,6 +190,83 @@ local function sanitizePlayerStats(stats)
     return stats
 end
 ```
+
+## Native Enforcement APIs (Player Bans)
+
+The Players class ships a native ban API: `Players:BanAsync`, `Players:UnbanAsync`, and `Players:GetBanHistoryAsync`, all gated by the `Players.BanningEnabled` property, which cannot be set from Luau and must be toggled in Studio's Players properties window. All three are server-only: client calls error, and Studio/Team Test runs do not apply bans to production. Each performs an HTTP call to backend services that is throttled and can fail; batch calls over `UserIds` retry per ID and aggregate failures into one error message (`failure for UserId {}`), so wrap calls in `pcall`. They also back the [User Restrictions Open Cloud API](https://create.roblox.com/docs/cloud/reference/UserRestriction) for third-party moderation tooling.
+
+### BanAsync config (BanConfigType)
+
+| Field | Type | Rules |
+|-------|------|-------|
+| `UserIds` | array (required) | UserIds to ban. Max size 50. |
+| `Duration` | integer (required) | Seconds. `-1` = permanent. `0` and all other negative values are invalid. |
+| `DisplayReason` | string (required) | Shown in the error modal when the banned user tries to join. Max 400 characters, text filtered. |
+| `PrivateReason` | string (required) | Internal notes returned by `GetBanHistoryAsync`. Max 1000 characters, not filtered, never shared with the client. |
+| `ApplyToUniverse` | boolean (optional, default `true`) | `false` limits the ban to the calling place. Banning someone in the start place excludes them from the whole universe regardless. |
+| `ExcludeAltAccounts` | boolean (optional, default `false`) | `true` disables propagation to suspected alternate accounts. |
+| `ApplyDeviceBlock` | boolean (optional, default `false`) | Blocks the banned user's device from rejoining for 24 hours after the ban. Only `UnbanAsync` lifts a device block; unbanning through the Open Cloud API or Creator Hub does not. |
+
+### UnbanAsync and GetBanHistoryAsync
+
+- `Players:UnbanAsync(config)` takes `{UserIds (max 50), ApplyToUniverse}`. An unban only lifts bans with the same scope: a universe-level unban does not invalidate a place-level ban and vice versa.
+- `Players:GetBanHistoryAsync(userId)` returns `BanHistoryPages` (inherits `Pages`). Use it to escalate: count prior bans and previous `Duration` values, and read `PrivateReason` notes, when computing the next ban length.
+
+### Escalation ladder pattern
+
+Pair detection with the native API instead of kicking in a loop. Illustrative shape:
+
+```luau
+-- ServerScriptService. Detection modules feed scores; the ladder decides.
+local REPRIEVES = { [1] = 3600, [2] = 86400 } -- 1h, then 24h; third strike permanent
+
+local function enforce(player: Player, detectorId: string)
+    local history = Players:GetBanHistoryAsync(player.UserId)
+    local strikes = #history:GetCurrentPage() + 1 -- iterate Pages for full history
+
+    local duration = REPRIEVES[strikes] or -1
+    local config: BanConfigType = {
+        UserIds = { player.UserId },
+        Duration = duration, -- -1 = permanent; 0 and other negatives are invalid
+        DisplayReason = "Violated server rules (action: " .. detectorId .. ")",
+        PrivateReason = detectorId .. " | strike " .. strikes,
+        ApplyToUniverse = true,
+        ExcludeAltAccounts = false,
+        ApplyDeviceBlock = strikes >= 3,
+    }
+    local ok, err = pcall(Players.BanAsync, Players, config)
+    if not ok then warn("ban failed:", err) end -- throttled HTTP can fail per UserId
+end
+```
+
+`Players.BanningEnabled` must be on for all three methods; verify it in Studio before shipping a flow that depends on them.
+
+Enforcement is a product decision, not an automatic response. Bans carry appeal implications, `DisplayReason` is filtered and shown to real users, and false positives from lag or tuning mistakes are permanent records in ban history. The docs themselves direct you to publish experience rules and provide an appeal path. Log detection context first, keep thresholds forgiving, and reserve permanent bans for clear violations. <!-- temporal: 2026-09 -->
+
+## Client-Triggerable Interaction Instances
+
+`ProximityPrompt`, `ClickDetector`, and `DragDetector` are remote-equivalent attack surfaces: the engine delivers a client interaction to a server-side callback with a `Player` argument, so exploiters can trigger them without your UI and outside your intended flow. The exploit table above covers only `RemoteEvent`s; these belong in the same audit.
+
+| Instance | Server-facing entry point | What the server must validate |
+|----------|---------------------------|-------------------------------|
+| `ProximityPrompt` | `Triggered(playerWhoTriggered)`, `TriggerEnded(playerWhoTriggered)` | Rate/hold logic is client-assisted: `HoldDuration` gating happens on the client, so re-check state, cooldown, and entitlements server-side on every trigger. |
+| `ClickDetector` | `MouseClick(playerWhoClicked)` | Distance: `MaxActivationDistance` (studs) bounds where the engine shows the prompt, but treat a click received beyond server-computed range as spoofed state, not just UI noise. |
+| `DragDetector` | `DragStart` / `DragContinue` / `DragEnd` | Drag limits (`MaxDragTranslation`, `MinDragTranslation`, `MaxDragAngle`, `MinDragAngle`) impede motion generation, they are not constraints; clamp final positions server-side. |
+
+`DragDetector.RunLocally` (default `false`) deserves special attention. When `false`, drag signals replicate to the server, which processes cursor rays, mutates the data model, and replicates results onward; the server still owns the outcome, so validate it. When `true`, the client processes those signals itself and does not replicate them; resulting changes reach the server only through your own `RemoteEvent` plumbing, which puts the entire burden back on remote validation. Treat `RunLocally = true` like any client-authored input channel and re-derive the result server-side.
+
+## Script Sandboxing and Capabilities
+
+Sandboxing is a defense-in-depth layer for code you did not write: toolbox models, plugin-supplied or community-contributed scripts, and player-authored code. It is experimental (client beta) and complements, never replaces, server-side validation.
+
+- Enable per place: `Workspace.SandboxedInstanceMode` must move from `Default` to `Experimental` in Studio before `Sandboxed` does anything.
+- `Instance.Sandboxed` (on Models, Folders, Scripts, and their descendants) marks a sandboxed container; scripts inside can only act per `Instance.Capabilities`, a `SecurityCapabilities` set spanning execution control (`RunClientScript`, `RunServerScript`), instance access, Luau functionality, and engine API access.
+- `Instance.IsInSandbox` is read-only and Studio-only, reporting whether an instance sits in a sandboxed container.
+- Missing capabilities fail with explicit errors (for example "lacking capability AccessOutsideWrite"), and scripts without an execution capability fail to start with a warning.
+- Scope guard: the capability set for nested containers is the intersection with the outer container; sandboxed scripts cannot fire events or call functions on unsandboxed instances with larger capability sets.
+- The docs advise avoiding the `AccessOutsideWrite` capability because sandboxing guarantees weaken when scripts can reach any instance.
+
+Reviewed against the [Script capabilities](https://create.roblox.com/docs/scripting/capabilities) page, whose example capabilities (`AccessOutsideWrite`, `CreateInstances`, `Network`, `RunServerScript`, `RunClientScript`) are the verified member names. <!-- temporal: 2026-09 -->
 
 ## What NOT to Do
 

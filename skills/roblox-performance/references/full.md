@@ -37,6 +37,17 @@ Per-frame breakdown of time spent in scripts, physics, rendering. The primary to
 - Client: Ctrl+F6 toggles the profiler; Ctrl+Alt+F6 opens its detailed timeline
 - Look for: long bars in "Script" category, physics spikes, render thread stalls
 
+Frame time converts to FPS by dividing 1,000 ms by frame time. These are the documented reference points (Roblox MicroProfiler docs):
+
+| Average frame time | Frames per second |
+|--------------------|-------------------|
+| 33.33 ms | 30 FPS |
+| 16.67 ms | 60 FPS |
+| 8.33 ms | 120 FPS |
+| 4.17 ms | 240 FPS |
+
+A high average is not the only failure mode: the docs stress **consistent** frame times, so a 16 ms average hiding periodic 40 ms spikes still reads as stutter to a player. Read the per-frame bars, not just the average.
+
 ### Developer Console (F9)
 - **Stats**: Memory, network, render stats
 - **Server Stats** (game owner): Server-side metrics
@@ -93,7 +104,9 @@ The practical rule is: profile first, isolate a pure or read-heavy calculation, 
 | Orphaned instances | Memory never freed | Destroy() instances, nil references |
 | Large tables never cleared | Lua GC can't collect | Set to nil or use weak tables |
 | Excessive cloning | Memory spikes on spawn | Object pooling |
-| Uncompressed images | High texture memory | Use compressed formats, reduce resolution |
+| Oversized images | High texture memory | Match resolution to on-screen size: at most 512x512 for large on-screen images, under 256x256 for minor ones, trim sheets for 3D reuse (docs) |
+
+Source for the image sizing guidance: https://create.roblox.com/docs/en-us/performance-optimization/improve (trim sheets, resolution-vs-screen-size rule). Uploaded images are transcoded by the platform, so "use a compressed format" is not a lever you control: the lever is resolution and reuse.
 
 #### Player/Character objects are NOT auto-destroyed
 
@@ -135,14 +148,14 @@ Notes:
 | High part count | Low FPS, draw call bound | Merge static geometry, use MeshParts |
 | Transparent part stacking | Overdraw, GPU bound | Reduce layers, use CanvasGroup for UI |
 | Excessive particles | Mobile FPS death | Cap ParticleEmitter.Rate, reduce on mobile |
-| Too many dynamic lights | Frame time spike | Limit to 4-6 active lights per area |
+| Too many dynamic lights | Frame time spike | Documented guidance is simply "use fewer dynamic lights"; the 4-6 per area figure is a practitioner heuristic, not an engine limit. Measure before enforcing |
 | Post-processing stacking | GPU overhead | One BloomEffect, one ColorCorrection max |
 
 ### Network
 
 | Problem | Symptom | Fix |
 |---------|---------|-----|
-| Frequent RemoteEvent fires | Bandwidth spike | Batch updates, throttle to 10-20/sec |
+| Frequent RemoteEvent fires | Bandwidth spike | Batch updates into one event per tick. The 10-20/sec throttle figure is a practitioner heuristic: pick the rate from measured bandwidth and gameplay tolerance, not a rule |
 | Large payloads | Lag spike on fire | Send IDs not full objects, compress data |
 | Replicating unnecessary instances | Join time slow | Keep Workspace lean, use ServerStorage |
 | Unthrottled property changes | Network saturation | Batch property changes, use attributes |
