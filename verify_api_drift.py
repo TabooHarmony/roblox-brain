@@ -26,7 +26,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent
 REGISTRY_PATH = ROOT / "api_drift_registry.yaml"
 BASE_URL = "https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine"
-MIRROR_DIR = ROOT / "vendor" / "creator-docs"
+MIRROR_DIR = ROOT / ".cache" / "creator-docs"
 CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 # Snapshot identity: mirror_creator_docs.py records retrieval metadata in a

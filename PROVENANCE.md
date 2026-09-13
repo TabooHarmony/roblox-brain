@@ -1,4 +1,8 @@
-# Historical Source Note: brockmartin/roblox-game-skill
+# Provenance
+
+Notes on sources examined for this library: what was removed, what was reviewed, and under what terms.
+
+## Removed source: brockmartin/roblox-game-skill
 
 A reference snapshot was examined on 2026-07-04 while developing eight Roblox skills. The snapshot was removed from this repository after provenance review because the upstream repository has no documented license or reuse permission.
 
@@ -12,7 +16,7 @@ No LICENSE file or explicit reuse permission was found in the upstream repositor
 
 The current skills use official documentation and original synthesis. Automated structure, source-URL, API-drift, version-pin, and fenced-code checks run in CI.
 
-# Third-Party Skill Review: MSayib/roblox-dev-skill and andrian-syh/roblox-best-practices-skill
+## Third-party skill review: MSayib/roblox-dev-skill and andrian-syh/roblox-best-practices-skill
 
 Both repositories were read as comparative material on 2026-09-13 to find coverage gaps in this library. Neither was integrated as source text.
 

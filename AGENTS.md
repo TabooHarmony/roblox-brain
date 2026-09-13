@@ -93,7 +93,7 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - Training-data-only content is unacceptable. Verify API references against current docs
 - Track sources in the `sources:` frontmatter field
 - Use `sources: [original]` for synthesis/opinion/design heuristics
-- When lifting from external repos, preserve attribution and record the license or reuse terms in the relevant vendor note
+- When lifting from external repos, preserve attribution and record the license or reuse terms in `PROVENANCE.md`
 - Use `raw.githubusercontent.com` URLs (not `github.com/blob/`) for source links
 - Mark temporal claims with event dates: `<!-- temporal: 2026-06 -->`
 
@@ -119,7 +119,7 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 | `verify_version_pins.py` | Tool version pin monitor (non-blocking) |
 | `api_drift_registry.yaml` | Registry of API claims to verify |
 | `requirements.txt` | Python dependencies (pyyaml) |
-| `vendor/NOTES.md` | Historical provenance note for removed source |
+| `PROVENANCE.md` | Provenance: removed sources and third-party reviews |
 | `.github/workflows/ci.yml` | CI: validation + drift + source URLs + install test |
 
 ## What NOT to Do

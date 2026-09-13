@@ -3,7 +3,7 @@
 
 The API drift checker (verify_api_drift.py) normally fetches each referenced
 YAML from raw.githubusercontent.com per claim. This script downloads the
-reference files the registry actually uses into vendor/creator-docs/ so the
+reference files the registry actually uses into .cache/creator-docs/ so the
 checker can run with no network, and so you can diff versions over time.
 
 Three distinct modes:
@@ -29,7 +29,7 @@ Freshness contract for the retained cache:
 - Downloads are written to a temp file and atomically renamed into place, so an
   interrupted fetch can never leave a truncated file that looks complete.
 
-The mirror is a cache, not a vendored copy of the docs. It is gitignored by
+The mirror is a local cache, not a committed copy of the docs. It is gitignored by
 default; commit it only if you want pinned offline CI.
 """
 
@@ -49,7 +49,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 REGISTRY_PATH = ROOT / "api_drift_registry.yaml"
-MIRROR_DIR = ROOT / "vendor" / "creator-docs"
+MIRROR_DIR = ROOT / ".cache" / "creator-docs"
 BASE_URL = "https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine"
 # The tree API is the canonical list of engine reference files.
 TREE_URL = "https://api.github.com/repos/Roblox/creator-docs/git/trees/main?recursive=1"

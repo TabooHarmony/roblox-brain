@@ -713,7 +713,7 @@ class ValidatorRegressionTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            mirror_dir = root / "vendor" / "creator-docs"
+            mirror_dir = root / ".cache" / "creator-docs"
             class_dir = mirror_dir / "classes"
             class_dir.mkdir(parents=True)
             (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")
@@ -767,7 +767,7 @@ class ValidatorRegressionTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            mirror_dir = root / "vendor" / "creator-docs"
+            mirror_dir = root / ".cache" / "creator-docs"
             class_dir = mirror_dir / "classes"
             class_dir.mkdir(parents=True)
             (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")
@@ -818,7 +818,7 @@ class ValidatorRegressionTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            mirror_dir = root / "vendor" / "creator-docs"
+            mirror_dir = root / ".cache" / "creator-docs"
             class_dir = mirror_dir / "classes"
             class_dir.mkdir(parents=True)
             (class_dir / "Part.yaml").write_text("id: Part\nproperties:\n  - name: Part.Position\n")  # no sidecar

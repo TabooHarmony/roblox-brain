@@ -18,7 +18,7 @@ All notable changes to `roblox-brain` are documented here.
 
 - Performance: the claim that compressed image formats reduce texture memory is replaced with the documented guidance (match image resolution to on-screen size, trim sheets, transcoding happens on upload). The light-count and remote-fire-rate figures are now labeled practitioner heuristics instead of engine limits, and the documented MicroProfiler frame-time thresholds are listed.
 - Studio MCP: the legacy `set_active_studio` note is reworded to match the current tool set, which routes by `studio_id`.
-- Reference infrastructure: API drift registry expanded to 78 entries; the vendor note records the two MIT skill sources reviewed for this pass and the claims rejected from them.
+- Reference infrastructure: API drift registry expanded to 78 entries; the provenance note records the two MIT skill sources reviewed for this pass and the claims rejected from them.
 
 ## [1.7.0] - 2026-09-06
 
