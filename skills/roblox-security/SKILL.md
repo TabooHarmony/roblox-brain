@@ -37,7 +37,7 @@ Load for exploit audits and hardening: authority models, remote abuse, economy, 
 
 ### Enforcement
 
-Enforcement is a product decision with appeal implications, not an automatic response. The native ban API is server-only (`Players:BanAsync` / `UnbanAsync` / `GetBanHistoryAsync`; `Players.BanningEnabled` must be on). `Duration` `-1` is permanent, `0` and other negatives are invalid; `DisplayReason` max 400 chars (filtered); `PrivateReason` max 1000, never client-shared; `ApplyDeviceBlock` lasts 24 hours and only `UnbanAsync` lifts it. Escalate via ban history; `pcall` every call (throttled HTTP). BanConfigType fields in full.md.
+Enforcement is a product decision with appeal implications, not an automatic response. The native ban API is server-only (`Players:BanAsync` / `UnbanAsync` / `GetBanHistoryAsync`; `Players.BanningEnabled` must be on). `Duration` `-1` is permanent, `0` and other negatives are invalid; `DisplayReason` max 400 chars (filtered); `PrivateReason` max 1000, never client-shared; `ApplyDeviceBlock` lasts 24 hours and only `UnbanAsync` lifts it. Escalate via ban history; `pcall` every call (throttled HTTP). Config field table is in full.md.
 
 ### Anti-Patterns
 

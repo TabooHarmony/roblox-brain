@@ -545,7 +545,7 @@ A `StyleRule.Selector` string mixes the following matchers (combinators like `>`
 |---|---|---|
 | Class | `Frame`, `TextButton` | Every `GuiObject` of that class |
 | Tag | `.ButtonPrimary` | Instances tagged via `CollectionService` |
-| Name | `MenuButton` | Instances by `Instance.Name` |
+| Name | `#MenuButton` | Instances by `Instance.Name` (the `#` prefix is required; a bare token is read as a class name) |
 | State | `:Hover`, `:Press` | The four `Enum.GuiState` values (also `Idle`, `NonInteractable`) |
 | UI modifier | `::UICorner`, `::UIStroke` | A phantom UIComponent of the matched instance; a modifier rule is parented under the base rule |
 | Query | `@SmallTouch` | Fires while a `StyleQuery` of that name is active |

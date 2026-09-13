@@ -195,7 +195,7 @@ end
 
 The Players class ships a native ban API: `Players:BanAsync`, `Players:UnbanAsync`, and `Players:GetBanHistoryAsync`, all gated by the `Players.BanningEnabled` property, which cannot be set from Luau and must be toggled in Studio's Players properties window. All three are server-only: client calls error, and Studio/Team Test runs do not apply bans to production. Each performs an HTTP call to backend services that is throttled and can fail; batch calls over `UserIds` retry per ID and aggregate failures into one error message (`failure for UserId {}`), so wrap calls in `pcall`. They also back the [User Restrictions Open Cloud API](https://create.roblox.com/docs/cloud/reference/UserRestriction) for third-party moderation tooling.
 
-### BanAsync config (BanConfigType)
+### BanAsync config dictionary
 
 | Field | Type | Rules |
 |-------|------|-------|
@@ -225,7 +225,7 @@ local function enforce(player: Player, detectorId: string)
     local strikes = #history:GetCurrentPage() + 1 -- iterate Pages for full history
 
     local duration = REPRIEVES[strikes] or -1
-    local config: BanConfigType = {
+    local config = { -- the parameter is typed Dictionary; there is no BanConfigType
         UserIds = { player.UserId },
         Duration = duration, -- -1 = permanent; 0 and other negatives are invalid
         DisplayReason = "Violated server rules (action: " .. detectorId .. ")",
