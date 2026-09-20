@@ -1,9 +1,10 @@
 ---
 name: roblox-performance
 description: "Use when profiling Roblox performance or diagnosing FPS, memory, network, mobile, or hot-path problems."
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-19
 sources:
   - https://create.roblox.com/docs/en-us/performance-optimization/microprofiler
+  - https://create.roblox.com/docs/en-us/reference/engine/libraries/debug
   - https://devforum.roblox.com/t/huge-memory-leak-prevention-for-everyone-or-most-people-atleast/3099605
   - https://devforum.roblox.com/t/full-release-of-parallel-luau-v1/1836187
 ---
@@ -19,7 +20,8 @@ Use when profiling, diagnosing lag, or setting performance budgets. For code-lev
 ### Profiling Tools
 - **MicroProfiler (Ctrl+F6)**: Per-frame breakdown: scripts, physics, rendering. Primary tool for finding what's slow.
 - **Developer Console (F9)**: Stats tab: memory, network, render stats. Server Stats for server-side metrics.
-- **Script Profiler (Ctrl+Alt+F5)**: Per-script CPU usage and heap allocations.
+- **Script Profiler (Ctrl+Alt+F5)**: Per-script CPU and heap.
+- **Custom labels**: `debug.profilebegin`/`debug.profileend` name hot regions in the MicroProfiler; `debug.setmemorycategory` names thread memory in the console. Gate behind a flag (full.md).
 
 ### Performance Targets
 | Metric | Starting target | Investigate at |
@@ -29,7 +31,7 @@ Use when profiling, diagnosing lag, or setting performance budgets. For code-lev
 | Client FPS (mobile) | 45 | < 30 |
 | Memory | device-specific | sustained growth |
 
-"Expensive" means the profiler shows it on a hot frame path (raycasts, clones, large finds, replication-heavy writes). Throttle by judgment from measurements, not a universal number, and re-measure after shipping: profile before and after on representative devices and confirm the targeted metric moved without regressions. Micro-optimizations live in `roblox-luau-patterns`.
+"Expensive" means the profiler shows it on a hot frame path (raycasts, clones, large finds, replication-heavy writes). Throttle from measurements, not a universal number; re-profile after shipping. Micro-optimizations live in `roblox-luau-patterns`.
 
 ### Parallel Luau
 - Use Actors only after profiling identifies isolatable CPU work.
@@ -37,14 +39,7 @@ Use when profiling, diagnosing lag, or setting performance budgets. For code-lev
 - SharedTable and mutexes add coordination cost; they do not replace ownership boundaries.
 
 ### Object Pooling
-```luau
--- Pre-clone, reuse. get() returns a lease token; release() requires it,
--- so duplicate or foreign releases never re-list the object.
-local obj, lease = pool:get()
--- ... use obj ...
-pool:release(obj, lease)
-```
-Canonical pool code (token-lease ownership): `roblox-luau-patterns`.
+Pre-clone and reuse. Canonical pool code (token-lease ownership): `roblox-luau-patterns`.
 
 ### StreamingEnabled Essentials
 - **On by default**. Container-scoped: only Workspace descendants stream. `ModelStreamingBehavior = Improved` streams non-BasePart descendants with their parent Model; Legacy streams only BaseParts.
@@ -53,6 +48,6 @@ Canonical pool code (token-lease ownership): `roblox-luau-patterns`.
 - **Gotcha**: `FindFirstChild("DistantPart")` returns nil if streamed out. Use WaitForChild with timeout.
 
 ### Mobile
-- Profile geometry, textures, particles, UI, and shadows on low-end devices.
+- Profile geometry, textures, particles, UI, shadows on low-end devices.
 
 > Full reference with code examples and API tables: [references/full.md](references/full.md)

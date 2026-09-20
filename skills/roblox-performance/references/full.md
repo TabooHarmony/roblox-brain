@@ -48,6 +48,23 @@ Frame time converts to FPS by dividing 1,000 ms by frame time. These are the doc
 
 A high average is not the only failure mode: the docs stress **consistent** frame times, so a 16 ms average hiding periodic 40 ms spikes still reads as stutter to a player. Read the per-frame bars, not just the average.
 
+### Custom labels in the MicroProfiler
+
+The MicroProfiler is far more useful when hot paths carry their own labels. The `debug` library provides [debug.profilebegin](https://create.roblox.com/docs/en-us/reference/engine/libraries/debug) (opens a custom MicroProfiler label), `debug.profileend` (closes the most recent one), and `debug.setmemorycategory` (names a thread's memory usage in the Developer Console). They are cheap but not free, so gate them behind a flag that defaults off and wrap the calls so enabling is a one-line change:
+
+```luau
+local PROFILING = false -- flip during performance sessions
+
+local function begin(label: string)
+    if PROFILING then debug.profilebegin(label) end
+end
+local function finish()
+    if PROFILING then debug.profileend() end
+end
+```
+
+Pair `begin`/`finish` around each measured region (per-system updates, expensive queries, serialization), and set a memory category per long-lived thread so memory grouped under one script separates in the console. Labels must be balanced: every `profilebegin` needs exactly one `profileend`, on the same thread.
+
 ### Developer Console (F9)
 - **Stats**: Memory, network, render stats
 - **Server Stats** (game owner): Server-side metrics

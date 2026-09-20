@@ -13,6 +13,18 @@ This guide uses raw `DataStoreService` concepts and does not require a particula
 
 Keep the store name, schema version, and key format in one module. Use stable keys such as `player_<UserId>` and convert numeric IDs to strings at the boundary.
 
+Scope the store name by environment so Studio sessions cannot touch production records, and let RTBF template matching (section 1b) still work by keeping the `player_<UserId>` shape intact in every environment:
+
+```luau
+local RunContext = game:GetService("RunService")
+
+local STORE_NAME = if RunContext:IsStudio()
+    then "PlayerData_Studio"
+    else "PlayerData"
+```
+
+Suffix the base name; do not rename the key format per environment. A store suffix plus `ProfileStore.Mock` (for library-based setups) covers the two Studio testing modes: live API writes that stay out of production, and fully ephemeral writes.
+
 ## 1a. User identity: Player.User and UserId
 
 `Player.User` is a read-only `User` value with three fields: `Id` (a domain-scoped user ID), `DomainType` (`EXPERIENCE` or `OAUTH`), and `DomainId` (the universe ID for experiences, the application ID for OAuth). The docs designate `Player.User` as the standard way to identify users in new code, and engine APIs that accept user ID parameters also accept `User` values directly. <!-- temporal: 2026-09 -->
@@ -266,6 +278,28 @@ end
 Migrate data after it is loaded and before gameplay sees it. Each migration should be small, ordered, and testable; the `migrate` shown with `addCoins` in `## 5. Atomic updates` is the pattern:
 
 Stamping the version is part of each migration step, never a substitute for it: a write that bumps `version` without running the migrations leaves fields missing while the record claims to be current. Conversely, if a stored version is newer than `CURRENT_VERSION`, refuse the write rather than overwriting unknown schema. Keep old-field handling until every supported record has migrated or until a deliberate data-retention policy says it can be removed. Test migrations against missing fields, old nested shapes, extra fields, and malformed values.
+
+### Reconciling against the current template
+
+Versioned migration and template reconciliation solve different gaps. Migration handles schema *changes*; reconciliation handles *additions*: a new field added to the default template that old records (and any record written before the field existed) simply lack. Reconcile recursively against the typed template at load, filling only missing keys and never overwriting stored values:
+
+```luau
+local function reconcile(target, template)
+    for key, default in template do
+        if target[key] == nil then
+            target[key] = if type(default) == "table"
+                then reconcile({}, default)
+                else default
+        elseif type(target[key]) == "table" and type(default) == "table"
+            and not getmetatable(target[key]) then
+            reconcile(target[key], default)
+        end
+    end
+    return target
+end
+```
+
+Run it after migration, before the profile is exposed to gameplay. Notes: keyed tables that hold arbitrary IDs (inventories, GUID-keyed entries) need a template entry for their *shape*, not their contents, so reconcile a prototype entry rather than enumerating keys; and skip reconciliation for metatable-backed objects so you do not overwrite class instances with plain defaults.
 
 ## 7. Save lifecycle
 

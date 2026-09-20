@@ -1,871 +1,833 @@
-# API Drift Watch Registry
-# Maps factual API claims in roblox-brain skills to verifiable facts in
-# Roblox/creator-docs engine reference YAML files.
-#
-# Run `python3 verify_api_drift.py` before external review or release.
-
 entries:
-  - id: cframe-lookat-constructor-replaced
-    claim: "CFrame.new(pos, lookAt) is legacy/replaced; use CFrame.lookAt"
-    files:
-      - path: skills/roblox-camera/SKILL.md
-      - path: skills/roblox-camera/references/full.md
-    teaching_needles:
-      - CFrame.new
-      - CFrame.lookAt
-    check:
-      type: constructor_description_contains
-      datatype: CFrame
-      constructor: new
-      parameters:
-        - pos
-        - lookAt
-      contains: "replaced by"
-    verified: 2026-07-02
-
-  - id: camera-setroll-deprecated
-    claim: "Camera:SetRoll is outdated/deprecated"
-    files:
-      - path: skills/roblox-camera/SKILL.md
-      - path: skills/roblox-camera/references/full.md
-    check:
-      type: method_deprecation_status
-      class: Camera
-      member: SetRoll
-      expected: deprecated
-    verified: 2026-07-02
-
-  - id: camera-getroll-deprecated
-    claim: "Camera:GetRoll is outdated/deprecated"
-    files:
-      - path: skills/roblox-camera/references/full.md
-    check:
-      type: method_deprecation_status
-      class: Camera
-      member: GetRoll
-      expected: deprecated
-    verified: 2026-07-02
-
-  - id: lighting-style-exists
-    claim: "Lighting.LightingStyle is the current artistic-intent property"
-    files:
-      - path: skills/roblox-lighting/references/full.md
-    check:
-      type: property_exists
-      class: Lighting
-      property: LightingStyle
-    verified: 2026-07-12
-
-  - id: lighting-prioritize-quality-exists
-    claim: "Lighting.PrioritizeLightingQuality is the current quality-distance preference property"
-    files:
-      - path: skills/roblox-lighting/references/full.md
-    check:
-      type: property_exists
-      class: Lighting
-      property: PrioritizeLightingQuality
-    verified: 2026-07-12
-
-  - id: lighting-style-not-script-writable
-    claim: "Lighting.LightingStyle must be configured in Studio"
-    files:
-      - path: skills/roblox-lighting/references/full.md
-    check:
-      type: property_write_security
-      class: Lighting
-      property: LightingStyle
-      expected: RobloxScriptSecurity
-    verified: 2026-07-26
-
-  - id: lighting-prioritize-quality-not-script-writable
-    claim: "Lighting.PrioritizeLightingQuality must be configured in Studio"
-    files:
-      - path: skills/roblox-lighting/references/full.md
-    check:
-      type: property_write_security
-      class: Lighting
-      property: PrioritizeLightingQuality
-      expected: RobloxScriptSecurity
-    verified: 2026-07-26
-
-  - id: lighting-technology-deprecated
-    claim: "Lighting.Technology is deprecated (superseded by LightingStyle/PrioritizeLightingQuality) and non-scriptable"
-    files:
-      - path: skills/roblox-lighting/SKILL.md
-      - path: skills/roblox-lighting/references/full.md
-    check:
-      type: property_deprecation_status
-      class: Lighting
-      property: Technology
-      expected: deprecated
-    verified: 2026-07-23
-
-  - id: ordered-datastore-key-string
-    claim: "GlobalDataStore:SetAsync takes a string key, including for OrderedDataStore usage"
-    files:
-      - path: skills/roblox-server-data/SKILL.md
-      - path: skills/roblox-server-data/references/full.md
-    check:
-      type: method_parameter_type
-      class: GlobalDataStore
-      method: SetAsync
-      parameter: key
-      expected: string
-    verified: 2026-07-12
-
-  # --- Added 2026-07-23 grill: coverage for skills verified against live docs ---
-
-  - id: networking-unreliable-remote-event-exists
-    claim: "UnreliableRemoteEvent is a real class for loss-tolerant ephemeral events"
-    files:
-      - path: skills/roblox-networking/references/full.md
-    check:
-      type: member_exists
-      class: UnreliableRemoteEvent
-      member: FireAllClients
-    verified: 2026-07-23
-
-  - id: input-touchmoved-exists
-    claim: "UserInputService.TouchMoved is the real touch-move event (not TouchChanged)"
-    files:
-      - path: skills/roblox-input/references/full.md
-    check:
-      type: member_exists
-      class: UserInputService
-      member: TouchMoved
-    verified: 2026-07-23
-
-  - id: input-getmousedelta-exists
-    claim: "UserInputService:GetMouseDelta exists and returns Vector2"
-    files:
-      - path: skills/roblox-input/references/full.md
-    check:
-      type: method_return_type
-      class: UserInputService
-      method: GetMouseDelta
-      expected: Vector2
-    verified: 2026-07-26
-
-  - id: server-data-getsortedasync-exists
-    claim: "OrderedDataStore:GetSortedAsync returns sorted DataStorePages"
-    files:
-      - path: skills/roblox-server-data/SKILL.md
-      - path: skills/roblox-server-data/references/full.md
-    check:
-      type: member_exists
-      class: OrderedDataStore
-      member: GetSortedAsync
-    verified: 2026-07-23
-
-  - id: server-data-messaging-publish-exists
-    claim: "MessagingService:PublishAsync exists for cross-server messaging"
-    files:
-      - path: skills/roblox-server-data/SKILL.md
-      - path: skills/roblox-server-data/references/full.md
-    check:
-      type: member_exists
-      class: MessagingService
-      member: PublishAsync
-    verified: 2026-07-23
-
-  - id: analytics-logcustomevent-exists
-    claim: "AnalyticsService:LogCustomEvent exists"
-    files:
-      - path: skills/roblox-analytics/references/full.md
-    check:
-      type: member_exists
-      class: AnalyticsService
-      member: LogCustomEvent
-    verified: 2026-07-23
-
-  - id: analytics-logfunnelstepevent-exists
-    claim: "AnalyticsService:LogFunnelStepEvent exists for recurring funnels"
-    files:
-      - path: skills/roblox-analytics/references/full.md
-    check:
-      type: member_exists
-      class: AnalyticsService
-      member: LogFunnelStepEvent
-    verified: 2026-07-26
-
-  - id: analytics-logonboardingfunnelstepevent-exists
-    claim: "AnalyticsService:LogOnboardingFunnelStepEvent exists for onboarding"
-    files:
-      - path: skills/roblox-analytics/references/full.md
-    check:
-      type: member_exists
-      class: AnalyticsService
-      member: LogOnboardingFunnelStepEvent
-    verified: 2026-07-26
-
-  - id: localization-formatbykey-exists
-    claim: "Translator:FormatByKey exists (FormatTranslate does NOT)"
-    files:
-      - path: skills/roblox-localization/SKILL.md
-      - path: skills/roblox-localization/references/full.md
-    check:
-      type: member_exists
-      class: Translator
-      member: FormatByKey
-    verified: 2026-07-23
-
-  - id: localization-autolocalize-exists
-    claim: "GuiBase2d.AutoLocalize must be true for auto-translation"
-    files:
-      - path: skills/roblox-localization/references/full.md
-    check:
-      type: property_exists
-      class: GuiBase2d
-      property: AutoLocalize
-    verified: 2026-07-23
-
-  - id: performance-streamingenabled-exists
-    claim: "Workspace.StreamingEnabled exists (ReadOnly, set in Studio)"
-    files:
-      - path: skills/roblox-performance/SKILL.md
-      - path: skills/roblox-performance/references/full.md
-    check:
-      type: property_exists
-      class: Workspace
-      property: StreamingEnabled
-    verified: 2026-07-23
-
-  - id: performance-streaming-integrity-mode-exists
-    claim: "Workspace.StreamingIntegrityMode replaces removed StreamingPauseMode guidance"
-    files:
-      - path: skills/roblox-performance/SKILL.md
-      - path: skills/roblox-performance/references/full.md
-    check:
-      type: property_has_tag
-      class: Workspace
-      property: StreamingIntegrityMode
-      tag: NotScriptable
-    verified: 2026-07-26
-
-  - id: performance-predictive-streaming-not-scriptable
-    claim: "Workspace.PredictiveStreamingMode is configured in Studio, not by runtime scripts"
-    files:
-      - path: skills/roblox-performance/references/full.md
-    teaching_needles:
-      - PredictiveStreamingMode
-      - not scriptable
-    check:
-      type: property_has_tag
-      class: Workspace
-      property: PredictiveStreamingMode
-      tag: NotScriptable
-    verified: 2026-08-07
-
-  - id: audio-default-listener-location-exists
-    claim: "SoundService.DefaultListenerLocation controls default advanced-audio listener placement"
-    files:
-      - path: skills/roblox-audio/SKILL.md
-      - path: skills/roblox-audio/references/full.md
-    check:
-      type: property_write_security
-      class: SoundService
-      property: DefaultListenerLocation
-      expected: PluginSecurity
-    verified: 2026-07-26
-
-  - id: bind-to-simulation-requires-fixed-simulation
-    claim: "RunService:BindToSimulation requires Workspace.UseFixedSimulation"
-    files:
-      - path: skills/roblox-animation-vfx/SKILL.md
-      - path: skills/roblox-animation-vfx/references/full.md
-      - path: skills/roblox-input/SKILL.md
-      - path: skills/roblox-input/references/full.md
-      - path: skills/roblox-networking/SKILL.md
-      - path: skills/roblox-networking/references/full.md
-      - path: skills/roblox-physics/references/full.md
-      - path: skills/roblox-security/SKILL.md
-      - path: skills/roblox-security/references/full.md
-    teaching_needles:
-      - BindToSimulation
-      - UseFixedSimulation
-    check:
-      type: method_description_contains
-      class: RunService
-      method: BindToSimulation
-      contains: UseFixedSimulation
-    verified: 2026-07-26
-
-  - id: pathfinding-improved-search-not-scriptable
-    claim: "Workspace.PathfindingUseImprovedSearch is a Studio-only setting"
-    files:
-      - path: skills/roblox-npc-ai/SKILL.md
-      - path: skills/roblox-npc-ai/references/full.md
-    check:
-      type: property_has_tag
-      class: Workspace
-      property: PathfindingUseImprovedSearch
-      tag: NotScriptable
-    verified: 2026-07-26
-
-  - id: ui-design-core-ui-safe-insets-exists
-    claim: "Enum.ScreenInsets.CoreUISafeInsets exists"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    check:
-      type: enum_item_exists
-      enum: ScreenInsets
-      item: CoreUISafeInsets
-    verified: 2026-07-26
-
-  - id: monetization-process-receipt-exists
-    claim: "MarketplaceService.ProcessReceipt exists"
-    files:
-      - path: skills/roblox-monetization/SKILL.md
-      - path: skills/roblox-monetization/references/full.md
-    check:
-      type: member_exists
-      class: MarketplaceService
-      member: ProcessReceipt
-    verified: 2026-07-26
-
-  - id: monetization-bind-receipt-handler-exists
-    claim: "MarketplaceService:BindReceiptHandler exists"
-    files:
-      - path: skills/roblox-monetization/SKILL.md
-      - path: skills/roblox-monetization/references/full.md
-    check:
-      type: member_exists
-      class: MarketplaceService
-      member: BindReceiptHandler
-    verified: 2026-07-26
-
-  - id: ui-design-reduced-motion-enabled-exists
-    claim: "GuiService.ReducedMotionEnabled exposes the player's reduced-motion preference"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    check:
-      type: property_exists
-      class: GuiService
-      property: ReducedMotionEnabled
-    verified: 2026-07-26
-
-  - id: ui-design-screen-insets-property-exists
-    claim: "ScreenGui.ScreenInsets accepts Enum.ScreenInsets values"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    check:
-      type: property_exists
-      class: ScreenGui
-      property: ScreenInsets
-    verified: 2026-07-26
-
-  - id: analytics-custom-field-key-exists
-    claim: "Enum.AnalyticsCustomFieldKeys.CustomField01 exists for analytics custom fields"
-    files:
-      - path: skills/roblox-analytics/references/full.md
-    check:
-      type: enum_item_exists
-      enum: AnalyticsCustomFieldKeys
-      item: CustomField01
-    verified: 2026-07-26
-
-  - id: building-meshpart-meshid-not-script-writable
-    claim: "MeshPart.MeshId is read-only to ordinary runtime scripts"
-    files:
-      - path: skills/roblox-building/references/full.md
-    check:
-      type: property_write_security
-      class: MeshPart
-      property: MeshId
-      expected: NotAccessibleSecurity
-    verified: 2026-08-02
-
-  - id: building-surfaceappearance-colormap-plugin-only
-    claim: "SurfaceAppearance.ColorMap is not an ordinary runtime-write property"
-    files:
-      - path: skills/roblox-building/references/full.md
-    check:
-      type: property_write_security
-      class: SurfaceAppearance
-      property: ColorMap
-      expected: PluginSecurity
-    verified: 2026-08-02
-
-  - id: luau-core-encodingservice-base64
-    claim: "EncodingService:Base64Encode and :Base64Decode exist and operate on buffers"
-    files:
-      - path: skills/roblox-luau-core/references/full.md
-    check:
-      type: member_exists
-      class: EncodingService
-      member: Base64Encode
-    verified: 2026-09-05
-
-  - id: luau-core-encodingservice-compress
-    claim: "EncodingService:CompressBuffer exists (Zstd, compression levels -7 to 22)"
-    files:
-      - path: skills/roblox-luau-core/references/full.md
-    check:
-      type: member_exists
-      class: EncodingService
-      member: CompressBuffer
-    verified: 2026-09-05
-
-  - id: luau-core-encodingservice-hash
-    claim: "EncodingService:ComputeStringHash exists (fast hashes, not password hashing)"
-    files:
-      - path: skills/roblox-luau-core/references/full.md
-    check:
-      type: member_exists
-      class: EncodingService
-      member: ComputeStringHash
-    verified: 2026-09-05
-
-  - id: luau-core-encodingservice-decompressed-size
-    claim: "EncodingService:GetDecompressedBufferSize exists; returns nil on corrupt input"
-    files:
-      - path: skills/roblox-luau-core/references/full.md
-    check:
-      type: member_exists
-      class: EncodingService
-      member: GetDecompressedBufferSize
-    verified: 2026-09-05
-
-  - id: building-createeditableimage-exists
-    claim: "AssetService:CreateEditableImage exists (options table with Size)"
-    files:
-      - path: skills/roblox-building/references/full.md
-    check:
-      type: member_exists
-      class: AssetService
-      member: CreateEditableImage
-    verified: 2026-09-05
-
-  - id: building-editableimage-writepixelsbuffer
-    claim: "EditableImage:WritePixelsBuffer exists and takes a buffer"
-    files:
-      - path: skills/roblox-building/references/full.md
-    check:
-      type: member_exists
-      class: EditableImage
-      member: WritePixelsBuffer
-    verified: 2026-09-05
-
-  - id: building-editableimage-size-property
-    claim: "EditableImage has a read-only Size property (Vector2)"
-    files:
-      - path: skills/roblox-building/references/full.md
-    check:
-      type: property_exists
-      class: EditableImage
-      property: Size
-    verified: 2026-09-05
-
-  - id: building-editablemesh-raycastlocal
-    claim: "EditableMesh:RaycastLocal exists (used for paint-on-mesh UV lookup)"
-    files:
-      - path: skills/roblox-building/references/full.md
-    check:
-      type: member_exists
-      class: EditableMesh
-      member: RaycastLocal
-    verified: 2026-09-05
-
-  - id: input-dragdetector-dragstart-exists
-    claim: "DragDetector exposes DragStart/DragContinue/DragEnd events (not DragStarted/DragMoved/DragEnded)"
-    files:
-      - path: skills/roblox-input/references/full.md
-    check:
-      type: member_exists
-      class: DragDetector
-      member: DragStart
-    verified: 2026-09-05
-
-  - id: input-dragdetector-setdragstylefunction-exists
-    claim: "DragDetector:SetDragStyleFunction exists; function receives the cursor Ray (Scriptable DragStyle)"
-    files:
-      - path: skills/roblox-input/references/full.md
-    check:
-      type: member_exists
-      class: DragDetector
-      member: SetDragStyleFunction
-    verified: 2026-09-05
-
-  - id: input-uidragdetector-dragcontinue-exists
-    claim: "UIDragDetector exposes DragStart/DragContinue/DragEnd events carrying a Vector2 input position"
-    files:
-      - path: skills/roblox-input/references/full.md
-    check:
-      type: member_exists
-      class: UIDragDetector
-      member: DragContinue
-    verified: 2026-09-05
-
-  - id: gui-uipagelayout-jumptopage
-    claim: "UIPageLayout.JumpTo exists (page-step methods are Next/Previous; 'JumpToPage' is not a real member)"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: member_exists
-      class: UIPageLayout
-      member: JumpTo
-    verified: 2026-09-05
-
-  - id: gui-selectionbox-adornee
-    claim: "SelectionBox.Adornee is inherited from InstanceAdornment (defined there, not on SelectionBox itself)"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: InstanceAdornment
-      property: Adornee
-    verified: 2026-09-05
-
-  - id: gui-decal-texture
-    claim: "Decal.Texture exists (ContentId; deprecated in favor of ColorMap/ColorMapContent)"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: Decal
-      property: Texture
-    verified: 2026-09-05
-
-  - id: gui-videoplayer-video
-    claim: "VideoPlayer.VideoContent exists (Content); VideoPlayer has no 'Video' property (that is VideoFrame)"
-    files:
-      - path: skills/roblox-gui/references/full.md
-    check:
-      type: property_exists
-      class: VideoPlayer
-      property: VideoContent
-    verified: 2026-09-05
-
-  - id: npc-humanoid-applydescription-exists
-    claim: "Humanoid:ApplyDescription(description) applies avatar appearance at runtime"
-    files:
-      - path: skills/roblox-npc-ai/references/full.md
-    check:
-      type: member_exists
-      class: Humanoid
-      member: ApplyDescription
-    verified: 2026-09-05
-
-  - id: npc-humanoiddescription-shirt-exists
-    claim: "HumanoidDescription.Shirt holds the classic shirt asset ID"
-    files:
-      - path: skills/roblox-npc-ai/references/full.md
-    check:
-      type: property_exists
-      class: HumanoidDescription
-      property: Shirt
-    verified: 2026-09-05
-
-  - id: npc-shirt-shirttemplate-exists
-    claim: "Shirt.ShirtTemplate is the classic clothing content ID"
-    files:
-      - path: skills/roblox-npc-ai/references/full.md
-    check:
-      type: property_exists
-      class: Shirt
-      property: ShirtTemplate
-    verified: 2026-09-05
-
-  - id: luau-patterns-stringvalue-value-exists
-    claim: "StringValue.Value is a string property; Changed fires with the new value"
-    files:
-      - path: skills/roblox-luau-patterns/references/full.md
-    check:
-      type: property_exists
-      class: StringValue
-      property: Value
-    verified: 2026-09-05
-
-  - id: luau-patterns-cframevalue-value-exists
-    claim: "CFrameValue.Value is a CFrame property; Changed fires with the new value"
-    files:
-      - path: skills/roblox-luau-patterns/references/full.md
-    check:
-      type: property_exists
-      class: CFrameValue
-      property: Value
-    verified: 2026-09-05
-
-  - id: physics-lineforce-inversesquarelaw-exists
-    claim: "LineForce.InverseSquareLaw applies 1/distance^2 force falloff along the Attachment0-Attachment1 axis"
-    files:
-      - path: skills/roblox-physics/references/full.md
-    check:
-      type: property_exists
-      class: LineForce
-      property: InverseSquareLaw
-    verified: 2026-09-05
-
-  - id: physics-ikcontrol-type-exists
-    claim: "IKControl.Type takes Enum.IKControlType (Position/Rotation/Transform/LookAt) and selects the solve mode"
-    files:
-      - path: skills/roblox-physics/references/full.md
-    check:
-      type: property_exists
-      class: IKControl
-      property: Type
-    verified: 2026-09-05
-
-  - id: physics-ikcontrol-smoothtime-exists
-    claim: "IKControl.SmoothTime controls seconds of target smoothing"
-    files:
-      - path: skills/roblox-physics/references/full.md
-    check:
-      type: property_exists
-      class: IKControl
-      property: SmoothTime
-    verified: 2026-09-05
-
-  - id: teleport-teleportasync-exists
-    claim: "TeleportService:TeleportAsync(placeId, players, teleportOptions?) is the current server-side teleport method (Teleport/TeleportToPlaceInstance are legacy); yields and can throw, so wrap in pcall"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    check:
-      type: member_exists
-      class: TeleportService
-      member: TeleportAsync
-    verified: 2026-09-05
-
-  - id: teleport-getlocalplayerteleportdata-exists
-    claim: "TeleportService:GetLocalPlayerTeleportData() is the client-side call for reading teleport data on arrival (not GetTeleportData)"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    check:
-      type: member_exists
-      class: TeleportService
-      member: GetLocalPlayerTeleportData
-    verified: 2026-09-05
-
-  - id: teleport-teleportinitfailed-exists
-    claim: "TeleportService.TeleportInitFailed is the event for teleports that fail after initiating (no TeleportFailed event exists)"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    check:
-      type: member_exists
-      class: TeleportService
-      member: TeleportInitFailed
-    verified: 2026-09-05
-
-  - id: badge-awardbadgeasync-exists
-    claim: "BadgeService:AwardBadgeAsync(userId, badgeId) returns a success boolean and is the current awarding method; AwardBadge is deprecated"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    check:
-      type: member_exists
-      class: BadgeService
-      member: AwardBadgeAsync
-    verified: 2026-09-05
-
-  - id: badge-getbadgeinfoasync-exists
-    claim: "BadgeService:GetBadgeInfoAsync(badgeId) yields a dictionary including IsEnabled; check it before awarding"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    check:
-      type: member_exists
-      class: BadgeService
-      member: GetBadgeInfoAsync
-    verified: 2026-09-05
-
-  - id: httpservice-getsecret-exists
-    claim: "HttpService:GetSecret(key) returns the experience secret store value and works from server scripts"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    teaching_needles:
-      - HttpService:GetSecret
-    check:
-      type: member_exists
-      class: HttpService
-      member: GetSecret
-    verified: 2026-09-13
-
-  - id: httpservice-getsecret-returns-secret
-    claim: "HttpService:GetSecret returns a Secret datatype, not a plain string"
-    files:
-      - path: skills/roblox-cloud/references/full.md
-    check:
-      type: method_return_type
-      class: HttpService
-      method: GetSecret
-      return_index: 0
-      expected: Secret
-    verified: 2026-09-13
-
-  - id: datastoregetoptions-usecache-exists
-    claim: "DataStoreGetOptions.UseCache exists, defaults to true, and lets GetAsync return a locally cached value"
-    files:
-      - path: skills/roblox-data/references/full.md
-    teaching_needles:
-      - UseCache
-    check:
-      type: property_exists
-      class: DataStoreGetOptions
-      property: UseCache
-    verified: 2026-09-13
-
-  - id: player-user-domain-scoped-identity
-    claim: "Player.User is the domain-scoped identity value and the documented standard for identifying users in new code"
-    files:
-      - path: skills/roblox-data/references/full.md
-      - path: skills/roblox-server-data/references/full.md
-    teaching_needles:
-      - player.User
-    check:
-      type: property_exists
-      class: Player
-      property: User
-    verified: 2026-09-13
-
-  - id: players-banasync-exists
-    claim: "Players:BanAsync is the native enforcement API and is gated by Players.BanningEnabled"
-    files:
-      - path: skills/roblox-security/references/full.md
-    teaching_needles:
-      - BanAsync
-      - BanningEnabled
-    check:
-      type: member_exists
-      class: Players
-      member: BanAsync
-    verified: 2026-09-13
-
-  - id: players-banningenabled-gate-exists
-    claim: "Players.BanningEnabled is the property that enables and disables the ban API"
-    files:
-      - path: skills/roblox-security/references/full.md
-    check:
-      type: member_exists
-      class: Players
-      member: BanningEnabled
-    verified: 2026-09-13
-
-  - id: players-unbanasync-exists
-    claim: "Players:UnbanAsync lifts a ban, including a device block that only unban can clear"
-    files:
-      - path: skills/roblox-security/references/full.md
-    check:
-      type: member_exists
-      class: Players
-      member: UnbanAsync
-    verified: 2026-09-13
-
-  - id: players-getbanhistoryasync-exists
-    claim: "Players:GetBanHistoryAsync reads an account's ban history"
-    files:
-      - path: skills/roblox-security/references/full.md
-    check:
-      type: member_exists
-      class: Players
-      member: GetBanHistoryAsync
-    verified: 2026-09-13
-
-  - id: datastore-version-history-members
-    claim: "Data store version history is read through ListVersionsAsync, GetVersionAsync, GetVersionAtTimeAsync, and RemoveVersionAsync"
-    files:
-      - path: skills/roblox-data/references/full.md
-    teaching_needles:
-      - ListVersionsAsync
-      - GetVersionAtTimeAsync
-    check:
-      type: member_exists
-      class: DataStore
-      member: ListVersionsAsync
-    verified: 2026-09-13
-
-
-  - id: stylesheet-setderives-exists
-    claim: "StyleSheet:SetDerives creates derived stylesheets and is the sheet-side counterpart of StyleDerive"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    teaching_needles:
-      - SetDerives
-    check:
-      type: member_exists
-      class: StyleSheet
-      member: SetDerives
-    verified: 2026-09-13
-
-  - id: stylequery-setcondition-exists
-    claim: "StyleQuery:SetCondition applies a query condition and StyleQuery:GetConditions reads the active set"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    teaching_needles:
-      - SetCondition
-    check:
-      type: member_exists
-      class: StyleQuery
-      member: SetCondition
-    verified: 2026-09-13
-
-  - id: uiflexitem-properties-exist
-    claim: "UIFlexItem children control flex layout through FlexMode, GrowRatio, ShrinkRatio, and ItemLineAlignment"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    teaching_needles:
-      - UIFlexItem
-    check:
-      type: property_exists
-      class: UIFlexItem
-      property: FlexMode
-    verified: 2026-09-13
-
-  - id: uilistlayout-flex-properties-exist
-    claim: "UIListLayout gains UIListLayout.HorizontalFlex and UIListLayout.VerticalFlex for flex-based list layout"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    teaching_needles:
-      - HorizontalFlex
-    check:
-      type: property_exists
-      class: UIListLayout
-      property: HorizontalFlex
-    verified: 2026-09-13
-
-  - id: uicorner-per-corner-properties-exist
-    claim: "UICorner exposes per-corner radii (TopLeftRadius, TopRightRadius, BottomLeftRadius, BottomRightRadius) with CornerRadius as the shorthand"
-    files:
-      - path: skills/roblox-ui-design/references/full.md
-    teaching_needles:
-      - TopLeftRadius
-    check:
-      type: property_exists
-      class: UICorner
-      property: TopLeftRadius
-    verified: 2026-09-13
-
-  - id: globaldatastore-batchgetasync-exists
-    claim: "GlobalDataStore:BatchGetAsync reads multiple keys in one call and is supported on ordered data stores"
-    files:
-      - path: skills/roblox-data/references/full.md
-      - path: skills/roblox-server-data/references/full.md
-    teaching_needles:
-      - BatchGetAsync
-    check:
-      type: member_exists
-      class: GlobalDataStore
-      member: BatchGetAsync
-    verified: 2026-09-13
-
-  - id: instance-sandboxed-property-exists
-    claim: "Instance.Sandboxed marks an instance as sandboxed and Instance.Capabilities grants its thread a capability set"
-    files:
-      - path: skills/roblox-security/references/full.md
-    teaching_needles:
-      - Sandboxed
-    check:
-      type: property_exists
-      class: Instance
-      property: Sandboxed
-    verified: 2026-09-13
-
-  - id: runservice-setpredictionmode-exists
-    claim: "RunService:SetPredictionMode forces prediction for an instance and is a client-side call"
-    files:
-      - path: skills/roblox-security/references/full.md
-      - path: skills/roblox-networking/references/full.md
-    teaching_needles:
-      - SetPredictionMode
-    check:
-      type: member_exists
-      class: RunService
-      member: SetPredictionMode
-    verified: 2026-09-13
+- id: cframe-lookat-constructor-replaced
+  claim: CFrame.new(pos, lookAt) is legacy/replaced; use CFrame.lookAt
+  files:
+  - path: skills/roblox-camera/SKILL.md
+  - path: skills/roblox-camera/references/full.md
+  teaching_needles:
+  - CFrame.new
+  - CFrame.lookAt
+  check:
+    type: constructor_description_contains
+    datatype: CFrame
+    constructor: new
+    parameters:
+    - pos
+    - lookAt
+    contains: replaced by
+  verified: 2026-07-02
+- id: camera-setroll-deprecated
+  claim: Camera:SetRoll is outdated/deprecated
+  files:
+  - path: skills/roblox-camera/SKILL.md
+  - path: skills/roblox-camera/references/full.md
+  check:
+    type: method_deprecation_status
+    class: Camera
+    member: SetRoll
+    expected: deprecated
+  verified: 2026-07-02
+- id: camera-getroll-deprecated
+  claim: Camera:GetRoll is outdated/deprecated
+  files:
+  - path: skills/roblox-camera/references/full.md
+  check:
+    type: method_deprecation_status
+    class: Camera
+    member: GetRoll
+    expected: deprecated
+  verified: 2026-07-02
+- id: lighting-style-exists
+  claim: Lighting.LightingStyle is the current artistic-intent property
+  files:
+  - path: skills/roblox-lighting/references/full.md
+  check:
+    type: property_exists
+    class: Lighting
+    property: LightingStyle
+  verified: 2026-07-12
+- id: lighting-prioritize-quality-exists
+  claim: Lighting.PrioritizeLightingQuality is the current quality-distance preference
+    property
+  files:
+  - path: skills/roblox-lighting/references/full.md
+  check:
+    type: property_exists
+    class: Lighting
+    property: PrioritizeLightingQuality
+  verified: 2026-07-12
+- id: lighting-style-not-script-writable
+  claim: Lighting.LightingStyle must be configured in Studio
+  files:
+  - path: skills/roblox-lighting/references/full.md
+  check:
+    type: property_write_security
+    class: Lighting
+    property: LightingStyle
+    expected: RobloxScriptSecurity
+  verified: 2026-07-26
+- id: lighting-prioritize-quality-not-script-writable
+  claim: Lighting.PrioritizeLightingQuality must be configured in Studio
+  files:
+  - path: skills/roblox-lighting/references/full.md
+  check:
+    type: property_write_security
+    class: Lighting
+    property: PrioritizeLightingQuality
+    expected: RobloxScriptSecurity
+  verified: 2026-07-26
+- id: lighting-technology-deprecated
+  claim: Lighting.Technology is deprecated (superseded by LightingStyle/PrioritizeLightingQuality)
+    and non-scriptable
+  files:
+  - path: skills/roblox-lighting/SKILL.md
+  - path: skills/roblox-lighting/references/full.md
+  check:
+    type: property_deprecation_status
+    class: Lighting
+    property: Technology
+    expected: deprecated
+  verified: 2026-07-23
+- id: ordered-datastore-key-string
+  claim: GlobalDataStore:SetAsync takes a string key, including for OrderedDataStore
+    usage
+  files:
+  - path: skills/roblox-server-data/SKILL.md
+  - path: skills/roblox-server-data/references/full.md
+  check:
+    type: method_parameter_type
+    class: GlobalDataStore
+    method: SetAsync
+    parameter: key
+    expected: string
+  verified: 2026-07-12
+- id: networking-unreliable-remote-event-exists
+  claim: UnreliableRemoteEvent is a real class for loss-tolerant ephemeral events
+  files:
+  - path: skills/roblox-networking/references/full.md
+  check:
+    type: member_exists
+    class: UnreliableRemoteEvent
+    member: FireAllClients
+  verified: 2026-07-23
+- id: input-touchmoved-exists
+  claim: UserInputService.TouchMoved is the real touch-move event (not TouchChanged)
+  files:
+  - path: skills/roblox-input/references/full.md
+  check:
+    type: member_exists
+    class: UserInputService
+    member: TouchMoved
+  verified: 2026-07-23
+- id: input-getmousedelta-exists
+  claim: UserInputService:GetMouseDelta exists and returns Vector2
+  files:
+  - path: skills/roblox-input/references/full.md
+  check:
+    type: method_return_type
+    class: UserInputService
+    method: GetMouseDelta
+    expected: Vector2
+  verified: 2026-07-26
+- id: server-data-getsortedasync-exists
+  claim: OrderedDataStore:GetSortedAsync returns sorted DataStorePages
+  files:
+  - path: skills/roblox-server-data/SKILL.md
+  - path: skills/roblox-server-data/references/full.md
+  check:
+    type: member_exists
+    class: OrderedDataStore
+    member: GetSortedAsync
+  verified: 2026-07-23
+- id: server-data-messaging-publish-exists
+  claim: MessagingService:PublishAsync exists for cross-server messaging
+  files:
+  - path: skills/roblox-server-data/SKILL.md
+  - path: skills/roblox-server-data/references/full.md
+  check:
+    type: member_exists
+    class: MessagingService
+    member: PublishAsync
+  verified: 2026-07-23
+- id: analytics-logcustomevent-exists
+  claim: AnalyticsService:LogCustomEvent exists
+  files:
+  - path: skills/roblox-analytics/references/full.md
+  check:
+    type: member_exists
+    class: AnalyticsService
+    member: LogCustomEvent
+  verified: 2026-07-23
+- id: analytics-logfunnelstepevent-exists
+  claim: AnalyticsService:LogFunnelStepEvent exists for recurring funnels
+  files:
+  - path: skills/roblox-analytics/references/full.md
+  check:
+    type: member_exists
+    class: AnalyticsService
+    member: LogFunnelStepEvent
+  verified: 2026-07-26
+- id: analytics-logonboardingfunnelstepevent-exists
+  claim: AnalyticsService:LogOnboardingFunnelStepEvent exists for onboarding
+  files:
+  - path: skills/roblox-analytics/references/full.md
+  check:
+    type: member_exists
+    class: AnalyticsService
+    member: LogOnboardingFunnelStepEvent
+  verified: 2026-07-26
+- id: localization-formatbykey-exists
+  claim: Translator:FormatByKey exists (FormatTranslate does NOT)
+  files:
+  - path: skills/roblox-localization/SKILL.md
+  - path: skills/roblox-localization/references/full.md
+  check:
+    type: member_exists
+    class: Translator
+    member: FormatByKey
+  verified: 2026-07-23
+- id: localization-autolocalize-exists
+  claim: GuiBase2d.AutoLocalize must be true for auto-translation
+  files:
+  - path: skills/roblox-localization/references/full.md
+  check:
+    type: property_exists
+    class: GuiBase2d
+    property: AutoLocalize
+  verified: 2026-07-23
+- id: performance-streamingenabled-exists
+  claim: Workspace.StreamingEnabled exists (ReadOnly, set in Studio)
+  files:
+  - path: skills/roblox-performance/SKILL.md
+  - path: skills/roblox-performance/references/full.md
+  check:
+    type: property_exists
+    class: Workspace
+    property: StreamingEnabled
+  verified: 2026-07-23
+- id: performance-streaming-integrity-mode-exists
+  claim: Workspace.StreamingIntegrityMode replaces removed StreamingPauseMode guidance
+  files:
+  - path: skills/roblox-performance/SKILL.md
+  - path: skills/roblox-performance/references/full.md
+  check:
+    type: property_has_tag
+    class: Workspace
+    property: StreamingIntegrityMode
+    tag: NotScriptable
+  verified: 2026-07-26
+- id: performance-predictive-streaming-not-scriptable
+  claim: Workspace.PredictiveStreamingMode is configured in Studio, not by runtime
+    scripts
+  files:
+  - path: skills/roblox-performance/references/full.md
+  teaching_needles:
+  - PredictiveStreamingMode
+  - not scriptable
+  check:
+    type: property_has_tag
+    class: Workspace
+    property: PredictiveStreamingMode
+    tag: NotScriptable
+  verified: 2026-08-07
+- id: audio-default-listener-location-exists
+  claim: SoundService.DefaultListenerLocation controls default advanced-audio listener
+    placement
+  files:
+  - path: skills/roblox-audio/SKILL.md
+  - path: skills/roblox-audio/references/full.md
+  check:
+    type: property_write_security
+    class: SoundService
+    property: DefaultListenerLocation
+    expected: PluginSecurity
+  verified: 2026-07-26
+- id: bind-to-simulation-requires-fixed-simulation
+  claim: RunService:BindToSimulation requires Workspace.UseFixedSimulation
+  files:
+  - path: skills/roblox-animation-vfx/SKILL.md
+  - path: skills/roblox-animation-vfx/references/full.md
+  - path: skills/roblox-input/SKILL.md
+  - path: skills/roblox-input/references/full.md
+  - path: skills/roblox-networking/SKILL.md
+  - path: skills/roblox-networking/references/full.md
+  - path: skills/roblox-physics/references/full.md
+  - path: skills/roblox-security/SKILL.md
+  - path: skills/roblox-security/references/full.md
+  teaching_needles:
+  - BindToSimulation
+  - UseFixedSimulation
+  check:
+    type: method_description_contains
+    class: RunService
+    method: BindToSimulation
+    contains: UseFixedSimulation
+  verified: 2026-07-26
+- id: pathfinding-improved-search-not-scriptable
+  claim: Workspace.PathfindingUseImprovedSearch is a Studio-only setting
+  files:
+  - path: skills/roblox-npc-ai/SKILL.md
+  - path: skills/roblox-npc-ai/references/full.md
+  check:
+    type: property_has_tag
+    class: Workspace
+    property: PathfindingUseImprovedSearch
+    tag: NotScriptable
+  verified: 2026-07-26
+- id: ui-design-core-ui-safe-insets-exists
+  claim: Enum.ScreenInsets.CoreUISafeInsets exists
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  check:
+    type: enum_item_exists
+    enum: ScreenInsets
+    item: CoreUISafeInsets
+  verified: 2026-07-26
+- id: monetization-process-receipt-exists
+  claim: MarketplaceService.ProcessReceipt exists
+  files:
+  - path: skills/roblox-monetization/SKILL.md
+  - path: skills/roblox-monetization/references/full.md
+  check:
+    type: member_exists
+    class: MarketplaceService
+    member: ProcessReceipt
+  verified: 2026-07-26
+- id: monetization-bind-receipt-handler-exists
+  claim: MarketplaceService:BindReceiptHandler exists
+  files:
+  - path: skills/roblox-monetization/SKILL.md
+  - path: skills/roblox-monetization/references/full.md
+  check:
+    type: member_exists
+    class: MarketplaceService
+    member: BindReceiptHandler
+  verified: 2026-07-26
+- id: ui-design-reduced-motion-enabled-exists
+  claim: GuiService.ReducedMotionEnabled exposes the player's reduced-motion preference
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  check:
+    type: property_exists
+    class: GuiService
+    property: ReducedMotionEnabled
+  verified: 2026-07-26
+- id: ui-design-screen-insets-property-exists
+  claim: ScreenGui.ScreenInsets accepts Enum.ScreenInsets values
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  check:
+    type: property_exists
+    class: ScreenGui
+    property: ScreenInsets
+  verified: 2026-07-26
+- id: analytics-custom-field-key-exists
+  claim: Enum.AnalyticsCustomFieldKeys.CustomField01 exists for analytics custom fields
+  files:
+  - path: skills/roblox-analytics/references/full.md
+  check:
+    type: enum_item_exists
+    enum: AnalyticsCustomFieldKeys
+    item: CustomField01
+  verified: 2026-07-26
+- id: building-meshpart-meshid-not-script-writable
+  claim: MeshPart.MeshId is read-only to ordinary runtime scripts
+  files:
+  - path: skills/roblox-building/references/full.md
+  check:
+    type: property_write_security
+    class: MeshPart
+    property: MeshId
+    expected: NotAccessibleSecurity
+  verified: 2026-08-02
+- id: building-surfaceappearance-colormap-plugin-only
+  claim: SurfaceAppearance.ColorMap is not an ordinary runtime-write property
+  files:
+  - path: skills/roblox-building/references/full.md
+  check:
+    type: property_write_security
+    class: SurfaceAppearance
+    property: ColorMap
+    expected: PluginSecurity
+  verified: 2026-08-02
+- id: luau-core-encodingservice-base64
+  claim: EncodingService:Base64Encode and :Base64Decode exist and operate on buffers
+  files:
+  - path: skills/roblox-luau-core/references/full.md
+  check:
+    type: member_exists
+    class: EncodingService
+    member: Base64Encode
+  verified: 2026-09-05
+- id: luau-core-encodingservice-compress
+  claim: EncodingService:CompressBuffer exists (Zstd, compression levels -7 to 22)
+  files:
+  - path: skills/roblox-luau-core/references/full.md
+  check:
+    type: member_exists
+    class: EncodingService
+    member: CompressBuffer
+  verified: 2026-09-05
+- id: luau-core-encodingservice-hash
+  claim: EncodingService:ComputeStringHash exists (fast hashes, not password hashing)
+  files:
+  - path: skills/roblox-luau-core/references/full.md
+  check:
+    type: member_exists
+    class: EncodingService
+    member: ComputeStringHash
+  verified: 2026-09-05
+- id: luau-core-encodingservice-decompressed-size
+  claim: EncodingService:GetDecompressedBufferSize exists; returns nil on corrupt
+    input
+  files:
+  - path: skills/roblox-luau-core/references/full.md
+  check:
+    type: member_exists
+    class: EncodingService
+    member: GetDecompressedBufferSize
+  verified: 2026-09-05
+- id: building-createeditableimage-exists
+  claim: AssetService:CreateEditableImage exists (options table with Size)
+  files:
+  - path: skills/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: AssetService
+    member: CreateEditableImage
+  verified: 2026-09-05
+- id: building-editableimage-writepixelsbuffer
+  claim: EditableImage:WritePixelsBuffer exists and takes a buffer
+  files:
+  - path: skills/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: EditableImage
+    member: WritePixelsBuffer
+  verified: 2026-09-05
+- id: building-editableimage-size-property
+  claim: EditableImage has a read-only Size property (Vector2)
+  files:
+  - path: skills/roblox-building/references/full.md
+  check:
+    type: property_exists
+    class: EditableImage
+    property: Size
+  verified: 2026-09-05
+- id: building-editablemesh-raycastlocal
+  claim: EditableMesh:RaycastLocal exists (used for paint-on-mesh UV lookup)
+  files:
+  - path: skills/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: EditableMesh
+    member: RaycastLocal
+  verified: 2026-09-05
+- id: input-dragdetector-dragstart-exists
+  claim: DragDetector exposes DragStart/DragContinue/DragEnd events (not DragStarted/DragMoved/DragEnded)
+  files:
+  - path: skills/roblox-input/references/full.md
+  check:
+    type: member_exists
+    class: DragDetector
+    member: DragStart
+  verified: 2026-09-05
+- id: input-dragdetector-setdragstylefunction-exists
+  claim: DragDetector:SetDragStyleFunction exists; function receives the cursor Ray
+    (Scriptable DragStyle)
+  files:
+  - path: skills/roblox-input/references/full.md
+  check:
+    type: member_exists
+    class: DragDetector
+    member: SetDragStyleFunction
+  verified: 2026-09-05
+- id: input-uidragdetector-dragcontinue-exists
+  claim: UIDragDetector exposes DragStart/DragContinue/DragEnd events carrying a Vector2
+    input position
+  files:
+  - path: skills/roblox-input/references/full.md
+  check:
+    type: member_exists
+    class: UIDragDetector
+    member: DragContinue
+  verified: 2026-09-05
+- id: gui-uipagelayout-jumptopage
+  claim: UIPageLayout.JumpTo exists (page-step methods are Next/Previous; 'JumpToPage'
+    is not a real member)
+  files:
+  - path: skills/roblox-gui/references/full.md
+  check:
+    type: member_exists
+    class: UIPageLayout
+    member: JumpTo
+  verified: 2026-09-05
+- id: gui-selectionbox-adornee
+  claim: SelectionBox.Adornee is inherited from InstanceAdornment (defined there,
+    not on SelectionBox itself)
+  files:
+  - path: skills/roblox-gui/references/full.md
+  check:
+    type: property_exists
+    class: InstanceAdornment
+    property: Adornee
+  verified: 2026-09-05
+- id: gui-decal-texture
+  claim: Decal.Texture exists (ContentId; deprecated in favor of ColorMap/ColorMapContent)
+  files:
+  - path: skills/roblox-gui/references/full.md
+  check:
+    type: property_exists
+    class: Decal
+    property: Texture
+  verified: 2026-09-05
+- id: gui-videoplayer-video
+  claim: VideoPlayer.VideoContent exists (Content); VideoPlayer has no 'Video' property
+    (that is VideoFrame)
+  files:
+  - path: skills/roblox-gui/references/full.md
+  check:
+    type: property_exists
+    class: VideoPlayer
+    property: VideoContent
+  verified: 2026-09-05
+- id: npc-humanoid-applydescription-exists
+  claim: Humanoid:ApplyDescription(description) applies avatar appearance at runtime
+  files:
+  - path: skills/roblox-npc-ai/references/full.md
+  check:
+    type: member_exists
+    class: Humanoid
+    member: ApplyDescription
+  verified: 2026-09-05
+- id: npc-humanoiddescription-shirt-exists
+  claim: HumanoidDescription.Shirt holds the classic shirt asset ID
+  files:
+  - path: skills/roblox-npc-ai/references/full.md
+  check:
+    type: property_exists
+    class: HumanoidDescription
+    property: Shirt
+  verified: 2026-09-05
+- id: npc-shirt-shirttemplate-exists
+  claim: Shirt.ShirtTemplate is the classic clothing content ID
+  files:
+  - path: skills/roblox-npc-ai/references/full.md
+  check:
+    type: property_exists
+    class: Shirt
+    property: ShirtTemplate
+  verified: 2026-09-05
+- id: luau-patterns-stringvalue-value-exists
+  claim: StringValue.Value is a string property; Changed fires with the new value
+  files:
+  - path: skills/roblox-luau-patterns/references/full.md
+  check:
+    type: property_exists
+    class: StringValue
+    property: Value
+  verified: 2026-09-05
+- id: luau-patterns-cframevalue-value-exists
+  claim: CFrameValue.Value is a CFrame property; Changed fires with the new value
+  files:
+  - path: skills/roblox-luau-patterns/references/full.md
+  check:
+    type: property_exists
+    class: CFrameValue
+    property: Value
+  verified: 2026-09-05
+- id: physics-lineforce-inversesquarelaw-exists
+  claim: LineForce.InverseSquareLaw applies 1/distance^2 force falloff along the Attachment0-Attachment1
+    axis
+  files:
+  - path: skills/roblox-physics/references/full.md
+  check:
+    type: property_exists
+    class: LineForce
+    property: InverseSquareLaw
+  verified: 2026-09-05
+- id: physics-ikcontrol-type-exists
+  claim: IKControl.Type takes Enum.IKControlType (Position/Rotation/Transform/LookAt)
+    and selects the solve mode
+  files:
+  - path: skills/roblox-physics/references/full.md
+  check:
+    type: property_exists
+    class: IKControl
+    property: Type
+  verified: 2026-09-05
+- id: physics-ikcontrol-smoothtime-exists
+  claim: IKControl.SmoothTime controls seconds of target smoothing
+  files:
+  - path: skills/roblox-physics/references/full.md
+  check:
+    type: property_exists
+    class: IKControl
+    property: SmoothTime
+  verified: 2026-09-05
+- id: teleport-teleportasync-exists
+  claim: TeleportService:TeleportAsync(placeId, players, teleportOptions?) is the
+    current server-side teleport method (Teleport/TeleportToPlaceInstance are legacy);
+    yields and can throw, so wrap in pcall
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  check:
+    type: member_exists
+    class: TeleportService
+    member: TeleportAsync
+  verified: 2026-09-05
+- id: teleport-getlocalplayerteleportdata-exists
+  claim: TeleportService:GetLocalPlayerTeleportData() is the client-side call for
+    reading teleport data on arrival (not GetTeleportData)
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  check:
+    type: member_exists
+    class: TeleportService
+    member: GetLocalPlayerTeleportData
+  verified: 2026-09-05
+- id: teleport-teleportinitfailed-exists
+  claim: TeleportService.TeleportInitFailed is the event for teleports that fail after
+    initiating (no TeleportFailed event exists)
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  check:
+    type: member_exists
+    class: TeleportService
+    member: TeleportInitFailed
+  verified: 2026-09-05
+- id: badge-awardbadgeasync-exists
+  claim: BadgeService:AwardBadgeAsync(userId, badgeId) returns a success boolean and
+    is the current awarding method; AwardBadge is deprecated
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  check:
+    type: member_exists
+    class: BadgeService
+    member: AwardBadgeAsync
+  verified: 2026-09-05
+- id: badge-getbadgeinfoasync-exists
+  claim: BadgeService:GetBadgeInfoAsync(badgeId) yields a dictionary including IsEnabled;
+    check it before awarding
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  check:
+    type: member_exists
+    class: BadgeService
+    member: GetBadgeInfoAsync
+  verified: 2026-09-05
+- id: httpservice-getsecret-exists
+  claim: HttpService:GetSecret(key) returns the experience secret store value and
+    works from server scripts
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  teaching_needles:
+  - HttpService:GetSecret
+  check:
+    type: member_exists
+    class: HttpService
+    member: GetSecret
+  verified: 2026-09-13
+- id: httpservice-getsecret-returns-secret
+  claim: HttpService:GetSecret returns a Secret datatype, not a plain string
+  files:
+  - path: skills/roblox-cloud/references/full.md
+  check:
+    type: method_return_type
+    class: HttpService
+    method: GetSecret
+    return_index: 0
+    expected: Secret
+  verified: 2026-09-13
+- id: datastoregetoptions-usecache-exists
+  claim: DataStoreGetOptions.UseCache exists, defaults to true, and lets GetAsync
+    return a locally cached value
+  files:
+  - path: skills/roblox-data/references/full.md
+  teaching_needles:
+  - UseCache
+  check:
+    type: property_exists
+    class: DataStoreGetOptions
+    property: UseCache
+  verified: 2026-09-13
+- id: player-user-domain-scoped-identity
+  claim: Player.User is the domain-scoped identity value and the documented standard
+    for identifying users in new code
+  files:
+  - path: skills/roblox-data/references/full.md
+  - path: skills/roblox-server-data/references/full.md
+  teaching_needles:
+  - player.User
+  check:
+    type: property_exists
+    class: Player
+    property: User
+  verified: 2026-09-13
+- id: players-banasync-exists
+  claim: Players:BanAsync is the native enforcement API and is gated by Players.BanningEnabled
+  files:
+  - path: skills/roblox-security/references/full.md
+  teaching_needles:
+  - BanAsync
+  - BanningEnabled
+  check:
+    type: member_exists
+    class: Players
+    member: BanAsync
+  verified: 2026-09-13
+- id: players-banningenabled-gate-exists
+  claim: Players.BanningEnabled is the property that enables and disables the ban
+    API
+  files:
+  - path: skills/roblox-security/references/full.md
+  check:
+    type: member_exists
+    class: Players
+    member: BanningEnabled
+  verified: 2026-09-13
+- id: players-unbanasync-exists
+  claim: Players:UnbanAsync lifts a ban, including a device block that only unban
+    can clear
+  files:
+  - path: skills/roblox-security/references/full.md
+  check:
+    type: member_exists
+    class: Players
+    member: UnbanAsync
+  verified: 2026-09-13
+- id: players-getbanhistoryasync-exists
+  claim: Players:GetBanHistoryAsync reads an account's ban history
+  files:
+  - path: skills/roblox-security/references/full.md
+  check:
+    type: member_exists
+    class: Players
+    member: GetBanHistoryAsync
+  verified: 2026-09-13
+- id: datastore-version-history-members
+  claim: Data store version history is read through ListVersionsAsync, GetVersionAsync,
+    GetVersionAtTimeAsync, and RemoveVersionAsync
+  files:
+  - path: skills/roblox-data/references/full.md
+  teaching_needles:
+  - ListVersionsAsync
+  - GetVersionAtTimeAsync
+  check:
+    type: member_exists
+    class: DataStore
+    member: ListVersionsAsync
+  verified: 2026-09-13
+- id: stylesheet-setderives-exists
+  claim: StyleSheet:SetDerives creates derived stylesheets and is the sheet-side counterpart
+    of StyleDerive
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  teaching_needles:
+  - SetDerives
+  check:
+    type: member_exists
+    class: StyleSheet
+    member: SetDerives
+  verified: 2026-09-13
+- id: stylequery-setcondition-exists
+  claim: StyleQuery:SetCondition applies a query condition and StyleQuery:GetConditions
+    reads the active set
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  teaching_needles:
+  - SetCondition
+  check:
+    type: member_exists
+    class: StyleQuery
+    member: SetCondition
+  verified: 2026-09-13
+- id: uiflexitem-properties-exist
+  claim: UIFlexItem children control flex layout through FlexMode, GrowRatio, ShrinkRatio,
+    and ItemLineAlignment
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  teaching_needles:
+  - UIFlexItem
+  check:
+    type: property_exists
+    class: UIFlexItem
+    property: FlexMode
+  verified: 2026-09-13
+- id: uilistlayout-flex-properties-exist
+  claim: UIListLayout gains UIListLayout.HorizontalFlex and UIListLayout.VerticalFlex
+    for flex-based list layout
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  teaching_needles:
+  - HorizontalFlex
+  check:
+    type: property_exists
+    class: UIListLayout
+    property: HorizontalFlex
+  verified: 2026-09-13
+- id: uicorner-per-corner-properties-exist
+  claim: UICorner exposes per-corner radii (TopLeftRadius, TopRightRadius, BottomLeftRadius,
+    BottomRightRadius) with CornerRadius as the shorthand
+  files:
+  - path: skills/roblox-ui-design/references/full.md
+  teaching_needles:
+  - TopLeftRadius
+  check:
+    type: property_exists
+    class: UICorner
+    property: TopLeftRadius
+  verified: 2026-09-13
+- id: globaldatastore-batchgetasync-exists
+  claim: GlobalDataStore:BatchGetAsync reads multiple keys in one call and is supported
+    on ordered data stores
+  files:
+  - path: skills/roblox-data/references/full.md
+  - path: skills/roblox-server-data/references/full.md
+  teaching_needles:
+  - BatchGetAsync
+  check:
+    type: member_exists
+    class: GlobalDataStore
+    member: BatchGetAsync
+  verified: 2026-09-13
+- id: instance-sandboxed-property-exists
+  claim: Instance.Sandboxed marks an instance as sandboxed and Instance.Capabilities
+    grants its thread a capability set
+  files:
+  - path: skills/roblox-security/references/full.md
+  teaching_needles:
+  - Sandboxed
+  check:
+    type: property_exists
+    class: Instance
+    property: Sandboxed
+  verified: 2026-09-13
+- id: runservice-setpredictionmode-exists
+  claim: RunService:SetPredictionMode forces prediction for an instance and is a client-side
+    call
+  files:
+  - path: skills/roblox-security/references/full.md
+  - path: skills/roblox-networking/references/full.md
+  teaching_needles:
+  - SetPredictionMode
+  check:
+    type: member_exists
+    class: RunService
+    member: SetPredictionMode
+  verified: 2026-09-13
+- id: debug-library-profiler-members
+  claim: The debug library exposes profilebegin, profileend, and setmemorycategory
+    for custom MicroProfiler labels and Developer Console memory categories
+  files:
+  - path: skills/roblox-performance/SKILL.md
+  - path: skills/roblox-performance/references/full.md
+  teaching_needles:
+  - debug.profilebegin
+  - debug.profileend
+  - debug.setmemorycategory
+  check:
+    type: library_member_exists
+    library: debug
+    member: profilebegin
+  verified: true

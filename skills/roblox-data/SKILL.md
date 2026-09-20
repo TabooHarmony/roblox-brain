@@ -1,7 +1,7 @@
 ---
 name: roblox-data
 description: "Use when implementing player data persistence with DataStore, session ownership, schemas, migrations, or save and load flows."
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-19
 sources:
   - https://create.roblox.com/docs/cloud-services/data-stores
   - https://create.roblox.com/docs/cloud-services/data-stores-vs-memory-stores
@@ -25,15 +25,15 @@ Load when designing player saves, schema migrations, retries, shutdown handling,
 
 ## Quick Reference
 
-- Define a serializable template and a version field before storing player state. Deep-copy templates so nested defaults are not shared, and run migrations before stamping the version.
+- Define a serializable template and a version field before storing player state. Deep-copy templates so nested defaults are not shared; migrate, then reconcile missing fields against the template. Scope store names by environment (`PlayerData_Studio`) so Studio writes stay out of production.
 - Use `UpdateAsync` for read-modify-write; handle throttling and transient errors.
-- Prevent two servers from mutating the same profile at once: a session-ownership wrapper or an equivalent protocol.
-- With ProfileStore: `StartSessionAsync`, `Profile.OnSessionEnd`, `EndSession` as documented; no `Steal` for normal loads; `ProfileStore.Mock` for Studio tests.
-- Save on meaningful changes and lifecycle boundaries; `PlayerRemoving` alone is not sufficient. Use `BindToClose` to finish pending work.
-- Store primitives, arrays, dictionaries; convert Instances/userdata/functions/cyclic tables first. Validate persisted numbers (no NaN/inf), strings (`utf8.len`), and nested tables: one bad value fails the whole write.
+- Prevent two servers mutating one profile at once: a session-ownership wrapper or equivalent protocol.
+- With ProfileStore: `StartSessionAsync`, `Profile.OnSessionEnd`, `EndSession` as documented; no `Steal` for normal loads; `ProfileStore.Mock` for ephemeral Studio writes.
+- Save on meaningful changes and lifecycle boundaries; `PlayerRemoving` alone is not sufficient. `BindToClose` finishes pending work.
+- Store primitives, arrays, dictionaries; convert Instances/userdata/functions/cyclic tables first. Validate numbers (no NaN/inf), strings (`utf8.len`), nested tables: one bad value fails the write.
 - RTBF: keep the user ID as a static substring in keys (`player_<UserId>`) so `{UserId}` deletion templates can match; hashed or random keys make erasure manual.
 - `GetAsync` serves a 4-second local cache (`DataStoreGetOptions.UseCache`, default `true`); verify writes with `UseCache = false`.
 - Poll `DataStoreService:GetRequestBudgetForRequestType` for live headroom; quotas scale with concurrent users (experience reads: 300 + concurrentUsers x 40/min).
 - New code identifies users with `player.User` (`User.Id`, `DomainType`, `DomainId`); `UserId` remains valid, but never mix the two IDs in one key scheme.
 
-**Need the details?** Load `references/full.md` for a framework-neutral persistence design.
+**Need details?** `references/full.md` has the framework-neutral persistence design.

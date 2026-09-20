@@ -78,6 +78,8 @@ def registry_referenced_files() -> set[str]:
                           "method_description_contains", "method_deprecation_status",
                           "class_deprecation_status"}:
             referenced.add(f"classes/{check.get('class', '')}.yaml")
+        elif check_type == "library_member_exists":
+            referenced.add(f"libraries/{check.get('library', '')}.yaml")
         elif check_type == "enum_item_exists":
             referenced.add(f"enums/{check.get('enum', '')}.yaml")
         elif check_type in {"constructor_deprecation_status", "constructor_description_contains"}:

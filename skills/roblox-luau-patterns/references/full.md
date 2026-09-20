@@ -126,6 +126,26 @@ end)
 
 Use `:Once()` for a genuinely one-shot event. Use `:Wait()` only when yielding the current thread is acceptable and cancellation or timeout is not required. For long-lived owners, collect connections, tasks, and instances behind one cleanup boundary. A cleanup library can be worthwhile when the project already uses one; one connection does not justify a dependency.
 
+### Typed signal payloads
+
+Engine-provided signals such as `RemoteEvent.OnServerEvent` are typed as `...any` in the API dump, so their payloads are unchecked. Custom signal classes can do better: make them generic (`Signal<T...>`) and type the payload once at the module boundary so every `.Connect` call site is checked. (Tooling-defined type surfaces such as `luau-lsp`'s exported `RBXScriptSignal<T...>` do carry payloads; the engine dump itself does not.)
+
+```luau
+type Purchased = Signal<{
+    userId: number,
+    productId: number,
+}>
+
+local purchased: Purchased = signal.new()
+
+purchased:Connect(function(payload)
+    -- payload.userId and payload.productId are checked here
+    grantProduct(payload.userId, payload.productId)
+end)
+```
+
+The useful habit is exporting the typed alias from the module that owns the signal and requiring that type at call sites, instead of re-declaring the payload shape inline each time. Without it, a typo like `productID` compiles and fails at runtime.
+
 Disconnecting before destroying is useful when callbacks could run during teardown or captured references outlive the instance. Do not claim every destroyed instance leaks every attached connection. Verify the actual owner and references.
 
 ### Instance references

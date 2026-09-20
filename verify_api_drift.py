@@ -252,6 +252,17 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
                 return "pass", f"{class_name}{sep}{member_name} exists ({collection})"
         return "fail", f"{class_name} member {member_name} missing (checked properties/methods/events/callbacks)"
 
+    if check_type == "library_member_exists":
+        # Globals/library pages (e.g. libraries/debug.yaml) list functions under methods.
+        library = check["library"]
+        member_name = check["member"]
+        doc = fetch_doc("libraries", library)
+        for collection in ("functions", "methods", "properties", "events", "callbacks", "constructors"):
+            if find_named(doc.get(collection) or [], f"{library}.{member_name}") or \
+               find_named(doc.get(collection) or [], f"{library}:{member_name}"):
+                return "pass", f"{library}.{member_name} exists ({collection})"
+        return "fail", f"{library} member {member_name} missing"
+
     if check_type == "enum_item_exists":
         enum_name = check["enum"]
         item_name = check["item"]

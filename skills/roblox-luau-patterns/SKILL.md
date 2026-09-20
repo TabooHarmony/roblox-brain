@@ -1,7 +1,7 @@
 ---
 name: roblox-luau-patterns
 description: "Use for Roblox module boundaries, object lifecycles, signals, task scheduling, fallible calls, and cleanup in Luau."
-last_reviewed: 2026-09-05
+last_reviewed: 2026-09-19
 sources:
   - https://luau-lang.org/
   - https://create.roblox.com/docs/reference/engine/classes/ObjectValue
@@ -30,7 +30,7 @@ Constructors use `.`, instance methods use `:`, and mutable fields belong on the
 
 ### Make ownership visible
 
-The code that connects a signal, creates an instance, or starts a task owns cleanup. Store connections and cancel or disconnect them when it ends.
+The code that connects a signal, creates an instance, or starts a task owns cleanup. Store connections and cancel or disconnect them when it ends. Type custom signal payloads once (`Signal<T...>`) and export the alias; see full.md.
 
 Configure an instance before parenting when observers should not see partial state. Parent earlier only when the API or lifecycle requires ancestry, and document that reason. This is visibility control, not a magic replication-race fix.
 
