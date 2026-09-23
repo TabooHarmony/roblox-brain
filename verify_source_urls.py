@@ -82,13 +82,8 @@ def main() -> int:
     args = parser.parse_args()
 
     all_urls = []
-    for entry in sorted(os.listdir(SKILLS_DIR)):
-        skill_dir = SKILLS_DIR / entry
-        if not skill_dir.is_dir():
-            continue
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
-            continue
+    for skill_md in sorted(SKILLS_DIR.glob("**/SKILL.md")):
+        entry = skill_md.parent.name
         with open(skill_md, encoding="utf-8") as f:
             content = f.read()
         urls = extract_source_urls(content)

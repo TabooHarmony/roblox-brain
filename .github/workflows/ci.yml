@@ -86,7 +86,7 @@ jobs:
           fi
 
           count=$(find "$SKILLS_DIR" -name "SKILL.md" | wc -l)
-          expected_count=$(find skills -mindepth 2 -maxdepth 2 -name "SKILL.md" | wc -l)
+          expected_count=$(find skills -mindepth 3 -maxdepth 3 -name "SKILL.md" | wc -l)
           echo "Found $count skills in $SKILLS_DIR (expected $expected_count)"
 
           if [ "$count" -ne "$expected_count" ]; then
@@ -113,11 +113,15 @@ jobs:
             exit 1
           fi
 
-          # Counts can pass with empty, renamed, or corrupted files. Compare the
-          # complete installed payload byte-for-byte against the source tree.
-          if ! diff -qr skills "$SKILLS_DIR"; then
-            echo "ERROR: Installed skill payload differs from source"
-            exit 1
-          fi
+          # Compare each installed skill with its source; the installer flattens
+          # the library folders into a single .agents/skills directory.
+          for source in skills/*/*/SKILL.md; do
+            skill_dir="$(dirname "$source")"
+            name="$(basename "$skill_dir")"
+            if ! diff -qr "$skill_dir" "$SKILLS_DIR/$name"; then
+              echo "ERROR: Installed payload differs for $name"
+              exit 1
+            fi
+          done
 
           echo "Install test passed with exact payload parity ($count skills, $ref_count references, $resource_count resources)"

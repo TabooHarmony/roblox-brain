@@ -71,11 +71,10 @@ def normalize_version(v: str) -> tuple[int, int, int]:
 
 def main() -> int:
     all_pins = []
-    for entry in sorted(os.listdir(SKILLS_DIR)):
-        skill_dir = SKILLS_DIR / entry
-        if not skill_dir.is_dir():
-            continue
-        for filepath in [skill_dir / "SKILL.md", skill_dir / "references" / "full.md"]:
+    for skill_md in sorted(SKILLS_DIR.glob("**/SKILL.md")):
+        skill_dir = skill_md.parent
+        entry = skill_dir.name
+        for filepath in [skill_md, skill_dir / "references" / "full.md"]:
             if not filepath.exists():
                 continue
             with open(filepath, encoding="utf-8") as f:

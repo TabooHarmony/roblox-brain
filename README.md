@@ -13,110 +13,102 @@ Works with Codex, Claude Code, Cursor, Roblox Assistant, and other tools that su
 
 </div>
 
-## What this is
+## Choose what to install
 
-`roblox-brain` gives an AI coding agent focused Roblox Studio knowledge without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details.
+`roblox-brain` gives AI agents focused Roblox Studio guidance without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details. The guidance draws on Roblox Creator Hub documentation, compatible external tools, and original synthesis.
 
-- 29 focused skills across Luau, architecture, collaboration behavior, game design, networking, UI, physics, data, monetization, localization, tooling, and publishing.
-- Guidance grounded in Roblox Creator Hub documentation, compatible external tools, and original synthesis.
+- **Core:** Luau, architecture, networking, security, data, and performance. A good starting point for general development.
+- **Gameplay:** Building, physics, NPCs, camera, input, GUI, animation, lighting, audio, and localization.
+- **Design:** Game design, player behavior, growth, analytics, and monetization.
+- **Tools:** Studio MCP, project tooling, Open Cloud, and publishing.
+
+Start with the library you need. You can add others later, or install all skills at once.
 
 ## Install
 
 ```bash
-# install the full library
+# everything
 npx skills add TabooHarmony/roblox-brain
 
-# install one skill
+# one library
+npx skills add TabooHarmony/roblox-brain/skills/core
+npx skills add TabooHarmony/roblox-brain/skills/gameplay
+npx skills add TabooHarmony/roblox-brain/skills/design
+npx skills add TabooHarmony/roblox-brain/skills/tools
+
+# or one named skill
 npx skills add TabooHarmony/roblox-brain --skill roblox-building
 ```
+
 
 To install manually, copy the whole skill directory, not just the file. A `SKILL.md` is an entry point, not the whole skill: skills link `references/full.md` for depth and examples, and a file-only copy loses that material.
 
 ```bash
 # whole directory, references included
-cp -r skills/roblox-growth-design ~/.claude/skills/
+cp -r skills/design/roblox-growth-design ~/.claude/skills/
 ```
 
 Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible skill directories. A directory copy is self-contained: everything the entry point links ships with it. If an agent hits a link to a `references/full.md` that was not copied, the right response is to say the reference is missing and ask the user to copy that skill's whole directory from this repo. Never summarize reference material that is not there, and never present it as loaded.
 
 ## Skills (29)
 
-### Core language and architecture
+Each library can be installed alone. `core` is the general development baseline; add the others for the work at hand. The full-repo install still includes all 29.
 
-| Skill | What it covers |
-| --- | --- |
-| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, scope, closures, idioms, and language traps |
-| `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, new type-solver features (`keyof`, type functions, `read`), and Roblox-aware typing |
-| `roblox-luau-patterns` | Module boundaries, object lifecycles, signals, scheduling, fallible calls, and cleanup |
-| `roblox-architecture` | Feature ownership, runtime location, dependencies, startup, and client/server authority |
-
-
-### Game design and growth
-
-| Skill | What it covers |
-| --- | --- |
-| `roblox-growth-design` | Discovery, positioning, onboarding, retention, experiments, packaging, LiveOps, and growth diagnosis |
-
-### Monetization
-
-| Skill | What it covers |
-| --- | --- |
-| `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, policy checks, and purchase recovery |
-
-### Systems and networking
-
-| Skill | What it covers |
-| --- | --- |
-| `roblox-networking` | Server-authoritative networking, remote validation, rate limits, and exploit resistance |
-| `roblox-security` | Anti-exploit design, movement, remote, economy, and data hardening, plus platform bans and capability sandboxing |
-| `roblox-data` | Player persistence, schemas, migrations, retries, session ownership, budgets, and data-deletion compliance |
-| `roblox-server-data` | OrderedDataStore, MessagingService, global state, and cross-server coordination |
-| `roblox-analytics` | Custom events, economy tracking, funnels, rate limits, and event taxonomy |
-| `roblox-npc-ai` | Pathfinding, state machines, detection, spawning, and network ownership |
-
-### Performance and runtime
-
-| Skill | What it covers |
-| --- | --- |
-| `roblox-performance` | Profiling, optimization, pooling, streaming, mobile performance, and budgets |
-
-### Building and UI
-
-| Skill | What it covers |
-| --- | --- |
-| `roblox-building` | Roblox geometry, maps, props, generated assets, MCP workflows, and acceptance gates |
-| `roblox-physics` | Constraints, vehicles, ragdolls, projectiles, elevators, and network ownership |
-| `roblox-gui` | Screen, surface, and world UI; layout, responsiveness, input, and UI state |
-| `roblox-ui-design` | Content-led visual systems, styling sheets and tokens, flex layout, existing-style inheritance, composition, and hierarchy |
-| `roblox-animation-vfx` | Animations, particles, beams, trails, tweens, camera feedback, and cleanup |
-| `roblox-lighting` | Lighting, atmosphere, post-processing, mood presets, and day/night cycles |
-| `roblox-audio` | SoundService, spatial audio, music systems, SFX, ambient layers, and volume management |
-| `roblox-input` | UserInputService, ContextActionService, keyboard, mouse, gamepad, and touch |
-| `roblox-camera` | Camera types, CFrame math, custom controllers, cutscenes, and screen shake |
-
-### MCP and cloud
-
-| Skill | What it covers |
-| --- | --- |
-| `roblox-studio-mcp` | Studio MCP capabilities, bridge-neutral routing, reliability, building, and testing workflows |
-| `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth 2.0, PKCE, webhooks, `HttpService`, secrets, and token lifecycle |
-
-### Workflow and tooling
+### Core (`skills/core/`, 10)
 
 | Skill | What it covers |
 | --- | --- |
 | `roblox-collaboration-mode` | Peer vs autonomous working mode, risk-scaled initiative, and surfacing uncertainty before domain work |
-| `roblox-code-review` | Reviews through security, performance, correctness, and monetization lenses |
+| `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, scope, closures, idioms, and language traps |
+| `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, and Roblox-aware typing |
+| `roblox-luau-patterns` | Module boundaries, object lifecycles, signals, scheduling, fallible calls, and cleanup |
+| `roblox-architecture` | Feature ownership, runtime location, dependencies, startup, and client/server authority |
+| `roblox-networking` | Server-authoritative networking, remote validation, rate limits, and exploit resistance |
+| `roblox-security` | Anti-exploit design, movement, remote, economy, and data hardening |
+| `roblox-data` | Player persistence, schemas, migrations, retries, session ownership, and budgets |
+| `roblox-server-data` | OrderedDataStore, MessagingService, global state, and cross-server coordination |
+| `roblox-performance` | Profiling, optimization, pooling, streaming, and mobile performance |
+
+### Gameplay (`skills/gameplay/`, 10)
+
+| Skill | What it covers |
+| --- | --- |
+| `roblox-building` | Geometry, maps, props, generated assets, and build verification |
+| `roblox-physics` | Constraints, vehicles, ragdolls, projectiles, and network ownership |
+| `roblox-npc-ai` | Pathfinding, state machines, detection, spawning, and network ownership |
+| `roblox-camera` | Camera types, CFrame math, custom controllers, cutscenes, and screen shake |
+| `roblox-input` | Keyboard, mouse, gamepad, touch, and action binding |
+| `roblox-gui` | Screen, surface, and world UI; layout, responsiveness, input, state, and visual verification |
+| `roblox-animation-vfx` | Animations, particles, beams, trails, tweens, and camera feedback |
+| `roblox-lighting` | Lighting, atmosphere, post-processing, and day/night cycles |
+| `roblox-audio` | SoundService, spatial audio, music systems, and SFX |
+| `roblox-localization` | Translation tables, locale handling, and auto-translation |
+
+### Design (`skills/design/`, 5)
+
+| Skill | What it covers |
+| --- | --- |
+| `roblox-game-design` | Core loops, tutorials, levels, economy structure, and game feel |
+| `roblox-player-psychology` | First-minute psychology, reward schedules, pricing, RNG/pity, and community loops |
+| `roblox-growth-design` | Discovery, positioning, retention, experiments, packaging, and LiveOps |
+| `roblox-analytics` | Custom events, economy tracking, funnels, and event taxonomy |
+| `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, and policy checks |
+
+### Tools (`skills/tools/`, 4)
+
+| Skill | What it covers |
+| --- | --- |
+| `roblox-studio-mcp` | Studio MCP capabilities, reliability, building, and testing workflows |
+| `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, and CI |
+| `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth, webhooks, and token lifecycle |
 | `roblox-publish-checklist` | Change-scoped release gates, evidence, dashboard checks, and rollback readiness |
-| `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, sourcemaps, and CI |
-| `roblox-localization` | LocalizationService, translation tables, locale handling, and auto-translation |
 
 ## How the content is organized
 
 Skills use **progressive disclosure** so an agent can start with a small context window and load detail only when needed:
 
 ```text
-skills/roblox-gui/
+skills/gameplay/roblox-gui/
 ├── SKILL.md              # quick reference
 └── references/
     └── full.md           # examples, API notes, and edge cases

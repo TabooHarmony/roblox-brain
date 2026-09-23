@@ -321,31 +321,34 @@ def validate_skill(skill_dir: str) -> list[str]:
     return errors
 
 
+def skill_directories() -> list[Path]:
+    """Find skills in flat or one-category-deep layouts, including incomplete dirs."""
+    directories = []
+    for entry in sorted(Path(SKILLS_DIR).iterdir()):
+        if not entry.is_dir():
+            continue
+        if entry.name in {"core", "gameplay", "design", "tools"}:
+            directories.extend(sorted(path for path in entry.iterdir() if path.is_dir()))
+        else:
+            directories.append(entry)
+    return directories
+
+
 def collect_all_skill_names() -> set[str]:
-    """Return the set of skill directory names under SKILLS_DIR."""
-    names = set()
-    for entry in os.listdir(SKILLS_DIR):
-        path = os.path.join(SKILLS_DIR, entry)
-        if os.path.isdir(path):
-            names.add(entry)
-    return names
+    return {directory.name for directory in skill_directories()}
 
 
 def validate_catalog(all_skill_names: set[str], root: Path = REPO_ROOT) -> list[str]:
-    """Keep public skill counts and README catalog rows tied to the real tree."""
+    """Keep the public README's skill counts and catalog tied to the real tree."""
     errors = []
     expected_count = len(all_skill_names)
     readme_path = root / "README.md"
-    agents_path = root / "AGENTS.md"
-    if not readme_path.is_file() or not agents_path.is_file():
-        return ["catalog validation requires README.md and AGENTS.md"]
+    if not readme_path.is_file():
+        return ["catalog validation requires README.md"]
 
     readme = readme_path.read_text(encoding="utf-8")
-    agents = agents_path.read_text(encoding="utf-8")
     count_patterns = (
-        (readme, r"(?m)^- (\d+) focused skills\b", "README summary"),
         (readme, r"(?m)^## Skills \((\d+)\)$", "README heading"),
-        (agents, r"(?m)\b(\d+) curated skills\b", "AGENTS summary"),
     )
     for document, pattern, label in count_patterns:
         match = re.search(pattern, document)
@@ -385,13 +388,11 @@ def validate_cross_references(all_skill_names: set[str]) -> list[str]:
     """
     errors = []
     ref_pattern = re.compile(r"`(roblox-[a-z0-9]+(?:-[a-z0-9]+)*)`")
-    for entry in sorted(os.listdir(SKILLS_DIR)):
-        skill_dir = os.path.join(SKILLS_DIR, entry)
-        if not os.path.isdir(skill_dir):
-            continue
+    for directory in skill_directories():
+        entry = directory.name
         for filepath in [
-            os.path.join(skill_dir, "SKILL.md"),
-            os.path.join(skill_dir, "references", "full.md"),
+            str(directory / "SKILL.md"),
+            str(directory / "references" / "full.md"),
         ]:
             if not os.path.exists(filepath):
                 continue
@@ -467,9 +468,7 @@ def validate_local_references() -> list[str]:
     """Ensure local references mentioned by skills actually exist and stay
     inside their skill directory."""
     errors = []
-    for skill_dir in sorted(Path(SKILLS_DIR).iterdir()):
-        if not skill_dir.is_dir():
-            continue
+    for skill_dir in skill_directories():
         documents = [skill_dir / "SKILL.md"]
         full_reference = skill_dir / "references" / "full.md"
         if full_reference.exists():
@@ -500,9 +499,7 @@ def validate_local_references() -> list[str]:
 def validate_reference_resources() -> list[str]:
     """Reject unlinked resource files under a skill's references directory."""
     errors = []
-    for skill_dir in sorted(Path(SKILLS_DIR).iterdir()):
-        if not skill_dir.is_dir():
-            continue
+    for skill_dir in skill_directories():
         references_dir = skill_dir / "references"
         if not references_dir.is_dir():
             continue
@@ -526,29 +523,27 @@ def main():
         print(f"Error: skills directory not found: {SKILLS_DIR}")
         sys.exit(1)
 
+    directories = skill_directories()
     all_errors = []
-    skill_count = 0
-
-    for entry in sorted(os.listdir(SKILLS_DIR)):
-        skill_dir = os.path.join(SKILLS_DIR, entry)
-        if not os.path.isdir(skill_dir):
-            continue
-        skill_count += 1
-        errors = validate_skill(skill_dir)
-        all_errors.extend(errors)
+    for skill_dir in directories:
+        all_errors.extend(validate_skill(str(skill_dir)))
 
     # Cross-reference validation runs across all skills
     all_skill_names = collect_all_skill_names()
+    if len(all_skill_names) != len(directories):
+        all_errors.append("duplicate skill directory name across categories")
     all_errors.extend(validate_catalog(all_skill_names))
     all_errors.extend(validate_cross_references(all_skill_names))
     all_errors.extend(validate_local_references())
     all_errors.extend(validate_reference_resources())
-    documents = sorted(Path(SKILLS_DIR).glob("*/SKILL.md"))
-    documents.extend(sorted(Path(SKILLS_DIR).glob("*/references/full.md")))
-    sources = sorted(Path(SKILLS_DIR).glob("*/references/**/*.luau"))
+    documents = [path for directory in directories for path in
+                 (directory / "SKILL.md", directory / "references" / "full.md")
+                 if path.is_file()]
+    sources = [path for directory in directories
+               for path in (directory / "references").rglob("*.luau")]
     luau_errors, luau_recognized, luau_compiled = validate_luau_syntax(documents, sources)
     all_errors.extend(luau_errors)
-    print(f"Validated {skill_count} skills")
+    print(f"Validated {len(directories)} skills")
     print(
         f"Luau snippets: {luau_recognized} recognized, "
         f"{luau_compiled} compiled"

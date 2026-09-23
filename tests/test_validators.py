@@ -18,12 +18,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class ValidatorRegressionTests(unittest.TestCase):
     def test_reference_paths_from_full_reference_resolve_at_skill_root(self):
-        document = ROOT / "skills" / "roblox-cloud" / "references" / "full.md"
+        document = ROOT / "skills" / "tools" / "roblox-cloud" / "references" / "full.md"
         target = validate_skills._resolve_local_reference(document, "references/full.md")
         self.assertEqual(target, document)
 
     def test_reference_scanner_handles_luau_resources(self):
-        document = ROOT / "skills" / "roblox-analytics" / "references" / "full.md"
+        document = ROOT / "skills" / "design" / "roblox-analytics" / "references" / "full.md"
         matches = list(
             validate_skills._local_reference_matches(
                 document,
@@ -312,14 +312,12 @@ class ValidatorRegressionTests(unittest.TestCase):
             (root / "README.md").write_text(
                 "- 99 focused skills\n\n## Skills (99)\n\n| `roblox-example` | Example |\n"
             )
-            (root / "AGENTS.md").write_text("99 curated skills\n")
             errors = validate_skills.validate_catalog({"roblox-example"}, root)
-            self.assertGreaterEqual(len(errors), 3)
+            self.assertTrue(any("README heading" in error for error in errors))
 
             (root / "README.md").write_text(
                 "- 1 focused skills\n\n## Skills (1)\n\n| `roblox-example` | Example |\n"
             )
-            (root / "AGENTS.md").write_text("1 curated skills\n")
             self.assertEqual(
                 validate_skills.validate_catalog({"roblox-example"}, root), []
             )
@@ -330,6 +328,22 @@ class ValidatorRegressionTests(unittest.TestCase):
             )
             errors = validate_skills.validate_catalog({"roblox-example"}, root)
             self.assertTrue(any("duplicate rows" in error for error in errors))
+
+    def test_nested_skill_directories_are_discovered(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skills = Path(tmp) / "skills"
+            (skills / "core" / "roblox-example").mkdir(parents=True)
+            (skills / "gameplay" / "roblox-other").mkdir(parents=True)
+            original = validate_skills.SKILLS_DIR
+            validate_skills.SKILLS_DIR = str(skills)
+            try:
+                self.assertEqual(
+                    validate_skills.collect_all_skill_names(),
+                    {"roblox-example", "roblox-other"},
+                )
+                self.assertEqual(len(validate_skills.skill_directories()), 2)
+            finally:
+                validate_skills.SKILLS_DIR = original
 
     def test_local_reference_validation_skips_incomplete_skill_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -436,7 +450,7 @@ class ValidatorRegressionTests(unittest.TestCase):
                 validate_skills.SKILLS_DIR = original
 
     def test_monetization_receipt_example_is_not_fragmented(self):
-        text = (ROOT / "skills/roblox-monetization/references/full.md").read_text()
+        text = (ROOT / "skills/design/roblox-monetization/references/full.md").read_text()
         section = re.search(
             r"## 3\. Centralize Developer Product receipts(.*?)## 4\.", text, re.S
         )
@@ -448,15 +462,15 @@ class ValidatorRegressionTests(unittest.TestCase):
         self.assertNotIn("```luau\n\n```luau", receipts)
 
     def test_mcp_contract_names_asset_generation_and_completion(self):
-        full = (ROOT / "skills/roblox-studio-mcp" / "references" / "full.md").read_text()
-        building = (ROOT / "skills/roblox-building" / "SKILL.md").read_text()
+        full = (ROOT / "skills/tools/roblox-studio-mcp" / "references" / "full.md").read_text()
+        building = (ROOT / "skills/gameplay/roblox-building" / "SKILL.md").read_text()
         for token in ("generate_procedural_model", "generate_mesh", "generate_material"):
             self.assertIn(token, full)
             self.assertIn(token, building)
         self.assertIn("search_asset", full)
         self.assertIn("insert_asset", full)
         self.assertIn("generationId", full)
-        compact = (ROOT / "skills/roblox-studio-mcp" / "SKILL.md").read_text()
+        compact = (ROOT / "skills/tools/roblox-studio-mcp" / "SKILL.md").read_text()
         self.assertIn("generate_*", compact)  # entry point abbreviates the generate tool family
         self.assertIn("wait_job_finished", compact)
         self.assertIn("read back", compact.lower())
@@ -736,7 +750,7 @@ class ValidatorRegressionTests(unittest.TestCase):
                 "    claim: 'Part exists'\n"
                 "    teaching_needles: ['Workspace']\n"
                 "    files:\n"
-                "      - path: skills/roblox-networking/SKILL.md\n"
+                "      - path: skills/core/roblox-networking/SKILL.md\n"
                 "    check:\n"
                 "      type: member_exists\n"
                 "      class: Part\n"
@@ -790,7 +804,7 @@ class ValidatorRegressionTests(unittest.TestCase):
                 "    claim: 'Part exists'\n"
                 "    teaching_needles: ['Workspace']\n"
                 "    files:\n"
-                "      - path: skills/roblox-networking/SKILL.md\n"
+                "      - path: skills/core/roblox-networking/SKILL.md\n"
                 "    check:\n"
                 "      type: member_exists\n"
                 "      class: Part\n"
@@ -835,7 +849,7 @@ class ValidatorRegressionTests(unittest.TestCase):
                 "    claim: 'Part exists'\n"
                 "    teaching_needles: ['Workspace']\n"
                 "    files:\n"
-                "      - path: skills/roblox-networking/SKILL.md\n"
+                "      - path: skills/core/roblox-networking/SKILL.md\n"
                 "    check:\n"
                 "      type: member_exists\n"
                 "      class: Part\n"

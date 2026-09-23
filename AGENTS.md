@@ -2,7 +2,7 @@
 
 ## What This Repo Is
 
-`roblox-brain` is a skills-only repository for AI coding agents working with Roblox Studio. 29 curated skills covering Luau language, Roblox engine APIs, architecture, growth design, security, monetization, localization, and workflow. Distributed via `npx skills add TabooHarmony/roblox-brain`.
+`roblox-brain` is a skills-only repository for AI coding agents working with Roblox Studio. 29 curated skills in four libraries (`core`, `gameplay`, `design`, `tools`), covering Luau, Roblox engine APIs, architecture, game design, security, monetization, localization, and workflow. Distributed via `npx skills add TabooHarmony/roblox-brain`; install a single library with `npx skills add TabooHarmony/roblox-brain/skills/core` (or another library path).
 
 No plugin code. No build system. No npm package. Just SKILL.md files.
 
@@ -20,7 +20,7 @@ their entire job is selecting the right domain skills.
 The README is the human-facing catalogue. Skill hosts discover the individual `SKILL.md` files directly.
 
 ```
-skills/roblox-gui/
+skills/gameplay/roblox-gui/
 ├── SKILL.md              ← Quick Reference (under 3,000 chars)
 └── references/
     └── full.md           ← Full Reference (under 50,000 chars)
@@ -58,8 +58,8 @@ Dense table or list format. The most useful info inline. Code examples in ```lua
 
 ## Adding a New Skill
 
-1. Create `skills/roblox-<name>/SKILL.md` following the structure above
-2. Create `skills/roblox-<name>/references/full.md` with complete reference (under 50,000 chars)
+1. Create `skills/<core|gameplay|design|tools>/roblox-<name>/SKILL.md` following the structure above
+2. Create that skill's `references/full.md` with complete reference (under 50,000 chars)
 3. Add a row to `README.md` in the appropriate skills table and update the skill count badge
 4. Run `python3 validate_skills.py`: must pass
 5. If the skill makes API claims, add focused entries to `api_drift_registry.yaml`
@@ -111,8 +111,8 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 
 | File | Purpose |
 |------|---------|
-| `skills/*/SKILL.md` | Quick reference for each skill |
-| `skills/*/references/full.md` | Full reference for each non-router skill |
+| `skills/{core,gameplay,design,tools}/*/SKILL.md` | Quick reference for each skill |
+| `skills/{core,gameplay,design,tools}/*/references/full.md` | Full reference for each non-router skill |
 | `validate_skills.py` | Validation script for skill structure |
 | `verify_api_drift.py` | API drift checker against live creator-docs |
 | `verify_source_urls.py` | Source URL reachability checker |

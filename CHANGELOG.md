@@ -2,23 +2,40 @@
 
 All notable changes to `roblox-brain` are documented here.
 
-## [1.8.0] - 2026-09-13
+## [2.0.0] - Unreleased
 
 ### Added
 
-- UI: the styling system (`StyleSheet`, `StyleLink`, `StyleDerive`, `StyleRule`, `StyleQuery`, `$token` usage and the one-sheet-per-tree limit), flex layout with `UIFlexItem` and `UIListLayout.HorizontalFlex`/`VerticalFlex`, and per-corner `UICorner` radii with their beta gate.
-- Luau: new type-solver features (`keyof`, `rawkeyof`, `setmetatable<T, M>`, `type function`, `read` members) with the `UseNewLuauTypeSolver` gate, native code generation gates and instruction ceilings, `@deprecated` syntax, the Lua 5.1 sandbox restrictions, the naming conventions, and a deprecated API catalog (`spawn`, `delay`, `Body*` movers, `LoadAnimation`, `tick()`, `SetPrimaryPartCFrame`, `Part.Velocity`).
-- Data: right-to-be-forgotten deletion templates and their 30-day windows, `DataStoreGetOptions.UseCache`, `BatchGetAsync` (ordered stores), version history (`ListVersionsAsync`/`GetVersionAsync`/`GetVersionAtTimeAsync`/`RemoveVersionAsync`), per-server and per-experience budget formulas, storage limits, and `Player.User` as the domain-scoped identity value.
-- Security: `BanAsync`/`UnbanAsync`/`GetBanHistoryAsync` with their config dictionary, the `BanningEnabled` gate, device-block semantics and their limits, sandboxed capabilities (`Instance.Sandboxed`, `Instance.Capabilities`), and client-triggerable interaction instances (`ProximityPrompt`, `ClickDetector`, `DragDetector`) treated as untrusted input.
-- Networking: what does and does not survive a remote call (functions, metatables, mixed tables, `nil` truncation, table copies) and the Server Authority settings bundle with `RunService:SetPredictionMode`.
-- Cloud: the experience secrets store (`HttpService:GetSecret`) covering non-printable `Secret` values, prefix/suffix transforms, per-experience secret count and domain allowlists, and the local playtest failure mode.
-- Tooling: a verification procedure for API claims that works without launching Studio, using the raw creator-docs markdown suffix and the engine class YAML that the drift registry checks against.
+- `roblox-game-design`: core loops, tutorials, level pacing, economies, game feel, and making repetitive play satisfying. Includes guidance for Roblox's Today's Picks and Moments.
+- `roblox-player-psychology`: first-session behavior, rewards, streaks, pricing, RNG and pity systems, and community-building.
+- GUI: styling with `StyleSheet`/`StyleLink` and `StyleQuery`, plus flex layouts using `UIListLayout` and `UIFlexItem`.
+- Luau: new type-solver features including `keyof`, `type function`, and `read` members; native code generation limits; and guidance on deprecated APIs such as `spawn`, `tick()`, and legacy body movers.
+- Data: account-deletion templates, version history, data-store budgets, and `Player.User` identity guidance.
+- Security: bans, sandboxed scripts, and server checks for interactions triggered through prompts, clicks, and dragging.
+- Networking: what survives a remote call and how to configure Server Authority.
+- Cloud: use experience secrets with `HttpService:GetSecret` rather than putting keys in scripts.
 
 ### Changed
 
-- Performance: the claim that compressed image formats reduce texture memory is replaced with the documented guidance (match image resolution to on-screen size, trim sheets, transcoding happens on upload). The light-count and remote-fire-rate figures are now labeled practitioner heuristics instead of engine limits, and the documented MicroProfiler frame-time thresholds are listed.
-- Studio MCP: the legacy `set_active_studio` note is reworded to match the current tool set, which routes by `studio_id`.
-- Reference infrastructure: API drift registry expanded to 78 entries; the provenance note records the two MIT skill sources reviewed for this pass and the claims rejected from them.
+- Skills are grouped into four installable libraries: `core` (10), `gameplay` (10), `design` (5), and `tools` (4). Installing the repository still installs all 29. Paths to individual skill folders have changed.
+- `roblox-gui` takes over practical styling, layout, and visual checks from `roblox-ui-design`, without prescribing a visual style.
+- Building now covers finding and inspecting Toolbox assets before making a replacement from scratch.
+- Growth design now covers launch ads, thumbnail tests, and reading organic traffic and retention after launch.
+- Architecture now asks agents to trace a feature from input through UI and remotes to saved state, rather than assuming that matching folder names mean the feature works.
+- Performance now distinguishes documented engine limits from rules of thumb and corrects the texture-memory advice.
+- Studio MCP guidance now routes calls to a specific Studio instance with `studio_id`.
+
+### Removed
+
+- `roblox-code-review` as a standalone router skill. Use the domain skill relevant to the change instead.
+- `roblox-ui-design` as a standalone skill. The practical GUI guidance remains in `roblox-gui`, but its full visual-design reference was not carried over.
+
+### Fixed
+
+- Lighting guidance now reflects current Creator Hub metadata: `LightingStyle` and `PrioritizeLightingQuality` are script-writable; deprecated `Technology` is not.
+- Analytics now reflects the documented limit of 10 economy resource types, not 5.
+- Monetization now recognizes `BindReceiptHandler` with `Enum.ReceiptType.DeveloperProduct` as a Developer Product receipt path alongside `ProcessReceipt`. Both still require a durable, idempotent grant before acknowledging a purchase.
+- Tooling no longer suggests archived TestEZ in the example package manifest; existing projects can keep using it.
 
 ## [1.7.0] - 2026-09-06
 
