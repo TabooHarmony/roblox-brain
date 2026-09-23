@@ -2,9 +2,9 @@
 
 # roblox-brain 🧠
 
-**A practical skill library for Roblox Studio coding agents.**
+**Roblox Studio skills for AI coding agents.**
 
-Works with Codex, Claude Code, Cursor, Roblox Assistant, and other tools that support agent skills.
+29 skills across four libraries. Install what you need, or take the whole set.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=semver)](https://github.com/TabooHarmony/roblox-brain/releases)
@@ -13,51 +13,49 @@ Works with Codex, Claude Code, Cursor, Roblox Assistant, and other tools that su
 
 </div>
 
-## Choose what to install
+## Pick a library
 
-`roblox-brain` gives AI agents focused Roblox Studio guidance without forcing every task through one framework. Each skill starts small and expands only when the task needs deeper examples or API details. The guidance draws on Roblox Creator Hub documentation, compatible external tools, and original synthesis.
+| | Library | Skills | For |
+| :-- | :-- | --: | :-- |
+| 🧱 | **Core** | 10 | Luau, architecture, networking, security, data, performance |
+| 🎮 | **Gameplay** | 10 | Building, physics, NPCs, camera, input, GUI, and presentation |
+| 🎨 | **Design** | 5 | Game design, player behavior, growth, analytics, monetization |
+| 🛠️ | **Tools** | 4 | Studio MCP, project tooling, Open Cloud, publishing |
 
-- **Core:** Luau, architecture, networking, security, data, and performance. A good starting point for general development.
-- **Gameplay:** Building, physics, NPCs, camera, input, GUI, animation, lighting, audio, and localization.
-- **Design:** Game design, player behavior, growth, analytics, and monetization.
-- **Tools:** Studio MCP, project tooling, Open Cloud, and publishing.
-
-Start with the library you need. You can add others later, or install all skills at once.
+Start with **Core** for general development. Add the others when the task calls for them. Each skill has a short entry point and a deeper reference with examples and API details.
 
 ## Install
 
+**All 29 skills:**
+
 ```bash
-# everything
 npx skills add TabooHarmony/roblox-brain
+```
 
-# one library
+**One library:**
+
+```bash
 npx skills add TabooHarmony/roblox-brain/skills/core
-npx skills add TabooHarmony/roblox-brain/skills/gameplay
-npx skills add TabooHarmony/roblox-brain/skills/design
-npx skills add TabooHarmony/roblox-brain/skills/tools
+# or: gameplay, design, tools
+```
 
-# or one named skill
+**One skill:**
+
+```bash
 npx skills add TabooHarmony/roblox-brain --skill roblox-building
 ```
 
-
-To install manually, copy the whole skill directory, not just the file. A `SKILL.md` is an entry point, not the whole skill: skills link `references/full.md` for depth and examples, and a file-only copy loses that material.
-
-```bash
-# whole directory, references included
-cp -r skills/design/roblox-growth-design ~/.claude/skills/
-```
-
-Works the same for `.codex/skills/`, `.cursor/skills/`, and other compatible skill directories. A directory copy is self-contained: everything the entry point links ships with it. If an agent hits a link to a `references/full.md` that was not copied, the right response is to say the reference is missing and ask the user to copy that skill's whole directory from this repo. Never summarize reference material that is not there, and never present it as loaded.
+Manual install: copy the **whole skill directory**, including `references/full.md`, into your agent's skills folder. For example: `cp -r skills/design/roblox-growth-design ~/.claude/skills/`. This also works with `.codex/skills/` and `.cursor/skills/`. Copying only `SKILL.md` leaves the reference missing.
 
 ## Skills (29)
 
-Each library can be installed alone. `core` is the general development baseline; add the others for the work at hand. The full-repo install still includes all 29.
+Expand a library to see its skills. The full-repo install includes all four.
 
-### Core (`skills/core/`, 10)
+<details>
+<summary><strong>🧱 Core</strong> · 10 skills · Luau and development foundations</summary>
 
-| Skill | What it covers |
-| --- | --- |
+| Skill | Covers |
+| :-- | :-- |
 | `roblox-collaboration-mode` | Peer vs autonomous working mode, risk-scaled initiative, and surfacing uncertainty before domain work |
 | `roblox-luau-core` | Luau syntax, tables, control flow, string patterns, scope, closures, idioms, and language traps |
 | `roblox-luau-types` | Types, generics, narrowing, inference, sealed/unsealed tables, exports, and Roblox-aware typing |
@@ -69,10 +67,13 @@ Each library can be installed alone. `core` is the general development baseline;
 | `roblox-server-data` | OrderedDataStore, MessagingService, global state, and cross-server coordination |
 | `roblox-performance` | Profiling, optimization, pooling, streaming, and mobile performance |
 
-### Gameplay (`skills/gameplay/`, 10)
+</details>
 
-| Skill | What it covers |
-| --- | --- |
+<details>
+<summary><strong>🎮 Gameplay</strong> · 10 skills · What players see and do</summary>
+
+| Skill | Covers |
+| :-- | :-- |
 | `roblox-building` | Geometry, maps, props, generated assets, and build verification |
 | `roblox-physics` | Constraints, vehicles, ragdolls, projectiles, and network ownership |
 | `roblox-npc-ai` | Pathfinding, state machines, detection, spawning, and network ownership |
@@ -84,54 +85,53 @@ Each library can be installed alone. `core` is the general development baseline;
 | `roblox-audio` | SoundService, spatial audio, music systems, and SFX |
 | `roblox-localization` | Translation tables, locale handling, and auto-translation |
 
-### Design (`skills/design/`, 5)
+</details>
 
-| Skill | What it covers |
-| --- | --- |
+<details>
+<summary><strong>🎨 Design</strong> · 5 skills · Play, retention, and economy</summary>
+
+| Skill | Covers |
+| :-- | :-- |
 | `roblox-game-design` | Core loops, tutorials, levels, economy structure, and game feel |
 | `roblox-player-psychology` | First-minute psychology, reward schedules, pricing, RNG/pity, and community loops |
 | `roblox-growth-design` | Discovery, positioning, retention, experiments, packaging, and LiveOps |
 | `roblox-analytics` | Custom events, economy tracking, funnels, and event taxonomy |
 | `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, and policy checks |
 
-### Tools (`skills/tools/`, 4)
+</details>
 
-| Skill | What it covers |
-| --- | --- |
+<details>
+<summary><strong>🛠️ Tools</strong> · 4 skills · Studio and shipping</summary>
+
+| Skill | Covers |
+| :-- | :-- |
 | `roblox-studio-mcp` | Studio MCP capabilities, reliability, building, and testing workflows |
 | `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, and CI |
 | `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth, webhooks, and token lifecycle |
 | `roblox-publish-checklist` | Change-scoped release gates, evidence, dashboard checks, and rollback readiness |
 
-## How the content is organized
+</details>
 
-Skills use **progressive disclosure** so an agent can start with a small context window and load detail only when needed:
+## How it works
+
+An agent discovers the skill descriptions, loads the relevant `SKILL.md`, then opens `references/full.md` only when it needs the detail:
 
 ```text
 skills/gameplay/roblox-gui/
 ├── SKILL.md              # quick reference
 └── references/
-    └── full.md           # examples, API notes, and edge cases
+    └── full.md           # examples and API notes
 ```
 
-1. **Discovery:** the host reads skill names and descriptions from `SKILL.md` frontmatter.
-2. **Quick reference:** the selected `SKILL.md` gives default rules and routing.
-3. **Full reference:** linked `references/full.md` material is loaded only when the task needs it.
+The guidance draws on Roblox Creator Hub documentation, compatible external tools, and original synthesis.
 
-## Recommended tooling
+## Studio connection
 
-- **[chrrxs/robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp):** the recommended Studio MCP server. Open source (MIT), and adds runtime debugging, multiplayer playtests, profiling, per-instance routing, and more. The official [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) built into Studio works fine as well if you prefer the built-in option.
+For agents working directly in Studio, [chrrxs/robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp) provides runtime debugging, multiplayer playtests, profiling, and per-instance routing. The built-in [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) is another option.
 
 ## Contributing
 
-PRs are welcome. Useful contributions include:
-
-- correcting an API reference or deprecated pattern;
-- adding a focused, widely applicable production pattern;
-- expanding examples from a compatible license, explicit permission, or original work;
-- keeping skills small, non-overlapping, and practical.
-
-Before opening a PR, run:
+Corrections, production patterns, and examples with compatible sourcing are welcome. Keep skills focused and practical. Before opening a PR, run:
 
 ```bash
 python3 validate_skills.py
@@ -143,9 +143,8 @@ python3 verify_version_pins.py
 
 ## Contributors
 
-- **[MrFearTick](https://www.roblox.com/users/1880599950/profile):** code references, networking, and monetization expansion
-- **[eeyq](https://www.roblox.com/users/192217155/profile):** content and references for the `roblox-growth-design` skill
-
+- [MrFearTick](https://www.roblox.com/users/1880599950/profile): code references, networking, and monetization expansion
+- [eeyq](https://www.roblox.com/users/192217155/profile): content and references for `roblox-growth-design`
 
 ## License
 
