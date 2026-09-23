@@ -2,8 +2,8 @@
 """Verify curated Roblox API claims against live Roblox creator-docs YAML.
 
 Usage:
-    python3 verify_api_drift.py
-    python3 verify_api_drift.py --verbose
+    python3 scripts/verify_api_drift.py
+    python3 scripts/verify_api_drift.py --verbose
 
 Exit 0 means every registry claim still matches the current docs.
 Exit 1 means drift, parse errors, or network/doc fetch errors were found.
@@ -23,8 +23,8 @@ from typing import Any
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent
-REGISTRY_PATH = ROOT / "api_drift_registry.yaml"
+ROOT = Path(__file__).resolve().parent.parent
+REGISTRY_PATH = ROOT / "scripts" / "api_drift_registry.yaml"
 BASE_URL = "https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine"
 MIRROR_DIR = ROOT / ".cache" / "creator-docs"
 CACHE: dict[tuple[str, str], dict[str, Any]] = {}

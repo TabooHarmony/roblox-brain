@@ -24,6 +24,7 @@ All notable changes to `roblox-brain` are documented here.
 - Architecture now asks agents to trace a feature from input through UI and remotes to saved state, rather than assuming that matching folder names mean the feature works.
 - Performance now distinguishes documented engine limits from rules of thumb and corrects the texture-memory advice.
 - Studio MCP guidance now routes calls to a specific Studio instance with `studio_id`.
+- Repository checks and the API drift registry now live in `scripts/`; contributor commands and CI use the new paths.
 
 ### Removed
 

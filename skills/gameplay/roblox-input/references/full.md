@@ -227,7 +227,7 @@ Set `SelectedObject` when a menu opens or a modal takes control, and clear or re
 
 ## Dragging: DragDetector and UIDragDetector
 
-`DragDetector` (3D; parent under a `BasePart` or `Model`) and `UIDragDetector` (2D; parent under any `GuiObject`) make objects draggable via all input types — mouse, touch, gamepad, VR — often with zero code. Both work in Studio edit mode while the Select/Move/Scale/Rotate tools (and, for UI, UI-editor plugins) are not active. Sources: create.roblox.com/docs/ui/3D-drag-detectors, create.roblox.com/docs/ui/ui-drag-detectors.
+`DragDetector` (3D; parent under a `BasePart` or `Model`) and `UIDragDetector` (2D; parent under any `GuiObject`) make objects draggable via all input types (mouse, touch, gamepad, VR), often with zero code. Both work in Studio edit mode while the Select/Move/Scale/Rotate tools (and, for UI, UI-editor plugins) are not active. Sources: create.roblox.com/docs/ui/3D-drag-detectors, create.roblox.com/docs/ui/ui-drag-detectors.
 
 ### Choosing a detector
 
@@ -237,7 +237,7 @@ Set `SelectedObject` when a menu opens or a modal takes control, and clear or re
 | Drag a 3D part/model, optionally with physics response | `DragDetector` |
 | Drag/rotate a UI element (sliders, spinners, inventory icons) | `UIDragDetector` |
 
-`DragDetector` is the general-purpose option: it inherits `ClickDetector` members (`MouseClick`, `RightMouseClick`, `MouseHoverEnter`/`MouseHoverLeave`, `CursorIcon`, `MaxActivationDistance`), supports 3D dragging of anchored parts (exact placement on release) and unanchored parts (constraint-force physics), and is highly scriptable (`Scriptable` drag style, custom constraint functions). `UIDragDetector` is the newer UI-only counterpart — prefer it over hand-rolled `GuiObject` input tracking for 2D drags. Both expose the same event trio, so knowledge transfers. (*practitioner*: UIDragDetector fully released Dec 2025, announced Aug 2024 — devforum.roblox.com/t/introducing-uidragdetectors-released/3109263.)
+`DragDetector` is the general-purpose option: it inherits `ClickDetector` members (`MouseClick`, `RightMouseClick`, `MouseHoverEnter`/`MouseHoverLeave`, `CursorIcon`, `MaxActivationDistance`), supports 3D dragging of anchored parts (exact placement on release) and unanchored parts (constraint-force physics), and is highly scriptable (`Scriptable` drag style, custom constraint functions). `UIDragDetector` is the newer UI-only counterpart; prefer it over hand-rolled `GuiObject` input tracking for 2D drags. Both expose the same event trio, so knowledge transfers. (*practitioner*: UIDragDetector fully released Dec 2025, announced Aug 2024; source: devforum.roblox.com/t/introducing-uidragdetectors-released/3109263.)
 
 ### DragDetector essentials
 
@@ -247,12 +247,12 @@ Default behavior: draggable in the ground plane. Key properties (defaults): `Dra
 
 `ResponseStyle` (Enum.DragDetectorResponseStyle):
 - `Geometric`: object is moved exactly; unanchored parts are temporarily anchored during the drag and restored on release.
-- `Physical`: unanchored parts are moved by constraint forces — tune `Responsiveness` (10), `MaxForce` (10000000), `MaxTorque` (10000), `ApplyAtCenterOfMass` (false = force at the clicked point).
-- `Custom`: object does not move; `DragFrame` still updates and events still fire — drive movement yourself.
+- `Physical`: unanchored parts are moved by constraint forces; tune `Responsiveness` (10), `MaxForce` (10000000), `MaxTorque` (10000), `ApplyAtCenterOfMass` (false = force at the clicked point).
+- `Custom`: object does not move; `DragFrame` still updates and events still fire, so drive movement yourself.
 
-Limits: `MinDragTranslation`/`MaxDragTranslation` (Vector3) and `MinDragAngle`/`MaxDragAngle` (`RotateAxis` only) impede motion but are not constraints. When using limits, set `ReferenceInstance` first — without a reference frame, limits re-anchor to the object's own pose on each drag.
+Limits: `MinDragTranslation`/`MaxDragTranslation` (Vector3) and `MinDragAngle`/`MaxDragAngle` (`RotateAxis` only) impede motion but are not constraints. When using limits, set `ReferenceInstance` first; without a reference frame, limits re-anchor to the object's own pose on each drag.
 
-Direction/reference: `Axis`/`Orientation` set the direction of motion; `ReferenceInstance` defines the reference frame — `DragFrame` (CFrame) is expressed relative to it and readable via `GetPropertyChangedSignal("DragFrame")` or `GetReferenceFrame()`.
+Direction/reference: `Axis`/`Orientation` set the direction of motion; `ReferenceInstance` defines the reference frame; `DragFrame` (CFrame) is expressed relative to it and readable via `GetPropertyChangedSignal("DragFrame")` or `GetReferenceFrame()`.
 
 Permissions: `PermissionPolicy` = `Nobody` | `Everybody` (default) | `Scriptable` plus `SetPermissionPolicyFunction(function(player, part) -> boolean)`. Missing function or invalid return blocks everyone.
 
@@ -260,7 +260,7 @@ Replication: `RunLocally=false` (default) → the client interprets input and th
 
 Events: `DragStart(playerWhoDragged: Player, cursorRay: Ray, viewFrame: CFrame, hitFrame: CFrame, clickedPart: BasePart, ...)`, `DragContinue(playerWhoDragged, cursorRay, viewFrame, ...)`, `DragEnd(playerWhoDragged)`. Modifier keys for dual-mode styles: `KeyboardModeSwitchKeyCode`/`GamepadModeSwitchKeyCode`/`VRSwitchKeyCode` (default LeftControl / ButtonR1 / ButtonL2).
 
-Scripting hooks: `SetDragStyleFunction(fn)` with `DragStyle = Scriptable` — `fn(cursorRay: Ray) -> CFrame?` returning the desired pivot CFrame in world space (`nil` = don't move). `AddConstraintFunction(priority, fn): RBXScriptConnection` — `fn(proposedMotion: CFrame) -> CFrame`, chained by priority; `Disconnect()` to remove. `RestartDrag()` re-evaluates the drag after changing `DragStyle`/`Axis`/`SecondaryAxis`.
+Scripting hooks: `SetDragStyleFunction(fn)` with `DragStyle = Scriptable`: `fn(cursorRay: Ray) -> CFrame?` returning the desired pivot CFrame in world space (`nil` = don't move). `AddConstraintFunction(priority, fn): RBXScriptConnection`: `fn(proposedMotion: CFrame) -> CFrame`, chained by priority; `Disconnect()` to remove. `RestartDrag()` re-evaluates the drag after changing `DragStyle`/`Axis`/`SecondaryAxis`.
 
 ```luau
 -- Drawer: slide along its own axis, clamped (illustrative)
@@ -282,13 +282,13 @@ end)
 
 ### UIDragDetector essentials
 
-`DragStyle` (Enum.UIDragDetectorDragStyle): `TranslatePlane` (default, free 2D), `TranslateLine` (1D along `DragAxis: Vector2`), `Rotate`, `Scriptable`. `ResponseStyle` (Enum.UIDragDetectorResponseStyle): `Offset` (default; applies motion to the parent's `Position` Offset), `Scale`, `CustomOffset`/`CustomScale` (UI does not move; `DragUDim2` still updates and events still fire — read `DragUDim2`/`DragRotation` to drive logic yourself).
+`DragStyle` (Enum.UIDragDetectorDragStyle): `TranslatePlane` (default, free 2D), `TranslateLine` (1D along `DragAxis: Vector2`), `Rotate`, `Scriptable`. `ResponseStyle` (Enum.UIDragDetectorResponseStyle): `Offset` (default; applies motion to the parent's `Position` Offset), `Scale`, `CustomOffset`/`CustomScale` (UI does not move; `DragUDim2` still updates and events still fire; read `DragUDim2`/`DragRotation` to drive logic yourself).
 
 Limits and bounds: `MinDragTranslation`/`MaxDragTranslation` (UDim2), `MinDragAngle`/`MaxDragAngle` (`Rotate`), `BoundingUI` (a `GuiBase2d`, e.g. a container Frame) with `BoundingBehavior` (`Automatic` default | `EntireObject` | `HitPoint`), and `ReferenceUIInstance` to re-anchor axes/origin. Speed: `SelectionModeDragSpeed` (UDim2), `SelectionModeRotateSpeed` (deg/sec), `UIDragSpeedAxisMapping`.
 
-Events: `DragStart(inputPosition: Vector2)`, `DragContinue(inputPosition: Vector2)`, `DragEnd(inputPosition: Vector2)`. For custom logic, connect `DragContinue` and read the parent's `Position` (or `DragUDim2` under Custom styles) — the same callback pattern as a `.Activated` button handler.
+Events: `DragStart(inputPosition: Vector2)`, `DragContinue(inputPosition: Vector2)`, `DragEnd(inputPosition: Vector2)`. For custom logic, connect `DragContinue` and read the parent's `Position` (or `DragUDim2` under Custom styles): the same callback pattern as a `.Activated` button handler.
 
-Scripting hooks: `SetDragStyleFunction(fn)` with `Scriptable` — `fn(inputPosition: Vector2) -> UDim2, float, [relativity, space]`; `DragSpace` (`Parent` | `LayerCollector`) and `DragRelativity` (`Absolute` | `Relative`) define return semantics. `AddConstraintFunction` chains like the 3D detector but passes UDim2 + float. `GetReferencePosition()`/`GetReferenceRotation()` read the reference origin. Event connections and registered functions run client-side (`LocalScript` or `RunContext = Client`), like all UI input.
+Scripting hooks: `SetDragStyleFunction(fn)` with `Scriptable`: `fn(inputPosition: Vector2) -> UDim2, float, [relativity, space]`; `DragSpace` (`Parent` | `LayerCollector`) and `DragRelativity` (`Absolute` | `Relative`) define return semantics. `AddConstraintFunction` chains like the 3D detector but passes UDim2 + float. `GetReferencePosition()`/`GetReferenceRotation()` read the reference origin. Event connections and registered functions run client-side (`LocalScript` or `RunContext = Client`), like all UI input.
 
 ```luau
 -- Volume slider: handle drags along X inside its container (illustrative)
@@ -410,19 +410,19 @@ end
 
 Key members (verified against the class page):
 
-- **`VREnabled`** (read-only boolean) — true when a VR session is active. The same flag exists on `UserInputService`.
-- **`GetUserCFrame(type: Enum.UserCFrame): CFrame`** — device pose as an offset from real-world origin. Multiply by `Camera.CFrame`, and scale the position by `Camera.HeadScale`, to place something at a headset/hand:
+- **`VREnabled`** (read-only boolean): true when a VR session is active. The same flag exists on `UserInputService`.
+- **`GetUserCFrame(type: Enum.UserCFrame): CFrame`**: device pose as an offset from real-world origin. Multiply by `Camera.CFrame`, and scale the position by `Camera.HeadScale`, to place something at a headset/hand:
   ```luau
   local handOffset = VRService:GetUserCFrame(Enum.UserCFrame.LeftHand)
   handOffset = handOffset.Rotation + handOffset.Position * camera.HeadScale
   part.CFrame = camera.CFrame * handOffset
   ```
-- **`GetUserCFrameEnabled(type): boolean`** — whether that device (Head, LeftHand, RightHand) is connected.
-- **`UserCFrameChanged(type, cframe)`** — fires on device movement; re-mirror parts there.
-- **`RecenterUserHeadCFrame()`** — re-centers the head pose (same as `UserInputService:RecenterUserHeadCFrame()`).
-- **`RequestNavigation(cframe, inputUserCFrame)`** — shows a parabola path visualizer toward a destination; pairs with the `NavigationRequested` event.
-- **`GetTouchpadMode(pad)` / `SetTouchpadMode(pad, mode)`** — legacy touchpad interaction modes (`Enum.VRTouchpad`, `Enum.VRTouchpadMode`).
-- Behavior properties: `AutomaticScaling` (`VRScaling.World` makes `Camera.HeadScale` track avatar size), `AvatarGestures` (server-set boolean for controller-driven hand/head animation), `FadeOutViewOnCollision` (default true, fades the view when the head clips geometry — do not disable without a replacement), `GuiInputUserCFrame` (which device drives UI input), `LaserPointer`, `ThirdPersonFollowCamEnabled`.
+- **`GetUserCFrameEnabled(type): boolean`**: whether that device (Head, LeftHand, RightHand) is connected.
+- **`UserCFrameChanged(type, cframe)`**: fires on device movement; re-mirror parts there.
+- **`RecenterUserHeadCFrame()`**: re-centers the head pose (same as `UserInputService:RecenterUserHeadCFrame()`).
+- **`RequestNavigation(cframe, inputUserCFrame)`**: shows a parabola path visualizer toward a destination; pairs with the `NavigationRequested` event.
+- **`GetTouchpadMode(pad)` / `SetTouchpadMode(pad, mode)`**: legacy touchpad interaction modes (`Enum.VRTouchpad`, `Enum.VRTouchpadMode`).
+- Behavior properties: `AutomaticScaling` (`VRScaling.World` makes `Camera.HeadScale` track avatar size), `AvatarGestures` (server-set boolean for controller-driven hand/head animation), `FadeOutViewOnCollision` (default true, fades the view when the head clips geometry; do not disable without a replacement), `GuiInputUserCFrame` (which device drives UI input), `LaserPointer`, `ThirdPersonFollowCamEnabled`.
 
 Do not invent member names: older community references carry stale VRService members. Check the class page when in doubt.
 

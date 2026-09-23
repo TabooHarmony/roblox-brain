@@ -266,7 +266,7 @@ NETWORK BUDGET:
 
 ## Community ecosystem (leads, not sources)
 
-- [Connections can memory leak Instances](https://devforum.roblox.com/t/psa-connections-can-memory-leak-instances/90082) — the RBXScriptSignal leak PSA every reviewer cites; [GC and memory leaks](https://devforum.roblox.com/t/garbage-collection-and-memory-leaks-in-roblox-what-you-should-know/374954).
+- [Connections can memory leak Instances](https://devforum.roblox.com/t/psa-connections-can-memory-leak-instances/90082): the RBXScriptSignal leak PSA every reviewer cites; [GC and memory leaks](https://devforum.roblox.com/t/garbage-collection-and-memory-leaks-in-roblox-what-you-should-know/374954).
 - [How to actually improve performance](https://devforum.roblox.com/t/improved-how-to-actually-improve-performance-in-your-games/1221842) (measure-first canon); [6000+ FPS game](https://devforum.roblox.com/t/creating-the-most-optimized-roblox-game-runs-at-6000-fps/1736424) extreme case.
-- [Luau Bytecode EXPLAINED](https://devforum.roblox.com/t/luau-bytecode-explained-how-to-read-debug-and-optimize-like-a-hacker/3941941) (2025) and [Illegal Luau optimizations](https://devforum.roblox.com/t/%E2%96%A8-how-2-make-roblox-engineers-cry-illegal-luau-optimizations-and-how-to-use-them/4128934) (2025) — compiler-level perf literacy.
+- [Luau Bytecode EXPLAINED](https://devforum.roblox.com/t/luau-bytecode-explained-how-to-read-debug-and-optimize-like-a-hacker/3941941) (2025) and [Illegal Luau optimizations](https://devforum.roblox.com/t/%E2%96%A8-how-2-make-roblox-engineers-cry-illegal-luau-optimizations-and-how-to-use-them/4128934) (2025): compiler-level perf literacy.
 - [Dynamic culling system](https://devforum.roblox.com/t/advanced-modular-dynamic-culling-system/4322958) (2026); [DistanceFade](https://devforum.roblox.com/t/distancefade-a-transparency-falloff-effect-for-your-games/3136828); [greedy meshing](https://devforum.roblox.com/t/consume-everything-how-greedy-meshing-works/452717).

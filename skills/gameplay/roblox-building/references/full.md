@@ -94,7 +94,7 @@ Hard constraints (official):
 
 - Creation APIs can return `nil` when the device is out of `Editable*` memory budget. Always nil-check before use; `:Destroy()` finished objects to free budget.
 - In published experiences the creator must be 13+, ID-verified, and have the "Allow Mesh / Image APIs" toggle on (Game Settings → Security). Loading assets works only for assets the experience owner (or group) owns.
-- `Editable*` objects do not replicate. Each client/server boundary needs its own creation; replicating edits means sending your own data (and you are then responsible for moderation of user-generated content — prefer seed/slider parameters over free-form pixel replication).
+- `Editable*` objects do not replicate. Each client/server boundary needs its own creation; replicating edits means sending your own data (and you are then responsible for moderation of user-generated content, so prefer seed/slider parameters over free-form pixel replication).
 - `EditableImage` size is fixed at creation. `EditableMesh` created from an asset is fixed-size by default (cheaper; positions/attributes editable, topology not). Non-fixed meshes: 60,000 vertex / 20,000 triangle limit.
 
 Rendering to UI: wrap with `Content.fromObject(image)` and assign to `ImageLabel.ImageContent` (or `MeshPart.TextureContent` / `MeshPart.MeshContent`). Practitioner tip: set `ResampleMode` to `Pixelated` for crisp low-resolution renders.
@@ -116,7 +116,7 @@ image:WritePixelsBuffer(Vector2.zero, image.Size, px)
 
 Practitioner guidance (devforum, unverified by us):
 
-- Pack a pixel as one `u32` write where possible instead of four `u8` writes; batch per-row and write once per frame. A one-`EditableImage`-update-per-frame limit has been reported — profile before assuming per-frame writes are free.
+- Pack a pixel as one `u32` write where possible instead of four `u8` writes; batch per-row and write once per frame. A one-`EditableImage`-update-per-frame limit has been reported, so profile before assuming per-frame writes are free.
 - Expensive per-pixel loops (raycast renderers, fractals) benefit from Parallel Luau: compute row buffers inside Actors, then `task.synchronize` before `WritePixelsBuffer` (it is not callable in parallel).
 - For painting on meshes: `EditableMesh:RaycastLocal` gives the hit UV, then draw at that coordinate on the paired `EditableImage` (`DrawImageTransformed` for cropping/rotation, `DrawCircle`/`DrawRectangle`/`DrawLine` for shapes).
 - `EditableMesh` IDs (vertex/face/UV/normal) are stable but unordered with holes; iterate `GetVertices()`/`GetFaces()` results, never `1..count`. Use batch APIs (`BatchSetValues`) over per-element calls for bulk edits; re-derive collision via `AssetService:CreateMeshPartAsync` at the end of a conceptual edit, not per-op.
@@ -412,7 +412,7 @@ Use the report to choose the next bounded inspection or playtest. Static counts 
 
 ### Interaction prompts: ProximityPrompt and ProximityPromptService
 
-`ProximityPrompt` (parent to a `BasePart`, `Attachment`, or `Model`) renders a built-in interaction prompt (key hint + label) and fires `Triggered` when the player interacts — no GUI code needed. Default `RequiresLineOfSight = true` and `MaxActivationDistance = 10`. `HoldDuration` makes the player hold the key; `GamepadKeyCode`/`Style` control presentation. `ObjectText`/`ActionText` are the sub-label and main label. `KeyboardKeyCode`/`ClickablePrompt` customize input.
+`ProximityPrompt` (parent to a `BasePart`, `Attachment`, or `Model`) renders a built-in interaction prompt (key hint + label) and fires `Triggered` when the player interacts; no GUI code needed. Default `RequiresLineOfSight = true` and `MaxActivationDistance = 10`. `HoldDuration` makes the player hold the key; `GamepadKeyCode`/`Style` control presentation. `ObjectText`/`ActionText` are the sub-label and main label. `KeyboardKeyCode`/`ClickablePrompt` customize input.
 
 `ProximityPromptService` is the manager: `Enabled` toggles all prompts, `MaxPromptsVisible` (default 16) caps simultaneous prompts, `MaxIndicatorsVisible` (default 16, clamped 0-64) caps opt-in distance indicators. Events: `PromptShown`/`PromptHidden` (client-side visibility), `PromptTriggered(prompt, player)` fires on completed interaction (key press, or after `HoldDuration` hold), `PromptTriggerEnded`, `PromptButtonHoldBegan`/`PromptButtonHoldEnded` (hold-progress UI), plus `IndicatorShown`/`IndicatorHidden` for custom indicator UI (indicators only appear when a prompt sets `MaxIndicatorDistance > 0`). Listen globally on the service to avoid per-prompt wiring:
 
@@ -425,6 +425,6 @@ end)
 
 Server scripts can also create and configure prompts programmatically; `TriggerEnded` on the prompt itself pairs with `Triggered` for release-to-cancel mechanics.
 
-- [Large-Scale Roblox Terrain: the ultimate guide](https://devforum.roblox.com/t/large-scale-roblox-terrain-the-ultimate-guide/405672) (84k views) — still the terrain-at-scale reference.
+- [Large-Scale Roblox Terrain: the ultimate guide](https://devforum.roblox.com/t/large-scale-roblox-terrain-the-ultimate-guide/405672) (84k views): still the terrain-at-scale reference.
 - [Realistic oceans via mesh deformation](https://devforum.roblox.com/t/realistic-oceans-using-mesh-deformation/1159345); [greedy meshing explainer](https://devforum.roblox.com/t/consume-everything-how-greedy-meshing-works/452717).
 - [Free texture sites](https://devforum.roblox.com/t/free-texture-sites/70131) (174k views); [City Loader plugin](https://devforum.roblox.com/t/city-loader-plugin-templates-for-real-life-buildingscities-in-studio/696886).

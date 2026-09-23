@@ -5,8 +5,8 @@ Extracts URLs from `sources:` frontmatter across all skills and HTTP HEADs
 each one. Fails on 404 or unreachable URLs.
 
 Usage:
-    python3 verify_source_urls.py
-    python3 verify_source_urls.py --verbose
+    python3 scripts/verify_source_urls.py
+    python3 scripts/verify_source_urls.py --verbose
 
 Exit 0 = all URLs reachable, 1 = dead links found.
 """
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / "skills"
 TIMEOUT = 15
 

@@ -241,64 +241,64 @@ A verified claim is worth pinning: if you maintain an agent-facing skill library
 
 ## Community tool stack (Tizzy discord, Jul–Sep 2026)
 
-Field-reported from a live dev Discord (Jul–Sep 2026). Community practices and third-party services, not verified or endorsed tooling — treat URLs, pricing, and availability as temporal. <!-- temporal: 2026-09 -->
+Field-reported from a live dev Discord (Jul–Sep 2026). Community practices and third-party services, not verified or endorsed tooling; treat URLs, pricing, and availability as temporal. <!-- temporal: 2026-09 -->
 
 ### AI thumbnail / icon pipelines
 
 There is a genuine CONFLICT in the community data on whether AI thumbnails help or hurt CTR; the resolution is genre-dependent:
 
-- **AI beats paid artists (repeated first-hand):** a $50 commissioned thumb got 1% CTR vs 3% for an AI one; AI thumbs routinely hit 8–10%+ qPTR (best observed ~14%); paid artists charged $35–150 per thumbnail pre-AI vs ~$16/mo AI subscriptions. Spend on iteration volume, not single commissions. — TwoGodTwoForce 2026-08-03; Gosu 2026-07-27/08-23; Blueshell_Dev 2026-07-21
-- **CONFLICT — AI thumbs measurably hurt CTR for non-slop games:** players recognize and skip obvious AI images; visible artifacts (uncanny faces) reduce perceived game quality. Reported to work only for brainrot/slop-adjacent genres. Mitigation: feed the AI references of successful same-genre thumbnails and A/B test whether the result reads "too AI." — Every 2026-08-25; Gatto 2026-08-30; lanmi 2026-09-17; charlie 2026-07-30; DampTruff 2026-07-15; cyntile 2026-07-18
-- **Workflow both camps agree on:** a detailed template prompt (one big bacon-hair avatar doing the action, black outlines, studio lighting, reward popups, mobile-legible, 16:9), then test many variants through Ads Manager and let CTR pick winners. From-scratch prompts produce generic output — always feed a reference image and describe targeted changes ("replace the gun with my game's mechanic"). GPT-class models are good at icons and high-saturation imagery, bad at faces and text; the standard pipeline is AI-generate the scene, then add text/faces by hand (Figma/Photopea). "Nano banana" rated better than GPT image 1. — Flow 2026-08-23; XOO 2026-08-23; Zriptic 2026-08-02; Seth/transcendence/Jerome 2026-08-27; Aura 2026-08-09
+- **AI beats paid artists (repeated first-hand):** a $50 commissioned thumb got 1% CTR vs 3% for an AI one; AI thumbs routinely hit 8–10%+ qPTR (best observed ~14%); paid artists charged $35–150 per thumbnail pre-AI vs ~$16/mo AI subscriptions. Spend on iteration volume, not single commissions. (TwoGodTwoForce 2026-08-03; Gosu 2026-07-27/08-23; Blueshell_Dev 2026-07-21)
+- **CONFLICT: AI thumbs measurably hurt CTR for non-slop games:** players recognize and skip obvious AI images; visible artifacts (uncanny faces) reduce perceived game quality. Reported to work only for brainrot/slop-adjacent genres. Mitigation: feed the AI references of successful same-genre thumbnails and A/B test whether the result reads "too AI." (Every 2026-08-25; Gatto 2026-08-30; lanmi 2026-09-17; charlie 2026-07-30; DampTruff 2026-07-15; cyntile 2026-07-18)
+- **Workflow both camps agree on:** a detailed template prompt (one big bacon-hair avatar doing the action, black outlines, studio lighting, reward popups, mobile-legible, 16:9), then test many variants through Ads Manager and let CTR pick winners. From-scratch prompts produce generic output; always feed a reference image and describe targeted changes ("replace the gun with my game's mechanic"). GPT-class models are good at icons and high-saturation imagery, bad at faces and text; the standard pipeline is AI-generate the scene, then add text/faces by hand (Figma/Photopea). "Nano banana" rated better than GPT image 1. (Flow 2026-08-23; XOO 2026-08-23; Zriptic 2026-08-02; Seth/transcendence/Jerome 2026-08-27; Aura 2026-08-09)
 
-**Thumbnail pre-testing tools** (test CTR before committing ad spend) — Blueshell_Dev 2026-07-21; RealYoKaglier 2026-08-07; FuturisticGames 2026-07-15/08-04; Zacky0s 2026-08-05; idk 2026-08-11; dot 2026-07-10; BlueMaster 2026-07-31; Zayuh 2026-07-10; MrX 2026-07-27:
+**Thumbnail pre-testing tools** (test CTR before committing ad spend; reported by Blueshell_Dev 2026-07-21; RealYoKaglier 2026-08-07; FuturisticGames 2026-07-15/08-04; Zacky0s 2026-08-05; idk 2026-08-11; dot 2026-07-10; BlueMaster 2026-07-31; Zayuh 2026-07-10; MrX 2026-07-27):
 
-- qptr.io — community tool by "Michael", recommended by Tizzy; devs pair it with ChatGPT ("show it the home-recs row, ask which thumbnail stands out to kids")
-- vizzbees.com — AI thumbnail generator even AI-skeptics vouch for
-- rothumbs / RoThumbs — AI generation (paid); RoClicks — free thumbnail/icon generator built from what's charting (bring-your-own Google/OpenAI key); several devs just use nano banana pro (free) directly
+- qptr.io: community tool by "Michael", recommended by Tizzy; devs pair it with ChatGPT ("show it the home-recs row, ask which thumbnail stands out to kids")
+- vizzbees.com: AI thumbnail generator even AI-skeptics vouch for
+- rothumbs / RoThumbs: AI generation (paid); RoClicks: free thumbnail/icon generator built from what's charting (bring-your-own Google/OpenAI key); several devs just use nano banana pro (free) directly
 - DIY style-copy pipeline: collect reference thumbnails → train a LoRA with Kohya_ss → run in ComfyUI/Stable Diffusion with a trigger word
-- PixelForge ($5) — cheap image-studio alternative to a free-but-slow Blender render setup
+- PixelForge ($5): cheap image-studio alternative to a free-but-slow Blender render setup
 
-**Production pipelines in use:** Gemini/ChatGPT layouts (with references from successful games) → clean up with RoThumbs; "ChatGPT Images + Photopea is a GOATED combo"; Fiverr human artists at ~3–4 thumbnails for £20; big-bang.studio (the studio behind Rivals and 99 Nights artwork) as study material; free render stack = Blender + free rigs + Photopea (pre-rendered baseplates, HP bars, etc. freely available). — beahrz/Zriptic 2026-07-12; Doug 2026-09-14; Joel 2026-09-17; Ariex 2026-08-07; N3Developer 2026-07-20
+**Production pipelines in use:** Gemini/ChatGPT layouts (with references from successful games) → clean up with RoThumbs; "ChatGPT Images + Photopea is a GOATED combo"; Fiverr human artists at ~3–4 thumbnails for £20; big-bang.studio (the studio behind Rivals and 99 Nights artwork) as study material; free render stack = Blender + free rigs + Photopea (pre-rendered baseplates, HP bars, etc. freely available). (beahrz/Zriptic 2026-07-12; Doug 2026-09-14; Joel 2026-09-17; Ariex 2026-08-07; N3Developer 2026-07-20)
 
-**AI icon pipeline that works:** have Claude render each 3D model as a screenshot from an angle with no background + black stroke — 20 car icons in 2 minutes; one dev built a custom icon maker (model screenshot → stroke → auto-upload via API). — blodi 2026-08-07; rip_HaoshokuRed 2026-08-12
+**AI icon pipeline that works:** have Claude render each 3D model as a screenshot from an angle with no background + black stroke: 20 car icons in 2 minutes; one dev built a custom icon maker (model screenshot → stroke → auto-upload via API). (blodi 2026-08-07; rip_HaoshokuRed 2026-08-12)
 
-Ads note: Ads Manager natively rotates multiple thumbnails as creatives in one campaign (auto-rotates, reports per-creative CTR, pushes winners) and is sufficient for 99% of games; if ads "don't work," the failure is almost always retention, not the channel. — Duphalak 2026-07-11; john 2026-07-06
+Ads note: Ads Manager natively rotates multiple thumbnails as creatives in one campaign (auto-rotates, reports per-creative CTR, pushes winners) and is sufficient for 99% of games; if ads "don't work," the failure is almost always retention, not the channel. (Duphalak 2026-07-11; john 2026-07-06)
 
 ### Asset / resource stack (community union)
 
-- Packages/data: wally.run community frameworks (Signal by sleitnick, Janitor, Promise v4); ProfileStore/ProfileService for data; roproxy.com as proxy for Roblox web-API calls from games. — Blueshell_Dev 2026-07-12; Qizzy 2026-07-29
-- Figma→Roblox UI: roimport.com (free importer); design at 16:9 for PC, export, scale with UIScale; preview/test UI code without launching the game via hoarcekat or the Vide framework; UI packs preferred over AI-generated UI frames. — Dapathy 2026-08-09; val 2026-07-30; Haze 2026-08-09; Bapo 2026-07-18
-- AI 3D: Meshy/Tripo3D for image-to-3D (~$1 first month; meshy.ai for bulk small models) — but building/modeling is the skill AI handles worst, along with non-basic UI; AI meshes are typically badly over-poly, check vertex counts before import; Blender + Claude/Astra for models, tripo3d for reference-image→3D instead of burning chat usage. — Zriptic 2026-07-10; FuturisticGames 2026-07-15; thug 2026-08-22; WASIMALT/Luna 2026-07-14; CraseDev 2026-09-14; Nyx 2026-09-01
-- Audio/UI assets: nocapmocap.com (mocap); Moon Animator ($30) + EasyWeld plugin; builtbybit.com templates/asset packs (e.g. SFX megapacks); gvesster.itch.io free icon pack; uiresouces.com UI grid patterns; epicstockmedia.com UI SFX packs; devforum "massive sound kit" (142 categorized sounds); itch.io UI kits (rblx-essentials) for weak GUI skills; Pixabay/Creator Store sounds; RoVisuals free hourglass/icon generator for ad creatives; Vanilla 3 icon set (DevForum) for Studio editor icons. — multiple contributors, Jul–Sep 2026
-- RoPrice (DevForum tool) — bulk-creating/editing dev products and gamepasses. — SteamedBunX 2026-07-25
+- Packages/data: wally.run community frameworks (Signal by sleitnick, Janitor, Promise v4); ProfileStore/ProfileService for data; roproxy.com as proxy for Roblox web-API calls from games. (Blueshell_Dev 2026-07-12; Qizzy 2026-07-29)
+- Figma→Roblox UI: roimport.com (free importer); design at 16:9 for PC, export, scale with UIScale; preview/test UI code without launching the game via hoarcekat or the Vide framework; UI packs preferred over AI-generated UI frames. (Dapathy 2026-08-09; val 2026-07-30; Haze 2026-08-09; Bapo 2026-07-18)
+- AI 3D: Meshy/Tripo3D for image-to-3D (~$1 first month; meshy.ai for bulk small models), but building/modeling is the skill AI handles worst, along with non-basic UI; AI meshes are typically badly over-poly, check vertex counts before import; Blender + Claude/Astra for models, tripo3d for reference-image→3D instead of burning chat usage. (Zriptic 2026-07-10; FuturisticGames 2026-07-15; thug 2026-08-22; WASIMALT/Luna 2026-07-14; CraseDev 2026-09-14; Nyx 2026-09-01)
+- Audio/UI assets: nocapmocap.com (mocap); Moon Animator ($30) + EasyWeld plugin; builtbybit.com templates/asset packs (e.g. SFX megapacks); gvesster.itch.io free icon pack; uiresouces.com UI grid patterns; epicstockmedia.com UI SFX packs; devforum "massive sound kit" (142 categorized sounds); itch.io UI kits (rblx-essentials) for weak GUI skills; Pixabay/Creator Store sounds; RoVisuals free hourglass/icon generator for ad creatives; Vanilla 3 icon set (DevForum) for Studio editor icons. (multiple contributors, Jul–Sep 2026)
+- RoPrice (DevForum tool): bulk-creating/editing dev products and gamepasses. (SteamedBunX 2026-07-25)
 
 ### AI coding stack consensus
 
-- Practical Roblox-specific workflow: keep the game in the project folder so a new AI session inherits context; connect Studio via MCP so the AI reads real code; rojo with git + selene linting for version-controlled scripting. Studio's MCP is token-hungry — sequential MCP + rojo + Codex is the leaner setup. — Nullborne 2026-07-17; chris 2026-08-23; BPAndrew 2026-07-10; Gordito 2026-07-15
-- **Studio MCP bug warning: collaborative editing can kill the Studio session and unsaved data when using Studio MCP — turn collaborative edits off and keep file backups.** — dalph06, 2026-07-10
-- Open Cloud API largely removes AI-agent friction: an AI with API access can publish images, create gamepasses/dev products, and set prices itself — "AI as studio assistant" is viable end-to-end. — Nyx, 2026-08-10
-- Performance debugging with AI: don't prompt "optimize my code" — ask for real diagnostics via MicroProfiler and script profiling to find CPU spikes; Humanoid instances are expensive at scale (hundreds of NPCs need rigs without Humanoids). — terms 2026-08-22; kah 2026-08-21
-- Local models: Qwen3.8-27B on a 24GB+ Apple Silicon Mac inside an agentic harness was specifically recommended; pairing Studio MCP with local Ollama models was asked about but unconfirmed. — jan 2026-08-20; majorFraud 2026-08-17
-- Community Claude skills circulating: roblox-brain (this repo) and dstack (github.com/HungryKelvin123/dstack); community opinion: most community skills are "documentation wrappers"/bloat. — keltec 2026-07-14; CraseDev 2026-09-14; Nyx 2026-09-01
+- Practical Roblox-specific workflow: keep the game in the project folder so a new AI session inherits context; connect Studio via MCP so the AI reads real code; rojo with git + selene linting for version-controlled scripting. Studio's MCP is token-hungry; sequential MCP + rojo + Codex is the leaner setup. (Nullborne 2026-07-17; chris 2026-08-23; BPAndrew 2026-07-10; Gordito 2026-07-15)
+- **Studio MCP bug warning: collaborative editing can kill the Studio session and unsaved data when using Studio MCP; turn collaborative edits off and keep file backups.** (dalph06, 2026-07-10)
+- Open Cloud API largely removes AI-agent friction: an AI with API access can publish images, create gamepasses/dev products, and set prices itself; "AI as studio assistant" is viable end-to-end. (Nyx, 2026-08-10)
+- Performance debugging with AI: don't prompt "optimize my code"; ask for real diagnostics via MicroProfiler and script profiling to find CPU spikes; Humanoid instances are expensive at scale (hundreds of NPCs need rigs without Humanoids). (terms 2026-08-22; kah 2026-08-21)
+- Local models: Qwen3.8-27B on a 24GB+ Apple Silicon Mac inside an agentic harness was specifically recommended; pairing Studio MCP with local Ollama models was asked about but unconfirmed. (jan 2026-08-20; majorFraud 2026-08-17)
+- Community Claude skills circulating: roblox-brain (this repo) and dstack (github.com/HungryKelvin123/dstack); community opinion: most community skills are "documentation wrappers"/bloat. (keltec 2026-07-14; CraseDev 2026-09-14; Nyx 2026-09-01)
 
 ### Playtester channels
 
-QA Central Discord organizes scheduled test sessions (recommended repeatedly, incl. by coaches); Hidden Devs has a tester-matching board; pay bug-finders by severity to increase coverage; Creator Hub "audience" section feedback (likes/dislikes) also counts as feedback entries. — NotAntPanda 2026-09-13; GameComposer 2026-08-21; tora/Kam 2026-08-23; ClosedTofu 2026-09-16
+QA Central Discord organizes scheduled test sessions (recommended repeatedly, incl. by coaches); Hidden Devs has a tester-matching board; pay bug-finders by severity to increase coverage; Creator Hub "audience" section feedback (likes/dislikes) also counts as feedback entries. (NotAntPanda 2026-09-13; GameComposer 2026-08-21; tora/Kam 2026-08-23; ClosedTofu 2026-09-16)
 
 ### Learning resources
 
-TizzyRBLX12 for monetization ("the GOAT"), RoBuilder for building, gfxcomet for UI, BrawlDev's tutorials as the standard on-ramp (replacing AlvinBlox/PeasFactory), Roblox's official learn channel (microprofiler videos for frame optimization) and its basic+advanced creator tutorials, refactoring.guru design-patterns catalog for game code architecture; consensus warning: avoid "tutorial hell"; math prerequisites for gameplay physics: trig, basic calculus, basic linear algebra. — bac 2026-07-26; Gosu 2026-08-20; Zayuh 2026-07-14; Davide 2026-07-13; Otorina3d 2026-08-12; freakyfinch457 2026-07-13
+TizzyRBLX12 for monetization ("the GOAT"), RoBuilder for building, gfxcomet for UI, BrawlDev's tutorials as the standard on-ramp (replacing AlvinBlox/PeasFactory), Roblox's official learn channel (microprofiler videos for frame optimization) and its basic+advanced creator tutorials, refactoring.guru design-patterns catalog for game code architecture; consensus warning: avoid "tutorial hell"; math prerequisites for gameplay physics: trig, basic calculus, basic linear algebra. (bac 2026-07-26; Gosu 2026-08-20; Zayuh 2026-07-14; Davide 2026-07-13; Otorina3d 2026-08-12; freakyfinch457 2026-07-13)
 
 ### Analytics and ops tools
 
-- Funnels are the underused analytics feature — devs who set them up immediately find exact drop-off steps; pair with watching a real fresh player session. — john 2026-07-06; Zak 2026-08-04; Carter 2026-08-06
-- Pull your own metrics into Grafana — the Roblox creator dashboard lags badly (24–48h on stats); self-hosted dashboards surface CCU/monetization trends faster. — Surfrdan, 2026-07-08
-- Trend-target tooling: a top dev runs a scraper detecting newly released games and pulls owner contact info within minutes of release; others scrape front-page thumbnails into a folder and have Claude pick references + write generation prompts; top-1000-game cutoff observed at 1,399 concurrent players. — 740k 2026-07-28; Zriptic 2026-07-22; amend 2026-08-21
+- Funnels are the underused analytics feature: devs who set them up immediately find exact drop-off steps; pair with watching a real fresh player session. (john 2026-07-06; Zak 2026-08-04; Carter 2026-08-06)
+- Pull your own metrics into Grafana; the Roblox creator dashboard lags badly (24–48h on stats); self-hosted dashboards surface CCU/monetization trends faster. (Surfrdan, 2026-07-08)
+- Trend-target tooling: a top dev runs a scraper detecting newly released games and pulls owner contact info within minutes of release; others scrape front-page thumbnails into a folder and have Claude pick references + write generation prompts; top-1000-game cutoff observed at 1,399 concurrent players. (740k 2026-07-28; Zriptic 2026-07-22; amend 2026-08-21)
 
 ### Identified tool gaps
 
 Two tool concepts the community wants but says do not exist yet:
 
-- **Session-replay plugin** — records player positions/actions for onboarding analytics and bug repro. — umbri, 2026-08-11
-- **Balance simulator** — run 100,000 simulated sessions to tune progression/balance values in seconds instead of weeks of hand-tuning. — 740k, 2026-07-24
+- **Session-replay plugin**: records player positions/actions for onboarding analytics and bug repro. (umbri, 2026-08-11)
+- **Balance simulator**: run 100,000 simulated sessions to tune progression/balance values in seconds instead of weeks of hand-tuning. (740k, 2026-07-24)

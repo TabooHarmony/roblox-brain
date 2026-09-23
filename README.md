@@ -134,11 +134,11 @@ For agents working directly in Studio, [chrrxs/robloxstudio-mcp](https://github.
 Corrections, production patterns, and examples with compatible sourcing are welcome. Keep skills focused and practical. Before opening a PR, run:
 
 ```bash
-python3 validate_skills.py
+python3 scripts/validate_skills.py
 python3 -m unittest discover -s tests -p 'test_*.py'
-python3 verify_api_drift.py
-python3 verify_source_urls.py
-python3 verify_version_pins.py
+python3 scripts/verify_api_drift.py
+python3 scripts/verify_source_urls.py
+python3 scripts/verify_version_pins.py
 ```
 
 ## Contributors

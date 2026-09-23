@@ -342,7 +342,7 @@ local function playCutscene(cameraPath: {CFrame}, duration: number)
         tween.Completed:Wait() -- also resumes if a newer tween cancels this one
         if cutsceneId ~= myId then
             return -- superseded: the newer cutscene owns camera, movement,
-                  -- AND the pending snapshot — leave it pending for that run
+                  -- AND the pending snapshot; leave it pending for that run
         end
     end
 

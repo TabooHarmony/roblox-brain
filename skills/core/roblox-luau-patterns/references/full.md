@@ -362,7 +362,7 @@ data on an instance. Reach for a ValueBase object for legacy compatibility
 or when a shared, replicated container with its own `Changed` signal is the
 point.
 
-- `StringValue`: shared strings — game state, current minigame name.
+- `StringValue`: shared strings (game state, current minigame name).
   `.Value` accepts at most 200,000 characters; longer raises
   `String too long`.
 - `CFrameValue`: rarely used; stores one CFrame. Attributes already store
@@ -383,7 +383,7 @@ end)
 
 Top-sorted DevForum canon for language patterns. These are the posts experienced scripters still cite.
 
-- [All about OOP](https://devforum.roblox.com/t/all-about-object-oriented-programming/8585) (2.7k likes, 2014 — still the reference); [metatables and metamethods](https://devforum.roblox.com/t/all-you-need-to-know-about-metatables-and-metamethods/503259).
-- [Avoiding wait() and why](https://devforum.roblox.com/t/avoiding-wait-and-why/244015) — origin of the `task.*` canon.
+- [All about OOP](https://devforum.roblox.com/t/all-about-object-oriented-programming/8585) (2.7k likes, 2014, still the reference); [metatables and metamethods](https://devforum.roblox.com/t/all-you-need-to-know-about-metatables-and-metamethods/503259).
+- [Avoiding wait() and why](https://devforum.roblox.com/t/avoiding-wait-and-why/244015): origin of the `task.*` canon.
 - [Pcalls: when and how](https://devforum.roblox.com/t/pcalls-when-and-how-to-use-them/393687) (658 likes); [Promises and why](https://devforum.roblox.com/t/promises-and-why-you-should-use-them/350825) for the Promise library.
-- Framework design: [Writing an FPS framework](https://devforum.roblox.com/t/writing-an-fps-framework-2020/503318) (+ part 2) — the most-cited architecture walkthrough; [Server Authority: How to Begin?](https://devforum.roblox.com/t/server-authority-how-to-begin/4139185) (2025).
+- Framework design: [Writing an FPS framework](https://devforum.roblox.com/t/writing-an-fps-framework-2020/503318) (+ part 2), the most-cited architecture walkthrough; [Server Authority: How to Begin?](https://devforum.roblox.com/t/server-authority-how-to-begin/4139185) (2025).

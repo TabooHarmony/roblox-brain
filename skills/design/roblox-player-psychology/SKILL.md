@@ -21,10 +21,10 @@ Load for behavior/persuasion questions: what happens in the first 60 seconds, wh
 
 ### Retention benchmarks & levers
 
-D1 20/30/40% · D7 8/15/20% · D30 3/7/10% (good/great/excellent; compounds — 40% D1 ≈ 3× the players of 25% D1 by day 30). Low number → lever: PTR→curiosity gap/social proof; D1→Zeigarnik, endowed progress; session→flow, variable reward; D7→goal gradient, collections; D30→habit loop, social identity; conversion→anchoring, charm pricing; ARPPU→ladders, visible status.
+D1 20/30/40% · D7 8/15/20% · D30 3/7/10% (good/great/excellent; compounds; 40% D1 ≈ 3× the players of 25% D1 by day 30). Low number → lever: PTR→curiosity gap/social proof; D1→Zeigarnik, endowed progress; session→flow, variable reward; D7→goal gradient, collections; D30→habit loop, social identity; conversion→anchoring, charm pricing; ARPPU→ladders, visible status.
 
 ### Hooks, pricing, RNG
 
-Four reward schedules (fixed/variable × ratio/interval) — layer all four. Hooks: appointments, streaks with one forgiven day, rotation, shared clan goals, hook model, specific timers ("Back in 4h 32m"). Ladder: 49–99 break threshold · 199–399 convenience · 499–799 luck+power · 999+ identity. RNG: 5 tiers (55/27/12/5/1%), show the pool and pity counter. For paid RNG implementation, check current Roblox guidance in `roblox-monetization`.
+Four reward schedules (fixed/variable × ratio/interval); layer all four. Hooks: appointments, streaks with one forgiven day, rotation, shared clan goals, hook model, specific timers ("Back in 4h 32m"). Ladder: 49–99 break threshold · 199–399 convenience · 499–799 luck+power · 999+ identity. RNG: 5 tiers (55/27/12/5/1%), show the pool and pity counter. For paid RNG implementation, check current Roblox guidance in `roblox-monetization`.
 
 > Full detail, tables, and community loop: [references/full.md](references/full.md)

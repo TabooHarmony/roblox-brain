@@ -8,9 +8,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-import validate_skills
-import verify_api_drift
-import verify_source_urls
+from scripts import validate_skills, verify_api_drift, verify_source_urls
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -480,7 +478,7 @@ class ValidatorRegressionTests(unittest.TestCase):
         # must never use freshness wording for retained cache files.
         # Isolated fixture: no dependence on the developer's real cache or
         # network. Registry + mirrors are pointed at a temp directory.
-        import mirror_creator_docs
+        from scripts import mirror_creator_docs
 
         with tempfile.TemporaryDirectory() as tmp:
             mirror_root = Path(tmp)
@@ -521,7 +519,7 @@ class ValidatorRegressionTests(unittest.TestCase):
     def test_mirror_check_detects_missing_registry_referenced_file(self):
         # F16 regression: a registry entry referencing a file the mirror
         # lacks must fail check mode. Isolated fixture, no real cache.
-        import mirror_creator_docs
+        from scripts import mirror_creator_docs
 
         with tempfile.TemporaryDirectory() as tmp:
             mirror_root = Path(tmp)
@@ -555,7 +553,7 @@ class ValidatorRegressionTests(unittest.TestCase):
         # F16 regression: explicit refresh verifies by hash before/after; an
         # identical payload is a no-op, a changed payload is replaced with the
         # old hash recorded.
-        import mirror_creator_docs as m
+        from scripts import mirror_creator_docs as m
 
         with tempfile.TemporaryDirectory() as tmp:
             mirror_dir = Path(tmp)
@@ -618,7 +616,7 @@ class ValidatorRegressionTests(unittest.TestCase):
     def test_mirror_interrupted_fetch_leaves_no_complete_looking_file(self):
         # F16 regression: fetch failure mid-write must not leave the cached
         # path holding partial bytes that look complete.
-        import mirror_creator_docs as m
+        from scripts import mirror_creator_docs as m
 
         with tempfile.TemporaryDirectory() as tmp:
             mirror_dir = Path(tmp)
@@ -639,7 +637,7 @@ class ValidatorRegressionTests(unittest.TestCase):
     def test_mirror_metadata_sidecar_records_retrieval_identity(self):
         # F16 regression: successful fetches record source, timestamp, hash in
         # an additive sidecar; read_metadata tolerates missing/corrupt ones.
-        import mirror_creator_docs as m
+        from scripts import mirror_creator_docs as m
 
         with tempfile.TemporaryDirectory() as tmp:
             mirror_dir = Path(tmp)
@@ -674,7 +672,7 @@ class ValidatorRegressionTests(unittest.TestCase):
     def test_api_drift_reports_snapshot_identity_and_age(self):
         # F16 regression: mirror reads surface snapshot identity and warn on
         # stale or metadata-less snapshots, without any network activity.
-        import verify_api_drift as v
+        from scripts import verify_api_drift as v
 
         with tempfile.TemporaryDirectory() as tmp:
             mirror_dir = Path(tmp) / "creator-docs"
@@ -720,7 +718,7 @@ class ValidatorRegressionTests(unittest.TestCase):
         # F16 regression: a mirror-backed run annotates results with the
         # snapshot date and warns about metadata-less files; no network call
         # is made and exit code stays 0 for passing claims.
-        import verify_api_drift as v
+        from scripts import verify_api_drift as v
 
         def fail_network(category, name):  # any fetch attempt fails the test
             raise AssertionError(f"unexpected network fetch: {category}/{name}")
@@ -774,7 +772,7 @@ class ValidatorRegressionTests(unittest.TestCase):
         # R10 regression: main()'s snapshot banner must verify the sidecar
         # hash against the cached bytes; a tampered sidecar must produce the
         # hash-mismatch warning, never a dated "retrieved ..." claim.
-        import verify_api_drift as v
+        from scripts import verify_api_drift as v
 
         def fail_network(category, name):
             raise AssertionError(f"unexpected network fetch: {category}/{name}")
@@ -828,7 +826,7 @@ class ValidatorRegressionTests(unittest.TestCase):
     def test_api_drift_main_reports_unknown_snapshot_identity(self):
         # F16 regression: a mirror file without retrieval metadata is reported
         # as an unknown snapshot instead of passing as fresh.
-        import verify_api_drift as v
+        from scripts import verify_api_drift as v
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

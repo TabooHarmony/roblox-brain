@@ -40,8 +40,8 @@ MAX_SKILL_CHARS = 3000
 CHAR_CAP_EXEMPT = {"roblox-growth-design"}
 MAX_DESC_CHARS = 150
 MAX_REF_CHARS = 50000
-REPO_ROOT = Path(__file__).resolve().parent
-SKILLS_DIR = os.path.join(os.path.dirname(__file__), "skills")
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SKILLS_DIR = str(REPO_ROOT / "skills")
 
 
 

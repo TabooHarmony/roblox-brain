@@ -61,12 +61,12 @@ Dense table or list format. The most useful info inline. Code examples in ```lua
 1. Create `skills/<core|gameplay|design|tools>/roblox-<name>/SKILL.md` following the structure above
 2. Create that skill's `references/full.md` with complete reference (under 50,000 chars)
 3. Add a row to `README.md` in the appropriate skills table and update the skill count badge
-4. Run `python3 validate_skills.py`: must pass
-5. If the skill makes API claims, add focused entries to `api_drift_registry.yaml`
+4. Run `python3 scripts/validate_skills.py`: must pass
+5. If the skill makes API claims, add focused entries to `scripts/api_drift_registry.yaml`
 
 ## Validation
 
-Run `python3 validate_skills.py` before committing. Checks:
+Run `python3 scripts/validate_skills.py` before committing. Checks:
 - SKILL.md under 3,000 chars
 - references/full.md under 50,000 chars
 - Description under 150 chars
@@ -81,9 +81,9 @@ Run `python3 validate_skills.py` before committing. Checks:
 - Cross-references (`` `roblox-X` `` in backticks) point to existing skills
 
 Additional CI checks:
-- `python3 verify_api_drift.py`: API claims against live Roblox creator-docs
-- `python3 verify_source_urls.py`: source URLs are reachable
-- `python3 verify_version_pins.py`: tool version pins (non-blocking)
+- `python3 scripts/verify_api_drift.py`: API claims against live Roblox creator-docs
+- `python3 scripts/verify_source_urls.py`: source URLs are reachable
+- `python3 scripts/verify_version_pins.py`: tool version pins (non-blocking)
 
 CI runs on all branches (`.github/workflows/ci.yml`).
 
@@ -93,7 +93,7 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - Training-data-only content is unacceptable. Verify API references against current docs
 - Track sources in the `sources:` frontmatter field
 - Use `sources: [original]` for synthesis/opinion/design heuristics
-- When lifting from external repos, preserve attribution and record the license or reuse terms in `PROVENANCE.md`
+- When reusing material from external repos, preserve attribution and license terms alongside the material; never copy without permission
 - Use `raw.githubusercontent.com` URLs (not `github.com/blob/`) for source links
 - Mark temporal claims with event dates: `<!-- temporal: 2026-06 -->`
 
@@ -113,13 +113,13 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 |------|---------|
 | `skills/{core,gameplay,design,tools}/*/SKILL.md` | Quick reference for each skill |
 | `skills/{core,gameplay,design,tools}/*/references/full.md` | Full reference for each non-router skill |
-| `validate_skills.py` | Validation script for skill structure |
-| `verify_api_drift.py` | API drift checker against live creator-docs |
-| `verify_source_urls.py` | Source URL reachability checker |
-| `verify_version_pins.py` | Tool version pin monitor (non-blocking) |
-| `api_drift_registry.yaml` | Registry of API claims to verify |
+| `scripts/validate_skills.py` | Validation script for skill structure |
+| `scripts/verify_api_drift.py` | API drift checker against live creator-docs |
+| `scripts/verify_source_urls.py` | Source URL reachability checker |
+| `scripts/verify_version_pins.py` | Tool version pin monitor (non-blocking) |
+| `scripts/mirror_creator_docs.py` | Refresh the local docs cache for API checks |
+| `scripts/api_drift_registry.yaml` | Registry of API claims to verify |
 | `requirements.txt` | Python dependencies (pyyaml) |
-| `PROVENANCE.md` | Provenance: removed sources and third-party reviews |
 | `.github/workflows/ci.yml` | CI: validation + drift + source URLs + install test |
 
 ## What NOT to Do
@@ -127,7 +127,7 @@ CI runs on all branches (`.github/workflows/ci.yml`).
 - Don't add plugin code, build systems, or npm packaging (this is skills-only)
 - Don't write skills from training data without verifying against current Roblox docs
 - Don't break cross-references when renaming or splitting skills
-- Don't commit without running `python3 validate_skills.py`
+- Don't commit without running `python3 scripts/validate_skills.py`
 - Don't leave `sources: []`: use `[original]` for synthesis
 - Don't use ```lua; use ```luau
 - Don't add `## Overview` sections; use `## When to Load` → `## Quick Reference` directly

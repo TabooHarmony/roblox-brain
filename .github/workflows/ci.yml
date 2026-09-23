@@ -24,7 +24,7 @@ jobs:
           echo "/tmp/luau" >> "$GITHUB_PATH"
 
       - name: Validate skill structure
-        run: python3 validate_skills.py
+        run: python3 scripts/validate_skills.py
 
       - name: Validator regression tests
         run: |
@@ -33,9 +33,9 @@ jobs:
 
       - name: API drift check
         run: |
-          python3 mirror_creator_docs.py
+          python3 scripts/mirror_creator_docs.py
           for i in 1 2 3; do
-            if python3 verify_api_drift.py; then
+            if python3 scripts/verify_api_drift.py; then
               exit 0
             fi
             echo "Retry $i/3..."
@@ -46,7 +46,7 @@ jobs:
       - name: Source URL check
         run: |
           for i in 1 2 3; do
-            if python3 verify_source_urls.py; then
+            if python3 scripts/verify_source_urls.py; then
               exit 0
             fi
             echo "Retry $i/3..."
@@ -55,7 +55,7 @@ jobs:
           exit 1
 
       - name: Version pin check
-        run: python3 verify_version_pins.py
+        run: python3 scripts/verify_version_pins.py
 
   install-test:
     strategy:

@@ -8,10 +8,10 @@ checker can run with no network, and so you can diff versions over time.
 
 Three distinct modes:
 
-    python3 mirror_creator_docs.py            # fill gaps only; existing files stay untouched
-    python3 mirror_creator_docs.py --all      # fill gaps across the full engine reference tree
-    python3 mirror_creator_docs.py --refresh  # explicit re-download that REPLACES existing files
-    python3 mirror_creator_docs.py --check    # presence check only (never fetches, never reports freshness)
+    python3 scripts/mirror_creator_docs.py            # fill gaps only; existing files stay untouched
+    python3 scripts/mirror_creator_docs.py --all      # fill gaps across the full engine reference tree
+    python3 scripts/mirror_creator_docs.py --refresh  # explicit re-download that REPLACES existing files
+    python3 scripts/mirror_creator_docs.py --check    # presence check only (never fetches, never reports freshness)
 
 Freshness contract for the retained cache:
 
@@ -47,8 +47,8 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent
-REGISTRY_PATH = ROOT / "api_drift_registry.yaml"
+ROOT = Path(__file__).resolve().parent.parent
+REGISTRY_PATH = ROOT / "scripts" / "api_drift_registry.yaml"
 MIRROR_DIR = ROOT / ".cache" / "creator-docs"
 BASE_URL = "https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine"
 # The tree API is the canonical list of engine reference files.
@@ -219,7 +219,7 @@ def check_mode() -> int:
         print(f"❌ Mirror missing {len(missing)} registry-referenced files:")
         for f in missing:
             print(f"   {f}")
-        print("Run: python3 mirror_creator_docs.py")
+        print("Run: python3 scripts/mirror_creator_docs.py")
         return 1
     print(f"✅ Mirror present for all {len(files)} registry-referenced files")
     if untracked:
@@ -229,7 +229,7 @@ def check_mode() -> int:
         )
         for f in untracked:
             print(f"   {f}")
-        print("Run: python3 mirror_creator_docs.py --refresh to record metadata for them")
+        print("Run: python3 scripts/mirror_creator_docs.py --refresh to record metadata for them")
     return 0
 
 

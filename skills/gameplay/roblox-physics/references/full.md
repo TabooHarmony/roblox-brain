@@ -39,7 +39,7 @@
 
 ## LineForce
 
-`LineForce` applies a constant force along the axis between `Attachment0` and `Attachment1` — it pulls (or pushes) one assembly toward the other, and the direction tracks the parts as they move. Compare `VectorForce`: a fixed `Vector3` (world or attachment-relative) whose direction never changes. Use LineForce when the pull must follow a target part; use VectorForce for constant world-direction thrust.
+`LineForce` applies a constant force along the axis between `Attachment0` and `Attachment1`; it pulls (or pushes) one assembly toward the other, and the direction tracks the parts as they move. Compare `VectorForce`: a fixed `Vector3` (world or attachment-relative) whose direction never changes. Use LineForce when the pull must follow a target part; use VectorForce for constant world-direction thrust.
 
 ```luau
 local lf = Instance.new("LineForce")
@@ -54,7 +54,7 @@ lf.Parent = anchorPart
 ```
 
 - `Magnitude`: signed force; sign sets pull vs push.
-- `MaxForce`: upper clamp (no `MinForce` property — limit in scripts if needed).
+- `MaxForce`: upper clamp (no `MinForce` property; limit in scripts if needed).
 - `InverseSquareLaw`: force scales as 1/distance² between the attachments.
 
 ## Attachment Pattern
@@ -240,7 +240,7 @@ end
 -- Tolerate characters destroyed mid-ragdoll: drop the record so it cannot
 -- leak. Illustrative; wire this when the character spawns. Declare the
 -- local FIRST so the handler closes over a real upvalue instead of its own
--- initializer — referencing `connection` inside its own `local` declaration
+-- initializer, so referencing `connection` inside its own `local` declaration
 -- reads a nil upvalue in the handler body.
 local connection: RBXScriptConnection
 connection = character.AncestryChanged:Connect(function()
@@ -255,7 +255,7 @@ For production use, store `ragdollState` inside your character/maid module rathe
 
 ## IKControl
 
-`IKControl` runs procedural inverse kinematics on a Motor6D rig — no baked animation needed. Parent it under the rig's `Humanoid`; it bends the joint chain from `ChainRoot` (e.g. `LeftUpperArm`) so `EndEffector` (e.g. `LeftHand`) reaches `Target` (usually an `Attachment` or `BasePart`). Common uses: foot placement on stairs/slopes, hands gripping rails or ladders, head look-at.
+`IKControl` runs procedural inverse kinematics on a Motor6D rig; no baked animation needed. Parent it under the rig's `Humanoid`; it bends the joint chain from `ChainRoot` (e.g. `LeftUpperArm`) so `EndEffector` (e.g. `LeftHand`) reaches `Target` (usually an `Attachment` or `BasePart`). Common uses: foot placement on stairs/slopes, hands gripping rails or ladders, head look-at.
 
 ```luau
 local ik = Instance.new("IKControl")
@@ -489,8 +489,8 @@ end
 
 Key facts (official):
 
-- `RegisterCollisionGroup(name)` — name cannot be `"Default"`. Registration has slight overhead proportional to workspace part count, so register at edit time in Studio when possible; register/rename/unregister at runtime sparingly.
-- `CollisionGroupSetCollidable(name1, name2, bool)` — throws if either group is unregistered; check `IsCollisionGroupRegistered` first.
+- `RegisterCollisionGroup(name)`: name cannot be `"Default"`. Registration has slight overhead proportional to workspace part count, so register at edit time in Studio when possible; register/rename/unregister at runtime sparingly.
+- `CollisionGroupSetCollidable(name1, name2, bool)`: throws if either group is unregistered; check `IsCollisionGroupRegistered` first.
 - Creating, deleting, or modifying collision relationships is server-only (Scripts); clients can only assign parts to existing groups.
 - Max 32 groups (`GetMaxCollisionGroups`). `GetRegisteredCollisionGroups()` returns `{name, mask}` entries.
 - `CollisionGroupsAreCollidable` returns true if either group is unregistered (default mask collides with everything).

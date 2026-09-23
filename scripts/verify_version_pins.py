@@ -6,7 +6,7 @@ Reports pinned vs latest. Non-blocking (exit 0 always) — version bumps
 are intentional decisions.
 
 Usage:
-    python3 verify_version_pins.py
+    python3 scripts/verify_version_pins.py
 """
 
 import json
@@ -16,7 +16,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / "skills"
 TIMEOUT = 15
 

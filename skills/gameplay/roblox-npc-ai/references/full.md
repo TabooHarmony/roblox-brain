@@ -446,21 +446,21 @@ For large NPC counts, keep a rotating work cursor or queue so not all NPCs think
 
 ## Community ecosystem (leads, not sources)
 
-- [SimplePath](https://devforum.roblox.com/t/simplepath-pathfinding-module/1196762) (894 likes) — the PathfindingService wrapper standard; [How 2 Make A* Pathfinding](https://devforum.roblox.com/t/how-2-make-a-pathfinding/2714504) for custom grids.
-- [BehaviorTrees3 + visual editor](https://devforum.roblox.com/t/behaviortrees3-btrees-visual-editor-v30/836158) — the BT reference implementation.
-- [Simulating thousands of moving NPCs performantly](https://devforum.roblox.com/t/simulating-thousands-of-moving-npcs-with-humanoidsphysics-performantly/4603494) (2026) — current humanoid-scale density canon.
+- [SimplePath](https://devforum.roblox.com/t/simplepath-pathfinding-module/1196762) (894 likes): the PathfindingService wrapper standard; [How 2 Make A* Pathfinding](https://devforum.roblox.com/t/how-2-make-a-pathfinding/2714504) for custom grids.
+- [BehaviorTrees3 + visual editor](https://devforum.roblox.com/t/behaviortrees3-btrees-visual-editor-v30/836158): the BT reference implementation.
+- [Simulating thousands of moving NPCs performantly](https://devforum.roblox.com/t/simulating-thousands-of-moving-npcs-with-humanoidsphysics-performantly/4603494) (2026): current humanoid-scale density canon.
 ## Avatar appearance: HumanoidDescription, BodyColors, Shirt, Pants
 
-### HumanoidDescription — the canonical runtime appearance API
+### HumanoidDescription: the canonical runtime appearance API
 
-- Change an NPC's appearance at runtime with `Humanoid:ApplyDescription(description)`; read current appearance with `Humanoid:GetDescription()`. ApplyDescription batch-applies every field in one step — prefer it over piecemeal property edits.
+- Change an NPC's appearance at runtime with `Humanoid:ApplyDescription(description)`; read current appearance with `Humanoid:GetDescription()`. ApplyDescription batch-applies every field in one step; prefer it over piecemeal property edits.
 - Clone-and-modify: never mutate a shared or template description in place. Clone it, edit the clone, apply. A shared instance mutates every NPC referencing it.
 - Key fields: `Shirt` and `Pants` (classic clothing asset IDs), `Face`, body-part mesh IDs (`Head`, `Torso`, `LeftArm`, `RightArm`, `LeftLeg`, `RightLeg`), per-part `*Color` (Color3), and R15 scale fields: `HeadScale`, `HeightScale`, `WidthScale`, `DepthScale`, `BodyTypeScale`, `ProportionScale`.
 - Accessories: per-bone string fields (`HatAccessory`, `HairAccessory`, `FaceAccessory`, `NeckAccessory`, `FrontAccessory`, `BackAccessory`, `WaistAccessory`, `ShouldersAccessory`) plus the Accessories table managed by `SetAccessories(accessories, includeRigidAccessories)` / `GetAccessories(includeRigidAccessories)`. Attach accessory instances with `Humanoid:AddAccessory(accessory)`.
-- R6 vs R15: scale fields and body-part mesh IDs apply to R15 only — they are ignored on R6. Classic clothing (`Shirt`/`Pants` IDs) works on both. Batch-apply with ApplyDescription so the rig rebuilds once.
+- R6 vs R15: scale fields and body-part mesh IDs apply to R15 only; they are ignored on R6. Classic clothing (`Shirt`/`Pants` IDs) works on both. Batch-apply with ApplyDescription so the rig rebuilds once.
 - Build descriptions from real avatars: `Players:GetHumanoidDescriptionFromUserIdAsync(userId)` and `Players:GetHumanoidDescriptionFromOutfitIdAsync(outfitId)`.
 
-### BodyColors — legacy
+### BodyColors (legacy)
 
 - Legacy instance parented to the character with one BrickColor per body part: `HeadColor`, `TorsoColor`, `LeftArmColor`, `RightArmColor`, `LeftLegColor`, `RightLegColor`.
 - Superseded by `HumanoidDescription`'s `*Color` Color3 fields for most uses. Keep for R6-only or legacy rigs.
@@ -482,4 +482,4 @@ npcHumanoid:ApplyDescription(desc)
 
 ## Legacy tools: HopperBin (deprecated)
 
-`HopperBin` is the pre-2013 ancestor of `Tool`: drop it in `StarterPack` and the player auto-equips it. It is deprecated — do not use it for new work. Migrate to `Tool` (parent to `Backpack` / equip via `Humanoid:EquipTool`) or to a prompt-based interaction (`ProximityPrompt`) for non-held abilities. Do not wire `HopperBin`-era events (`Bin.Selected`/`Bin.Deselected` are the old API) into new systems; only tolerate HopperBins when preserving a legacy place file.
+`HopperBin` is the pre-2013 ancestor of `Tool`: drop it in `StarterPack` and the player auto-equips it. It is deprecated; do not use it for new work. Migrate to `Tool` (parent to `Backpack` / equip via `Humanoid:EquipTool`) or to a prompt-based interaction (`ProximityPrompt`) for non-held abilities. Do not wire `HopperBin`-era events (`Bin.Selected`/`Bin.Deselected` are the old API) into new systems; only tolerate HopperBins when preserving a legacy place file.

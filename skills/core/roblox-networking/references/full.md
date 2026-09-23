@@ -286,18 +286,18 @@ You can add your own `TextChannel` and `TextChatCommand` instances even with def
 
 ### Client/server split ([TextChannel](https://create.roblox.com/docs/reference/engine/classes/TextChannel))
 
-- `TextChannel:SendAsync(message, metadata)` — client only. Sends a player message to the server; the engine filters it server-side, and clients receive "the result of the filtered message from the server". Metadata over 200 characters means the message is not delivered.
-- `TextChannel:DisplaySystemMessage(message, metadata)` — client only. Visible only to that local user and **not** automatically filtered or localized.
-- `TextChannel.MessageReceived` / `TextChatService.MessageReceived` — client only.
-- `TextChannel:AddUserAsync(userId)` — server only. Adds a `TextSource`; returns `nil, false` when the user has chat off or is not in the server.
+- `TextChannel:SendAsync(message, metadata)` (client only). Sends a player message to the server; the engine filters it server-side, and clients receive "the result of the filtered message from the server". Metadata over 200 characters means the message is not delivered.
+- `TextChannel:DisplaySystemMessage(message, metadata)` (client only). Visible only to that local user and **not** automatically filtered or localized.
+- `TextChannel.MessageReceived` / `TextChatService.MessageReceived` (client only).
+- `TextChannel:AddUserAsync(userId)` (server only). Adds a `TextSource`; returns `nil, false` when the user has chat off or is not in the server.
 - Server-side delivery control: `TextChannel.ShouldDeliverCallback(message, textSource)` (return `false` to withhold from a recipient) plus `TextChatService:CanUserChatAsync` / `CanUsersChatAsync` / `CanUsersDirectChatAsync` for platform permission gates.
 
-`OnIncomingMessage` (on both `TextChatService` and `TextChannel`) is documented client-only: it decorates or replaces messages for display by returning `TextChatMessageProperties`; returning `nil` leaves the message unchanged. `TextChatService.OnIncomingMessage` runs before any `TextChannel.OnIncomingMessage`. Define each callback exactly once — multiple bindings override one another nondeterministically. Messages are not replicated to a custom UI by themselves; the default chat UI consumes `MessageReceived` for you, and a custom UI must render those payloads itself.
+`OnIncomingMessage` (on both `TextChatService` and `TextChannel`) is documented client-only: it decorates or replaces messages for display by returning `TextChatMessageProperties`; returning `nil` leaves the message unchanged. `TextChatService.OnIncomingMessage` runs before any `TextChannel.OnIncomingMessage`. Define each callback exactly once: multiple bindings override one another nondeterministically. Messages are not replicated to a custom UI by themselves; the default chat UI consumes `MessageReceived` for you, and a custom UI must render those payloads itself.
 
 ### Filtering rules
 
 - Player messages sent via `TextChannel:SendAsync` are filtered by the engine server-side; do not double-filter before `SendAsync`.
-- `DisplaySystemMessage` strings are not filtered. Static developer-authored text is fine. If a system message embeds player input (names, item names), filter that input server-side with `TextService:FilterStringAsync` first — the same rule as any other user-generated text.
+- `DisplaySystemMessage` strings are not filtered. Static developer-authored text is fine. If a system message embeds player input (names, item names), filter that input server-side with `TextService:FilterStringAsync` first; the same rule applies as for any other user-generated text.
 
 ### Example: custom channel plus `/heal` command
 
@@ -352,7 +352,7 @@ end
 
 When a sent message matches a `TextChatCommand` alias, the command sinks it server-side: `Triggered` fires and the message is not replicated to other users.
 
-### Legacy Chat (deprecated — migration reference only)
+### Legacy Chat (deprecated; migration reference only)
 
 - `Chat:Chat(partOrCharacter, message, color?)` fires `Chat.Chatted` and drives the legacy bubble-chat LocalScript. Replace with `TextChatService:DisplayBubble()` and `BubbleChatConfiguration`.
 - `Chat:FilterStringAsync` / `Chat:FilterStringForBroadcast` filter legacy chat text; the client-side call form is deprecated. Replace with server-side `TextService:FilterStringAsync` ([Chat](https://create.roblox.com/docs/reference/engine/classes/Chat)).
@@ -378,5 +378,5 @@ Top-sorted DevForum canon for networking libraries. Verify status in-thread; sev
 
 - State replication: [Replica](https://devforum.roblox.com/t/replica-server-to-client-state-replication-module/3216980) (2024, current favorite; pairs with ProfileStore per [PlayerState](https://devforum.roblox.com/t/playerstate-profilestore-replica-without-the-headache/3766568)); [ReplicaService](https://devforum.roblox.com/t/replicate-your-states-with-replicaservice-networking-system/894736) older.
 - Remote tooling: [Packet](https://devforum.roblox.com/t/packet-networking-library/3573907) (2025), [Warp](https://devforum.roblox.com/t/warp-very-fast-powerful-networking-library/2779813) (2024), [BridgeNet](https://devforum.roblox.com/t/bridgenet-insanely-optimized-easy-to-use-networking-library-full-of-utilities-now-with-roblox-ts-v199-beta/1909935) (legacy).
-- Case study: [60x bandwidth reduction in Astro Force](https://devforum.roblox.com/t/how-we-reduced-bandwidth-usage-by-60x-in-astro-force-roblox-rts/1202300) — the practical RTS-scale optimization write-up.
-- [StreamX is DEPRECATED](https://devforum.roblox.com/t/deprecated-streamx-reduce-lag-and-prevent-map-cloning/1992484) — do not recommend; example of a once-canonical library that died.
+- Case study: [60x bandwidth reduction in Astro Force](https://devforum.roblox.com/t/how-we-reduced-bandwidth-usage-by-60x-in-astro-force-roblox-rts/1202300), the practical RTS-scale optimization write-up.
+- [StreamX is DEPRECATED](https://devforum.roblox.com/t/deprecated-streamx-reduce-lag-and-prevent-map-cloning/1992484): do not recommend; example of a once-canonical library that died.

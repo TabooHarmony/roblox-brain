@@ -231,11 +231,11 @@ Initialize existing and future tagged instances. Treat added and removed signals
 
 ## Community ecosystem (leads, not sources)
 
-Open-source study codebases ranked by DevForum likes — read before architecting similar genres:
+Open-source study codebases ranked by DevForum likes. Read before architecting similar genres:
 
-- [Miner's Haven](https://devforum.roblox.com/t/miners-haven-open-sourced-everything-you-need-to-make-your-own-factory-game/350767) — factory/sim systems at scale.
-- [Ruddev's Battle Royale](https://devforum.roblox.com/t/os-game-ruddevs-battle-royale-open-sourced/340548) — full OS game.
-- [Mass Uncopylocked](https://devforum.roblox.com/t/mass-uncopylocked-35-free-games-and-projects/2880269) — 35 open-sourced projects (466k views).
+- [Miner's Haven](https://devforum.roblox.com/t/miners-haven-open-sourced-everything-you-need-to-make-your-own-factory-game/350767): factory/sim systems at scale.
+- [Ruddev's Battle Royale](https://devforum.roblox.com/t/os-game-ruddevs-battle-royale-open-sourced/340548): full OS game.
+- [Mass Uncopylocked](https://devforum.roblox.com/t/mass-uncopylocked-35-free-games-and-projects/2880269): 35 open-sourced projects (466k views).
 - FPS architecture: [Writing an FPS framework](https://devforum.roblox.com/t/writing-an-fps-framework-2020/503318) series remains the most-cited framework-design walkthrough.
 
 ## ECS on Roblox: reality check
@@ -251,6 +251,6 @@ ECS is not standard practice in shipped Roblox experiences. The pattern recurs f
 
 Practitioner reports from a live dev Discord; repeated field observations, not doc-verified claims. <!-- temporal: 2026-09 -->
 
-- **Module-loader race pattern:** race conditions from dependency chains ("require this → require that" dominoes) cause playtests that only work after 2–3 restarts. Fix pattern: server services and client controllers don't depend on each other until their `.Init()` is called; a module loader requires all modules, then initializes all (optionally `task.spawn` per init for parallel init). Also makes the codebase far easier for AI agents to work with. — BuilderbeastYT/Ibra 2026-07-29; RBobloxian5542 2026-08-07
-- **BigNum handling for simulators:** `IntValue` breaks past ~10 quadrillion; `NumberValue` extends only to ~9.22e18; the standard fix is coefficient + exponent pairs (a BigNum-style library, e.g. the "infinitemath" module). — GameForgeX; renik01; adhx5; Skardoll; Davide, 2026-07-06
-- Max server size is 200 players — a "10k player server" is 10k spread across 200-slot servers. — thug, 2026-08-22
+- **Module-loader race pattern:** race conditions from dependency chains ("require this → require that" dominoes) cause playtests that only work after 2–3 restarts. Fix pattern: server services and client controllers don't depend on each other until their `.Init()` is called; a module loader requires all modules, then initializes all (optionally `task.spawn` per init for parallel init). Also makes the codebase far easier for AI agents to work with. Attribution: BuilderbeastYT/Ibra 2026-07-29; RBobloxian5542 2026-08-07
+- **BigNum handling for simulators:** `IntValue` breaks past ~10 quadrillion; `NumberValue` extends only to ~9.22e18; the standard fix is coefficient + exponent pairs (a BigNum-style library, e.g. the "infinitemath" module). Attribution: GameForgeX; renik01; adhx5; Skardoll; Davide, 2026-07-06
+- Max server size is 200 players; a "10k player server" is 10k spread across 200-slot servers. Attribution: thug, 2026-08-22

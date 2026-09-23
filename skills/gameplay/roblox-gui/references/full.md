@@ -108,7 +108,7 @@ local state = {
 
 local function render()
     local busy = state.requestId ~= nil
-    -- While a request is recorded — pending OR unresolved — a fresh
+    -- While a request is recorded (pending OR unresolved), a fresh
     -- same-intent purchase must stay blocked. Only a correlated result or
     -- snapshot may release it.
     buyButton.Active = not busy and not state.unresolved and state.selectedId ~= nil
@@ -139,7 +139,7 @@ buyButton.Activated:Connect(function()
         -- Bound the refresh too: if no correlated answer arrives, stop the
         -- spinner but DO NOT discard the operation. The request id stays
         -- recorded and unresolved=true keeps Buy blocked, because the
-        -- original purchase may still have committed — a fresh same-intent
+        -- original purchase may still have committed, and a fresh same-intent
         -- purchase could double-spend. Reconciliation (a correlated
         -- PurchaseResult or echoed InventorySync) can still settle it.
         task.delay(REQUEST_TIMEOUT, function()
@@ -166,7 +166,7 @@ end)
 -- pending request: an unrelated background snapshot (fired before the
 -- purchase committed) must not clear the pending state. The server echoes
 -- the reconciled request id in the snapshot it sends in response to
--- RefreshPurchases; only that correlation settles a pending request —
+-- RefreshPurchases; only that correlation settles a pending request,
 -- including one already marked unresolved.
 InventorySync.OnClientEvent:Connect(function(snapshot)
     if state.requestId then
@@ -323,18 +323,18 @@ Flex is built into `UIListLayout` (`HorizontalFlex` or `VerticalFlex`); `UIFlexI
 
 Top-sorted DevForum canon for UI libraries. Verify status in-thread before recommending.
 
-- [TopbarPlus v3](https://devforum.roblox.com/t/topbarplus-v340-construct-topbar-icons-with-ease-customise-them-with-themes-dropdowns-captions-labels-and-more/1017485) — the topbar icon standard (4.4k likes).
-- [Iris](https://devforum.roblox.com/t/iris-immediate-mode-ui-library-based-on-dear-imgui/2302802) — Dear ImGui-style immediate mode, good for debug tools/dev UIs, not player-facing polish.
+- [TopbarPlus v3](https://devforum.roblox.com/t/topbarplus-v340-construct-topbar-icons-with-ease-customise-them-with-themes-dropdowns-captions-labels-and-more/1017485): the topbar icon standard (4.4k likes).
+- [Iris](https://devforum.roblox.com/t/iris-immediate-mode-ui-library-based-on-dear-imgui/2302802): Dear ImGui-style immediate mode, good for debug tools/dev UIs, not player-facing polish.
 - [Screen3D](https://devforum.roblox.com/t/screen3d-a-3d-ui-framework-that-just-works/3273671) (2024); [Text+](https://devforum.roblox.com/t/text-custom-fonts-advanced-control/3521684) (2025) custom fonts.
-- [Satchel](https://devforum.roblox.com/t/satchel-open-source-modern-backpack-system/2451549) — open-source inventory/backpack, study-grade.
-- [Vanilla 3](https://devforum.roblox.com/t/vanilla-3-the-pragmatic-icon-set-for-roblox-studio/935745) — the pragmatic icon set.
+- [Satchel](https://devforum.roblox.com/t/satchel-open-source-modern-backpack-system/2451549): open-source inventory/backpack, study-grade.
+- [Vanilla 3](https://devforum.roblox.com/t/vanilla-3-the-pragmatic-icon-set-for-roblox-studio/935745): the pragmatic icon set.
 - Chat: BetterChat V3 discontinued; [NovaChat](https://devforum.roblox.com/t/novachat-v107-chat-update-part-2-a-modern-feature-rich-chat-replacement-update/4513813) (2026) is the active replacement line; [ViewportFrame masking](https://devforum.roblox.com/t/viewportframe-masking/2964839) (2024) heavily cited for UI VFX.
 - Design theory: [UI Design Starter Guide](https://devforum.roblox.com/t/ui-design-starter-guide/53461) (1.1k likes).
 - [Mobile button placement tutorial](https://devforum.roblox.com/t/the-correct-way-to-design-mobile-buttons/2494558) illustrates collisions with the default thumbstick/jump controls and touchscreen-PC detection pitfalls. Treat its coordinates and per-frame script as dated examples, not a portable recipe; test on the game's target devices.
 
 ## Pagination (UIPageLayout)
 
-A `UIPageLayout` parented to a `GuiObject` (usually a `Frame`) stacks its children as full-size pages; only the current page is visible. Members: `JumpTo(page)`, `JumpToIndex(index)`, `Next()`, `Previous()`, plus the `CurrentPage` property. Set `Circular = true` for wraparound looping and tune motion with `TweenTime`, `EasingStyle`, `EasingDirection` (`Animated = false` for instant snaps). The layout provides no buttons — wire input yourself:
+A `UIPageLayout` parented to a `GuiObject` (usually a `Frame`) stacks its children as full-size pages; only the current page is visible. Members: `JumpTo(page)`, `JumpToIndex(index)`, `Next()`, `Previous()`, plus the `CurrentPage` property. Set `Circular = true` for wraparound looping and tune motion with `TweenTime`, `EasingStyle`, `EasingDirection` (`Animated = false` for instant snaps). The layout provides no buttons, so wire input yourself:
 
 ```luau
 local layout = Instance.new("UIPageLayout")
@@ -370,7 +370,7 @@ end)
 
 ## Decals (Decal, Texture)
 
-`Decal` draws a single image on one face of a part (`Face = Enum.NormalId.Front`, etc.). The separate `Texture` class shares face placement and repeats/tiles the image via `StudsPerTileU/V` and `OffsetStudsU/V` — use `Texture` for tiled surfaces, `Decal` for posters and signs. The image property `Texture` (ContentId) is deprecated in favor of `ColorMap`/`ColorMapContent` but still functional. `Transparency`, `Color3`, and `Face` are runtime-writable: tween decals, or swap images in response to gameplay. User-uploaded image assets go through moderation; a failed review renders nothing, so ship a placeholder and handle it.
+`Decal` draws a single image on one face of a part (`Face = Enum.NormalId.Front`, etc.). The separate `Texture` class shares face placement and repeats/tiles the image via `StudsPerTileU/V` and `OffsetStudsU/V`; use `Texture` for tiled surfaces and `Decal` for posters and signs. The image property `Texture` (ContentId) is deprecated in favor of `ColorMap`/`ColorMapContent` but still functional. `Transparency`, `Color3`, and `Face` are runtime-writable: tween decals, or swap images in response to gameplay. User-uploaded image assets go through moderation; a failed review renders nothing, so ship a placeholder and handle it.
 
 ```luau
 local decal = Instance.new("Decal")
@@ -381,7 +381,7 @@ decal.Parent = part
 
 ## Video (VideoFrame, VideoPlayer)
 
-`VideoFrame` is the simple path: parent it to a `SurfaceGui` and set `Video` (ContentId) to a video-type asset — image IDs will not play. Control with `Play()`, `Pause()`, `Looped`, and `Volume`; wait for `IsLoaded` (or the `Loaded` event) before playing. `Ended`/`DidLoop` report playback progress.
+`VideoFrame` is the simple path: parent it to a `SurfaceGui` and set `Video` (ContentId) to a video-type asset; image IDs will not play. Control with `Play()`, `Pause()`, `Looped`, and `Volume`; wait for `IsLoaded` (or the `Loaded` event) before playing. `Ended`/`DidLoop` report playback progress.
 
 `VideoPlayer` is the newer wire-based source: set `VideoContent` (Content), then connect `Wire` instances to a `VideoDisplay` inside a `SurfaceGui` for visuals and an `AudioEmitter` for sound. It adds `PlaybackSpeed`, `TimePosition`, `LoadAsync()`, and a `PlayFailed` event for fetch failures. Prefer `VideoFrame` unless you need the video/audio wire split.
 
