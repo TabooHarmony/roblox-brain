@@ -2,18 +2,15 @@
 
 # roblox-brain 🧠
 
-**Roblox Studio skills for AI coding agents.**
+**The Roblox Studio knowledge your coding agent is missing.**
 
-29 skills across four libraries. Install what you need, or take the whole set.
-
-[![CI](https://img.shields.io/github/actions/workflow/status/TabooHarmony/roblox-brain/ci.yml?branch=main&label=ci)](https://github.com/TabooHarmony/roblox-brain/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=semver)](https://github.com/TabooHarmony/roblox-brain/releases)
 [![License](https://img.shields.io/github/license/TabooHarmony/roblox-brain)](LICENSE)
 [![skills.sh](https://skills.sh/b/TabooHarmony/roblox-brain)](https://skills.sh/TabooHarmony/roblox-brain)
 
 </div>
 
-## Pick a library
+## Pick a skill set for your agent
 
 | | Library | Skills | For |
 | :-- | :-- | --: | :-- |
@@ -22,7 +19,8 @@
 | 🎨 | **Design** | 5 | Game design, player behavior, growth, analytics, monetization |
 | 🛠️ | **Tools** | 4 | Studio MCP, project tooling, Open Cloud, publishing |
 
-Start with **Core** for general development. Add the others when the task calls for them. Each skill has a short entry point and a deeper reference with examples and API details.
+Each skill has a short entry point and a deeper reference with examples and API details.
+Start with **Core** for general development work. Add the others when the task calls for them.
 
 ## Install
 
@@ -106,7 +104,7 @@ Expand a library to see its skills. The full-repo install includes all four.
 | Skill | Covers |
 | :-- | :-- |
 | `roblox-studio-mcp` | Studio MCP capabilities, reliability, building, and testing workflows |
-| `roblox-tooling` | Rojo, Wally, Selene, StyLua, Lune, Aftman, and CI |
+| `roblox-tooling` | External third-party tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, and CI |
 | `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth, webhooks, and token lifecycle |
 | `roblox-publish-checklist` | Change-scoped release gates, evidence, dashboard checks, and rollback readiness |
 
@@ -127,7 +125,7 @@ The guidance draws on Roblox Creator Hub documentation, compatible external tool
 
 ## Studio connection
 
-For agents working directly in Studio, [chrrxs/robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp) provides runtime debugging, multiplayer playtests, profiling, and per-instance routing. The built-in [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) is another option.
+For agents working directly in Studio, the open source [robloxstudio-mcp](https://github.com/Chrrxs/robloxstudio-mcp) provides enhanced capabilities such as runtime debugging, multiplayer playtests, profiling, and per-instance routing. The built-in, proprietary [Roblox Studio MCP](https://create.roblox.com/docs/studio/mcp) is also compatible with this skill library.
 
 ## Contributing
 
