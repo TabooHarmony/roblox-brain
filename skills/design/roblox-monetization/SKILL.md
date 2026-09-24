@@ -4,7 +4,7 @@ description: "Use when implementing Roblox GamePasses, Developer Products, subsc
 last_reviewed: 2026-08-21
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/MarketplaceService
-  - https://create.roblox.com/docs/reference/engine/classes/MarketplaceService/BindReceiptHandler
+  - https://create.roblox.com/docs/reference/engine/classes/MarketplaceService#BindReceiptHandler
   - https://create.roblox.com/docs/production/monetization/passes
   - https://create.roblox.com/docs/production/monetization/developer-products
   - https://create.roblox.com/docs/production/monetization/subscriptions

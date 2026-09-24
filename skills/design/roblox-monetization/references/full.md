@@ -45,7 +45,7 @@ Cache a successful result when appropriate, but provide an invalidation or refre
 
 ## 3. Centralize Developer Product receipts
 
-Use one server-owned Developer Product receipt path. The example below uses `ProcessReceipt`; alternatively, [`BindReceiptHandler`](https://create.roblox.com/docs/reference/engine/classes/MarketplaceService/BindReceiptHandler) accepts `Enum.ReceiptType.DeveloperProduct` with an optional product-ID filter. Whichever path owns the receipt must:
+Use one server-owned Developer Product receipt path. The example below uses `ProcessReceipt`; alternatively, [`BindReceiptHandler`](https://create.roblox.com/docs/reference/engine/classes/MarketplaceService#BindReceiptHandler) accepts `Enum.ReceiptType.DeveloperProduct` with an optional product-ID filter. Whichever path owns the receipt must:
 
 1. identify the product and player;
 2. determine whether this receipt was already granted;
