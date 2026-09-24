@@ -13,13 +13,14 @@ sources:
   - https://create.roblox.com/docs/production/game-design/onboarding-techniques
   - https://create.roblox.com/docs/projects/assets/toolbox
   - https://create.roblox.com/docs/scripting/security/third-party-vulnerabilities
+  - https://create.roblox.com/docs/assistant/guide
 ---
 
 # Roblox Building
 
 ## When to Load
 
-Load for Roblox geometry, props, maps, routes, landmarks, or spatial onboarding via MCP or Luau. See `references/full.md` for complete patterns.
+Load for geometry, props, maps, and spatial onboarding via MCP or Luau.
 
 ## Quick Reference
 
@@ -30,12 +31,13 @@ Load for Roblox geometry, props, maps, routes, landmarks, or spatial onboarding 
 4. Verify the tree, view, and traversal.
 
 ### Asset Choice
-- Search the project and Toolbox/Creator Store before generating. Filter by type, creator, and price; inspect previews, scripts, and fit.
-- Surface creator, ID, price, and usage rights before cross-owner/paid insertion. Audit inserted scripts and dependencies; remove unneeded code and test in scene. See `roblox-security`.
-- Use `generate_procedural_model` for blockouts, `generate_mesh` for textured props, and `generate_material` for surfaces.
-- For meshes, inspect bounds, collision, anchoring, PBR, and quality levels.
-- Use permitted images; wait for generation jobs to finish.
-- `EditableImage`/`EditableMesh` have permission and memory limits; see full reference.
+- Search project assets and Toolbox before generating. Check type, creator, price, scripts, and fit.
+- Before paid or cross-owner insertion, disclose creator, ID, price, and rights. Inspect scripts and dependencies; remove unneeded code and test in scene. See `roblox-security`.
+- MCP: `generate_procedural_model`, `generate_mesh`, `generate_material`.
+- Studio Assistant previews models, restyles textures, and segments imported meshes. These aren't confirmed MCP tools; see full reference.
+- Check mesh bounds, collision, PBR, and quality levels.
+- Use permitted images; wait for jobs to finish.
+- `EditableImage`/`EditableMesh` have permission and memory limits.
 - Use native Parts/CSG when reuse or generation is unsuitable.
 
 ### Player Scale
@@ -55,4 +57,4 @@ Player ~5 studs | Door 4w×7h | Ceiling 10-14 | Counter 3.5-4 | Seat 1.5 | Path 
 ### Anti-Patterns
 Guessing coordinates | unanchored or duplicate parts | hardcoded world positions | silent CSG failure | oversized batches | claims without readback
 
-**Need detail?** Load `references/full.md` for maps, validation, and asset workflows.
+**Details:** `references/full.md` covers maps, validation, and assets.

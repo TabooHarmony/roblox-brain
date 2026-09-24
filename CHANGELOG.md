@@ -2,7 +2,7 @@
 
 All notable changes to `roblox-brain` are documented here.
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2026-09-24
 
 ### Added
 
@@ -20,6 +20,7 @@ All notable changes to `roblox-brain` are documented here.
 - Skills are grouped into four installable libraries: `core` (10), `gameplay` (10), `design` (5), and `tools` (4). Installing the repository still installs all 29. Paths to individual skill folders have changed.
 - `roblox-gui` takes over practical styling, layout, and visual checks from `roblox-ui-design`, without prescribing a visual style.
 - Building now covers finding and inspecting Toolbox assets before making a replacement from scratch.
+- Building also covers Studio Assistant's texture restyling, imported-mesh segmentation, and image previews, without treating those editor actions as MCP tools.
 - Growth design now covers launch ads, thumbnail tests, and reading organic traffic and retention after launch.
 - Architecture now asks agents to trace a feature from input through UI and remotes to saved state, rather than assuming that matching folder names mean the feature works.
 - Performance now distinguishes documented engine limits from rules of thumb and corrects the texture-memory advice.

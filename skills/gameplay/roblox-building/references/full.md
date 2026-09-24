@@ -65,6 +65,14 @@ If a capability is unavailable, switch to the offline Luau path and identify the
 
 Generated assets are candidates. Structural and visual review are still required.
 
+### Studio Assistant generation (not the MCP tool list)
+
+Roblox's [Studio Assistant guide](https://create.roblox.com/docs/assistant/guide) and [feature announcement](https://devforum.roblox.com/t/introducing-new-texture-generation-tools-segment-any-mesh-and-image-previews/4890084) describe these editor workflows. Use them when an agent can operate Studio's Assistant UI or guide a person through it; check the live tool list before assuming an MCP client can call them.
+
+- **Restyle existing meshes:** select one or more meshes and use the ribbon button, right-click **Generate > Texture**, or Assistant's `/generate_texture`. Iterate on the generated texture, then export it to a texturing program for further editing if needed. Check the mesh and appearance afterward rather than assuming generation preserved every detail.
+- **Segment imported meshes:** select the `MeshPart` itself, then use `/segment_mesh` in Assistant. Name up to five parts; suggested names for familiar objects can improve results. Run the command again on a part if you need finer division. This is an early-preview feature; the guide says it replaces the original mesh in Workspace, so inspect the new hierarchy, materials, collisions, and behavior before proceeding.
+- **Preview before generating:** for text-prompt `/generate_mesh` or `/generate_procedural_model`, review the suggested part names and choose from four generated image previews before creating the final model. A supplied hint image guides the model but currently skips that four-preview step. This is an Assistant UI flow, not a promise that MCP `generate_mesh` exposes preview selection.
+
 ## Mesh-Backed Geometry
 
 `MeshPart` is a `BasePart` with a custom mesh. Treat the visible mesh, its appearance, and its collision shape as separate review surfaces:
