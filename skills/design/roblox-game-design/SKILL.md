@@ -18,7 +18,6 @@ sources:
 
 Load for the structural craft of a Roblox experience: core loop and meta-game architecture, tutorial/FTUE structure, level design, economy design, retention-phase planning, juice/game feel, Bartle balance, grind avoidance, Today's Picks or Moments readiness. Route elsewhere: metrics/discovery → `roblox-growth-design`; persuasion/pricing → `roblox-player-psychology`; VFX → `roblox-animation-vfx`; economy telemetry → `roblox-analytics`.
 
-Everything except the Today's Picks and Moments sections is a practitioner framework or heuristic, not official Roblox guidance.
 
 ## Quick Reference
 

@@ -2,6 +2,20 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [2.1.0] - 2026-09-25
+
+### Added
+
+- `roblox-animation-vfx` now covers effect composition, impact timing, flipbook textures, mesh and UI-based effects, and checking readability and performance in play.
+
+### Changed
+
+- Refined the design skills for a cleaner, more direct read.
+
+### Fixed
+
+- The README release badge now shows the latest release instead of sticking at v1.7.0.
+
 ## [2.0.0] - 2026-09-24
 
 ### Added

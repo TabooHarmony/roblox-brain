@@ -1,11 +1,11 @@
 # Roblox Player Psychology: Full Reference
 
-The behavioral heuristics here are not official Roblox guidance. The paid-random-items rules link to the platform policy.
+The behavioral suggestions are design choices. The paid RNG note links to Roblox's policy for purchase implementation.
 
 ## 1. The platform and who pays
 
 <!-- temporal: 2026-08 -->
-Q2 2026 snapshot (practitioner read of public Roblox reporting): 123M DAU (up 10%, below the 152M Q3 2025 peak), 29B hours engaged (up 5% YoY), 27M monthly unique payers (up 15%), bookings up 8%; spending per hour is falling. Roblox retuned recommendations toward long-term retention; attention is spreading out (top ten games hold only ~⅕ of all playtime). Grow a Garden peaked at 22.3M concurrent players; the ceiling is huge.
+Q2 2026 snapshot (figures from public Roblox reporting; interpretation is our own): 123M DAU (up 10%, below the 152M Q3 2025 peak), 29B hours engaged (up 5% YoY), 27M monthly unique payers (up 15%), bookings up 8%; spending per hour is falling. Roblox retuned recommendations toward long-term retention; attention is spreading out (top ten games hold only ~⅕ of all playtime). Grow a Garden peaked at 22.3M concurrent players; the ceiling is huge.
 
 Who plays and pays:
 
@@ -84,7 +84,7 @@ Grow a Garden runs all four at once: crops mature on a clock (fixed interval), s
 5. **The hook model**: trigger → action → variable reward → investment. Whatever they leave behind loads the next trigger.
 6. **Be specific**: "Back in 4h 32m" beats "come back soon".
 
-### Cadence and habit (practitioner)
+### Cadence and habit
 
 - Ship weekly: players calibrate to your rhythm; an irregular one teaches them not to check.
 - Announce first: anticipation is bigger than delivery; a short teaser ramp beats a surprise drop.
@@ -109,7 +109,7 @@ Designing for solo play (self-determination framing):
 - **Competence**: difficulty just above skill; Tower of Hell works because failing is instant and cheap.
 - **Relatedness**: pets, companions, ghosts, leaderboards: show that other humans exist somewhere.
 
-### What each mode does to your numbers (practitioner)
+### What each mode does to your numbers
 
 | Metric | Solo-leaning | Social-leaning |
 |---|---|---|
@@ -137,7 +137,7 @@ Roblox takes 30%: a 799 R$ pass nets ~559 R$ before cashing out (DevEx pays less
 
 Verify pricing before building a model on it (regional pricing: see `roblox-monetization`). Everyone holds an odd Robux balance; bundles are fixed, so price items just under common leftovers. Few players ever pay; you are designing for a small minority, which is why the **first purchase matters most**.
 
-### Pricing principles (practitioner)
+### Pricing principles
 
 - **Charm pricing / left digit**: price is read left to right: 499 files as "four hundred something"; 500 does not. Decades of retail taught people that a nine means a deal, even with nothing to compare.
 - **Precision reads as fair, round reads as premium**: 349 looks calculated; 350 looks arbitrary and invites questions. For status buys, round numbers feel considered. Luxury does not price at 999.
@@ -157,7 +157,7 @@ Verify pricing before building a model on it (regional pricing: see `roblox-mone
 
 Never sell raw victory: sell time, luck, expression, and access.
 
-### The infinite pack (ladder monetization, practitioner)
+### The infinite pack (ladder monetization)
 
 - A ladder of rewards with rising prices, roughly 50 R$ at the bottom to 2,400 R$ near the top.
 - Refreshes weekly: each update brings a new themed ladder with new exclusive pets.
@@ -181,7 +181,7 @@ Never sell raw victory: sell time, luck, expression, and access.
 - **Soft pity**: odds climb after a threshold; players feel it heating up.
 - **Rising odds**: chance grows on each failure and resets on a win; same average, no brutal streaks.
 
-Rules of thumb (practitioner):
+Rules of thumb:
 
 - **Show the counter.** "34 of 50" turns open-ended frustration into a goal.
 - **One counter per rarity**: then no session ever feels like pure loss.
@@ -246,7 +246,7 @@ Ethics note: about a third of age-checked daily users are under thirteen. Use th
 
 ## 8. Order of work and review
 
-Build in this order (practitioner):
+Build in this order:
 
 1. **Fix Day 1**: instrument everything, no dead ends; first reward inside 30 seconds; one mechanic in minute one; fix load times; aim for 20% D1.
 2. **Build Day 7**: a milestone ladder with no dead ends; a collection to complete; a daily hook with a safety valve; one social feature; aim for 8% D7.

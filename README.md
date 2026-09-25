@@ -4,7 +4,7 @@
 
 **The Roblox Studio knowledge your coding agent is missing.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=semver)](https://github.com/TabooHarmony/roblox-brain/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/TabooHarmony/roblox-brain?display_name=tag&sort=date)](https://github.com/TabooHarmony/roblox-brain/releases)
 [![License](https://img.shields.io/github/license/TabooHarmony/roblox-brain)](LICENSE)
 [![skills.sh](https://skills.sh/b/TabooHarmony/roblox-brain)](https://skills.sh/TabooHarmony/roblox-brain)
 

@@ -58,17 +58,17 @@ These are hypotheses, not one-to-one causes. Segment and test. Per-stat tactics 
 
 ### Algorithm hotspots (2026)
 
-Provenance: (official) = documented platform behavior; (practitioner) = operator observation, experience-based, not verified as a ranking rule.
+In this section, (official) marks documented behavior; other ranking claims are unverified.
 
-- Cold traffic (practitioner): ads are the cheapest, least-qualified players; Home algo ranks the qualified audience. Launch stats look bad on ad players. Don't panic.
-- Ranking: Roblox docs say benchmark games do not affect ranking; the similar-games benchmark is rough context only. A practitioner model (unverified hypothesis) adds staging: genre-wide first, then against "experiences with similar players," where better-statted competitors take your players. Use the benchmark to choose comparison cohorts, not as a ranking rule.
-- Ads do not buy Home placement (practitioner); meaningful stat-improving updates do. 28-day signals (D1, D2–7, D8–28); updates take days to show.
+- Cold traffic: ads are the cheapest, least-qualified players; Home algo ranks the qualified audience. Launch stats look bad on ad players. Don't panic.
+- Ranking: Roblox docs say benchmark games do not affect ranking (official); the similar-games benchmark is rough context only. An unverified hypothesis adds staging: genre-wide first, then against "experiences with similar players," where better-statted competitors take your players. Use the benchmark to choose comparison cohorts, not as a ranking rule.
+- Ads do not buy Home placement; meaningful stat-improving updates do. 28-day signals (D1, D2–7, D8–28); updates take days to show.
 - Beta mode hides a game from Home (official feature); tune metrics on cheap ad traffic before opening to the algo.
 - The 250 highly-engaged-player requirement (official): all-ages games start 16+ only until 250 highly engaged age-checked plays within 60 days. Definition (official, evolving): account tenure + playtime in your game + a purchase anywhere on Roblox in the last 60 days. 25 = publishing-fee refund threshold (separate). Ads serve 16+ automatically. Home impressions accelerate the count fastest.
 - Experience detail page matters: put your best thumbnails and a gameplay description there; it feeds overall play-through.
-- Launch realism (practitioner): split ad campaigns desktop/mobile; paid playtime ≈ half of organic; low-CCU stats are noise (don't kill on a 3% D1 readout); algo "biting" shows as thumbnail impressions before CCU; console = cheap long-session niche; multiplayer needs singleplayer fallbacks; feedback forms at decision popups.
+- Launch realism: split ad campaigns desktop/mobile; paid playtime ≈ half of organic; low-CCU stats are noise (don't kill on a 3% D1 readout); algo "biting" shows as thumbnail impressions before CCU; console = cheap long-session niche; multiplayer needs singleplayer fallbacks; feedback forms at decision popups.
 
-### Monetization mental model (practitioner)
+### Monetization mental model
 
 - Convert valuable one-time game passes into consumables (repeat-purchase dev products): they pump 7-day spend days per user and solve recurring pain.
 - Products must be must-haves that solve a pain (effort grind, losing progress AFK, FOMO, status). Limiteds with real scarcity outsell unlimited cosmetics.

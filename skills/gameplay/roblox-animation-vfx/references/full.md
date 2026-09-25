@@ -4,6 +4,14 @@
 
 Visual effects are a budgeted part of gameplay, not decoration added after performance work. Build them around an owner, a trigger, a duration, and a cleanup path.
 
+## Design an effect before wiring it
+
+Start with the gameplay signal: where is the hazard, when is contact, and what changed? Sketch the effect in phases: an optional readable warning, a fast contact shape, a brief peak, then a quieter decay. A projectile may need a travel trail and a separate impact; an environmental effect may need continuous motion and an occasional accent. Give each layer one job rather than adding emitters until the event disappears under glow. Keep the warning distinguishable from the hit, especially when timing or danger matters.
+
+Test the silhouette with sound and post-processing off. Does a player see the impact point and direction at gameplay distance, against both dark and bright backgrounds? Check that a moving slash's tapered tail trails its direction of travel instead of pointing ahead of it. Then add secondary motion (sparks, smoke, fragments or a shockwave), sound, and a small local camera response only where they clarify the event. Stagger layers deliberately so everything does not appear and vanish on the same frame. A bright fill and a darker edge can make the same shape read without stacking unrelated shapes. Make the strongest visual moment brief; reserve dense spectacle for rare events so routine actions stay legible. Reduce intensity or disable nonessential layers if the player has selected reduced motion.
+
+For a natural-looking effect, break the subject into different behaviors rather than one emitter doing everything: for example, a water impact has a surface ring, heavy upward splashes, fine droplets, then lingering mist. Give those layers different lifetimes, speeds, scale and transparency. Reuse a coherent texture/palette family and vary motion enough to avoid obvious repetition. Roblox's volcano and waterfall tutorials demonstrate this layered approach; the composition is a design choice, not a requirement to reproduce their example assets.
+
 ## 1. Animation loading
 
 Use an `Animator` under the character's `Humanoid` or under an `AnimationController` for non-character rigs. Keep asset IDs in configuration and verify that the experience has permission to use them.
@@ -51,7 +59,7 @@ If the animation can be stopped and restarted, make the effect trigger idempoten
 
 Use a short fade when moving between locomotion states. Stop tracks that should no longer contribute. A track that remains playing at a low weight still consumes state and can make later debugging difficult.
 
-Keep the state machine responsible for selecting tracks. The effect system should react to a named event such as `Footstep` or `Impact`, not inspect every animation frame.
+Keep the state machine responsible for selecting tracks. The effect system should react to a named event such as `Footstep` or `Impact`, not inspect every animation frame. Treat the contact sound and its timing as part of the same cue: a visually sharp hit with late or missing audio can feel weak. Synchronize both to the event, allow players to lower effects independently, and route sound mixing details to `roblox-audio`.
 
 ## 4. Particle emitters
 
@@ -71,6 +79,14 @@ end)
 ```
 
 Use `NumberSequence` and `ColorSequence` to move size, transparency, and color over lifetime. Keep lifetime and rate low enough that a repeated effect cannot accumulate unbounded particles. Prefer a small set of reusable templates over creating new textures and emitters for every hit.
+
+### Textures, flipbooks and non-particle effects
+
+A flipbook is one image containing frames of motion. For a native `ParticleEmitter`, set a matching `FlipbookLayout` (including `Custom` with `FlipbookSizeX`/`FlipbookSizeY` for non-square grids), then choose `FlipbookMode`: `OneShot` plays once over the particle's lifetime, while `Loop` repeats. `FlipbookStartRandom` with `FlipbookFramerate` set to zero chooses a different static frame per particle, useful for varied sparks or shards; it is not an animated flipbook. Give frames enough padding to avoid texture bleeding. Make tintable shapes with a transparent background and neutral values rather than baking a different color into every texture; test the actual `Color` sequence and blend against the scene. Verify the animation at the intended lifetime and on mobile: expensive flipbooks may be disabled on memory-constrained clients.
+
+Not every effect with a sequence of textures is a native particle flipbook. A model can hold individually textured decals, mesh frames, or UI images advanced by a separate player or plugin. Inspect its object types, animation script and asset IDs before assuming `ParticleEmitter.Flipbook*` settings will control it. An `.rbxm` may only contain templates while a place file carries the playback machinery. Treat imported effect scripts as untrusted; inspect them before running, check whether textures are owned and usable by the target experience, and recreate the idea with your own assets when reuse rights are unclear. A visual preview alone does not prove the model will play after insertion.
+
+For one-shot hit feedback, an expanding mesh ring or a short screen-space image can make the first frame readable while particles supply texture and motion afterward. Keep screen effects local, brief and optional; do not let an overlay obscure the player's next input or an enemy's telegraph. Mesh-based shockwaves and custom image players can require more scripting than a native emitter, so prefer built-in effects when they achieve the same read.
 
 ## 5. Beams and trails
 
@@ -153,7 +169,9 @@ Pool effects that fire frequently, such as muzzle flashes, hit sparks, and foots
 - active tweens and connections;
 - expiration timestamp.
 
-Use `Debris` for a simple one-shot lifetime. Use an explicit owner object when the effect has multiple connections or must be cancelled early.
+Use `Debris` for a simple one-shot lifetime. Use an explicit owner object when the effect has multiple connections or must be cancelled early. For continuous emitters, disable them first, let existing particles expire, and only then remove the owner if a natural fade matters. For multi-part effects, keep the triggers and timing together; an animation file or particle model alone may not include the sequence that actually plays it.
+
+Budget the *simultaneous view*, not just each effect alone. Test several players repeating the action near the camera, and compare low- and high-quality graphics on a mobile-class device. Transparent screen coverage, overlapping layers, lights and unique animated textures can cost more than an emitter count suggests. Scale secondary layers down before sacrificing the primary contact cue. A showcase full of emitters is not a performance target.
 
 ## 9. Legacy effect classes: Sparkles (and Fire, Smoke)
 
@@ -175,7 +193,9 @@ Preload only the assets needed for an imminent experience state. Preloading an e
 - [ ] Every animation uses an `Animator` and a verified asset ID.
 - [ ] Track priority and stopping behavior are intentional.
 - [ ] Markers or named gameplay events drive synchronized effects.
-- [ ] Bursts have bounded count and lifetime.
+- [ ] Bursts have bounded count and lifetime; texture/flipbook layouts match their source images.
+- [ ] The main silhouette and travel direction read before secondary layers, and contact VFX/SFX land together.
+- [ ] Custom mesh, decal, or UI sequences have the player and asset permissions they need; imported scripts were inspected.
 - [ ] Beam and trail attachments survive for the effect's lifetime.
 - [ ] Tweens are replaced or cancelled when state changes.
 - [ ] `Completed` handlers check `PlaybackState` and effect ownership before destroying shared or pooled instances.

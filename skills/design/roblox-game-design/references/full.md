@@ -2,7 +2,7 @@
 
 Structural craft: core loops, tutorials/FTUE, level design, economies, retention phases, juice, player-type balance, grind avoidance, curation readiness.
 
-Sections 1–8 contain design frameworks and heuristics, not official Roblox guidance. Sections 9 and 10 link to Roblox's Today's Picks and Moments posts.
+Sections 1–8 are design guidance; sections 9 and 10 link to Roblox's Today's Picks and Moments posts.
 
 **Scope boundaries (cross-references):**
 - Funnel metrics, discovery algorithms, experiments, LiveOps cadence, monetization packaging → `roblox-growth-design`
@@ -34,7 +34,7 @@ A game must function at three time scales **simultaneously**; each layer only wo
 
 ## 2. Retention Phases ([Department of Play framework](https://departmentofplay.net/retention-framework-keep-your-players-forever/))
 
-Heuristic framework published by Department of Play on Unity LevelUp. Core thesis: as a game matures, what keeps players shifts from **mechanics and novelty** toward **social connection and community**.
+Published by Department of Play on Unity LevelUp. Core thesis: as a game matures, what keeps players shifts from **mechanics and novelty** toward **social connection and community**.
 
 ### Short-term (D0–D7)
 - **Understandability**: the FTUE must make the game immediately graspable; players who don't understand how to play leave.
@@ -56,7 +56,7 @@ Heuristic framework published by Department of Play on Unity LevelUp. Core thesi
 
 **The Chess analogy:** Chess has had no "content update" in centuries yet retains players for decades, because its value is entirely mastery + community. Terminal retention means the game has transitioned from software to **social platform**.
 
-**Roblox mapping (heuristic):** D0–7 is your FTUE and first-session loop; D7–30 is your progression/meta-game; D30–90 needs leaderboards/groups/updates; D90+ is served by Roblox groups, community Discords, and social features. Session count, session length, and retention are the three metrics that feed both ad-style and purchase-style revenue; steady revenue needs players returning over months, not a launch spike.
+**Roblox mapping:** D0–7 is your FTUE and first-session loop; D7–30 is your progression/meta-game; D30–90 needs leaderboards/groups/updates; D90+ is served by Roblox groups, community Discords, and social features. Session count, session length, and retention are the three metrics that feed both ad-style and purchase-style revenue; steady revenue needs players returning over months, not a launch spike.
 
 ---
 
@@ -133,7 +133,7 @@ Use it per-mechanic within a level, or as the whole level arc. It answers "how d
 
 ## 5. Economy Architecture
 
-Game-economy heuristics:
+Game economy design:
 
 ### 5.1 Sources and sinks: the plumbing
 
@@ -205,7 +205,7 @@ Cross-reference: instrument these flows → `roblox-analytics`; monetization pac
 | **Socializers** | ♥ Hearts | Connection: the game is a backdrop for people | Chat, guilds/groups, emotes, team tasks |
 | **Killers** | ♣ Clubs | Dominance: win against others, show superiority | PvP, global rankings, rare cosmetics as status |
 
-**The ecosystem logic (heuristic):** the four types feed each other:
+**The ecosystem logic:** the four types feed each other:
 - Achievers need Explorers (who find the equipment and secrets Achievers use to level).
 - Killers need Achievers (high-value targets to prove dominance against).
 - Socializers keep the community alive and are the audience for everyone else.
@@ -291,7 +291,7 @@ Summarizes the official Roblox Newsroom post **"Roblox Moments: User-Generated D
 
 <!-- temporal: 2026-09 -->
 
-These are experience-based observations, not official Roblox guidance or controlled experiments. Numbers describe individual cases, not platform benchmarks. **CONFLICT** marks disagreement between reports.
+These are experience-based observations, not controlled experiments. Numbers describe individual cases, not platform benchmarks. **CONFLICT** marks disagreement between reports.
 
 ### Onboarding and tutorial craft
 
@@ -369,7 +369,7 @@ These are experience-based observations, not official Roblox guidance or control
 
 **+1 games work on minimal complexity with maximum depth:** the same action stacked with multipliers/rebirths is disproportionately retentive for Roblox's kid demographic; regurgitated +1 clones still pull 5k CCU.
 
-**3-task framework (veteran simulator dev):** Task A = the main loop, identifiable from title/thumbnail alone; Task B = something that makes Task A easier (the upgrade/funnel layer); Task C = a long-term goal that requires Task A. If a player can't name A from the store page, the store page is broken.
+**3-task framework:** Task A = the main loop, identifiable from title/thumbnail alone; Task B = something that makes Task A easier (the upgrade/funnel layer); Task C = a long-term goal that requires Task A. If a player can't name A from the store page, the store page is broken.
 
 **Ship an infinitely repeatable core loop, add content weekly**: you don't need 20 hours of content at release. A flawed core loop cannot be fixed by updates; a good loop with weak individual systems can.
 
@@ -401,4 +401,4 @@ These are experience-based observations, not official Roblox guidance or control
 - **Thumbnail→game congruence:** whatever your highest-CTR thumbnail shows, put that exact visual in the game immediately on join; the ad promised it, so the first minute must deliver it; use YouTube playthroughs of similar games to find which upgrade moments players care about. Design the thumbnail as a simple, slightly exaggerated picture of actual gameplay so marketing promise and game never diverge; for anime the winning pattern is progression fantasy (noob becoming strong).
 - **Name + genre selection changes measurable ad performance:** CTR jumped 1.4%→3.0% just from selecting a genre and renaming the game; the algorithm may down-rank names it thinks impersonate existing games.
 - **Stability is the gatekeeper of retention:** buggy/laggy games make the tuned loop and good thumbnails invisible; one experienced dev's soft-shutdown omission (players kicked on update) damaged his algo standing; a competitor trademarked "War Tycoon"; a legal failure mode devs don't plan for.
-- **Kids-specific design cues, stated bluntly by a working dev:** bright colors, constant satisfying sound stimuli on every button, robux offers visible everywhere, progression fast at the start then slowing; "follow marketing and casino tips."
+- **Kids-specific design cues:** bright colors, constant satisfying sound stimuli on every button, robux offers visible everywhere, progression fast at the start then slowing; "follow marketing and casino tips."
