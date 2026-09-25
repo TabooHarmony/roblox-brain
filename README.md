@@ -10,6 +10,8 @@
 
 <img src="assets/before-after.png" alt="Side-by-side examples of Roblox code without and with roblox-brain: shop menu on phones, cheater-proof purchases, saving progress, and server memory over time" width="100%">
 
+<sub><em>These are illustrative examples. Results depend on your model and how you use it.</em></sub>
+
 </div>
 
 ## Pick a skill set for your agent
