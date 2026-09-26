@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/github/license/TabooHarmony/roblox-brain)](LICENSE)
 [![skills.sh](https://skills.sh/b/TabooHarmony/roblox-brain)](https://skills.sh/TabooHarmony/roblox-brain)
 
-<img src="assets/before-after.png" alt="Side-by-side examples of Roblox code without and with roblox-brain: shop menu on phones, cheater-proof purchases, saving progress, and server memory over time" width="100%">
+<img src="assets/demo.gif" alt="Animated demo: Roblox code without roblox-brain breaks on phones, trusts client prices, loses progress, and leaks memory; with roblox-brain each is fixed. Then the 29 skills and the install command, npx skills add TabooHarmony/roblox-brain" width="100%">
 
 <sub><em>These are illustrative examples. Results depend on your model and how you use it.</em></sub>
 
