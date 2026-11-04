@@ -373,6 +373,14 @@ Multiplayer behavior is core development work, and agents under-cover it. Whenev
 - **chrrxs bridge:** use `multiplayer_playtest` (start with `numPlayers`, add players, leave a client, end). Combine with `get_runtime_logs` to check per-peer state and `eval_client_runtime` to inspect a specific client.
 - **Fallback:** if the bridge cannot run multiple clients, say so plainly and give the user the manual Studio test-player path. Do not claim multiplayer verification you did not do.
 
+### Verify a private UI on both clients
+
+For a prompt or menu intended for just the interacting player, use a local test copy and record the behavior from both clients. If the bridge cannot start a multi-client session, choose **Server & Clients** in Studio, set the client count to **2**, and start the test. [Studio testing modes](https://create.roblox.com/docs/studio/testing-modes#multi-client-simulation)
+
+1. Start with both menus closed. Have A use the prompt while B waits. Verify that A sees the menu and that B can still move with their menu closed.
+2. Reset the same setup and reverse the roles. If an access rule applies, also try from an ineligible player and verify that neither menu opens.
+3. Record observations per client, then repeat the same setup, actions, and assertions after changing the code. A missing observation on either client leaves that assertion unverified. Clean server logs or a visible menu on A alone cannot establish what B saw.
+
 ## MCP Mode Detection
 
 Different MCP servers expose different names and schemas. Call `tools/list` and route by capability:
