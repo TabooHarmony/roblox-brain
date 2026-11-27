@@ -264,8 +264,43 @@ end
 
 - Shadows on lights are expensive. Limit to 4-6 shadow-casting lights visible at once.
 - PointLight.Shadows = false is much cheaper than true.
-- Use Neon material for visual glow without the performance cost of actual lights.
+- Use Neon material for visual glow without the performance cost of actual lights, in dark tones (it blooms to white).
+- Light `Range` is clamped to 120 studs.
 - On mobile, consider disabling light shadows entirely.
+
+## Current engine facts (2026-11)
+
+- **Light range is capped at 120 studs.** `PointLight`, `SpotLight` and `SurfaceLight` `Range` is always clamped to 120; `Lighting.ExtendLightRangeTo120` is unused, hidden and non-scriptable.
+- **`LightingStyle` and `PrioritizeLightingQuality` are script-writable; `Technology` is deprecated.** `Soft` is the stylized look and `Realistic` the naturalistic one, and the shadowing path also depends on `PrioritizeLightingQuality` (for example, `Soft` with it enabled uses shadow maps rather than voxel lighting). Check both on desktop and phone.
+- **Graphics quality levels:** the engine scales rendering per device and keeps at least 500 studs of draw distance even at the lowest level. Preview with Studio Settings → Rendering → Editor Quality Level at the lowest and highest levels. The docs advise against changing visuals from scripts based on `UserGameSettings.SavedQualityLevel`. If raising the level doesn't reveal more scene, check `StreamingTargetRadius` before blaming lighting.
+- **`Lighting.LightingChanged(skyChanged)`:** `skyChanged` is true when a `Sky` is added or removed or a Sky property other than `SkyboxOrientation` changes; false for Lighting, Atmosphere and `SkyboxOrientation` changes.
+- **Decal and Texture emissive masks:** `Decal.EmissiveMaskContent` (a grayscale mask), `EmissiveStrength` (multiplier, default 1, 0 turns glow off, large values clamp to white) and `EmissiveTint` make a decal or texture glow without a light. `Texture` inherits them from `Decal`. <!-- temporal: 2026-11 -->
+
+## Field-tested lighting lessons
+
+From individual projects; judge every change from an in-game screenshot at play distance under the final lighting stack.
+
+- **Roofed interiors: leave `ClockTime` alone.** Sky light still tints a fully roofed room (14.5 → 17.4 turned one blue). Tune interiors with `Lighting.Ambient` and one `ColorCorrectionEffect`. A brightly lit white ceiling over a white interior read clinical; a dark open ceiling with lower Ambient (around 54, 58, 72) did most of the fix in one step. In-game colors land well below Blender renders under dim indoor ambient.
+- **Lamp pools stack.** Values that look right on one light burn a room white when several overlap: 32 PointLights at Brightness 1.5 blew a room out, Brightness 0.25 with Range 16 read right. Outdoor lamps in daylight tint surfaces (a driveway went pink at noon); light only lamps with something overhead.
+- **Imported lamp data often lists several bulbs per fixture** a fraction of a stud apart. Merge bulbs within about 2 studs into one light and dim crowded areas (for example by `sqrt(3 / lightsWithin10Studs)`).
+- **Tie each light to its fixture.** Lights parented to a separate holder outlive a destroyed lamp. Parent the light to the lamp part, or probe the lamp point with `GetPartBoundsInRadius` and put the light out after two empty probes.
+- **Neon blooms to near-white at ordinary bright colors** (150, 190, 255 read as white); a lit surface that must keep its hue needs dark values (45, 70, 120 read as saturated blue). Many Neon parts plus bright lights blow rooms out. Small Neon pickups read as blobs; `SmoothPlastic` read better.
+- **Materials and tonemapping shift palettes.** `Fabric` greyed out bright awning colors, the Retro tonemapper washed out light colors, and exposure changes did nothing while color grading was on (`ColorCorrectionEffect` plus dimmer lights worked). Check palette-critical surfaces under the final material and lighting.
+- **Two-sided panes go black on the shaded face.** A `Texture` on both faces of a thin plant part rendered the side away from the sun near black. `Texture.Color3` values above 1 brighten, so tint each face by `1 + k * max(0, -normal:Dot(Lighting:GetSunDirection()))` with `k` about 1.2, leaving the sunny face at 1; a uniform tint washes out the sunny side. The emissive mask properties above are the documented alternative to test.
+- **Skybox faces:** in one project `Sky.SkyboxLf` faced +X and `SkyboxRt` faced -X, the opposite of what the names suggest (the reference only says "left" and "right"). When generating faces, verify with a debug render that paints each pixel's direction on a 15-degree grid; a turned or mirrored face breaks the grid at its edges. Show the sun with `Sky.CelestialBodiesShown` rather than painting it, so faces don't depend on time of day.
+
+```luau
+-- Illustrative: brighten the shaded face of a two-sided texture pane.
+local Lighting = game:GetService("Lighting")
+
+local K = 1.2
+
+local function shadeTwoSided(texture: Texture, faceNormalWorld: Vector3)
+    local away = math.max(0, -faceNormalWorld:Dot(Lighting:GetSunDirection()))
+    local gain = 1 + K * away
+    texture.Color3 = Color3.new(gain, gain, gain)
+end
+```
 
 ## Common Mistakes
 
