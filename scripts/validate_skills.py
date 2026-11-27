@@ -3,8 +3,8 @@
 Validate roblox-brain skills for size and structure compliance.
 
 Checks:
-- SKILL.md under 3,000 chars
-- references/full.md under 35,000 chars
+- SKILL.md under 3,000 chars (when_to_use excluded); no skill is exempt
+- references/full.md under 50,000 chars; no skill is exempt
 - Description under 150 chars
 - Frontmatter has name, description, last_reviewed, sources
 - sources field is not empty (use [original] for synthesis)
@@ -34,10 +34,9 @@ from pathlib import Path
 import yaml
 
 MAX_SKILL_CHARS = 3000
-# Conversational/strategic skills are loaded at planning time, not hot-loaded
-# mid-development, so the tight hot-load budget does not apply. Keep the
-# explicit list small and justified.
-CHAR_CAP_EXEMPT = {"roblox-growth-design"}
+# Every skill obeys both size caps. An exemption list used to skip them, which
+# let one reference file grow to twice the cap unnoticed; split oversized
+# skills instead of exempting them.
 MAX_DESC_CHARS = 150
 # when_to_use is listing metadata (trigger phrases), not hot-loaded body text, so it has
 # its own cap and does not count toward MAX_SKILL_CHARS.
@@ -249,7 +248,7 @@ def validate_skill(skill_dir: str) -> list[str]:
             counted -= len(line) + 1
 
     # Size check
-    if counted > MAX_SKILL_CHARS and skill_name not in CHAR_CAP_EXEMPT:
+    if counted > MAX_SKILL_CHARS:
         errors.append(
             f"{skill_name}: SKILL.md is {counted} chars excluding when_to_use (max {MAX_SKILL_CHARS})"
         )
@@ -307,7 +306,7 @@ def validate_skill(skill_dir: str) -> list[str]:
     if not is_router and os.path.exists(ref_path):
         with open(ref_path, encoding="utf-8") as f:
             ref_content = f.read()
-        if len(ref_content) > MAX_REF_CHARS and skill_name not in CHAR_CAP_EXEMPT:
+        if len(ref_content) > MAX_REF_CHARS:
             errors.append(
                 f"{skill_name}: references/full.md is {len(ref_content)} chars (max {MAX_REF_CHARS})"
             )
