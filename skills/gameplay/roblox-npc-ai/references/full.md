@@ -150,6 +150,60 @@ Keep path requests bounded and event-driven:
 
 If `Path.Blocked` fires, recompute from the NPC's current position with a bounded retry policy. Do not allow a blocked-path callback to recursively create unlimited overlapping `ComputeAsync` calls.
 
+## Pathfinding under streaming and debugging
+
+- **Client pathfinding sees only streamed-in geometry**, so it can route through obstacles that exist on the server; streaming can also block or unblock a path while a character walks it. Handle blocked paths and recompute. A client script that targets a world object should target a part inside a `Persistent` model and wait for `Workspace.PersistentLoaded`. Server pathfinding sees the whole world.
+- **Visualize** the navigation mesh, pathfinding modifiers and pathfinding links from Studio's Visualization Options widget (upper-right of the viewport).
+
+## Architecture for many bots: sense, think, act
+
+A structure that scales and tests well (field-tested in shooter bots):
+
+- **Sense:** each bot updates on its own phase so raycasts spread across frames; it writes what it sees, hears (gunshots and sprinting within a radius) and who hurt it into a plain table.
+- **Think:** a pure `Brain(mind, senses) -> intent` function with no Roblox calls. Being pure, it can be unit tested in Lune and run in a headless seeded simulation.
+- **Act:** a motor that moves the body every frame with the same movement numbers players have, so bots never move in ways players can't.
+
+```luau
+-- Illustrative: the pure Think step. No Instances, no services.
+export type Senses = { targetVisible: boolean, targetDistance: number, hurtBy: number?, now: number }
+export type Mind = { state: string, reactAt: number, reactionDelay: number }
+export type Intent = { move: string, fire: boolean }
+
+local function think(mind: Mind, senses: Senses): Intent
+    if senses.targetVisible then
+        if mind.state ~= "engage" then
+            mind.state = "engage"
+            mind.reactAt = senses.now + mind.reactionDelay -- human-like reaction delay
+        end
+        return { move = "strafe", fire = senses.now >= mind.reactAt and senses.targetDistance < 120 }
+    end
+    mind.state = if senses.hurtBy then "search" else "patrol"
+    return { move = mind.state, fire = false }
+end
+
+return think
+```
+
+**Think-rate tiers.** Distance-tiered thinking is a good start: decisions every 0.1 s within about 90 studs, every 1 s past about 220 studs, with a reaction delay of 0.15-0.28 s; then profile. One measured pen of 10 active ragdoll NPCs plus corpses owned by one client cost 0.25 ms of physics and 0.6 ms of heartbeat per frame.
+
+**Virtual server NPCs, client rigs.** For many living NPCs, keep them virtual on the server (position, state and decisions as data, replicated at about 20 Hz) and draw them on each client as anchored rigs moved with `workspace:BulkMoveTo` and default animations; 40 NPCs cost about 0.2 ms of client script per frame in one project. Switch to shared server physics only for dead bodies and severed pieces, keep damage server-authoritative, keep gore client-only, and use collision groups so players walk through piles.
+
+## Cover-point graphs instead of free pathfinding
+
+For shooter bots, hand-placed tagged markers can beat `PathfindingService`:
+
+1. Place cover and waypoint markers (a part or attachment; front = `LookVector`; attributes for full or half height, open peek sides, and a role such as camp or snipe).
+2. Auto-link any two within about 48 studs that a straight walk connects: floor all the way, no step over about 3.5 studs, only jumpable obstacles with head room.
+3. Run A* on that graph. Skip and warn on bad markers, draw points and links in a debug view, and treat an unlinked point as unreachable.
+4. Claim cover points so two bots never share one, and drop a cover the bot was seen in for a few seconds so it doesn't oscillate between two failing covers.
+
+## Fair, tunable bot difficulty
+
+- **Tune reaction, not walk speed.** Reaction delay, attack cooldown and aim error read as a human; a visibly slower walk reads as "that's a bot" (in one game, 8.5 studs/s was obvious and 11 felt right).
+- **Skill as a few numbers per rank** (reaction delay, aim-error cone, movement amount, first-shot accuracy) applied to one shared brain. Aim trails a moving target by part of the reaction, flicks past a new target and settles, then tightens while tracking; cap turn rate so slow turners can be circled; fire in bursts with rests; a sniper shows its aim line during a windup whose last fraction locks, so changing direction dodges it. Assert in tests that every skill number improves monotonically with rank.
+- **Mixed lobbies:** filler bots target other bots before real players, so humans mostly face humans. Every new gate on bot behavior can switch something else off; list what a new flag disables before shipping it.
+- **Measure with a headless, seeded simulation** of the pure bot code on the real map against scripted player profiles. Print K/D, kills and deaths per minute, median time to kill and to die, and stuck bots (wanted to move 5 of 10 s but moved under 3 studs, with seed and position). Compare versions over many seeds (36+ for a free-for-all, 72 for a duel). In free-for-all, K/D barely follows skill because bots kill each other, so judge by deaths per minute and time to death too.
+
 ## State Machine Pattern
 
 The most reliable NPC AI architecture. Each NPC has a current state and transitions based on conditions.
