@@ -9,7 +9,14 @@ Both `UserInputService` (UIS) and `ContextActionService` (CAS) are client-only. 
 
 For a Server Authority project, inputs that affect the core simulation should use Roblox's Input Action System (`InputAction` and `InputContext`) rather than traditional `UserInputService.InputBegan` or a continuous `RemoteEvent` stream. Store the current action state where the shared simulation can read it, then process synchronized movement or physics through `RunService:BindToSimulation()` (requires `Workspace.UseFixedSimulation` enabled in Studio) so client prediction and server rollback use the same input history.
 
-`ContextActionService` remains useful for UI-only actions and classic projects. Do not use the UI binding choice as a security boundary; the server still validates the resulting action and its game-specific permissions.
+<!-- temporal: 2026-11 --> **`ContextActionService` binding is planned for deprecation.** Its class page now says `BindAction` and the related binding methods aren't recommended for new work and are planned for deprecation, and points to the Input Action System. Keep existing CAS bindings working (the CAS sections below still document them) and migrate when you touch them. Do not use the binding choice as a security boundary; the server still validates the resulting action and its game-specific permissions.
+
+### Input Action System essentials
+
+- **Instances, not script bindings.** An `InputContext` groups `InputAction`s; each action holds `InputBinding`s (a key, a gamepad button, a touch `UIButton`). One `Pressed`/`Released` handler works on every device; read analog actions with `GetState()`.
+- **Default player scripts.** `Workspace.PlayerScriptsUseInputActionSystem` is set in Studio, not by scripts. With it on, the default `PlayerModule` is injected under `StarterPlayer` and character controls run through input actions, so code that requires `PlayerScripts.PlayerModule` to read the move vector can silently get nothing. Find the movement action in your place's tree rather than hardcoding a path.
+- **Block or override keys while a menu is open** by enabling a higher-`Priority` `InputContext` with `Sink` that binds those keys. A `KeyCode` binding ignores its `UIButton`. Avoid the deprecated `InputAction:Fire()`.
+- **Input Action Manager (beta).** <!-- temporal: 2026-11 --> **Window > Input > Input Action Manager** is a matrix editor for contexts, actions and bindings. It scans existing input instances into the grid and puts new ones in an `Inputs` folder in `ReplicatedStorage`. Yellow warnings mark a missing binding; red warnings mark a duplicate binding. Audit with it before shipping a cross-platform update.
 
 ## UserInputService: Properties
 
@@ -20,7 +27,7 @@ For a Server Authority project, inputs that affect the core simulation should us
 | `GamepadEnabled` | bool | Any supported gamepad connected |
 | `AccelerometerEnabled` / `GyroscopeEnabled` | bool | Mobile sensors present |
 | `VREnabled` | bool | VR headset active |
-| `PreferredInput` | Enum.PreferredInput | Primary input the player is likely using now: `KeyboardAndMouse`, `Gamepad`, `Touch` or `MicroGamepad`. Changes during a session; observe it with `GetPropertyChangedSignal`. Better than per-device flags on hybrids. |
+| `PreferredInput` | Enum.PreferredInput | Primary input the player is likely using now: `KeyboardAndMouse`, `Gamepad`, `Touch` or `MicroGamepad` (`MicroGamepad` is not set yet for TV remotes; see Micro Gamepads and TV Remotes). Changes during a session; observe it with `GetPropertyChangedSignal`. Better than per-device flags on hybrids. |
 | `MouseBehavior` | Enum.MouseBehavior | `Default`, `LockCenter`, `LockCurrentPosition` |
 | `MouseDeltaSensitivity` | number | 0–10, sensitivity multiplier for mouse-movement deltas (`GetMouseDelta()`, `InputChanged`); does not affect the cursor icon or the player's own camera-sensitivity setting |
 | `MouseIcon` / `MouseIconEnabled` / `MouseIconContent` | string/bool | Custom cursor (AssetId, ContentText) |
@@ -168,6 +175,8 @@ end)
 ```
 
 ### Bind vs InputBegan: when to use which
+
+For new work, prefer an `InputAction` over both (see Input Action System essentials). In existing CAS code:
 
 Use `ContextActionService.BindAction` when:
 - The action only exists in a context (holding tool, sitting in seat, near door).
@@ -369,6 +378,44 @@ end
 - D-pad: `DPadUp`, `DPadDown`, `DPadLeft`, `DPadRight`
 - System: `ButtonStart`, `ButtonSelect`
 
+## Micro Gamepads and TV Remotes
+
+<!-- temporal: 2026-11 --> A **micro gamepad** is a navigation-focused controller, usually a D-pad plus a few buttons; a TV remote (D-pad, centre, back) is the common case. It uses the `Gamepad1`–`Gamepad8` slots.
+
+- **Detection:** `Enum.PreferredInput.MicroGamepad` exists but is not currently set for these devices. Until it is, the docs' check is: `Gamepad1` is connected and supports neither `Thumbstick1` nor `Thumbstick2` (`GamepadSupports`). `Gamepad1` is always the most preferred connected pad, so a full controller plugged in alongside takes it. A TV remote additionally supports `Enum.KeyCode.ButtonCenter`.
+- **Legacy keycodes:** remote buttons currently arrive as legacy gamepad keycodes. `ButtonCenter` maps to `ButtonA` and `ButtonBack` to `ButtonB` in all contexts. The arrows map to `DPadUp/Down/Left/Right` in menus and selection mode, but to `Thumbstick1` (movement) and `Thumbstick2` (camera, with the Classic or Follow camera) during gameplay. Never identify a TV remote from these keycodes alone: a full gamepad sends the same ones.
+- **Bind once, branch on capability.** Bind `ButtonA`/`ButtonB` actions and branch inside the handler: on a micro gamepad `ButtonA` activates the focused item, otherwise it may jump. Use separate input contexts for navigation and gameplay so one press never triggers both.
+- **UI:** visible focus, everything reachable with four directions, centre for the primary action, back to close, focus preserved across open and close, large controls (`roblox-gui` §6).
+- **Test:** in Device Simulator pick the Android TV device, then choose **TV Remote** in Controller Emulator; it is driven from the keyboard or mouse.
+
+```luau
+-- Illustrative: verify against the micro-gamepad guide for your engine version.
+local UserInputService = game:GetService("UserInputService")
+
+local function isMicroGamepadPreferred(): boolean
+	local pad = Enum.UserInputType.Gamepad1
+	if not UserInputService:GetGamepadConnected(pad) then
+		return false
+	end
+	return not UserInputService:GamepadSupports(pad, Enum.KeyCode.Thumbstick1)
+		and not UserInputService:GamepadSupports(pad, Enum.KeyCode.Thumbstick2)
+end
+
+local function isTVRemotePreferred(): boolean
+	return isMicroGamepadPreferred()
+		and UserInputService:GamepadSupports(Enum.UserInputType.Gamepad1, Enum.KeyCode.ButtonCenter)
+end
+```
+
+## First Person, Locked Mouse and Menus
+
+- **Every clickable popup needs a key.** With the cursor locked to the centre, a popup that needs a click (a mid-game vote) cannot take one on PC. Route popups through a menu key players already know, and let phones tap directly. Check a chosen key exists on compact keyboards (backquote/tilde often doesn't) and isn't already taken (Tab opens the player list).
+- **A window that needs clicks frees the mouse.** Show a `Modal` element and set `UserInputService.MouseIconEnabled = true`: `Modal` frees the mouse, but in first person the icon can stay hidden and per-frame camera code may hide it again. Tie mouse behavior to one "any menu open" state, not to each screen's own code; separate per-screen handling left players with invisible cursors and locked cameras (observed repeatedly in one project).
+- **Proximity prompts under a locked mouse.** With `ClickablePrompt = true` (the default), a prompt's click button can sit under the centred cursor: it takes mouse movement and sinks `MouseButton1` (`gameProcessed = true`), dropping held actions (measured in one project). Per the docs, `ClickablePrompt = false` stops click activation except on mobile, so set it false in locked-mouse games and confirm taps still work on a phone. Set it when the prompt is created or arrives; setting it in `ProximityPromptService.PromptShown` was too late for the prompt's first showing in that project.
+- **Menu binds pass while any window is open.** A gamepad button that opens a menu must pass input (or have its context disabled) while any window is open, or it swallows directional navigation. The D-pad that opened a window cannot also close it, because inside the window it moves focus; close with B. Number keys and shoulder buttons for a slot row should check which window is open. Third-party top-bar libraries can listen on raw `InputBegan` for D-pad Up; check them (`roblox-gui` §6).
+- **Refused presses are dropped, not queued.** A fire queue that remembers clicks made while an action cannot fire reads as auto-fire. For slow, deliberate actions, act only on a press that arrives when the action is ready, and clear any queued flag on every refused press. Test with simulated clicks plus a per-frame sampler of the ready state.
+- **A second action can come from aim, not a key.** For example: clicking a placed charge under the crosshair detonates it, clicking elsewhere places another. Test aim as distance from the crosshair ray rather than a raycast if targets behind walls should count. It works the same on mouse, touch and gamepad.
+
 ## Touch Deep Dive
 
 ### High-level gestures
@@ -439,7 +486,7 @@ Do not invent member names: older community references carry stale VRService mem
 
 Roblox's mobile input guide states that most sessions are played on mobile devices. Design controls for touch first, then map the same actions to gamepad and keyboard/mouse.
 
-- **Capability vs presentation:** `TouchEnabled`, `KeyboardEnabled` and `GamepadEnabled` say what hardware exists. `UserInputService.PreferredInput` (`Enum.PreferredInput`: `KeyboardAndMouse`, `Gamepad`, `Touch`, `MicroGamepad`) says what the player is most likely using now. Choose what to *show* (touch buttons, reticles, key hints) from `PreferredInput`, and keep every capability's route working.
+- **Capability vs presentation:** `TouchEnabled`, `KeyboardEnabled` and `GamepadEnabled` say what hardware exists. `UserInputService.PreferredInput` (`Enum.PreferredInput`: `KeyboardAndMouse`, `Gamepad`, `Touch`; `MicroGamepad` exists but isn't set yet) says what the player is most likely using now. Choose what to *show* (touch buttons, reticles, key hints) from `PreferredInput`, and keep every capability's route working.
 - **Observe, don't cache:** `PreferredInput` changes during a session (a tablet with a keyboard, a phone with a Bluetooth pad, a PC with a controller). Listen with `GetPropertyChangedSignal("PreferredInput")`. Layout chosen once at startup from `TouchEnabled` flips or sticks on hybrid devices.
 - **Cancel on switch:** a press or charge that is in progress when the input mode changes should be cancelled, not completed.
 
@@ -449,10 +496,12 @@ A custom on-screen action button (attack, throw, use) replaces a mouse click. Ge
 
 - **Button-owned touches:** an action fires only for a touch that **began** on the button. Track that touch's `InputObject` from began to ended. A camera drag that slides across the button must not fire it, and a tap anywhere else on screen must not act as an attack while the camera uses drag-to-look.
 - **Placement from the jump button:** the default jump button lives under `PlayerGui.TouchGui` (find `JumpButton` there) and changes size with screen size (70 vs 120 pixels at the ~500 px min-axis preset in the default control script). Place custom buttons from its measured `AbsolutePosition`/`AbsoluteSize`, keep a gap, and fall back to the size rule only when it isn't present. Clear the thumbstick zone (lower-left).
-- **Re-place when the screen state changes:** other HUD elements may appear beside the button in some states (an out-of-round menu, a spectate bar). Check each state on the smallest phone (`roblox-gui` §11.5).
+- **Re-place when the screen state changes:** other HUD elements may appear beside the button in some states (an out-of-round menu, a spectate bar). Check each state on the smallest phone (`roblox-gui` §7.5). `PlayerGui.TouchGui` sets its own insets, so convert its `AbsolutePosition` into your HUD's space before comparing (`roblox-gui` §7.4).
 - **One aim contract:** if the button fires toward the screen center, show a reticle. Offset the camera slightly (a shoulder view) so the reticle isn't hidden behind the character, and use the same aim for gamepad (below).
 - **Feedback on the control:** pressed state, cooldown fill and disabled state belong on the button itself, because the player's thumb covers it and the rest of the HUD is out of view.
 - **Hide when it can't act:** unarmed, dead, a window open, a cutscene.
+- **Hold becomes toggle on touch and gamepad.** Hold-to-run gadgets (a drill, a beam) are hard on phones and controllers, where the thumb is also steering. Make the hold a toggle there, keep hold on mouse, and switch off when the gadget leaves the hand. If the trigger was already down when the gadget came out, its release lands in the toggle path; clear the held flag there or the gadget runs forever.
+- **Aim assist for touch and gamepad** should be small, capped and line-of-sight only. Measured in one project: touch players hit at about a third of the desktop rate without assist; a small cone pulling toward the upper body only while aiming or firing, capped in degrees per second with no flick, closed much of that gap. Measure aim error with and without assist, and confirm it never locks through walls. Run assist in a render step bound just before the camera (`roblox-camera`).
 
 ## Gameplay Input Gating and Cancellation
 
@@ -484,13 +533,13 @@ end
 ## Platform Button Hints
 
 - `UserInputService:GetStringForKeyCode(keyCode, format)` returns the label for the current platform. Pass `Enum.KeyCodeStringFormat.Abbreviated` for short labels (`L1`/`R1` on PlayStation, `LB`/`RB` on Xbox).
-- `UserInputService:GetImageForKeyCode(keyCode)` returns Roblox's default icon for the key on the current controller.
-- With the Input Action System, `InputActionLabel` keeps binding icons in sync across devices without code.
+- `UserInputService:GetImageForKeyCode(keyCode)` returns Roblox's default icon for the key on the current controller. In one project it returned `rbxasset://textures/ui/Controls/...` paths in separate PlayStation and Xbox sets; show those images rather than drawing letters, and check both families (Studio emulation returned the PlayStation set there).
+- **`InputActionLabel`** <!-- temporal: 2026-11 --> shows the current key or icon for its `InputAction` and updates when the device or binding changes, with no code. It resolves in order: each binding's `DisplayImage`; platform images from `GetImageForKeyCode`; each binding's `DisplayName`; platform strings from `GetStringForKeyCode`; a placeholder when no action or binding is set. `ResolvedText` and `ResolvedImageContent` expose what it chose.
 - Never hardcode Xbox names; PlayStation players see different glyphs. Refresh hints when `PreferredInput` changes, including tooltips and onboarding text that mention a key.
 
 ## Testing Input Across Devices
 
-Use Studio's Device Simulator with Controller Emulator (Emulation tab): emulate Xbox, then PlayStation, plug and unplug mid-session, and switch touch → gamepad → mouse without respawning. A per-feature checklist:
+Use Studio's Device Simulator with Controller Emulator: emulate Xbox, then PlayStation, then the TV Remote, plug and unplug mid-session, and switch touch → gamepad → mouse without respawning. A per-feature checklist:
 
 1. Controller-only cold join: move, look, jump with no mouse or keyboard touched.
 2. Every action: tap, hold, release, and cancel by opening a window, opening the Roblox menu and disconnecting the pad mid-hold. Nothing should fire on cancel.
@@ -626,7 +675,8 @@ end)
 - **No debounce on JumpRequest.** Fires once per frame the jump key is held.
 - **Recommending deprecated `PlayerActions` for new bindings.** Mixing it with `KeyCode` is legal, but new code should bind explicit `Enum.KeyCode` entries instead (`Enum.KeyCode.DPadUp` covers the gamepad d-pad).
 - **Setting `MouseBehavior = LockCenter` and forgetting to reset it.** Reset on player leave or context exit.
-- **Bypassing `ContextActionService` because it "feels indirect."** Most gameplay bindings should use CAS: it correctly handles chat/text-box conflicts for free.
+- **Writing new `ContextActionService:BindAction` code.** CAS binding is planned for deprecation; new bindings belong in the Input Action System. Raw `InputBegan` gameplay handlers still need the `gameProcessedEvent` filter.
+- **Detecting a TV remote with `PreferredInput.MicroGamepad`.** It is not set yet; check `GamepadSupports` for missing thumbsticks.
 - **Auto-creating touch buttons beyond the 7 limit.** BindAction silently refuses to create the 8th button.
 - **Using `gameProcessedEvent` to filter CAS handlers.** CAS doesn't pass `gpe` to its handlers; by design, CAS handles conflicts itself.
 
