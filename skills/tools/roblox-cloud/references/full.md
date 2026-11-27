@@ -226,13 +226,23 @@ This is a marketing-surface API, not an in-experience engine API: it lives on th
 
 ## 8.6 TeleportService (in-experience)
 
-Server-only teleports between places. Does not work during Studio playtesting; test in a published experience.
+Server-only teleports between places in the same experience or others. <!-- temporal: 2026-11 -->
+
+**Studio testing:** `TeleportAsync` now works in Studio **Test** and **Team Test** without publishing; the destination place opens as a new test server, and the debugger, server inspection, and Device Simulator carry over. Only `TeleportAsync` is supported in tests (not `Teleport`, `TeleportPartyAsync`, or other legacy methods), and test servers differ from production:
+- In **Test**, `game.PrivateServerId` and `game.JobId` are always empty. In **Team Test**, every server is private, so `PrivateServerId` is never empty, even for public-server teleports. Don't trust `PrivateServerId ~= ""` checks until you test in a published game.
+- In Team Test, a reserved server's `PrivateServerId` can differ from its `ReservedServerId` (they match in production). Reuse the original `ReservedServerId` to send more players.
+- `VipServerId` teleports fail in tests (Team Test servers have no owner), and `GetPlayerPlaceInstanceAsync` doesn't work.
+- Tests only teleport between places that share the starting place's `GameId`.
 
 - `TeleportService:TeleportAsync(placeId, players, teleportOptions?)` is the current method for every teleport (different place, specific server, reserved server); `Teleport`, `TeleportToPlaceInstance`, and `TeleportToPrivateServer` are legacy. Server scripts only; route client requests through a `RemoteEvent`. Max 50 players per call; a group must teleport within one experience.
 - Yields and can throw: always wrap in `pcall` and retry failures (official guidance recommends retries, especially for reserved-server teleports). A teleport can also fail after the call returns without throwing; handle that in `TeleportService.TeleportInitFailed` (player, `Enum.TeleportResult`, errorMessage, placeId, teleportOptions). There is no `TeleportFailed` event.
 - Options come from `Instance.new("TeleportOptions")`; there is no `CreateTeleportOptions`:
   - `SetTeleportData(data)`: non-secure payload, visible to the client; never send secrets.
-  - `ShouldReserveServer = true` for a new reserved server, `ReservedServerAccessCode = code` for an existing one, `ServerInstanceId = jobId` for a specific public server. Mutually exclusive pairs error: `ReservedServerAccessCode`+`ServerInstanceId`, `ShouldReserveServer`+either.
+  - Routing fields (set at most one; setting more than one errors):
+    - `ReservedServerId = guid` for a developer-created reserved server. Generate the GUID on the server with `HttpService:GenerateGUID(false)`. The first teleport with a new ID creates the server; reusing the ID routes later teleports to it.
+    - `VipServerId = privateServerId` for a player-purchased VIP (private) server. Use the target server's `game.PrivateServerId`, from any place in the same experience.
+    - `ServerInstanceId = jobId` for a specific public server.
+  - **Deprecated:** `ShouldReserveServer`, `ReservedServerAccessCode`, and `TeleportService:ReserveServerAsync()` remain only for backward compatibility. Don't write new code with them. See "Migrate from access codes" below.
 - Read data on arrival: server `player:GetJoinData().TeleportData`; client `TeleportService:GetLocalPlayerTeleportData()`.
 
 ```luau
@@ -249,21 +259,43 @@ local data = TeleportService:GetLocalPlayerTeleportData()
 if data then print("round:", data.round) end
 ```
 
-### Reserved servers: identify the destination instance
+### Reserved servers: create, reuse, and identify
 
-When `ShouldReserveServer = true` creates a new reserved server (or a teleport targets an existing `ReservedServerAccessCode`), the destination instance is private: only players you teleport in arrive. Pass the access code forward by teleporting the next group with `TeleportOptions.ReservedServerAccessCode` set. Identify the running server through DataModel properties, not fields invented on `GetJoinData()`:
+Create the reserved server by teleporting with a fresh GUID, and persist the GUID if other servers or later sessions must send players to the same server. Key it by whatever identifies the session (lobby ID, party ID) in a DataStore, or in a MemoryStore for short-lived matches.
+
+```luau
+-- Server: create (first teleport) or rejoin (same ID) a reserved server
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+
+local reservedServerId = HttpService:GenerateGUID(false) -- or the stored ID to rejoin
+local opts = Instance.new("TeleportOptions")
+opts.ReservedServerId = reservedServerId
+
+local ok, result = pcall(TeleportService.TeleportAsync, TeleportService, PLACE_ID, players, opts)
+if ok and result then
+	-- result.PrivateServerId matches game.PrivateServerId on the destination.
+	-- result.ReservedServerAccessCode is only filled for legacy access-code teleports.
+end
+```
+
+The destination instance is private: only players you teleport in arrive. On arrival, `game.PrivateServerId` equals the `ReservedServerId` you supplied and stays constant across every instance of that reserved server, while `game.JobId` changes per running instance. Identify the server type through DataModel properties, not fields invented on `GetJoinData()`:
 
 ```luau
 -- Server script inside the reserved server
 local inReservedServer = game.PrivateServerId ~= ""
 -- A developer-created reserved server has no owning user;
--- a purchased private server has a non-zero game.PrivateServerOwnerId.
+-- a purchased private (VIP) server has a non-zero game.PrivateServerOwnerId.
 local developerReserved = inReservedServer and game.PrivateServerOwnerId == 0
 if inReservedServer and developerReserved then
 	-- restricted admission: verify the player against server-held state
 	-- (see the opaque-ticket pattern below), never from client claims.
 end
 ```
+
+To keep a VIP-server party together when moving to another place in the same experience, set `opts.VipServerId = game.PrivateServerId`.
+
+**Migrate from access codes:** replace `ReserveServerAsync()` + `ReservedServerAccessCode` (or `ShouldReserveServer = true`) with a server-generated GUID in `ReservedServerId`, store the GUID wherever you stored access codes, and update every `TeleportOptions` that set the old fields.
 
 A standard public server reports `PrivateServerId = ""`. A purchased private server reports a non-empty `PrivateServerId` with a non-zero `PrivateServerOwnerId`, which is how the cases stay distinguishable. Treat any non-empty `PrivateServerId` as restricted admission and verify the player's right to be there from server-held state.
 

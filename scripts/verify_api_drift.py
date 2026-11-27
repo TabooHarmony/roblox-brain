@@ -237,6 +237,23 @@ def verify(entry: dict[str, Any]) -> tuple[str, str]:
             return "pass", f"{class_name}.{prop_name} has tag {expected_tag}"
         return "fail", f"{class_name}.{prop_name} tags={tags}, expected {expected_tag}"
 
+    if check_type == "property_has_capability":
+        # Capability gates (Enum.SecurityCapability) such as PluginOrOpenCloud,
+        # which replaced the NotScriptable tag on some Studio-only properties.
+        class_name = check["class"]
+        prop_name = check["property"]
+        expected_capability = check["capability"]
+        doc = fetch_doc("classes", class_name)
+        prop = find_named(doc.get("properties") or [], f"{class_name}.{prop_name}")
+        if not prop:
+            return "fail", f"{class_name}.{prop_name} missing"
+        capabilities = prop.get("capabilities") or []
+        if expected_capability in capabilities:
+            return "pass", f"{class_name}.{prop_name} requires capability {expected_capability}"
+        return "fail", (
+            f"{class_name}.{prop_name} capabilities={capabilities}, expected {expected_capability}"
+        )
+
     if check_type == "member_exists":
         # Searches properties, methods, and events for a named member.
         class_name = check["class"]

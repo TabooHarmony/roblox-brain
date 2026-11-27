@@ -44,7 +44,7 @@ local function ownsPass(player: Player, passId: number): (boolean?, string?)
 end
 ```
 
-Cache a successful result when appropriate, but provide an invalidation or refresh path for purchases made during the session. Handle API failure as "not confirmed yet," not as a permanent denial or grant.
+Call this every time access matters (join, spawn, when the benefit is used) instead of caching a `true` for the session or saving it: Roblox caches the result internally, so repeated calls are cheap, and the answer turns `false` when a free trial ends or a purchase is refunded. Handle API failure as "not confirmed yet": deny for now and re-check next time, never a permanent denial or grant.
 
 ## 2a. Centralized Game Pass benefits
 
@@ -56,7 +56,33 @@ Operator/design pattern, grounded in the official [passes flow](https://raw.gith
 - An external purchase during an existing session can take several minutes to propagate through the engine ownership cache. Define a bounded refresh path; reconnecting starts a new ownership check. Do not promise that an application cache invalidation bypasses Roblox’s cache.
 - Validate configured IDs and keep unknown passes from authorizing arbitrary benefits. Remove per-player caches at departure and ignore stale asynchronous results for a player/session that has ended. Keep subscriptions and paid consumables on their own lifecycle paths.
 
-Test existing ownership on join, purchase/cancel in-session, a query failure, repeated refresh, character respawn, player leave during the query, and two passes contributing to one benefit. Centralization removes duplicate plumbing, not product-specific rules or server validation.
+### Pass free trials (from December 2, 2026)
+
+<!-- temporal: 2026-11 --> Creators can enable a one-session **free trial** per pass (Creator Hub > Monetization > Shop > Free Trials, or the Open Cloud game passes API; new passes have trials off by default). Players who don't own the pass see **Try** in Shop; each player gets one trial per pass, one active trial at a time. The trial lasts one game session (it survives a rejoin within an hour after a system error), and a **Buy** button appears before it ends. In Studio playtests, trials last one hour.
+
+What breaks in old pass code:
+- Starting a trial fires `PromptGamePassPurchaseFinished` with `purchaseSuccess = true`, and `UserOwnsGamePassAsync` returns `true` during the trial. No event fires when the trial ends; ownership checks simply return `false` again.
+- So **any permanent grant on "owns pass" is now exploitable**: one-time bonus currency, inventory items, maxed upgrades, or unlock flags written to the DataStore. A player in a trial should get exactly what a buyer gets, and only while the trial lasts.
+- Fix: apply pass benefits from a live ownership check and don't save them. For anything permanent, call `MarketplaceService:GetPassOwnershipAsync(player, passId)` and grant only when `.Owned` is `true` (bought). `.Active` is `true` for owners and active trials (it matches `UserOwnsGamePassAsync`); `StartTime`/`EndTime` are present while a trial is active. On the client it can only query the local player.
+- Gifting flows: a trialing player looks like an owner to `UserOwnsGamePassAsync`, so check the recipient's `Owned` instead.
+
+```luau
+-- Server: permanent rewards only for purchased passes, not trials
+local function grantPermanentRewardIfOwned(player: Player, passId: number)
+	local ok, ownership = pcall(MarketplaceService.GetPassOwnershipAsync, MarketplaceService, player, passId)
+	if not ok then
+		warn("pass ownership check failed:", ownership) -- unknown: retry later, never grant
+		return
+	end
+	if ownership.Owned then
+		-- grant permanent items, currency, or saved data (idempotently)
+	elseif ownership.Active then
+		-- free trial: temporary, unsaved benefits only
+	end
+end
+```
+
+Test existing ownership on join, a trial start and its session end, purchase during a trial, purchase/cancel in-session, a query failure, repeated refresh, character respawn, player leave during the query, and two passes contributing to one benefit. Centralization removes duplicate plumbing, not product-specific rules or server validation.
 
 ## 3. Centralize Developer Product receipts
 

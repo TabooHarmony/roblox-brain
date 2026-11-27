@@ -283,7 +283,7 @@ end)
 
 Notes:
 - The same leak exists on the client (e.g. Player/character references from LocalScripts); clean up there too.
-- `Workspace.PlayerCharacterDestroyBehavior` (default `Disabled`) controls whether the engine destroys characters on removal. Even if set to destroy, don't rely on it for the Player object, and explicit cleanup is harmless.
+- `Workspace.PlayerCharacterDestroyBehavior` (`Default`, `Enabled`, `Disabled`; set in Studio, not by scripts): `Enabled` makes the engine call `Destroy()` on a player's old character when it is replaced (for example on respawn) and on the `Player` object when the player leaves. `Default` follows the engine's current default, which can change between releases, so set `Enabled` explicitly if you rely on it. Explicit cleanup of your own connections and tables is still needed and harmless. <!-- temporal: 2026-11 -->
 
 ### Rendering
 
@@ -340,14 +340,14 @@ Configuration:
 - `StreamingMinRadius`: highest-priority radius; Studio default is 64 studs.
 - `StreamingIntegrityMode`: behavior when a player enters an incompletely streamed region.
 
-These settings are not scriptable. Tune them in Studio from measurements on
-representative devices; do not assume a smaller radius is automatically better.
+Game scripts can't set these: they carry the `PluginOrOpenCloud` capability, so only Studio, plugins, and Open Cloud Luau execution sessions can change them. Tune them in Studio from measurements on
+representative devices; do not assume a smaller radius is automatically better. <!-- temporal: 2026-11 -->
 
 **Gotcha**: `workspace:FindFirstChild("DistantPart")` returns nil if the part is streamed out. Use `WaitForChild` with timeout, or design systems that don't depend on distant parts existing on the client.
 
 ### Predictive Streaming (2026-07)
 
-`Workspace.PredictiveStreamingMode` is Studio-only and not scriptable. `Default` currently behaves like `Disabled`; `Enabled` lets the engine prefetch likely destinations for streaming-enabled experiences.
+`Workspace.PredictiveStreamingMode` is set in Studio (or from a plugin or Open Cloud Luau execution, per its `PluginOrOpenCloud` capability); runtime game scripts can't change it. `Default` currently behaves like `Disabled`; `Enabled` lets the engine prefetch likely destinations for streaming-enabled experiences.
 
 Spawn prefetching creates small temporary streaming foci at possible respawn locations after a player dies. CFrame return optimization keeps the area a player just left streamed in for a likely near-term return. Predictions are additive and temporary, so remeasure memory and bandwidth on representative devices.
 

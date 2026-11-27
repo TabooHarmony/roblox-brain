@@ -211,25 +211,25 @@ entries:
   - path: skills/core/roblox-performance/SKILL.md
   - path: skills/core/roblox-performance/references/full.md
   check:
-    type: property_has_tag
+    type: property_has_capability
     class: Workspace
     property: StreamingIntegrityMode
-    tag: NotScriptable
-  verified: 2026-07-26
+    capability: PluginOrOpenCloud
+  verified: 2026-11-27
 - id: performance-predictive-streaming-not-scriptable
-  claim: Workspace.PredictiveStreamingMode is configured in Studio, not by runtime
-    scripts
+  claim: Workspace.PredictiveStreamingMode is set from Studio, plugins, or Open Cloud
+    Luau execution, not by runtime game scripts
   files:
   - path: skills/core/roblox-performance/references/full.md
   teaching_needles:
   - PredictiveStreamingMode
-  - not scriptable
+  - PluginOrOpenCloud
   check:
-    type: property_has_tag
+    type: property_has_capability
     class: Workspace
     property: PredictiveStreamingMode
-    tag: NotScriptable
-  verified: 2026-08-07
+    capability: PluginOrOpenCloud
+  verified: 2026-11-27
 - id: audio-default-listener-location-exists
   claim: SoundService.DefaultListenerLocation controls default advanced-audio listener
     placement
@@ -237,11 +237,11 @@ entries:
   - path: skills/gameplay/roblox-audio/SKILL.md
   - path: skills/gameplay/roblox-audio/references/full.md
   check:
-    type: property_write_security
+    type: property_has_capability
     class: SoundService
     property: DefaultListenerLocation
-    expected: PluginSecurity
-  verified: 2026-07-26
+    capability: PluginOrOpenCloud
+  verified: 2026-11-27
 - id: bind-to-simulation-requires-fixed-simulation
   claim: RunService:BindToSimulation requires Workspace.UseFixedSimulation
   files:
@@ -1123,3 +1123,49 @@ entries:
     class: Tool
     property: ManualActivationOnly
   verified: 2026-10-14
+- id: teleport-should-reserve-server-deprecated
+  claim: TeleportOptions.ShouldReserveServer is deprecated in favor of ReservedServerId
+  files:
+  - path: skills/tools/roblox-cloud/references/full.md
+  teaching_needles:
+  - ShouldReserveServer
+  - ReservedServerId
+  check:
+    type: property_deprecation_status
+    class: TeleportOptions
+    property: ShouldReserveServer
+    expected: deprecated
+  verified: 2026-11-27
+- id: teleport-reserved-server-access-code-deprecated
+  claim: TeleportOptions.ReservedServerAccessCode is deprecated in favor of ReservedServerId
+    and VipServerId
+  files:
+  - path: skills/tools/roblox-cloud/references/full.md
+  teaching_needles:
+  - ReservedServerAccessCode
+  - VipServerId
+  check:
+    type: property_deprecation_status
+    class: TeleportOptions
+    property: ReservedServerAccessCode
+    expected: deprecated
+  verified: 2026-11-27
+- id: teleport-reserved-server-id-exists
+  claim: TeleportOptions.ReservedServerId targets a developer-created reserved server
+  files:
+  - path: skills/tools/roblox-cloud/references/full.md
+  check:
+    type: property_exists
+    class: TeleportOptions
+    property: ReservedServerId
+  verified: 2026-11-27
+- id: performance-player-character-destroy-behavior-exists
+  claim: Workspace.PlayerCharacterDestroyBehavior controls automatic destruction of old
+    characters and departed Player objects
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: property_exists
+    class: Workspace
+    property: PlayerCharacterDestroyBehavior
+  verified: 2026-11-27

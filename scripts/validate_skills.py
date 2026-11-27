@@ -151,7 +151,7 @@ def validate_luau_syntax(
                 fixture = Path(temp_dir) / f"block-{compiled}-{index}.luau"
                 fixture.write_text(code, encoding="utf-8")
                 result = subprocess.run(
-                    [compiler, str(fixture)], capture_output=True, text=True, check=False
+                    [compiler, str(fixture)], capture_output=True, text=True, encoding="utf-8", errors="replace", check=False
                 )
                 compiled += 1
                 if result.returncode:
@@ -165,7 +165,7 @@ def validate_luau_syntax(
                     )
         for source in sources or []:
             result = subprocess.run(
-                [compiler, str(source)], capture_output=True, text=True, check=False
+                [compiler, str(source)], capture_output=True, text=True, encoding="utf-8", errors="replace", check=False
             )
             compiled += 1
             if result.returncode:

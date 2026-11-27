@@ -2,6 +2,22 @@
 
 All notable changes to `roblox-brain` are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Pass free trials, live December 2, 2026. Starting a trial fires `PromptGamePassPurchaseFinished` with success, and `UserOwnsGamePassAsync` returns `true` while the trial lasts. Permanent rewards must check `GetPassOwnershipAsync().Owned`, and pass benefits must come from a live ownership check rather than a cached or saved one.
+- The `roblox-studio-mcp` skill now verifies private UI on both clients of a two-client test (thanks to Deworix, #6).
+
+### Fixed
+
+- `roblox-cloud` taught the deprecated reserved-server flow (`ShouldReserveServer`, `ReservedServerAccessCode`, `ReserveServerAsync`). It now uses a server-generated GUID in `TeleportOptions.ReservedServerId`, covers `VipServerId` and migration, and explains that `TeleportAsync` can now be tested in Studio Test and Team Test, with the differences from production listed.
+- `roblox-growth-design` gave old Kids and Select numbers. The evaluation threshold is now 100 highly engaged players (it was 500, then 250), and the expedited review fee is 50,000 R$ (it was 100,000). The 2-month Plus or Premium subscription alternative to the publishing fee is now mentioned.
+- `roblox-performance` claimed `PlayerCharacterDestroyBehavior` defaults to `Disabled` and that it never destroys the `Player` object. Both claims were unsourced. `Enabled` destroys both old characters and departed `Player` objects, and `Default` follows the engine default, which can change.
+- The docs replaced the `NotScriptable` tag on streaming settings and `SoundService.DefaultListenerLocation` with the `PluginOrOpenCloud` capability. The skills now say these can be set from Studio, plugins, or Open Cloud Luau execution, but not by game scripts. The drift checker has a new `property_has_capability` check for this.
+- The validator could crash a reader thread on Windows while decoding `luau-compile` output, and two tests read skill files with the system encoding. Both now use UTF-8.
+- Replaced the dead pesde manifest source URL; pesde's docs moved out of its repo.
+
 ## [2.3.1] - 2026-10-14
 
 ### Fixed

@@ -148,6 +148,10 @@ python3 scripts/verify_version_pins.py
 - [MrFearTick](https://www.roblox.com/users/1880599950/profile): code references, networking, and monetization expansion
 - [eeyq](https://www.roblox.com/users/192217155/profile): content and references for `roblox-growth-design`
 
+## Featured in
+
+- [GameDevTool's roundup of free AI tools for Roblox Studio](https://gamedevtool.com/ai-tools-for-roblox-studio/roblox-brain), thanks to [fzsheik](https://github.com/fzsheik)
+
 ## License
 
 MIT
