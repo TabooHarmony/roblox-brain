@@ -101,7 +101,7 @@ local loaded = AssetService:CreateEditableImageAsync(Content.fromUri(assetUri))
 
 Hard constraints (official):
 
-- Creation APIs can return `nil` when the device is out of `Editable*` memory budget. Always nil-check before use; `:Destroy()` finished objects to free budget.
+- Creation APIs can return `nil` when the device is out of `Editable*` memory budget. Always nil-check before use. Destroy an `EditableMesh` only when no MeshPart still uses it (see lifetime below); destroy finished `EditableImage`s that nothing displays.
 - In published experiences the creator must be 13+, ID-verified, and have the "Allow Mesh / Image APIs" toggle on (Game Settings → Security). Loading assets works only for assets the experience owner (or group) owns.
 - `Editable*` objects do not replicate. Each client/server boundary needs its own creation; replicating edits means sending your own data (and you are then responsible for moderation of user-generated content, so prefer seed/slider parameters over free-form pixel replication).
 - `EditableImage` size is fixed at creation. `EditableMesh` created from an asset is fixed-size by default (cheaper; positions/attributes editable, topology not). Non-fixed meshes: 60,000 vertex / 20,000 triangle limit.
@@ -128,7 +128,68 @@ Practitioner guidance (devforum, unverified by us):
 - Pack a pixel as one `u32` write where possible instead of four `u8` writes; batch per-row and write once per frame. A one-`EditableImage`-update-per-frame limit has been reported, so profile before assuming per-frame writes are free.
 - Expensive per-pixel loops (raycast renderers, fractals) benefit from Parallel Luau: compute row buffers inside Actors, then `task.synchronize` before `WritePixelsBuffer` (it is not callable in parallel).
 - For painting on meshes: `EditableMesh:RaycastLocal` gives the hit UV, then draw at that coordinate on the paired `EditableImage` (`DrawImageTransformed` for cropping/rotation, `DrawCircle`/`DrawRectangle`/`DrawLine` for shapes).
-- `EditableMesh` IDs (vertex/face/UV/normal) are stable but unordered with holes; iterate `GetVertices()`/`GetFaces()` results, never `1..count`. Use batch APIs (`BatchSetValues`) over per-element calls for bulk edits; re-derive collision via `AssetService:CreateMeshPartAsync` at the end of a conceptual edit, not per-op.
+- `EditableMesh` IDs (vertex/face/UV/normal) are stable but unordered with holes; iterate `GetVertices()`/`GetFaces()` results, never `1..count`. Use the batch APIs below over per-element calls for bulk edits; re-derive collision via `AssetService:CreateMeshPartAsync` at the end of a conceptual edit, not per hit (field-measured: a visual rebuild took 0.5 ms, a collision rebuild 15-19 ms).
+
+### EditableMesh lifetime, budget and batch APIs
+
+**A MeshPart built from an EditableMesh keeps referencing it.** Verified in Studio (November 2026): a MeshPart from `AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh))` keeps `MeshContent.SourceType == Object`. After `editableMesh:Destroy()`, `CreateEditableMeshAsync(meshPart.MeshContent)` reads back 0 vertices, although `MeshPart.Size` is unchanged. So destroy an EditableMesh only when no MeshPart still uses it, or after destroying that MeshPart. A displayed mesh stays alive and keeps counting against the editable memory budget; to keep geometry permanently, upload or publish it as an asset instead.
+
+**The budget is shared per device.** Field-measured: a Studio client allowed only about 8 growable meshes (`AssetService:CreateEditableMesh()`) at once, further creates returning nil, while 300 fixed-size copies fit. In another project eleven static decor props filled the budget and later gameplay meshes failed to build ("EditableMesh budget is full"), silently breaking a core action. Practice:
+
+- Build growable, copy with `CreateEditableMeshAsync(Content.fromObject(mesh), { FixedSize = true })`, then destroy the growable one once nothing displays it. Fixed-size meshes still allow position and color edits (dents, tints), not topology, and `Clear()` throws on them.
+- Many MeshParts can share one mesh: calling `CreateMeshPartAsync` twice on the same content and `:Clone()` of the result both work. Build each look once.
+- A mesh that never changes at runtime belongs in an uploaded asset: no editable budget, instant to appear. After adding decor, exercise gameplay paths and search logs for "budget".
+
+**Batch APIs (2026-10).** `EditableMesh` now has batch methods that replace per-element loops: `BatchAdd(Enum.MeshAttribute.X, data)` creates vertices, normals, UVs, colors or faces and returns their ids in order; `BatchGetValues(ids)` / `BatchSetValues(ids, values)` read and write positions, normals, UVs, colors or alphas (`BatchSetValues(normalIds, nil)` resets normals to auto-computed); `BatchGetFaceAttributes`, `BatchSetFaceAttributes`, `BatchGetVertexAttributes`, `BatchGetVertexFaceAttributes`, `BatchSetVertexFaceAttributes` handle per-corner ids; `BatchRemove(faceIds)` removes faces (follow with `RemoveUnused()`). `AddFace(...)` accepts a triangle or a quad (a quad counts as 2 triangles) and, for a vertex already on another face, reuses that face's normal, UV and color ids, which gives smooth shading by default. <!-- temporal: 2026-11 -->
+
+```luau
+-- Illustrative: build a flat grid of triangles with batch calls.
+local AssetService = game:GetService("AssetService")
+
+local function buildGrid(n: number, step: number): EditableMesh?
+    local mesh = AssetService:CreateEditableMesh()
+    if not mesh then
+        return nil -- editable budget exhausted
+    end
+    local positions = {}
+    local half = n * step / 2
+    for z = 0, n do
+        for x = 0, n do
+            -- Centre vertices on the part origin (see "fixed-size centring" below).
+            table.insert(positions, Vector3.new(x * step - half, 0, z * step - half))
+        end
+    end
+    local v = mesh:BatchAdd(Enum.MeshAttribute.Vertex, positions)
+    local faces = {}
+    for z = 0, n - 1 do
+        for x = 0, n - 1 do
+            local i = z * (n + 1) + x + 1
+            table.insert(faces, { v[i], v[i + n + 1], v[i + n + 2] })
+            table.insert(faces, { v[i], v[i + n + 2], v[i + 1] })
+        end
+    end
+    mesh:BatchAdd(Enum.MeshAttribute.Face, faces)
+    return mesh
+end
+```
+
+**Field-measured EditableMesh lessons.**
+
+- **Deformable props need inner vertices.** Give faces where hits land an even grid (about 0.12-0.22 studs); a plain box has none to push. Avoid triangle-fan caps, which dent into starbursts.
+- **Give dented faces their own normals and colors.** Baked meshes share normals and colors across faces, so moving one vertex reshades many. Copy per-corner normals and colors on the growable mesh before the fixed-size copy, recompute touched face normals from `(v2 - v1):Cross(v3 - v1)`, and re-smooth only dented corners.
+- **A MeshPart stretches its mesh to `Size`.** After a dent changes the bounds, set `Part.Size = mesh:GetSize()` and offset by `mesh:GetCenter()`.
+- **Centre fixed-size vertices on the part origin** (for example -2..2, not 0..4); an offset mesh drew shifted from its part.
+- **`RaycastLocal(origin, direction)` uses the direction's length and hits back faces.** Start outside the mesh (hit point plus normal) and keep only hits whose face faces the ray, or thin shells report the far wall.
+- **Bake explicit per-corner normals.** Without them, automatic normals smooth across welded vertices and light bleeds across sharp corners; chunked shells with unwelded seams then shade differently. An undamaged mesh that is already stripey means the bake is wrong.
+- **`CreateMeshPartAsync` defaults to Plastic,** whose PBR grain shows over flat vertex colors; set `SmoothPlastic` for flat-colored generated meshes.
+- **Cost is per mesh, not per face:** about 44 ms per `CreateMeshPartAsync` regardless of size. Keep small groups (under about 30 Parts) as Parts, and show cheap box stand-ins while a long bake runs.
+- **Runtime MeshParts from EditableMesh cast no shadow in Studio** even with `CastShadow = true`; a Part beside them did. Check shadows on a live client before using them for large world props.
+
+### EditableImage: projected sampling, decals and publishing (2026-10/11)
+
+- `EditableImage:SampleImageProjected` was added for projected sampling; read its reference page before use.
+- `AssetService:CreateDecalAsync({ ... })` builds a `Decal` from color and PBR maps, each a `Content.fromObject(editableImage)`; asset ids and URIs are not accepted (load images with `CreateEditableImageAsync` first). The decal comes back unparented: set `Face` and parent it to a part.
+- `AssetService:PromptCreatePlatformContentAsync(player, editableImage, Enum.AssetType.Image)` (server only) shows a publish dialog that saves a player's creation to their inventory. `PromptCreateAssetAsync` is gone from the reference. You remain responsible for moderating what players make. <!-- temporal: 2026-11 -->
 
 ## Player Scale Reference
 
@@ -139,6 +200,47 @@ Practitioner guidance (devforum, unverified by us):
 - Seat height: ~1.5 studs from floor
 - Paths: minimum 6 studs wide (10+ for main roads)
 - Stair step: 1 stud rise, 1.5 stud run
+
+## Custom terrain materials (Expanded Terrain, 2026-11)
+
+With **Expanded Terrain** enabled on `Workspace` (per place, off by default; the place must reopen, and in Team Create you must exit and wait about 15 s), terrain supports up to 62 custom paintable materials, each a base material plus an optional `MaterialVariant` and a color tint, so several shades of grass can coexist instead of overriding one base material globally. Expanded Terrain also shrinks terrain's share of place size and improves terrain streaming and load. Places edited during early access still need the property set, or custom materials can show as grass. <!-- temporal: 2026-11 -->
+
+- **Studio:** Terrain Editor material picker → **+**; manage in Window → 3D → Terrain Materials Manager. Changing a material updates all terrain using it; deleting a used one paints that terrain bright purple.
+- **Scripts:** `Terrain:SetMaterialSlot(slotIndex, baseMaterial, materialVariantName, color)` configures slots `2`-`63` (`0` Air and `1` Water are reserved); pass `""` for a tint-only slot. `GetMaterialSlot` returns base material, variant name and color (nil when unset); `ResetMaterialSlot` clears it, and voxels still referencing it render an invalid-material indicator. Voxels reference slots through the `SolidMaterialIndex` channel of `ReadVoxelChannels`/`WriteVoxelChannels`. It throws if the variant name doesn't exist for that base material in `MaterialService`.
+- **Limits from the docs:** a `MaterialVariant`'s custom physical properties are not yet respected in slots; Team Create terrain edits can mesh wrongly; with a small streaming radius, terrain thinner than 16 voxels can vanish on clients, and thinning terrain saves little memory under Expanded Terrain; heightmap and colormap imports may differ from before.
+
+```luau
+-- Illustrative: a tinted grass slot, then paint one voxel region with it.
+local terrain = workspace.Terrain
+terrain:SetMaterialSlot(2, Enum.Material.Grass, "", Color3.fromRGB(96, 140, 60))
+print(terrain:GetMaterialSlot(2)) -- Grass, "", color
+```
+
+**Terrain placement (field-measured).** Raycasts miss terrain written in the same frame, so wait a frame after writing before placing on it. Smooth terrain's visible surface sat about 1-1.5 studs above the occupancy written, so place props on a terrain raycast hit, tilted to the hit normal and sunk slightly, never on heightfield maths.
+
+## Cage meshes (WrapTarget / WrapLayer)
+
+Cage meshes are invisible low-resolution surfaces that let one mesh deform over another; they power layered accessories and work on any `MeshPart` as long as all paired cages share identical UVs. Only paired cages interact, unlike collisions. In Studio, a `MeshPart` with a child `WrapTarget` is a target (authored in Blender as a render mesh plus `<Name>_OuterCage`); a `MeshPart` with a child `WrapLayer` wraps over a target (render mesh plus `<Name>_InnerCage` and `<Name>_OuterCage`). To apply a deformation, parent the target and layered `MeshPart`s in one `Model` and connect them with a `WeldConstraint`. Runtime creation and reshaping of cages is covered by the in-experience avatar creation docs. Use this for clothing-like props, armor that fits several body shapes, or one caged mesh reused on many differently shaped targets.
+
+## Placement, orientation and measurement (field-measured)
+
+- **Yaw direction:** `CFrame.Angles(0, theta, 0).LookVector` is `(-sin theta, 0, -cos theta)`, so a model whose front is local -Z faces +X at `theta = -math.pi/2`. A swapped table put a wall of fixtures backwards. After placing rotated fixtures, read back a child's world position against its parent.
+- **`Model:GetBoundingBox` is oriented to the pivot** (the `PrimaryPart`'s if present, otherwise `WorldPivot`), so a rotated model can look unchanged when you compare bounds. Measure world extents from part corners when checking rotation.
+- **Measure reference layouts from the place file.** When walking an `.rbxlx`, take bounds from `BasePart` CFrames only: Attachments carry local CFrames near the origin and stretch spans to hundreds of studs. Read the `SpawnLocation` rotation to know which way players face. Compare content by target size, not count.
+- **Anchor placed props and record their support.** Unanchored props placed at a tilt or stacked slid within seconds (a quarter of a pile slid off when only its base was anchored). Anchor display props and piles, and store what each rests on (for example `HeldBy` attributes) so breaking the support releases them; "rests on top" misses wall-mounted items. Verify with a server check comparing each body to its marker after several seconds.
+- **Size interactables for eye height.** A default avatar's eye is about 4.5 studs up. Counter-height displays (3.5-4.6 studs) put 61% of targets at or above eye level in one map. Keep tops about 2.5 studs and target centres 1.5-4.5, measured by a script over placement markers. Cross-walls of 8-10 studs hide what's behind while tall landmarks still show.
+- **Blockouts get playtested as games.** Every gate on the walking path must be open or breakable before handover; list the ones sealed on purpose.
+
+## Mesh maps, z-fighting and materials (field-measured)
+
+- **Coplanar overlaps z-fight even at tiny offsets** (a top 0.005 studs below its neighbour flickered). Inset one of each overlapping pair by about 0.01 studs. Before baking or importing, scan for coplanar overlapping same-facing triangles (normals within 0.999, plane distance within 0.003) and fail the build on any; one model went from 388 overlaps to 0. Skip break-edge rim strips whose adjacent faces differ by more than about 30 degrees. Common causes: trim bands flush with a plate, stacked bottoms sharing a plane, posts as wide as the panel they meet.
+- **Low-poly mesh maps:** set meshes `CanCollide` and `CanQuery` false and put an invisible box or wedge Part under anything that sticks out half a stud or more, so shots and movement hit predictable shapes. Join meshes by group and material, split any group over 20,000 triangles (the documented per-mesh limit), and turn off shadows on overhead meshes so covered maps stay lit.
+- **Upload static meshes as `.glb` Models through Open Cloud** so Roblox processes them into MeshParts with collision data; save the result as a committed `.rbxm` and skip re-upload when the source hash is unchanged. Download the processed copy and match each MeshPart to its source node by bounds.
+- **Vertex colors through mesh upload:** in one project the upload path linearised OBJ vertex colors (sRGB to linear) while Roblox displayed the stored value as sRGB, so meshes rendered darker (70,160,240 stored as 15,89,222). Read stored colors back with `CreateEditableMeshAsync(Content.fromUri(meshId))` and `GetColor`; to match a picked color, run each channel through linear-to-sRGB before writing the file (`c <= 0.0031308` → `12.92c`, else `1.055c^(1/2.4) - 0.055`).
+- **Recolorable patterns without SurfaceAppearance:** a MeshPart's `Color` shows through transparent pixels of its `TextureID`, and scripts can set `TextureID` at runtime. Box-project UVs at a fixed studs-per-tile on every model so one texture tiles the same everywhere, and scale tiling by `Size / MeshSize` when scaling a model.
+- **`MaterialVariant.ColorMap` is plugin-only** (PluginSecurity read and write); keep texture ids your runtime code needs in your own data module.
+- **Creator Store descriptions are not evidence.** Packs that said "No scripts" contained 6-8 scripts and audio. Read the asset's script flag and instance counts before inserting.
+- **Inspect generated or imported art from top, bottom and the facing side** before calling it fixed; triangle counts don't show a wrong shape. For world imports end to end, see `roblox-world-import-pipeline`.
 
 ## Build Process
 
