@@ -70,6 +70,89 @@ Use a short fade when moving between locomotion states. Stop tracks that should 
 
 Keep the state machine responsible for selecting tracks. The effect system should react to a named event such as `Footstep` or `Impact`, not inspect every animation frame. Treat the contact sound and its timing as part of the same cue: a visually sharp hit with late or missing audio can feel weak. Synchronize both to the event, allow players to lower effects independently, and route sound mixing details to `roblox-audio`.
 
+## Animation Graphs: state machines and expressions (2026-11)
+
+The Animation Graph Editor builds an `AnimationGraphDefinition` asset of nodes, connections and parameters. Publishing it gives an ordinary asset id: load it on an `Animator` like any `Animation`, `Play()` it, and drive it with `AnimationTrack:SetParameter(name, value)`. The node types include `StateMachineNode`, `OneShotNode`, `Blend1DNode`/`Blend2DNode`, `SelectNode`, `PrioritySelectNode`, `RandomSequenceNode`, `SequenceNode`, `SpeedNode`, `MaskNode`, `AddNode`/`SubtractNode`/`OverNode` and `ClipNode`; `GetParameter` and `GetParameterDefaults` read values back. <!-- temporal: 2026-11 -->
+
+**State machines.** A state machine node groups named states (a clip, a blend node or a nested state machine; the state's name must match the node input) and outputs the active pose, or a blend of two while transitioning. `EntryState` picks the start state. Each transition has `From` (unset for an **(Any)** transition), `To`, `WaitFor` and a blend `Duration` (default 0.15 s) with `Curve` limited to `Linear` or `CubicV2`:
+
+- `WaitFor = Trigger` shows an **Expression** box: a boolean parameter (`Grounded`) or a condition (`Speed >= 12`).
+- `WaitFor = Finished` with `When = Finished` (after the source ends) or `BeforeFinished` (start blending one Duration before the end).
+- When several expressions are true, the highest `Priority` (0-65,535) wins; equal priorities pick **at random**, so give competing transitions distinct priorities.
+- Only the active state's events pass through; during a transition the graph's global event rules apply.
+
+The documented jump example: states `Locomotion` (a `Blend1DNode` of idle and run on `Speed`), `Fall` and `LandIdle` (clips with Play Mode `OnceAndHold`); `Locomotion → Fall` on `not Grounded` (0.2 s), `Fall → LandIdle` on `Grounded` (0.1 s), `LandIdle → Locomotion` on `Finished`/`BeforeFinished` (0.2 s). Gameplay code only updates `Grounded` and `Speed`.
+
+**Expressions** are short Luau-like formulas that compute a node property or a transition condition from graph parameters: arithmetic and comparisons, `and`/`or`/`not` with Luau truthiness, `if ... then ... elseif ... else` expressions, the `math` library (not `math.frexp`, `math.noise` or `math.randomseed`; `math.modf` returns only the integer part), `Vector2`/`Vector3`/`Color3`/`CFrame` construction and members, and `..`. Multi-line expressions allow `local` and `return`, but an `if` body may hold only a `return` or one expression. Value nodes (`AnimationValueNodeDefinition`, `NodeType = Expression`) publish computed values through `AnimationValueOutputDefinition` outputs. A `OneShotNode` combines its pose with the base pose by `Enum.AnimationNodeBlendMode`: `Over` replaces by weight, `Add` layers additively, `Subtract` removes.
+
+```luau
+-- Illustrative: drive a published graph from the humanoid.
+local RunService = game:GetService("RunService")
+
+local function driveGraph(animator: Animator, humanoid: Humanoid, graphId: string): AnimationTrack
+    local animation = Instance.new("Animation")
+    animation.AnimationId = graphId
+    local track = animator:LoadAnimation(animation)
+    track:Play()
+    local connection: RBXScriptConnection
+    connection = RunService.Stepped:Connect(function()
+        if not track.IsPlaying then
+            connection:Disconnect()
+            return
+        end
+        track:SetParameter("MovementSpeed", humanoid.MoveDirection.Magnitude * humanoid.WalkSpeed)
+        track:SetParameter("MaxSpeed", humanoid.WalkSpeed)
+        track:SetParameter("Grounded", humanoid.FloorMaterial ~= Enum.Material.Air)
+    end)
+    return track
+end
+```
+
+Prefer a graph state machine over hand-written track switching when transitions are pure animation decisions; keep gameplay state (can the player attack?) in code and pass only its result as a parameter. In Server Authority, the same "query, don't cache tracks" rule applies to graph tracks.
+
+## Avatar joints and procedural poses
+
+New R15 player rigs (with `StarterPlayer.AvatarJointUpgrade`, the default for new experiences) use `AnimationConstraint` joints instead of `Motor6D`; a default R15 checked in Studio in November 2026 had no `Motor6D`s at all. `IsA("Motor6D")` is false for them, and their `C0`/`C1` are read-only aliases. See `roblox-physics` for the full migration table and `roblox-characters` for character lifecycle. <!-- temporal: 2026-11 -->
+
+- **Layer procedural motion in `Transform` during `RunService.PreSimulation`.** The `Animator` writes `Transform` between `PreAnimation` and `PreSimulation`, so multiplying in afterwards stacks with playing tracks. Skip frames where `Animator.EvaluationThrottled` is true. Never edit rig attachment CFrames.
+- **Look joints up lazily and accept both classes.** `CharacterAdded` can fire before parts stream in; an eager lookup finds nothing and no pose ever applies (field-measured).
+- **Measured R15 conventions** (one project): shoulder +X raises the arm forward, elbow +X bends the forearm up, waist +Y turns the chest so the right shoulder goes forward, and `Transform` composes `Rx * Ry * Rz`. Check reach in HumanoidRootPart space, not UpperTorso space. Drop joints a new pose doesn't use once they ease near zero, or they freeze instead of returning to the walk.
+- **Skinned arms bend only while their joints still link the parts.** With elbow and wrist joints stripped, skinned meshes render as rigid blocks. Never resize skinned parts at runtime (the crease pinches); to reach further, straighten the arm.
+- **Put the `Animator` under the `Humanoid`** in a model that contains one; an `Animator` under an `AnimationController` there moved nothing (field-observed).
+- **Default idle and walk animations write face controls every frame,** hiding scripted dynamic-head expressions. Strip those tracks' face channels or apply the expression after the animator each frame, and check in Play, not Edit.
+
+```luau
+-- Illustrative: procedural neck look on either rig type.
+local RunService = game:GetService("RunService")
+
+local function findJoint(character: Model, partName: string, jointName: string): Instance?
+    local part = character:FindFirstChild(partName)
+    local joint = part and part:FindFirstChild(jointName)
+    if joint and (joint:IsA("AnimationConstraint") or joint:IsA("Motor6D")) then
+        return joint
+    end
+    return nil
+end
+
+local function bindNeckLook(character: Model, getYaw: () -> number): RBXScriptConnection
+    local neck: Instance? = nil
+    return RunService.PreSimulation:Connect(function()
+        neck = neck or findJoint(character, "Head", "Neck") -- lazy: parts may stream in late
+        if neck == nil then
+            return
+        end
+        local look = CFrame.Angles(0, getYaw(), 0)
+        if neck:IsA("AnimationConstraint") then
+            neck.Transform = look * neck.Transform
+        elseif neck:IsA("Motor6D") then
+            neck.Transform = look * neck.Transform
+        end
+    end)
+end
+```
+
+**NPC locomotion by direction.** Author forward, back and strafe clips at the same length so they stay in step, weight them each frame by movement direction against facing, and scale playback by actual speed over each clip's authored pace; a circling NPC then strafes with its chest on the target. Give crouch and slide clips the same sink the server applies, and after the Animator runs, counter-rotate head and arms by the torso's clip rotation plus aim pitch so the weapon points where the NPC aims. Make held weapons massless and non-queryable so shots pass through.
+
 ## 4. Particle emitters
 
 For a continuous effect, tune `Rate`, `Lifetime`, `Speed`, `Size`, and `Color`. For a one-shot effect, keep emission manual:
@@ -182,6 +265,233 @@ Use `Debris` for a simple one-shot lifetime. Use an explicit owner object when t
 
 Budget the *simultaneous view*, not just each effect alone. Test several players repeating the action near the camera, and compare low- and high-quality graphics on a mobile-class device. Transparent screen coverage, overlapping layers, lights and unique animated textures can cost more than an emitter count suggests. Scale secondary layers down before sacrificing the primary contact cue. A showcase full of emitters is not a performance target.
 
+## Production VFX patterns
+
+### Layered bursts timed by attributes
+
+Author an effect as a template `Attachment` (or Folder) whose emitters each carry their own timing, so artists retune it in Studio without touching code. One module plays any such template:
+
+- `EmitCount` (number): particles per emit;
+- `EmitDelay` (number, seconds): offset from the trigger;
+- optional `EmitDuration`: emit continuously for that long instead of a single burst;
+- optional `Essential = true`: keep this layer even when the effect budget is tight.
+
+```luau
+-- Illustrative EffectPlayer: plays a layered template at a world CFrame.
+local Debris = game:GetService("Debris")
+
+local EffectPlayer = {}
+
+local MAX_LIFETIME = 20 -- the docs cap particle lifetime at 20 s
+
+local function longestLifetime(root: Instance): number
+    local longest = 0
+    for _, d in root:GetDescendants() do
+        if d:IsA("ParticleEmitter") then
+            local delay = d:GetAttribute("EmitDelay") or 0
+            local duration = d:GetAttribute("EmitDuration") or 0
+            longest = math.max(longest, delay + duration + math.min(d.Lifetime.Max, MAX_LIFETIME))
+        end
+    end
+    return longest
+end
+
+-- scale: 0..1 budget multiplier from your effect budget (see below).
+function EffectPlayer.play(template: Attachment, at: CFrame, scale: number)
+    local fx = template:Clone()
+    fx.WorldCFrame = at
+    fx.Parent = workspace.Terrain -- attachments in Terrain need no host part
+    for _, d in fx:GetDescendants() do
+        if d:IsA("ParticleEmitter") then
+            local essential = d:GetAttribute("Essential") == true
+            local count = math.floor((d:GetAttribute("EmitCount") or 0) * (essential and 1 or scale) + 0.5)
+            local delay = d:GetAttribute("EmitDelay") or 0
+            local duration = d:GetAttribute("EmitDuration")
+            d.Enabled = false
+            task.delay(delay, function()
+                if not d.Parent then
+                    return -- effect already cleaned up
+                end
+                if duration then
+                    d.Enabled = true
+                    task.delay(duration, function()
+                        if d.Parent then
+                            d.Enabled = false
+                        end
+                    end)
+                elseif count > 0 then
+                    d:Emit(count)
+                end
+            end)
+        end
+    end
+    Debris:AddItem(fx, longestLifetime(fx) + 0.25)
+    return fx
+end
+
+return EffectPlayer
+```
+
+Rules that keep this safe: emitters in templates have `Rate = 0` or `Enabled = false`; cleanup waits for the longest layer, because destroying an emitter kills its live particles instantly; and nothing in the effect touches gameplay state.
+
+### Effect budgets for phones
+
+The docs advise against scaling visual effects from `UserGameSettings.SavedQualityLevel`, because it fights the engine's own quality scaling. Budget from what you control instead:
+
+- **Cap concurrent effects per kind** (for example 8 hit sparks, 2 explosions) and drop the oldest or skip the newest past the cap.
+- **Scale non-essential layers by measured frame time** with hysteresis (for example drop to 0.5 when the rolling average stays over 22 ms for a second, recover under 18 ms).
+- **Cull by distance** to the camera for routine effects (field-measured: about 90 studs for small animated surfaces), and skip the effect entirely when its origin is off screen and not gameplay-critical.
+- **Budget the simultaneous view**: several players repeating an action near the camera, on a mobile-class device. Particle property changes are documented as expensive, so set properties at template time rather than per frame.
+
+```luau
+-- Illustrative budget: frame-time-driven scale with hysteresis and per-kind caps.
+local RunService = game:GetService("RunService")
+
+local Budget = { scale = 1 }
+local active: { [string]: number } = {}
+local CAPS = { spark = 8, explosion = 2 }
+
+local average = 1 / 60
+RunService.Heartbeat:Connect(function(dt)
+    average += (dt - average) * 0.05
+    if average > 0.022 then
+        Budget.scale = 0.5
+    elseif average < 0.018 then
+        Budget.scale = 1
+    end
+end)
+
+function Budget.tryAcquire(kind: string, lifetime: number): boolean
+    local count = active[kind] or 0
+    if count >= (CAPS[kind] or math.huge) then
+        return false
+    end
+    active[kind] = count + 1
+    task.delay(lifetime, function()
+        active[kind] = (active[kind] or 1) - 1
+    end)
+    return true
+end
+
+return Budget
+```
+
+### Server-authority-safe and replicated effects
+
+- **Effects are presentation.** Never grant damage, rewards or state from an effect, a `Touched` on an effect part, or a particle callback.
+- **Under Server Authority, predicted effects must be reversible.** Key each effect by the synchronized event that caused it (for example `entityId .. ":" .. shotIndex`); play once per key, and cancel or hide it when rollback changes that state. Do not cache `AnimationTrack` handles across rollback: the server-authority techniques page still says to query `Animator:GetTrackByAnimationId()` or `GetPlayingAnimationTracks()` when applying changes. <!-- temporal: 2026-11 -->
+- **Classic replication:** the server sends one compact event (position, normal, kind) and every client plays the effect locally. The shooter's client plays its own copy immediately and ignores the echo for its own events.
+- **Fire one-off payoff effects only on real events.** Late removal packets for crumbling chunks flashed the payoff effect once per chunk in one project.
+
+```luau
+-- Illustrative: play-once-per-key with rollback cancellation.
+local played: { [string]: Instance } = {}
+
+local function playKeyed(key: string, spawnEffect: () -> Instance)
+    if played[key] then
+        return -- resimulation replayed the same event: don't double the effect
+    end
+    played[key] = spawnEffect()
+end
+
+local function cancelKeyed(key: string)
+    local fx = played[key]
+    played[key] = nil
+    if fx and fx.Parent then
+        fx:Destroy()
+    end
+end
+```
+
+Expire old keys after a few seconds so the table can't grow without bound.
+
+### Particle facts and field-tested settings
+
+From the `ParticleEmitter` reference and particle guide: lifetime is capped at 20 s; `LightEmission` 0 is normal blending and 1 is additive; `Brightness` scales emitted light only when `LightInfluence` is 0; `FlipbookBlendFrames` crossfades flipbook frames instead of swapping them; `TimeScale` runs 0-1 and 0 freezes particles in place; particles follow global wind only with `WindAffectsDrag` on and `Drag > 0`; a grayscale texture without alpha can use `LightEmission = 1` to hide its dark regions.
+
+Field-tested (individual projects; tune to your camera):
+
+- **Hitstop:** `TimeScale = 0` right after `Emit` holds an impact's particles for the freeze, then restore it.
+- **Size for camera distance.** The stock sparkles texture at `Size` 1.5 covered the screen at 3 studs; a contact flash about 0.4 studs across needed `Size` about 0.7 with a dark copy (`Size` 1.0) behind for contrast.
+- **Small additive accents need `Brightness` (about 4).** A shockwave ring under about 2 studs was a faint smudge, invisible on light surfaces; it reads at 1-8 studs. Behind dust, use `LightEmission` 1, transparency 0 and a `ZOffset` toward the camera.
+- **Lie a particle flat on a face** with `Orientation = VelocityPerpendicular` and a tiny speed (0.01) along the surface normal.
+- **Loot and debris fountains under default gravity (196.2 studs/s²):** rise height is `v² / (2g)`, so 2.3-3.7 studs needs about 30-38 studs/s up; 8-12 studs/s rises under half a stud. Fan pieces evenly by index.
+- **Cosmetic chips need no physics.** Anchored pooled Parts moved with one `workspace:BulkMoveTo` per frame in a client-only simulation. Spray them out of the impact (impact point minus object centre), spawn about 0.2 studs outside the surface with a minimum outward speed (about 35% of the burst), and re-read the floor every ~0.75 studs of sideways travel. A median throw of about 2 studs and a max of about 13 read right.
+- **Trails on spinning debris:** `Trail.FaceCamera = true` with its two attachments across the piece keeps width; disable it at rest. On pooled pieces, create the trail once and call `Trail:Clear()` after setting the new CFrame (128 pieces cost nothing measurable).
+
+### Beams from first person (field-tested)
+
+- Start a smoke or trail beam past the muzzle (about 10x its width), fade its first 15%, and make `Width0` about a third of `Width1`, or it fills the view and hides the crosshair.
+- Soft-alpha smoke needs width and opacity together to read heavy (0.3 studs at 0.92 opacity, not 0.12 at 0.55).
+- A strong energy beam: three stacked additive `Beam`s (thin white core, mid color, wide scrolling haze), `LightEmission` 1, `LightInfluence` 0, held full about 0.05 s, then thinned and faded. Pool beams between Terrain-parented attachments; skip per-shot beams on multi-pellet weapons.
+
+### Animated surfaces, highlights and orientation
+
+- **Animate MeshPart surfaces with `Texture` instances** (tiling in studs, scrolling with `OffsetStudsU`/`OffsetStudsV`, tint and fade via `Color3`/`Transparency`), `Decal`s for one-off art, and `Color`/`Material` ramps for glow. Scripts can't set `SurfaceAppearance` maps at runtime (`ColorMap` is plugin-only; `ColorMapContent` is plugin-writable), per-frame `TextureID` swaps are content loads, and Beams float off curved meshes. Measured: 12 animated props with 178 overlays cost about 0.3 ms of Luau a frame on screen and 0.014 ms off screen; write properties only on change, and compute heat-style states in closed form from the last event so unseen objects cost nothing.
+- **`Highlight` limit is 255 at once** (Highlight reference); extra instances are silently ignored, and a disabled `Highlight` still holds a slot, so delete highlights you won't reuse. Field notes: an `Adornee` set to a Folder drew nothing with no error (use a Model or BasePart); a fill ignores scene lighting and washes out texture, so use outline-only for selection.
+- **Surface-aligned CFrames:** `normal:Cross(Vector3.zAxis)` is zero on ±Z faces and `.Unit` gives NaN, so the effect vanishes. Fall back to another axis.
+
+```luau
+-- Illustrative: a CFrame on a surface whose look vector is the normal.
+local function surfaceCFrame(position: Vector3, normal: Vector3): CFrame
+    local reference = if math.abs(normal:Dot(Vector3.yAxis)) > 0.99 then Vector3.xAxis else Vector3.yAxis
+    local right = reference:Cross(normal).Unit
+    local up = normal:Cross(right).Unit
+    return CFrame.fromMatrix(position, right, up, -normal)
+end
+```
+
+### Shipping and verifying effect assets
+
+- **Upload every texture.** `rbxasset://textures/vfxpreview/...` paths live in Studio's install folder, get wiped by Studio updates and never exist on live servers.
+- **Decal ids are not image ids.** An Open Cloud upload with asset type Decal returns a Decal id, which fails `PreloadAsync` as a particle texture. Resolve the image id inside it (in Edit mode, `InsertService:LoadAsset(decalId)` and read the Decal's `Texture`) and preload that to `Success`.
+- **A broken id fails silently.** One broken texture made every instance of an effect invisible for a whole pass. Keep source images in the repo next to their uploaded ids so you can re-upload, and include Terrain in raycasts that place ground effects.
+- **Freeze to inspect.** Set `TimeScale = 0` to screenshot particles (trails keep fading, so loop their source). MCP screenshot latency of about a second misses short flashes, and heavy atmosphere can wash out an effect that looks fine in clear air, so check under the game's real lighting, in a live player view.
+
+## Procedural motion and feel
+
+### Springs: integrate in fixed substeps
+
+A visual spring stepped once per frame with semi-implicit Euler (5 Hz, damping 0.75) diverged at `dt = 1/30`, growing 67x in one second (field-measured). Unfocused Studio windows and slow phones run that slow. Substep stiff motion at a fixed rate and clamp `dt`:
+
+```luau
+-- Illustrative critically/under-damped spring with fixed substeps.
+export type Spring = { x: number, v: number, target: number, freq: number, damping: number }
+
+local SUBSTEP = 1 / 240
+local MAX_DT = 0.1
+
+local function stepSpring(s: Spring, dt: number)
+    local remaining = math.min(dt, MAX_DT)
+    local w = 2 * math.pi * s.freq
+    while remaining > 0 do
+        local h = math.min(SUBSTEP, remaining)
+        local accel = w * w * (s.target - s.x) - 2 * s.damping * w * s.v
+        s.v += accel * h
+        s.x += s.v * h
+        remaining -= h
+    end
+end
+
+return stepSpring
+```
+
+### Feel values that passed playtests (field-tested, first person)
+
+- **Viewmodel lag:** underdamped springs about 2.6 Hz, damping 0.4, scaled by tool heft; view lag about 0.025 x angular speed, capped at 0.08 rad; a figure-8 walk bob scaled by speed / 16, faded to 0 during strikes and hitstop.
+- **Camera kick:** a non-oscillating pulse `x * e^(1 - x)` with `x = t / peak` (peak about 0.05 s), with a randomized shape per hit (pitch x0.75-1.2, yaw ±0.7 x pitch, roll toward the swinging hand). A fixed direction read as "too linear".
+- **Struck heavy props:** a stiff near-critical spring (5 Hz, damping 0.75, small amplitude); set the spring's velocity on each hit rather than adding to it.
+- **Recoil that never piles up:** a fast spring minus a slower, bouncier spring pushed by the same amount snaps out in about 35 ms, dips slightly below rest and settles in about 0.3 s, so held fire rattles about rest. Keep a small camera knock (about a degree) on the same springs; zero camera recoil felt dead. Guard "no pile-up at 3x fire rate" with a unit test.
+- **Build stances from target axes, not guessed Euler angles:** decide where the grip sits and which way the striking face points, then `CFrame.fromMatrix(pos, up:Cross(-face), up, -face)`; read `ToEulerAnglesXYZ` back only if you must store angles.
+
+### First-person viewmodels (field-tested across many tools)
+
+- Judge a viewmodel through the live player camera at the game's FOV and at 16:9 and 21:9, never from stock render angles, and don't ship hold or motion changes nobody watched in the running game.
+- Size the tool against the visible arm (forearm at most about twice the tool's thickest part); hold every tool at the same camera distance (about 1.7 studs); aim gun-like tools at a point 9-20 studs down the view axis with zero roll.
+- A viewmodel that clips walls is usually a big model held far out: bake it smaller (x0.6) and hold it closer, which looks identical; for the rest, sphere-cast from the eye to the far end and dip the nose about the grip.
+- Make each arm's far end leave the screen in every frame of every clip; key where the gun and hands go and solve arms from hand to shoulder rather than keying arms by hand.
+- R15 details: `RightShoulderRigAttachment` sits on the upper arm's outer edge, not its axis; the `RightGripAttachment` +Y points out of the front of the fist. Cloned arms show the player's shirt only inside a model with a `Humanoid` of `RigType` R15 and R15 part names, and each sleeve maps through its own limb mesh's UVs, so a mirrored right arm renamed `LeftUpperArm` shows bare skin. Clothing can arrive after the tool script starts: re-dress the viewmodel when a `Shirt` or `BodyColors` is added.
+
 ## 9. Legacy effect classes: Sparkles (and Fire, Smoke)
 
 `Sparkles` is a minimal particle emitter: parent to a `BasePart` or an `Attachment` in one. It has essentially three knobs (`Enabled`, `SparkleColor`, `Color`) and no lifetime, texture, rate, or `Emit()` control. Use it for quick placeholder effects only; any real effect should be a `ParticleEmitter`.
@@ -210,6 +520,9 @@ Preload only the assets needed for an imminent experience state. Preloading an e
 - [ ] `Completed` handlers check `PlaybackState` and effect ownership before destroying shared or pooled instances.
 - [ ] Temporary instances, connections, and tasks have an owner.
 - [ ] Effects are tested on the target device class and in a real playtest.
+- [ ] Joint code accepts `AnimationConstraint` as well as `Motor6D`; procedural poses write `Transform` in `PreSimulation`.
+- [ ] Effect templates carry their own timing attributes; concurrent effects are capped and non-essential layers scale with a budget.
+- [ ] Every texture is uploaded (no `rbxasset://` preview paths) and preloads to `Success` from its image id.
 
 ## Community ecosystem (leads, not sources)
 
