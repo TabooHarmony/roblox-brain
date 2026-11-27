@@ -49,6 +49,40 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Manual install: copy the **whole skill directory**, including `references/full.md`, into your agent's skills folder. For example: `cp -r skills/design/roblox-growth-design ~/.claude/skills/`. This also works with `.codex/skills/` and `.cursor/skills/`. Copying only `SKILL.md` leaves the reference missing.
 
+## Make your agent use the skills
+
+Installed skills only help if the agent loads them. Many agents pick skills from their descriptions alone and will skip them on a quick edit. Add this to your game project's `AGENTS.md` (Codex, Cursor, Gemini, Copilot and most others) or `CLAUDE.md` (Claude Code):
+
+```markdown
+## Roblox skills
+Before changing, fixing, reviewing or planning anything in this Roblox project:
+1. Load `roblox-collaboration-mode` first.
+2. Load every `roblox-*` skill that matches the task (for example `roblox-gui` for menus, `roblox-data` for saves, `roblox-networking` for remotes).
+3. Read that skill's `references/full.md` before writing code that depends on its details.
+Prefer the skills over memory for Roblox APIs; say which skills you loaded.
+```
+
+In Claude Code you can also add a reminder to every prompt with a `UserPromptSubmit` hook in `.claude/settings.json` (or `~/.claude/settings.json` for all projects). Text the command prints is added to the agent's context:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Roblox project: load roblox-collaboration-mode and the matching roblox-* skills before changing code.'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Ask the agent which skills it loaded when a result looks like it ignored them.
+
 ## Skills (29)
 
 Expand a library to see its skills. The full-repo install includes all four.
