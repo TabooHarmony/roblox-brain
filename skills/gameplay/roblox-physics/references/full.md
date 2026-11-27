@@ -163,96 +163,106 @@ DriveRemote.OnServerEvent:Connect(function(player, throttle: number, steer: numb
 end)
 ```
 
-## Ragdoll
+## Character joints: AnimationConstraint rigs (2026)
 
-### Activate Ragdoll (replace Motor6Ds with BallSockets)
+With `StarterPlayer.AvatarJointUpgrade` enabled (the default for new experiences; a Studio setting, not script-writable), R15 player characters spawn with `AnimationConstraint` joints and `BallSocketConstraint`s instead of `Motor6D`s. A default R15 character checked in Studio in November 2026 had no `Motor6D` at all: 15 `AnimationConstraint`s, 14 `BallSocketConstraint`s (present and enabled) and 4 `RigidConstraint`s. Code that searches for `Motor6D` silently finds nothing. <!-- temporal: 2026-11 -->
 
-Enable creates attachments, sockets, and disables motors; disable must undo
-exactly that set. Track ownership: which instances were created and which
-motors were disabled, so recovery never re-enables a motor that was already
-disabled before ragdolling, never destroys an unrelated socket, and repeated
-or interleaved calls stay idempotent.
+Migration rules from the `AnimationConstraint` reference page:
+
+| Old Motor6D habit | AnimationConstraint rig |
+|-------------------|-------------------------|
+| `FindFirstChildOfClass("Motor6D")` | `FindFirstChildWhichIsA("AnimationConstraint")`, then fall back to `Motor6D` for legacy rigs |
+| `joint:IsA("Motor6D")` guards | Returns `false`; accept `"AnimationConstraint"` too |
+| Write `C0`/`C1`/`Part0`/`Part1` | Read-only aliases of `Attachment0.CFrame`, `Attachment1.CFrame` and the attachments' parents. Don't write them |
+| Edit rig attachment CFrames | Don't modify `RigAttachment.CFrame`: it breaks retargeting and costs performance |
+| `neck.C0 = base * rot` every RenderStepped | Multiply into `Transform` during `RunService.PreSimulation` (`joint.Transform = rot * joint.Transform`), skipping frames where `Animator.EvaluationThrottled` is true |
+| Server writes C0 to replicate a pose | Evaluate on clients; sync inputs through attributes or `UnreliableRemoteEvent` |
+
+`IsKinematic = true` (default) behaves like a Motor6D: parts snap to `Transform`. `IsKinematic = false` makes the joint chase `Transform` with forces and torques capped by `MaxForce`/`MaxTorque`, with stiffness from `LinearStrength`/`AngularStrength` (normalized natural frequency, `f / 60`; `0` applies no force or torque; values well above `1` can go unstable) and `LinearDamping`/`AngularDamping` (`1` is critical damping). A root joint may still oscillate at low frequency because it doesn't "see" the downstream mass; raise both strength and damping. `Transform` writes are batched and applied after `PreSimulation`, and an `Animator` overwrites `Transform` each frame between `PreAnimation` and `PreSimulation`, which is why procedural layers go in `PreSimulation`. The `IKControl` reference still describes `Motor6D` chains, so verify IK on an AnimationConstraint rig in Studio.
 
 ```luau
-local ragdollState: { [Model]: { created: {Instance}, disabledMotors: { {motor: Motor6D, wasEnabled: boolean} } } } = {}
+-- Illustrative: find a joint on either rig type.
+local function findJoint(part: BasePart, name: string): Instance?
+    local joint = part:FindFirstChild(name)
+    if joint and (joint:IsA("AnimationConstraint") or joint:IsA("Motor6D")) then
+        return joint
+    end
+    return nil
+end
+```
+
+## Ragdoll
+
+### AnimationConstraint rigs: use the built-in joints
+
+The upgraded rig is already a ragdoll rig: its `BallSocketConstraint`s are present and enabled, and force-based simulation is one property away. **Don't add a `BallSocketConstraint` per joint on top.** Measured in one project: hand-building sockets on a rig that already carried 14 `BallSocketConstraint`s and 19 `NoCollisionConstraint` pairs doubled the sockets to 28, and the rig fought itself and shook. Before building any rig, list the character's existing constraints by class.
+
+Method (illustrative; verify the exact limp feel in Studio):
+
+1. Set `Humanoid.BreakJointsOnDeath = false` for a death ragdoll; it defaults to `true`, and broken joints leave nothing to simulate.
+2. Put the Humanoid in `Enum.HumanoidStateType.Physics` (or let your death flow do it) so it stops driving the limbs.
+3. For each `AnimationConstraint`, record its properties, then set `IsKinematic = false`. For a limp body set `AngularStrength = 0` (no torque toward the pose) and let the built-in ball sockets hold the limbs. For a powered or struggling ragdoll, keep some strength and cap `MaxTorque`.
+4. To recover, restore the recorded values (`IsKinematic = true`) and move the Humanoid to `GettingUp`.
+
+```luau
+-- Illustrative: limp ragdoll on an AnimationConstraint rig. Verify in Studio.
+type Saved = { joint: AnimationConstraint, kinematic: boolean, angular: number }
+local ragdolled: { [Model]: { Saved } } = {}
 
 local function enableRagdoll(character: Model)
-    if ragdollState[character] then return end -- already ragdolled
-
+    if ragdolled[character] then
+        return -- idempotent
+    end
     local humanoid = character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-    local record = { created = {}, disabledMotors = {} }
-    ragdollState[character] = record
-
-    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-
-    for _, motor in character:GetDescendants() do
-        if motor:IsA("Motor6D") and motor.Name ~= "Root" then -- keep Root for HRP
-            local att0 = Instance.new("Attachment")
-            att0.CFrame = motor.C0
-            att0.Parent = motor.Part0
-
-            local att1 = Instance.new("Attachment")
-            att1.CFrame = motor.C1
-            att1.Parent = motor.Part1
-
-            local socket = Instance.new("BallSocketConstraint")
-            socket.Attachment0 = att0
-            socket.Attachment1 = att1
-            socket.LimitsEnabled = true
-            socket.UpperAngle = 45 -- prevent unnatural bending
-            socket.Parent = motor.Part0
-
-            table.insert(record.created, att0)
-            table.insert(record.created, att1)
-            table.insert(record.created, socket)
-            table.insert(record.disabledMotors, { motor = motor, wasEnabled = motor.Enabled })
-            motor.Enabled = false
+    if not humanoid then
+        return
+    end
+    local saved: { Saved } = {}
+    for _, d in character:GetDescendants() do
+        if d:IsA("AnimationConstraint") then
+            table.insert(saved, { joint = d, kinematic = d.IsKinematic, angular = d.AngularStrength })
+            d.IsKinematic = false
+            d.AngularStrength = 0 -- limp: the built-in BallSockets hold the limbs
         end
     end
+    if #saved == 0 then
+        return -- legacy Motor6D rig: see the legacy note below
+    end
+    ragdolled[character] = saved
+    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 end
 
 local function disableRagdoll(character: Model)
-    local record = ragdollState[character]
-    if not record then return end -- not ragdolled by us
-    ragdollState[character] = nil
-
-    -- Destroy only instances enableRagdoll created; other sockets in the
-    -- character belong to someone else and survive.
-    for _, obj in record.created do
-        if obj.Parent then
-            obj:Destroy()
+    local saved = ragdolled[character]
+    if not saved then
+        return
+    end
+    ragdolled[character] = nil
+    for _, entry in saved do
+        if entry.joint.Parent then
+            entry.joint.IsKinematic = entry.kinematic
+            entry.joint.AngularStrength = entry.angular
         end
     end
-
-    -- Restore only motors this enable cycle disabled, to their prior state.
-    for _, entry in record.disabledMotors do
-        if entry.motor.Parent then
-            entry.motor.Enabled = entry.wasEnabled
-        end
-    end
-
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     if humanoid then
         humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
     end
 end
-
--- Tolerate characters destroyed mid-ragdoll: drop the record so it cannot
--- leak. Illustrative; wire this when the character spawns. Declare the
--- local FIRST so the handler closes over a real upvalue instead of its own
--- initializer, so referencing `connection` inside its own `local` declaration
--- reads a nil upvalue in the handler body.
-local connection: RBXScriptConnection
-connection = character.AncestryChanged:Connect(function()
-    if not character.Parent then
-        ragdollState[character] = nil
-        connection:Disconnect()
-    end
-end)
 ```
 
-For production use, store `ragdollState` inside your character/maid module rather than a module-level table, and wire the destruction cleanup into that maid so records cannot outlive their character.
+Store the record in the character's cleanup object so it can't outlive the character, and restore only what this cycle changed. The sleep-system docs list `AnimationConstraint` with `IsKinematic = false` among constraints whose `MaxForce`/`MaxTorque` matter, and the performance docs recommend joint limits or no-collision constraints so ragdoll limbs don't collide with each other.
+
+### Legacy Motor6D rigs
+
+Experiences with `AvatarJointUpgrade` off, and custom NPC rigs, still use `Motor6D`. The classic method creates two attachments at `C0`/`C1`, a limited `BallSocketConstraint` between them, and disables the motor (keep `Root` for the HumanoidRootPart). Track exactly what you created and which motors you disabled, so recovery destroys only your instances and restores each motor's prior `Enabled`. Check first that the rig doesn't already carry sockets.
+
+### Field-measured ragdoll lessons
+
+- **Corpse ragdolls: remove the Humanoid and HumanoidRootPart once the joints go limp.** A live Humanoid kept setting R15 limbs back to non-colliding, so they sank into the floor. Keep the root collision box no wider than the body; an oversized root rubbed the legs.
+- **Settle corpses.** Anchor once every part has moved under about 0.25 studs and 5 degrees for 0.3 s, never in the air; wake on a hit; cap awake pieces by freezing the slowest early; fade after a few seconds and cap the count (oldest first).
+- **Consistent death ragdolls across clients.** The server anchors the body where it died and sends one event (hit direction, damage, body velocity, killer); each client hides the server body and simulates its own limp copy from that pose with that throw. The copy must drop its rig attachments or its Humanoid rebuilds joints on top. Give each joint a cone around where the limb hangs plus a small twist limit; lean the shoulder cone forward so a raised arm starts inside it.
+- **Check self-contact** with `GetTouchingParts` per part while limp.
 
 ## IKControl
 
@@ -276,7 +286,7 @@ ik.Enabled = false
 - `SmoothTime`: seconds of smoothing toward the target; lower = snappier.
 - `EndEffectorOffset` / `Offset`: CFrame adjustments to effector and target placement.
 - `Pole`: optional part hinting elbow/knee bend direction.
-- The chain must run through `Motor6D` joints from `ChainRoot` to `EndEffector`; inspect with `GetChainLength()` / `GetChainCount()`.
+- The reference describes chains of `Motor6D` joints from `ChainRoot` to `EndEffector`; inspect with `GetChainLength()` / `GetChainCount()`, and verify on AnimationConstraint rigs.
 
 ## Projectiles
 
@@ -308,6 +318,28 @@ end
 
 - **Modern**: `ExcludeInstances` (array of instances whose descendants are excluded) and `IncludeInstances` (only those descendants are considered). They can be combined for mixed filtering — e.g. include a large folder but exclude specific children — and **exclusions take priority over inclusions** when an instance matches both. `IncludeInstances = nil` is the most permissive filter (includes everything), whereas `IncludeInstances = {}` is the most restrictive (includes nothing) — a deliberate nil-vs-empty distinction when building "raycast only this folder" queries.
 - **Legacy (still functional, superseded)**: `FilterDescendantsInstances` + `FilterType = Enum.RaycastFilterType.Exclude/Include`. Older examples using this pair keep working; for new work prefer `ExcludeInstances`/`IncludeInstances`.
+
+### Cast options: Margin, SizeGradient, overrides (2026-11)
+
+`RaycastParams` gained two shape controls, and `WorldRoot:Shapecast` gained overrides: <!-- temporal: 2026-11 -->
+
+- `RaycastParams.Margin` (>= 0, default 0) expands the cast shape uniformly. It applies to `Shapecast`, `Blockcast`, `Spherecast` and `Raycast`; a non-zero `Margin` on `Raycast` makes it a sphere cast of that radius. The expanded shape counts toward the size limit, so a large margin can make a cast throw.
+- `RaycastParams.SizeGradient` (>= -1, default 0) scales the shape over the cast: it ends at `1 + SizeGradient` times its size (`0.5` ends 50% larger, `-1` shrinks to nothing). It scales the shape, not the margin, except for `Spherecast`, where radius and margin scale together. Use it for cone-like melee sweeps or widening blasts.
+- `WorldRoot:Shapecast(part, direction, params?, cframeOverride?, sizeOverride?)` casts a part's real geometry from another pose or size without moving the part. It ignores parts that **initially** intersect the shape (use `GetPartsInPart` for overlap), excludes the cast part itself, caps distance at 1024 studs, and throws for a Terrain part.
+- `RaycastParams.RespectCanCollide = true` makes a query use `CanCollide` instead of `CanQuery` for each hit part.
+
+`BasePart.CanQuery = false` only takes effect when `CanCollide` is also `false` (BasePart reference). A colliding helper part with `CanQuery = false` still blocks rays; measured in one project, invisible colliding helper boxes caught every close melee ray. Exclude helper folders through `ExcludeInstances`, or set `RespectCanCollide = true` on aim and melee rays so non-colliding helpers (a transparent SpawnLocation at head height, invisible triggers) stop counting as hits.
+
+```luau
+-- Illustrative melee sweep: widening box that ignores non-colliding helpers.
+local function meleeSweep(origin: CFrame, reach: number, ignore: { Instance }): RaycastResult?
+    local params = RaycastParams.new()
+    params.ExcludeInstances = ignore
+    params.RespectCanCollide = true
+    params.SizeGradient = 1 -- ends twice as large as it starts
+    return workspace:Blockcast(origin, Vector3.new(1, 2, 1), origin.LookVector * reach, params)
+end
+```
 
 ### Physics Projectile (arcing, grenade-style)
 
@@ -490,6 +522,83 @@ local function createSwing(platform: BasePart, pivot: Vector3, maxAngle: number)
     return hinge
 end
 ```
+
+## Contact data: `BasePart:BindToCollisionSummaries` (2026-10)
+
+`part:BindToCollisionSummaries(callback)` subscribes to per-frame contact data, separate from `Touched`. Once per frame, after simulation, the callback gets an array of summaries for every contact patch the part was in: `Time` (substep time), `Part0` (the subscribed part), `Part1` (the other part, possibly `Terrain`), `Point` (world, averaged over the patch), `Normal` (unit, oriented relative to the subscribed part), `RelativeVelocity` (Part1 relative to Part0 at the point) and `Area` (square studs; `0` for edge or corner contacts). It returns an `RBXScriptConnection`. <!-- temporal: 2026-11 -->
+
+Behavior the docs spell out:
+
+- It throws if the callback is nil or the part is not in `Workspace`. Destroying the part disconnects it.
+- Recording runs only while at least one subscription exists, and its cost scales with the number of subscribed parts, not total collisions. Subscribe the few parts that matter (projectiles, vehicles, a held prop).
+- Sleeping-on-sleeping contacts and `CanCollide = false` parts produce no summaries.
+- Several substeps per frame can give several summaries per patch in one callback; order by `Time`. Non-convex geometry gives one summary per touching hull pair, and terrain contacts split further by normal.
+- **Nothing replicates.** Each peer gets summaries only for collisions it owns, so a client-owned body reports on its owner's client. Validate on the server anything that grants damage.
+
+Impact speed is the head-on component: `math.abs(summary.RelativeVelocity:Dot(summary.Normal))`; the remainder is sliding.
+
+```luau
+-- Illustrative: impact sound and damage threshold for one owned body.
+local IMPACT_SPEED = 25
+
+local function watchImpacts(body: BasePart, onImpact: (Vector3, number) -> ())
+    return body:BindToCollisionSummaries(function(summaries)
+        local best, bestPoint = 0, nil
+        for _, summary in summaries do
+            local speed = math.abs(summary.RelativeVelocity:Dot(summary.Normal))
+            if speed > best then
+                best, bestPoint = speed, summary.Point
+            end
+        end
+        if bestPoint and best >= IMPACT_SPEED then
+            onImpact(bestPoint, best)
+        end
+    end)
+end
+```
+
+Field note from before this API: a client-owned body's velocity reached the server too coarsely to detect impacts (a 19 studs/s throw read about 5 on the server). Sense impacts on the owning client (now with collision summaries) and validate on the server.
+
+## Mesh collision fidelity: `Tunable` (2026-10)
+
+`Enum.CollisionFidelity.Tunable` exposes `MeshPart.CollisionPrecision` (0-1): `0` favors performance with the simplest collision mesh, `1` favors a close match to the visual mesh. Its default is chosen by the engine from the mesh's size, and it is written in Studio (plugin security), not by game scripts. Other options: `Box` for small or non-interactive props, `Hull` for shapes without deep cavities, `Default` (voxel-based decomposition with concavity), and `PreciseConvexDecomposition` (most accurate, most expensive). Inspect with Studio's Visualization Options → Collision fidelity. <!-- temporal: 2026-11 -->
+
+## Field-measured physics lessons
+
+Measured in individual projects; numbers are examples, verify on your own content.
+
+### Contacts and resting bodies
+- **A free part keeps contacts within roughly 5 studs, not only parts it touches.** About 300 contacts while touching about 2 in a dense map of small parts; about 100 free debris pieces made 30k contacts and 30-45 ms of physics. Put tiny map parts in a collision group the debris ignores (cut contacts from 239 to 41 per piece). Read `Stats.ContactsCount` per free object before optimizing anything else; `GetTouchingParts` doesn't show this cost.
+- **Large resting unanchored assemblies keep costing physics.** A 1,750-part fallen piece cost about 11 ms per step at zero velocity (17 ms step vs 6 ms anchored). Anchor big debris after about one second still. For client debris piles: anchor below about 0.5 studs/s and 0.3 rad/s held for 0.5 s of clamped dt, unanchor on a nearby hit, and spread anchor and weld work across frames.
+- **Settle loot only when slow and grounded.** Anchoring the first frame speed drops caught 9 of 22 pieces at the top of a bounce. Require a short slow run (about 0.15 s) and the box's lowest point within about 0.25 studs of a downward ray hit. Lowest point of a rotated box: `|Right.Y|*hx + |Up.Y|*hy + |Look.Y|*hz` below the center. Anchored loot outlives its support, so periodically unanchor pieces with nothing under them.
+- **Resting bodies drift.** Sub-millimetre motion every step and non-orthonormal rotation made a 0.05-degree check fire every frame. Use roughly 0.002 studs and 0.2 degrees, and sweep an awake set a slice per frame.
+- **Wake a settled body only for events that can remove its support.** Waking a large body for an unrelated hit cost about 41 ms of physics for seconds.
+
+### Assemblies, velocity and welds
+- **Set velocity and impulses on `part.AssemblyRootPart`.** Setting `AssemblyLinearVelocity` on a massless welded part didn't move the body and desynced client and server.
+- **Judge a launch by `AssemblyCenterOfMass` and `AssemblyLinearVelocity`,** not one part's position (a tipping plate raised a corner 88 studs at zero velocity). Two bodies with identical velocity may be one assembly; size per-body forces from the body's own parts, not `AssemblyMass`. A fixed seed fixes input, not outcome; repeat runs.
+- **Rebuilding welded collision parts right after an impulse drops the impulse** (a struck body read speed 0 over 10 hits). Diff and keep unchanged parts; apply impulses after any rebuild.
+- **Don't set `CFrame` on a part welded into a moving assembly to reshape it;** that moves the whole assembly. Disable its `WeldConstraint`, set `Size` and `CFrame`, then re-enable the weld.
+- **Overlapping client copies can launch like popcorn** (up to 330 studs/s) even with `NoCollisionConstraint`s on every starting overlap. Capping each body's rise, speed and spin in `Heartbeat` stopped it. Build lazy collision under a falling body before it lands, never remove it under a resting body, and destroy (don't fade) anything removed mid-simulation.
+
+### Ownership, anchoring and authority
+- **A client can't make a server-anchored part fall** by setting `Anchored = false` locally; it reads unanchored and never moves. For client debris, clone it into a local folder, hide the original locally (Transparency 1, CanCollide, CanQuery, CanTouch off) and simulate the clone.
+- **Moving an anchored HumanoidRootPart on the client doesn't replicate,** so server origin checks silently reject the player's actions. In test scripts move the root unanchored, wait for replication, then anchor; log each server condition when a scripted action does nothing.
+- **Don't anchor a character root to freeze a player when forces scale with assembly mass.** An anchored root reports infinite mass; the force becomes infinite and position turns NaN on unanchor. Freeze on the client with zero walk and jump.
+- **Physics-reactive NPC ownership with hysteresis:** last hitter for a few seconds, otherwise the nearest player within a radius, switching only when another player is clearly closer. Damage stays on the server.
+- **Client physics needs streaming.** Local client parts about 1,400 studs from the character didn't simulate at all; the streaming docs say client simulation happens only in streamed areas. Include a control body that should simply fall.
+
+### Movement and carrying
+- **`LinearVelocity` overrides Humanoid air control,** but disabling it lets the Humanoid zero sideways speed almost at once. To keep momentum after a dash, keep it enabled and aim it each frame at the current velocity minus `Gravity * dt` on Y and a little drag.
+- **Carrying props:** server `SetNetworkOwner(player)`, then drive from the client with `AlignPosition`/`AlignOrientation` in OneAttachment mode. Put held bodies in a group that ignores characters, or the holder can shove or ride them. Holding a heavy body off-center levers it up; give over-limit bodies zero torque.
+- **Two-handed tools:** `IKControl` on arms flipped arms 120-180 degrees per frame when a hand crossed the chest or went overhead. Place the tool from an authored grip frame in HumanoidRootPart space and solve analytic two-bone IK into the shoulder and elbow `Transform`s in `PreSimulation`, bending the elbow toward a fixed side point. Log each arm segment's rotation per frame; hand-to-target distance misses flips.
+
+### Queries and fast bodies
+- **Detect a trapped player with body-sized box casts or overlap queries,** not a few rays (8 short rays missed the corners of a 4x4 box). Define trapped narrowly (about 0.6 studs of room, held about 3 s) and reject candidate free spots that are themselves trapped.
+- **At high speed a slow frame can skip a short "about to touch" window.** Detect impacts by the segment from the previous to the current position as well as by distance, and cast ahead by the expected delay when a server change lands a round trip later.
+- **Drop thousands of parts with proxies.** Simulate one invisible proxy box per chunk and move the anchored, non-colliding visuals with one `workspace:BulkMoveTo` per frame. Measured: 5.5k real physics parts cost 60-70 ms per step; `BulkMoveTo` of 5k parts cost 6-11 ms. Let proxies collide only with the ground or a catch slab.
+- **Side-only barriers:** a per-side collision group colliding only with the other side's character groups keeps players out of a spawn while shots and sight rays pass; back it with a server position check.
+- **Foliage and props need an interaction matrix.** For each kind (bush, tree, prop), decide whether projectiles, explosions, melee, characters and the camera pass, hit or break, and test every pair. Imported plants cut or merged for performance silently lose collision and query behavior. See `roblox-destruction` for breakable props.
 
 ## Collision groups: PhysicsService
 
