@@ -17,7 +17,7 @@ sources:
   - https://raw.githubusercontent.com/LPGhatguy/aftman/main/README.md
   - https://raw.githubusercontent.com/rojo-rbx/rokit/main/README.md
   - https://raw.githubusercontent.com/rojo-rbx/rojo/v7.7.1/src/cli/syncback.rs
-  - https://raw.githubusercontent.com/pesde-pkg/pesde/main/docs/src/content/docs/reference/manifest.mdx
+  - https://docs.pesde.dev/reference/manifest/
   - https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/README.md
   - https://raw.githubusercontent.com/lest-luau/lest/main/docs/backends.md
   - https://raw.githubusercontent.com/lest-luau/lest/main/docs/continuous-integration.md

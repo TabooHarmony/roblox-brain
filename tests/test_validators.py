@@ -142,6 +142,24 @@ class ValidatorRegressionTests(unittest.TestCase):
             },
         )
 
+    def test_api_registry_checks_property_capability(self):
+        self.assert_api_check_passes(
+            {
+                "type": "property_has_capability",
+                "class": "SoundService",
+                "property": "DefaultListenerLocation",
+                "capability": "PluginOrOpenCloud",
+            },
+            {
+                "properties": [
+                    {
+                        "name": "SoundService.DefaultListenerLocation",
+                        "capabilities": ["Audio", "PluginOrOpenCloud"],
+                    }
+                ]
+            },
+        )
+
     def test_api_registry_checks_method_description(self):
         self.assert_api_check_passes(
             {
@@ -183,6 +201,10 @@ class ValidatorRegressionTests(unittest.TestCase):
             (
                 {"type": "property_has_tag", "class": "C", "property": "P", "tag": "NotScriptable"},
                 {"properties": [{"name": "C.P", "tags": []}]},
+            ),
+            (
+                {"type": "property_has_capability", "class": "C", "property": "P", "capability": "PluginOrOpenCloud"},
+                {"properties": [{"name": "C.P", "capabilities": []}]},
             ),
             (
                 {"type": "method_description_contains", "class": "C", "method": "M", "contains": "RequiredFlag"},
@@ -454,7 +476,7 @@ class ValidatorRegressionTests(unittest.TestCase):
                 validate_skills.SKILLS_DIR = original
 
     def test_monetization_receipt_example_is_not_fragmented(self):
-        text = (ROOT / "skills/design/roblox-monetization/references/full.md").read_text()
+        text = (ROOT / "skills/design/roblox-monetization/references/full.md").read_text(encoding="utf-8")
         section = re.search(
             r"## 3\. Centralize Developer Product receipts(.*?)## 4\.", text, re.S
         )
@@ -466,15 +488,15 @@ class ValidatorRegressionTests(unittest.TestCase):
         self.assertNotIn("```luau\n\n```luau", receipts)
 
     def test_mcp_contract_names_asset_generation_and_completion(self):
-        full = (ROOT / "skills/tools/roblox-studio-mcp" / "references" / "full.md").read_text()
-        building = (ROOT / "skills/gameplay/roblox-building" / "SKILL.md").read_text()
+        full = (ROOT / "skills/tools/roblox-studio-mcp" / "references" / "full.md").read_text(encoding="utf-8")
+        building = (ROOT / "skills/gameplay/roblox-building" / "SKILL.md").read_text(encoding="utf-8")
         for token in ("generate_procedural_model", "generate_mesh", "generate_material"):
             self.assertIn(token, full)
             self.assertIn(token, building)
         self.assertIn("search_asset", full)
         self.assertIn("insert_asset", full)
         self.assertIn("generationId", full)
-        compact = (ROOT / "skills/tools/roblox-studio-mcp" / "SKILL.md").read_text()
+        compact = (ROOT / "skills/tools/roblox-studio-mcp" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("generate_*", compact)  # entry point abbreviates the generate tool family
         self.assertIn("wait_job_finished", compact)
         self.assertIn("read back", compact.lower())

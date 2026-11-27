@@ -2,9 +2,10 @@
 name: roblox-cloud
 description: "Use for Roblox Open Cloud: API keys, OAuth 2.0, webhooks, scopes, token lifecycle, DataStore or messaging access from outside the game."
 when_to_use: "Also for scripts that read stats or saves externally, publishing places by API, HttpService calls, and auditing API key permissions."
-last_reviewed: 2026-10-02
+last_reviewed: 2026-11-27
 sources:
   - https://create.roblox.com/docs/projects/teleport
+  - https://create.roblox.com/docs/projects/teleport-private-servers
   - https://create.roblox.com/docs/cloud/guides
   - https://create.roblox.com/docs/cloud/auth/api-keys
   - https://create.roblox.com/docs/cloud/auth/oauth2-overview
@@ -27,7 +28,7 @@ Load for Open Cloud, OAuth, webhooks, HttpService, or teleport handoffs. In-game
 
 - **API key:** server, CI, bot, webhook worker, or owner automation. Scope to required resources and operations.
 - **OAuth 2.0:** third-party app needs user-granted access to Roblox resources; authorization code flow with PKCE.
-- Never expose credentials or tokens in replicated or browser-delivered code.
+- Never expose credentials or tokens in replicated or browser code.
 
 ### REST mechanics
 

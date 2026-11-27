@@ -2,7 +2,7 @@
 name: roblox-audio
 description: "Use when adding, changing, or fixing Roblox audio: playback, spatial sound, music, sound effects, SoundGroups, or dynamic effects."
 when_to_use: "Also when a sound doesn't play, is too loud or quiet, overlaps or loops wrongly, volume settings, and auditing audio assets or mixes."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/SoundService
   - https://create.roblox.com/docs/audio/objects

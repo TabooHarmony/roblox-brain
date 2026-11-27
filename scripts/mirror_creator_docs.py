@@ -73,6 +73,7 @@ def registry_referenced_files() -> set[str]:
         check = entry.get("check") or {}
         check_type = check.get("type")
         if check_type in {"property_exists", "property_write_security", "property_has_tag",
+                          "property_has_capability",
                           "property_deprecation_status", "member_exists",
                           "method_parameter_type", "method_return_type",
                           "method_description_contains", "method_deprecation_status",

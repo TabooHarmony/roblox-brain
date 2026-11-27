@@ -186,7 +186,8 @@ wire.SourceInstance = player
 wire.TargetInstance = emitter
 wire.Parent = workspace.CampfirePart
 
--- Studio/plugin-only SoundService.DefaultListenerLocation controls whether
+-- SoundService.DefaultListenerLocation (settable only from Studio, plugins, or
+-- Open Cloud Luau execution: PluginOrOpenCloud capability) controls whether
 -- Roblox creates and wires the default AudioListener and AudioDeviceOutput.
 -- For runtime custom placement, create and wire an explicit AudioListener.
 
