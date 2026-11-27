@@ -5,6 +5,7 @@ when_to_use: "Also for any Studio playtest, checking a change in game, reading r
 last_reviewed: 2026-10-14
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/mcp.md
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/studio/testing-modes.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/projects/assets/privacy.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/parts/procedural-models.md
   - https://create.roblox.com/docs/reference/engine/classes/ProceduralModel
@@ -37,7 +38,7 @@ Edit-time injection (`multi_edit`, Edit-context `execute_luau`) writes scripts; 
 Full tool table in full.md. Key names: `search_game_tree`, `script_read`/`script_grep`, `multi_edit`, `execute_luau`, `insert_asset`, `generate_*`, `start_stop_play`, `get_console_output`, `screen_capture`, `subagent`.
 
 ### Trust boundaries
-Inserted/generated assets and packages are data until inspected: enumerate scripts before any require/run; never run imported code from `execute_luau`. Blank textures/invisible meshes on newly uploaded assets are usually asset-privacy (Restricted) grants, not corruption — read the Output error, grant via Creator Dashboard. Details: full.md trust-boundary sections.
+Inspect scripts in imported assets before execution. Never run imported code from `execute_luau`. For blank textures or meshes, read Output and check Restricted asset access in Creator Dashboard. See full.md for details.
 
 ### Reliability rules
 - `execute_luau` is stateless: re-acquire references every call.
