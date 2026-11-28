@@ -1169,3 +1169,203 @@ entries:
     class: Workspace
     property: PlayerCharacterDestroyBehavior
   verified: 2026-11-27
+
+# --- B3 November 2026 refresh ---
+- id: b3-testing-testservice-runtestsasync
+  claim: TestService:RunTestsAsync runs registered tests and returns a TestRunResult
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: member_exists
+    class: TestService
+    member: RunTestsAsync
+  verified: 2026-11-27
+- id: b3-testing-testservice-registersuite
+  claim: TestService:RegisterSuite groups tests that share tags and a timeout
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: member_exists
+    class: TestService
+    member: RegisterSuite
+  verified: 2026-11-27
+- id: b3-testing-testservice-enabled
+  claim: TestService.Enabled gates the test APIs to playtests
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: property_exists
+    class: TestService
+    property: Enabled
+  verified: 2026-11-27
+- id: b3-testing-testcase-check
+  claim: TestCase:Check records a failed comparison and continues
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: member_exists
+    class: TestCase
+    member: Check
+  verified: 2026-11-27
+- id: b3-testing-testcase-require
+  claim: TestCase:Require stops the test on a failed comparison
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: member_exists
+    class: TestCase
+    member: Require
+  verified: 2026-11-27
+- id: b3-testing-context-skip
+  claim: TestExecutionContext:Skip records a test as skipped
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: member_exists
+    class: TestExecutionContext
+    member: Skip
+  verified: 2026-11-27
+- id: b3-testing-testcasestatus-timedout
+  claim: Enum.TestCaseStatus has TimedOut
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: enum_item_exists
+    enum: TestCaseStatus
+    item: TimedOut
+  verified: 2026-11-27
+- id: b3-testing-testrunstatus-notests
+  claim: Enum.TestRunStatus has NoTests
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: enum_item_exists
+    enum: TestRunStatus
+    item: NoTests
+  verified: 2026-11-27
+- id: b3-testing-studiotestservice-multiplayer
+  claim: StudioTestService:ExecuteMultiplayerTestAsync runs scripted multi-client tests
+  files:
+  - path: skills/tools/roblox-testing/references/full.md
+  check:
+    type: member_exists
+    class: StudioTestService
+    member: ExecuteMultiplayerTestAsync
+  verified: 2026-11-27
+- id: b3-security-device-trust-callback
+  claim: IntegrityService.EvaluatePlayerDeviceTrust accepts or rejects joining players
+  files:
+  - path: skills/core/roblox-security/references/full.md
+  check:
+    type: member_exists
+    class: IntegrityService
+    member: EvaluatePlayerDeviceTrust
+  verified: 2026-11-27
+- id: b3-security-device-trust-level
+  claim: Player.DeviceTrustLevel reports the device trust level
+  files:
+  - path: skills/core/roblox-security/references/full.md
+  check:
+    type: property_exists
+    class: Player
+    property: DeviceTrustLevel
+  verified: 2026-11-27
+- id: b3-security-device-trust-unknown
+  claim: Enum.PlayerDeviceTrustLevel has Unknown
+  files:
+  - path: skills/core/roblox-security/references/full.md
+  check:
+    type: enum_item_exists
+    enum: PlayerDeviceTrustLevel
+    item: Unknown
+  verified: 2026-11-27
+- id: b3-security-prompt-age-check
+  claim: Player:PromptAgeCheck asks a player to complete an age check
+  files:
+  - path: skills/core/roblox-security/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: PromptAgeCheck
+  verified: 2026-11-27
+- id: b3-security-age-checked
+  claim: Player.AgeChecked reports the age-check status
+  files:
+  - path: skills/core/roblox-security/references/full.md
+  check:
+    type: property_exists
+    class: Player
+    property: AgeChecked
+  verified: 2026-11-27
+- id: b3-networking-server-region
+  claim: DataModel.ServerRegion reports the server's region code
+  files:
+  - path: skills/core/roblox-networking/references/full.md
+  check:
+    type: property_exists
+    class: DataModel
+    property: ServerRegion
+  verified: 2026-11-27
+- id: b3-networking-friends-in-server
+  claim: Player:GetFriendsInServerAsync returns friends in the current server
+  files:
+  - path: skills/core/roblox-networking/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: GetFriendsInServerAsync
+  verified: 2026-11-27
+- id: b3-networking-friends-in-universe
+  claim: Player:GetFriendsInUniverseAsync returns friends across the universe
+  files:
+  - path: skills/core/roblox-networking/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: GetFriendsInUniverseAsync
+  verified: 2026-11-27
+- id: b3-monetization-open-shop
+  claim: MarketplaceService:OpenShop opens the in-game Shop overlay
+  files:
+  - path: skills/design/roblox-monetization/references/full.md
+  check:
+    type: member_exists
+    class: MarketplaceService
+    member: OpenShop
+  verified: 2026-11-27
+- id: b3-analytics-log-journey-event
+  claim: AnalyticsService:LogJourneyEvent logs a journey node
+  files:
+  - path: skills/design/roblox-analytics/references/full.md
+  check:
+    type: member_exists
+    class: AnalyticsService
+    member: LogJourneyEvent
+  verified: 2026-11-27
+- id: b3-analytics-player-segments
+  claim: AnalyticsService:GetPlayerSegmentsAsync returns player segments
+  files:
+  - path: skills/design/roblox-analytics/references/full.md
+  check:
+    type: member_exists
+    class: AnalyticsService
+    member: GetPlayerSegmentsAsync
+  verified: 2026-11-27
+- id: b3-analytics-acquisition-home
+  claim: Enum.UserAcquisitionSource has HomeRecommendation
+  files:
+  - path: skills/design/roblox-analytics/references/full.md
+  check:
+    type: enum_item_exists
+    enum: UserAcquisitionSource
+    item: HomeRecommendation
+  verified: 2026-11-27
+- id: b3-analytics-engagement-high
+  claim: Enum.EngagementLevel has High
+  files:
+  - path: skills/design/roblox-analytics/references/full.md
+  check:
+    type: enum_item_exists
+    enum: EngagementLevel
+    item: High
+  verified: 2026-11-27

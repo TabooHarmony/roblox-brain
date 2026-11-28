@@ -30,7 +30,7 @@ Load for authority, remote abuse, economy, saves, bans, or sandboxing audits. Re
 ### Authority Models
 
 - **Classic replication:** validate client requests against server state. Never trust client damage, currency, inventory, permissions, or positions.
-- **Server Authority:** `Workspace.AuthorityMode = Server`: the server owns core simulation while clients predict and recover from misprediction. Use `BindToSimulation()`, not blanket `Heartbeat` correction (full.md).
+- **Server Authority:** `Workspace.AuthorityMode = Server`: the server owns core simulation while clients predict and recover from misprediction. `BindToSimulation()` (needs `UseFixedSimulation`), not `Heartbeat` fixes.
 - **Both:** validate attacks, purchases, teleports, permissions, and custom remotes at the server boundary.
 
 ### Audit Checklist

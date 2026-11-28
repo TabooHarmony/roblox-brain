@@ -44,12 +44,12 @@ Load for leaderboards, messaging, MemoryStore coordination, world state, seasons
 - At quota, growing writes fail; Open Cloud `memory-store:flush` clears the scope.
 
 ### Cross-Server Patterns
-- Expiring server heartbeats; notify via MessagingService.
+- Expiring server heartbeats; notify by MessagingService.
 
 ### User Identity
 - Identify users with `player.User` (`User.Id`, `DomainType`, `DomainId`); `UserId` stays valid. Domain IDs are per-experience: key cross-server data on `UserId`.
 
 ### Pitfalls
 - GlobalDataStore: same rate limits as player DataStores
-- Never store Instances; use `UpdateAsync` for shared counters
+- No Instances; `SetAsync` overwrites: `UpdateAsync` counters
 > Store selection and workflows: [references/full.md](references/full.md)
