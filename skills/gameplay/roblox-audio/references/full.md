@@ -228,6 +228,8 @@ ContentProvider:PreloadAsync(criticalSounds)
 -- Now these assets are cached and play instantly
 ```
 
+Pass the `Sound` instances, not raw id strings, when the status matters. `PreloadAsync` accepts content-ID strings in its `contentIdList`, but in one project every audio id given as a string reported `Failure` in the callback while the sounds loaded and played (`TimeLength` was correct); the same ids given as `Sound` instances reported `Success`. Confirm loading with `IsLoaded` or `TimeLength` rather than the string-form status. Preload only what the first moments need; preloading everything slows the join (performance guide).
+
 ### One-Shot SFX (auto-cleanup)
 
 ```luau
@@ -253,7 +255,9 @@ Play sounds on the client for zero-latency feedback. Server tells client WHAT to
 -- Server
 SFXRemote:FireClient(player, "hit", workspace.Enemy.HumanoidRootPart.Position)
 
--- Client
+-- Client: a positioned cue gets a temporary anchored part.
+-- Cues with no world position (UI, your own weapon, reward chimes) skip this
+-- and play on a flat Sound parented to SoundService (see "Flat vs 3D voices").
 SFXRemote.OnClientEvent:Connect(function(sfxName: string, position: Vector3)
     local part = Instance.new("Part")
     part.Position = position
@@ -266,11 +270,54 @@ SFXRemote.OnClientEvent:Connect(function(sfxName: string, position: Vector3)
 end)
 ```
 
+## Advanced Audio API Additions
+
+<!-- temporal: 2026-11 -->
+- **Acoustic simulation.** `SoundService.AcousticSimulationEnabled` turns on occlusion (muffling through walls), diffraction (bending around corners) and reverberation for the modular system. It also needs `AudioEmitter.AcousticSimulationEnabled` and `AudioListener.AcousticSimulationEnabled` on the pair; the global switch overrides both. `AudioEmitter.SimulationFidelity` (`Enum.AudioSimulationFidelity`) trades detail for cost, and when an emitter and listener disagree the less detailed option wins. A Roblox staff post on the DevForum (2026-11-24) said the feature was then Studio-only and that legacy `Sound` support was being added in a Studio beta (https://devforum.roblox.com/t/studio-beta-sounds-support-acoustic-simulation-for-more-immersive-audio/5003368). Confirm it works in a published server before relying on it, profile dense scenes (many NPC emitters), and keep a fallback such as the raycast occlusion below.
+- **Distance attenuation presets.** `AudioEmitter.DistanceAttenuationMode` defaults to `Custom` (the curve from `SetDistanceAttenuation`). The presets `InverseTapered`, `Linear`, `LinearSquared` and `Inverse` use `AudioEmitter.DistanceAttenuationBounds` (default 4 to 10000 studs) instead of the custom curve.
+- **Emitter position.** `AudioEmitter.PositionType` and `PositionInstance` let an emitter follow an instance other than its parent.
+- **Raw samples (Studio only).** `AudioStreamReader` reads and `AudioStreamWriter` writes raw sample buffers in the audio graph (`Read`/`Peek`, `Write`/`Space`, with `SampleRate`, `WindowSize`, `Layout`, and a read-only `SampleFormat`). They are Studio-only and don't work in Team Create; use them for analysis and tooling plugins, not live gameplay.
+- **Audio search ordering.** `AudioSearchParams.SortType` (`Enum.AudioSortType`: `Relevance`, `MostUsed`, `Trending`, `RecentlyCreated`, `ShortestToLongest`, `LongestToShortest`) orders `AssetService:SearchAudioAsync` results.
+- **Text-to-speech translation.** `AudioTextToSpeech.AutoLocalize` defaults to `true`: `Text` is translated into the player's language and routed to a matching voice (for example, a female English voice routes to a female voice elsewhere). It currently covers Arabic, Chinese (Mandarin), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese and Spanish. Set it false for names or lines that must stay verbatim (`roblox-localization`).
+
+## Flat vs 3D Voices
+
+- **No world position, no 3D voice.** Positionless one-shots (UI, your own gunshot, reward chimes) played on 3D voices parked at the camera pan and jump as the camera turns, which players report as glitchy audio (observed). Play them on `Sound`s parented to `SoundService` (no `Attachment` or `Part`), or through `AudioPlayer → Wire → AudioDeviceOutput`.
+- **Your own first-person weapon.** A weapon sound on a part offset from the camera plays in one ear in first person. Play the local player's weapon flat or from the camera centre, and keep positional sound for other players' weapons.
+- **Near distance before volume.** When a distant sound seems too quiet, check `RollOffMinDistance` before raising `Volume`. With `InverseTapered`, a blast 30 studs away with a near distance of 6 is about 14 dB down (6/30). Set the near distance per cue (large explosions far larger than footsteps) instead of one value for every sound. Keep `Volume` at or below 1 and layer instead; shot sounds at `Volume` 2.2 clipped in one project.
+
+## Leveling and Asset Choice (measured in one project)
+
+- **Level by loudness, not by ear.** Library files arrive at very different loudness (music 10+ LU above effects; some effects mastered near -9 LUFS with clipped peaks). Measure each file or slice (for example `ffmpeg -af ebur128` over the exact slice) and set `Volume = 10^((target - LUFS) / 20)`. One working set: music about -28.5 LUFS effective, ambience about 5 dB under music, effects about -18 LUFS per take, true peak at most -3 dBTP. Slices under about 0.4 s measure near -70 LUFS because of gating; level those by peak.
+- **Measure before calling a sound weak.** A "too quiet" thump that has almost nothing above 300 Hz only gets louder as a thud when turned up; layering a bright transient fixes it. Compare band energy, loudness and how long the tail takes to fall 40 dB. A short tail, not missing bass, often makes a gun sound small.
+- **Moderation.** Uploaded audio is moderated before others can hear it (`audio/assets`). Keep noise, static, hiss and harsh buzzers out of uploads; wire the new id in and keep working while it is reviewed.
+- **Mono and channel balance.** Prefer mono takes for effects. One stereo file was 14 dB louder on one side and stayed panned on flat voices.
+- **Client-shipped classics.** Some classic sounds ship with the client and play by content path (for example `rbxasset://sounds/oof.ogg`). Creator Store copies titled as a famous sound were unreliable in one check (most were a different recording), so when someone names a platform sound, use the original.
+- **Licensed library sounds.** Roblox's catalog includes licensed sound-effect and music libraries that can be used by id without uploading (check the asset's description and the Creator Store terms). Search with the library's exact title shape; descriptive queries mostly return ripped game audio. Many effect files open with silence or hold several takes back to back: measure onsets in a downloaded copy, then play one slice with a playback region.
+- **Music cuts.** Newer music uploads carry album and artist fields. Search the album for its cuts (main, underscore, short and sting versions); underscore cuts make quieter beds. Don't trust mood tags or "no percussion" titles; listen to or analyse each pick, and screen instrumentals for speech.
+
+## Slicing, Loops and Timing
+
+- **Playback regions are in source seconds.** Set `PlaybackRegionsEnabled = true` and `PlaybackRegion = NumberRange.new(start, start + length)`. The slice lasts `length / PlaybackSpeed`: 0.45 s at speed 0.4 plays about 1.1 s. Pitch a charge whine up to fit a shorter charge; a gunshot pitched to about 0.4 reads as a heavy thud and can double as a low layer.
+- **Sync to the peak, not the first onset.** A crash sliced from 0 had its loudest hit 0.45 s in and boomed after the slam. Start the slice a few hundredths of a second before the peak, schedule each take early by its measured onset, and mark the animation frame where the sound belongs.
+- **Keep natural tails.** Cutting a gunshot tail at 0.5 s made it sound clipped; fade only once the tail is about 30 dB down, and prefer takes that end in their own tail over a region cut mid-ring.
+- **Held sounds are one looped voice.** Play a drill, motor or beam as one looped voice for as long as the input is held, not as repeated slices, which click. Pick a loop region with flat RMS, fade in fast and out slowly. A noisy-tailed ambience loops cleanly over its quiet middle on two voices with an equal-power crossfade a few seconds before the region ends.
+- **Variation.** Give each repeated hit cue 3–8 takes with per-take gain, never repeat the last take, and vary pitch by roughly ±12%. A repeated mechanical beat from one machine should use one take and vary only pitch.
+- **Motion-driven sounds.** Drive continuous movement sounds from distance travelled, scaled by speed over top speed, rather than from a timer.
+- **Match meaning.** A cue must match what the player is getting: a coin sound on raw material reads wrong until it becomes money. Tool switches deserve a short sound even when the animation is smooth.
+- **Counting plays in tests.** In one project `Sound.Played` did not fire for replays of region-sliced sounds while `IsPlaying` showed them playing. Count rising edges of `IsPlaying` on pooled voices, or count in your own play wrapper.
+
+## Occlusion and Interior Sources
+
+- **Cheap raycast occlusion.** For a few important sources, a few times a second cast one ray from the camera to the source; when a wall blocks it, ease the sound quieter and muffled (lower `Volume` plus an `EqualizerSoundEffect` cut) rather than switching hard. Prefer acoustic simulation once it is confirmed in published servers.
+- **Interior sources and caps.** TVs and radios inside buildings played through walls at full volume and stacked, and many car alarms fired at once (observed). Lower interior sources when the listener is outside the room, and cap concurrent instances of the same ambient or alarm sound.
+- **Stop sounds with their source.** A looping alarm kept playing after its car was destroyed. Parent loops to the emitting object or stop them in its cleanup path, and test the destroy path for every loop.
+
 ## Common Mistakes
 
 - **Playing sounds on the server for feedback**: Server sounds have network latency. Play on client for responsive SFX. Server only for sounds ALL players must hear identically.
 - **No RollOff configuration**: Default RollOffMaxDistance is 10000 studs (basically infinite). Set it explicitly or sounds bleed across the entire map.
-- **Stacking rapid sounds**: Playing the same sound 10x in 0.1s creates ear-splitting overlap. Check `sound.IsPlaying` or use a cooldown.
+- **Stacking rapid sounds**: Playing the same sound 10x in 0.1s creates ear-splitting overlap. Use a cooldown or a voice cap, but check it against the fastest real event spacing: a 0.3 s cooldown silently dropped the middle of three slams 0.28 s apart in one project, and a hit gated by a particle throttle skipped landings. Every visible event deserves a sound, even a quiet one.
 - **Forgetting Looped = false on one-shots**: Default is false, but if you clone from a template that has Looped = true, your SFX plays forever.
 - **Not destroying one-shot sounds**: Sounds parented to destroyed parts get GC'd, but sounds in SoundService accumulate. Always Destroy() after Ended.
 - **Volume > 1**: Causes clipping/distortion. Keep ≤ 1. Use SoundGroup volume for amplification.
