@@ -403,6 +403,51 @@ These are experience-based observations, not controlled experiments. Numbers des
 - **Stability is the gatekeeper of retention:** buggy/laggy games make the tuned loop and good thumbnails invisible; one experienced dev's soft-shutdown omission (players kicked on update) damaged his algo standing; a competitor trademarked "War Tycoon"; a legal failure mode devs don't plan for.
 - **Kids-specific design cues:** bright colors, constant satisfying sound stimuli on every button, robux offers visible everywhere, progression fast at the start then slowing; "follow marketing and casino tips."
 
+### Pacing and tuning (measured, November 2026)
+
+Measured in one project, or counted across 59 reviewed simulator games and kits. These are starting points, not rules.
+
+**Pacing.**
+
+- **Keep cheap early buys.** Removing two cheap post-tutorial purchases doubled the time to the next buys. The share of players with no purchase in ten minutes rose from 15% to 33%, and first-minute leaves rose from 7.4% to 14.3%. After any economy change, check the purchase-gap distribution.
+- **First stage vs. the boredom point.** A dense first stage simulated at 55 minutes and read as "overwhelming", while testers quit a reference game at 28. Aim for about 10 minutes, a few object types, and new ones revealed one at a time.
+- **Decompose slow stages before buffing damage.** Split a stage's time into hits, hauling, and gates. On one finale, a faster clear saved 0.4 minutes, while fewer, more valuable chunks (same payout) saved 1.8. Check chunks × objects against carry capacity in every late area.
+- **Size bosses by solo hit count.** Hits ≈ effective area ÷ the late tool's effect per hit. One 5,000-square-stud target came to about 800 hits (10 minutes solo), while 700 square studs took about 80 s. Target about a minute solo with the top tool; parties only make it faster.
+- **Give the run currency a finale sink** once the run's tools are bought, gated on the late tool so new players can't starve their tool path.
+
+**Sims and scale.**
+
+- **Feed economy sims real rates.** Run the actual damage function in Studio Edit mode on each target, with random aim, for 6–8 trials. A guessed +12.5% power per level gained only about 20% by level 6.
+- **Give sim players realistic policies.** A nearest-first bot badly understated progress. Score runs on milestone times plus the longest gap without a purchase.
+- **Treat sim minutes as a canary, not a target.** Sims catch big breakage, such as one weapon winning 73% of matches. Tune from real phone and PC playtests.
+- **Scale party difficulty from players present.** Don't use the lobby-chosen size: most "size 4" runs had one player facing four times the quota. Rescale on every join and leave.
+
+**Combat feel.**
+
+- **Measure first-person reach from the eye.** The eye sits about 4.5 studs up on R15. A 3.5-stud reach hit nothing on the floor, and players called it "horrid hit registration". Measure eye-to-target distances on the real map.
+- **Stepped falloff beats a hard cutoff.** Use full power up close, about a third at the old range, and a tickle below the weakest melee hit out to max reach, so close range is what breaks things.
+- **Check tool radii in grid cells.** On a 1-stud destruction grid, tools whose radii round to one cell lose their identity. Show damage on every hit.
+- **One upgrade path per verb.** A magnet and a vacuum that both extend pickup made the bought tool feel pointless.
+- **Respawn at the spawn farthest from shooters**, never in sight while a hidden spawn exists. Give 1.5–2 s of spawn protection that ends at the player's first shot, and face every spawn into the map.
+
+**Round games.**
+
+- **Reference kits spent 41–56 s of fixed waiting before each round**: a 13–15 s loop wait, a 15 s vote across 3 maps, about 10 s of map load, and a role phase. Fill that time with activity, and measure join-to-first-play and round-end-to-next-play separately.
+- **Treat the first elimination as onboarding.** Give the player a clear next action while they wait.
+
+**Lobbies.**
+
+- **Check layouts in walking seconds:** distance ÷ 16 studs/s, plus paths and climbing. In references, the nearest product display sat about 24 studs from spawn (median), and vote pads 66–85 studs.
+- **Keep the two verbs a newcomer must learn side by side.**
+
+**Simulator parameters observed across the 59 reviews.**
+
+- **Storage caps:** storage pressure appeared in about 58%, and paid capacity in about 29%. Give caps a free expansion path and a sink for duplicates.
+- **Cost curves:** about ×1.25–1.7 per level for core stats, ×1.08 for cheap frequent upgrades, and ×4–×100 steps for capacity or rebirth gates.
+- **Timers:** restocks every 3–5 minutes, server boosts of 15 minutes, events about hourly, and free wheels every 1–3 hours.
+- **Offline earnings** (21 of the 59): usually 10–50% of the online rate, capped most often at 8 hours. Pay them on the server from saved state (`roblox-data` §8b).
+- **Friend boosts** (19 of the 59): +5–10% per friend in the server, capped at +25–50%, recomputed about every 60 s. Compute the boost on the server from the live roster (`Player:IsFriendsWith`), and show the value the server applies. Several kits displayed a bonus that never changed earnings.
+
 ## Tutorial fairness and completion checks
 
 Audit target markers, arrows, outlines, and other teaching cues against competitive information rules. Define eligible targets, viewers, game phases, and a durable lesson-completion condition. Test fresh and experienced players, bots and real opponents, and the transition from practice to a live match. A practice aid must not silently continue exposing hidden opponents or repeat after its lesson has finished.

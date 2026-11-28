@@ -244,6 +244,72 @@ Ethics note: about a third of age-checked daily users are under thirteen. Use th
 - Always show the winners: one unverified giveaway destroys trust in every future one.
 - Reveal one thing at a time: a silhouette beats a full reveal; five days, five reasons to check back.
 
+## 7a. Dark-pattern audit checklist
+
+<!-- temporal: 2026-11 -->
+
+A teardown review of about 60 Roblox games and kits (measured) found these recurring problems. Each one has an honest version:
+
+| Problem | Honest version |
+|---|---|
+| "Limited" labels or countdowns with no real server-backed end, or that restart | A real end time or real stock, or call it "Featured" |
+| "Worth", "x15 VALUE", or %-off badges with no real prior price | Show the final price and exact contents |
+| Displayed odds that don't match the server roll, or don't sum to 100% | Odds generated from the server table (`roblox-monetization` §8b) |
+| Checkout prompts at failure or shortfall, often 8–10 s expiring revive windows | Let players fail or wait without a checkout; recovery optional, no ticking window |
+| Labels that differ from the grant | One product definition drives both |
+| Social asks (like, join, favorite) tied to rewards when only group membership can be verified | Reward only what you can verify, once |
+| "Leaving resets progress" or "must stay in game" framing | Neutral timers; progress saves |
+| Earned currency styled like Robux, or custom fake checkouts | Distinct currency art; only Roblox's prompt for Robux |
+| Paid harm to other players (kill-all, unlocking a rival's base, a "steal" that grants a copy) | Pro-social or cosmetic server effects |
+
+Roblox's guidance requires genuine discounts and warns against false scarcity and restarting countdowns.
+
+## 7b. Observed patterns from simulator teardowns (measured)
+
+These come from about 59 reviewed simulator games and kits, mostly kits, read from UI and config labels. They show what the genre does, not what converts.
+
+**First-minute timings.**
+
+- Guided tutorials start 1–5 s after join (32 of the 59 have one).
+- The first currency arrives almost at once: after 8 studs walked, on a 0.25–0.5 s tick, or on the first tap.
+- The first session gift comes at about 45–60 s.
+- Daily-reward panels wait until the tutorial is done, plus about 20 s.
+- Favorite prompts come at 30–150 s, and friend invites at around 8 minutes.
+
+Prompts that appear before the first reward, or that block movement (such as a full-screen language picker), compete with the core loop. Defer them until after the first payout.
+
+**A fast first action isn't protective by itself.** In one round-based game's first-session traces, players whose first action came within 10 s left quickly more often (28%) than those whose first action came at 30–60 s (10%). What kills a session is dead waiting with nothing to do. Treat second-by-second first-minute scripts as hypotheses to test.
+
+**Paid UI timing depends on genre.** Rules that keep paid UI out of the first minutes come from tycoon, RPG, and younger-audience data. Some current physics-sandbox leaders show paid offers from the first second. Pick the timing per genre and test it, and keep prompts on deliberate taps (`roblox-monetization` §8b).
+
+**Observed price labels.** Median labels, with ranges:
+
+| Item | Median | Range |
+|---|---|---|
+| Permanent x2 cash or power passes | R$199 | R$3–1,375 |
+| VIP | R$149 | R$99–375 |
+| Starter packs | R$49 | R$19–189 |
+| Automation passes (auto-collect, auto-skip) | — | R$29–149 |
+| Currency packs | R$289 | R$13–4,500 |
+| Limited cosmetics | R$1,699 | — |
+
+Check any band ladder against the genre's current top games.
+
+**Playtime gift ladders** front-load early claims, then spread out, and reset each session. For example: 1, 5, 10, 15, 30, and 60 minutes, escalating from currency to boosts and pets.
+
+- Scale currency rewards with progress, such as max(a floor, 10% of balance), so they stay relevant.
+- Collection indexes often pay a lasting multiplier at a completion threshold.
+- Avoid "MUST STAY IN GAME" copy.
+
+**Rarity tables** usually have 6–18 tiers with a long tail far below 1%, plus a separate mutation roll (about 84–97% "none") with ×1.15–×5 multipliers.
+
+- Define "luck" precisely. For example, "take the rarer of N rolls" turns a 20% Rare into 36% at Luck 2.
+- Show the effective odds that the luck math produces.
+
+**Pity can count time as well as opens.** Kits used playtime-scheduled guarantees (a Legendary every 5 minutes of play) alongside count-based pity (after 100 openings). Time-based pity rewards staying, not spending. Whatever the form, enforce the counter on the server: several kits promised pity that nothing enforced.
+
+**Show probability, not weight.** For accumulated-weight selection (your chance of a special role rises each round you aren't picked), show each player's normalized percentage among eligible players. "Chance: 3x" reads as a probability and misleads. If a paid "pick me next" product exists, state how it overrides normal selection and how competing paid claims are resolved.
+
 ## 8. Order of work and review
 
 Build in this order:

@@ -2,7 +2,7 @@
 name: roblox-game-design
 description: "Use when designing or reworking a Roblox game: core loop, tutorial/FTUE, levels, economy, retention phases, juice, grind, curation."
 when_to_use: "Also when players quit early, the game feels boring or grindy, balancing rewards and prices, reviewing a design or game idea, and auditing the first session."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - original
   - https://departmentofplay.net/retention-framework-keep-your-players-forever/
@@ -30,5 +30,6 @@ Load for the structural craft of a Roblox experience: core loop and meta-game ar
 - **Anti-grind**: grind is a state of mind, not a mechanic. Fix with juice, skill ceilings, and measurable chunks.
 - **Bartle**: Achievers/Explorers/Socializers/Killers form an ecosystem; over-serve one and the others leave.
 - **Field data**: measured onboarding/monetization/retention numbers (2026; see full.md).
+- **Tuning checks**: keep cheap early buys; size bosses by solo hit count; scale parties from players present; measure reach from the eye; feed sims real rates (full.md).
 
 > Full framework details, checklists, case studies (Stardew, Hades, Artifact), and the curation/Moments prep: [references/full.md](references/full.md)
