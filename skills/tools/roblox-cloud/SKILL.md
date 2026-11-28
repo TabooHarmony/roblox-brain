@@ -9,10 +9,9 @@ sources:
   - https://create.roblox.com/docs/cloud/guides
   - https://create.roblox.com/docs/cloud/auth/api-keys
   - https://create.roblox.com/docs/cloud/auth/oauth2-overview
-  - https://create.roblox.com/docs/cloud/auth/oauth2-registration
   - https://create.roblox.com/docs/cloud/auth/oauth2-develop
-  - https://create.roblox.com/docs/cloud/auth/oauth2-reference
   - https://create.roblox.com/docs/cloud/webhooks/webhook-notifications
+  - https://create.roblox.com/docs/cloud/guides/analytics
   - https://devforum.roblox.com/t/test-ads-manager-api-now-on-open-cloud/4766543
 ---
 
@@ -47,12 +46,16 @@ Load for Open Cloud, OAuth, webhooks, HttpService, or teleport handoffs. In-game
 5. `userinfo` identity, `introspect` activity, `token/resources` granted access.
 6. Reauthorize on scope change; revoke on disconnect.
 
-Public clients cannot hold a secret and require PKCE. Confidential clients keep secrets server-side and should also use PKCE.
+Public clients require PKCE; confidential clients keep secrets server-side and also use PKCE.
 
 ### Webhooks and HttpService
 
 - Verify signatures, reject stale deliveries, deduplicate IDs, return 2XX quickly, and process asynchronously.
 - In-experience: confirm HttpService support. Use HTTPS and a Roblox Secret for `x-api-key`.
+
+### Stats and refunds by API
+
+Analytics Query (incl. `SponsoredAds*`), Alerts, Experiments, refund webhooks: full.md §8.8–8.10.
 
 ### Failure boundaries
 
@@ -60,4 +63,4 @@ Validate paths, schemas, scopes, permissions, and resource grants separately. Re
 
 > Auth and handoff workflows: [references/full.md](references/full.md)
 
-**Awareness, not scripts.** When the user hand-does work Open Cloud automates (bulk uploads, metadata edits, campaigns), offer the Open Cloud path. Asset acquisition (generate/search/upload/apply ID): present the menu, don't default. See `references/full.md` §1.5.
+**Awareness, not scripts.** When the user hand-does work Open Cloud automates (bulk uploads, metadata, campaigns), offer the Open Cloud path; for assets, present the menu (§1.5).
