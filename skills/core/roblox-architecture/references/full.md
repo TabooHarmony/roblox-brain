@@ -241,6 +241,143 @@ end)
 
 Initialize existing and future tagged instances. Treat added and removed signals as lifecycle boundaries, including client streaming. Validate attribute types and defaults, keep durable or security-sensitive state server-owned, and make attach/cleanup safe to repeat.
 
+## Join, boot and lifecycle ordering (field-tested)
+
+Lessons from several projects. Each has bitten a shipped game; re-test in your own place.
+
+- **Decide admission before any other join logic.** When a server can bounce joins (private parties, solo runs, full lobbies), the admission owner decides first. In one test, a new-save player about to be teleported away first triggered the server's first-session auto-start, which pulled the host into a tutorial match. Expose an `admitted` flag from the admission owner and have every `PlayerAdded`, data-load and character hook check it. Or route all join handling through that one module.
+- **Don't depend on the order of `PlayerAdded` handlers.** When two services each connect `Players.PlayerAdded`, a grant that needs another service's per-player state can run before that state exists. Wire the player lifecycle once in one entry point that calls each owner in order, or call the owning service explicitly. At start, also loop over `Players:GetPlayers()` for anyone who joined before the connection.
+- **Spawn with `Player:LoadCharacterAsync()`.** `Player:LoadCharacter()` is tagged deprecated in the [Player reference](https://create.roblox.com/docs/reference/engine/classes/Player), superseded by `LoadCharacterAsync()`, and `LoadCharacterWithHumanoidDescription` is likewise superseded by `LoadCharacterWithHumanoidDescriptionAsync`. Both yield, so call them from the spawn owner after admission, not from inside a `PlayerAdded` fan-out. <!-- temporal: 2026-11 -->
+- **Long non-yielding boot work can be aborted.** The engine's watchdog error is `Script timeout: exhausted allowed execution time` ([ScriptContext](https://create.roblox.com/docs/reference/engine/classes/ScriptContext)). In one live server, roughly 10 s of boot work without a yield hit it. A `task.spawn` inside `Init` runs on the same resume, so the timeout also killed the bootstrap, and the failure looked quiet: no remotes registered and blank HUD stats. Use `task.defer` for optional warm-up and yield inside long boot loops.
+- **Live boot order differs from Studio.** On a live device the client often starts after the server's remotes and the character already exist. None of its `WaitForChild` calls yield, so the whole client start-up (requires, every `Start`, UI builds) lands in one frame; phones froze about 5.5 s after joining. Studio solo yields on those waits, so the same code looks spread out. Reproduce the live order with a temporary `task.wait(8)` at the top of the client bootstrap, then pace system starts with a per-frame budget (see `roblox-luau-patterns`).
+- **`CollectionService:GetTagged` searches the whole DataModel**, not only `Workspace` ([reference](https://create.roblox.com/docs/reference/engine/classes/CollectionService)). Archived or imported copies of tagged markers in `ServerStorage` keep spawning things. Strip tags from anything archived, destroy verification imports straight away, or filter results by ancestry (`instance:IsDescendantOf(workspace)`).
+- **List what a new gate switches off.** A new mode or flag (bots, practice, fill, Studio-only) often gates existing features off; in one game, bot-fill checks silently disabled bonus rounds in the small servers most players were in. When adding a gate, search for every place it is checked, list what it disables in the handoff, and confirm each new item or config entry has a consumer in code.
+
+```luau
+-- Illustrative: one entry point owns the player lifecycle, in order.
+local Players = game:GetService("Players")
+
+type Owner = { onJoin: (Player) -> (), onLeave: (Player) -> () }
+
+local function wirePlayers(admission: { admit: (Player) -> boolean }, owners: { Owner })
+    local admitted: { [Player]: true } = {}
+
+    local function join(player: Player)
+        if admitted[player] or not admission.admit(player) then
+            return
+        end
+        admitted[player] = true
+        for _, owner in owners do -- explicit order, no handler race
+            owner.onJoin(player)
+        end
+    end
+
+    Players.PlayerAdded:Connect(join)
+    Players.PlayerRemoving:Connect(function(player)
+        if admitted[player] then
+            admitted[player] = nil
+            for i = #owners, 1, -1 do
+                owners[i].onLeave(player)
+            end
+        end
+    end)
+    for _, player in Players:GetPlayers() do -- joined before we connected
+        task.spawn(join, player)
+    end
+end
+
+return wirePlayers
+```
+
+## Content as data, checked by a test
+
+Make content additions (a weapon, a badge, a cosmetic) pure data. Keep one definitions table that the server, client, HUD and dev tools all read, with no code that branches on a content name; when something seems to need a name branch, add a field instead. Back it with a unit test that fails when any entry lacks the assets it needs (animations, sounds, marker cues), and let behavior modules be found by file presence rather than a hand-kept list. This is a field-tested pattern, not an engine rule.
+
+```luau
+-- Illustrative: a completeness check that runs in a unit test.
+type WeaponDef = { animation: string?, fireSound: string?, damage: number? }
+
+local REQUIRED = { "animation", "fireSound", "damage" }
+
+local function missingFields(defs: { [string]: WeaponDef }): { string }
+    local problems = {}
+    for name, def in defs do
+        for _, field in REQUIRED do
+            if (def :: any)[field] == nil then
+                table.insert(problems, `{name} lacks {field}`)
+            end
+        end
+    end
+    table.sort(problems)
+    return problems
+end
+
+return missingFields
+```
+
+## A small system scheduler
+
+A short scheduler stepped on `Heartbeat` pays for itself in projects with many per-frame systems:
+
+- systems run in the order added;
+- interval systems get the `dt` since their last run, and after a hitch they run once instead of catching up;
+- each system is labeled in the MicroProfiler by name (`debug.profilebegin`/`debug.profileend`);
+- a system that errors warns once, and the rest keep running.
+
+Add the replication system last, so it sends each step's final state.
+
+```luau
+-- Illustrative: ordered systems, no catch-up, error isolation, profiler labels.
+local RunService = game:GetService("RunService")
+
+type System = { name: string, interval: number, step: (dt: number) -> (), last: number, failed: boolean }
+
+local systems: { System } = {}
+
+local function add(name: string, interval: number, step: (dt: number) -> ())
+    table.insert(systems, { name = name, interval = interval, step = step, last = os.clock(), failed = false })
+end
+
+RunService.Heartbeat:Connect(function()
+    local now = os.clock()
+    for _, system in systems do
+        local dt = now - system.last
+        if dt >= system.interval then
+            system.last = now -- one run after a hitch, never a burst of catch-up runs
+            debug.profilebegin(system.name)
+            local ok, err = pcall(system.step, dt)
+            debug.profileend()
+            if not ok and not system.failed then
+                system.failed = true
+                warn(`system {system.name} errored: {err}`)
+            end
+        end
+    end
+end)
+
+return { add = add }
+```
+
+## Server Authority changes the code layout
+
+<!-- temporal: 2026-11 -->
+Under the Server Authority model, as documented 2026-11 ([overview](https://create.roblox.com/docs/projects/server-authority), [techniques](https://create.roblox.com/docs/projects/server-authority/techniques)), gameplay code is one `ModuleScript` that runs on both client and server inside functions bound with `RunService:BindToSimulation()`. That shapes ownership:
+
+- **Prediction follows assemblies.** Predicting a part predicts everything welded or constrained to it, its parent `Model` and any `Humanoid` in that model. A model parented to the character but not physically connected is a separate assembly, predicted only inside the simulation radius or when forced with `RunService:SetPredictionMode()`. `RunService:GetPredictionStatus()` tells the client whether an instance is currently predicted.
+- **Create inside the simulation, remove outside it.** Bound functions may create instances (`Instance.new`, `Clone`, `Instance.fromExisting`); the client copy merges with the server's when it arrives. `Destroy()` and reparenting an instance already in the DataModel error inside a bound function. Record the intent in an attribute inside the simulation and destroy the instance in a server `PostSimulation` connection.
+- **Tools are not fully supported yet.** `Humanoid:EquipTool()` and `UnequipTools()` have no simulation access. Build equippables by cloning and welding a `Model` to the character inside the simulation, and track the equipped state with an attribute.
+- **Gameplay animations belong in the simulation.** `Animator:LoadAnimation()`, `AnimationTrack:Play()`, `Stop()`, `AdjustSpeed()` and `TimePosition` have simulation access. A rollback can replace tracks, so look up the live track each frame with `Animator:GetTrackByAnimationId()` instead of caching it.
+- **Effects must be undoable.** The client may predict an event that never happens on the server. Keep sounds and particles in presentation code that can hide or cancel a mispredicted effect (see `roblox-animation-vfx` for keyed effects).
+
+Networking and validation details stay in `roblox-networking`.
+
+## File-based workflows on the Creator Hub
+
+<!-- temporal: 2026-11 -->
+Roblox now documents three code workflows ([compare file-based workflows](https://create.roblox.com/docs/projects/file-based-workflows), [Rojo](https://create.roblox.com/docs/projects/rojo)): **Studio-native** (the place is the source of truth, and Script Sync keeps a copy of the scripts in Git); **partially managed** Rojo (Git owns the code and the place owns models, terrain and UI, which Roblox recommends for most teams that use Git); and **fully managed** Rojo (Git owns everything, and CI builds and publishes places). Decide which side owns each kind of content before you design the folder layout. Rojo is a community tool and its docs are the reference; tool setup lives in `roblox-tooling`.
+
+`SerializationService` ([reference](https://create.roblox.com/docs/reference/engine/classes/SerializationService)) converts instances to `.rbxm` data and back for build tooling: `SerializeInstancesAsync({ Instance })` returns a buffer and `DeserializeInstancesAsync(buffer)` returns the instances. It works only from Studio plugins and Open Cloud Luau Execution sessions, not from game scripts, and it errors on instances or services that can't be created. Roblox gives no stability contract for the `.rbxm` format, so round-trip the bytes through the API instead of parsing them. <!-- temporal: 2026-11 -->
+
 ## Community ecosystem (leads, not sources)
 
 Open-source study codebases ranked by DevForum likes. Read before architecting similar genres:
@@ -282,6 +419,8 @@ These are v0.11.0 behaviors verified against the release notes and source (2026-
 - **Debug world.** `jecs.world(true)` installs checked wrappers that error on structural changes during entity deletion and on invalid entities/pairs. Use it in development worlds; it catches the hook-mutation class above early.
 - **Query iterators are single-pass per query object.** In jecs source, a plain query memoizes its `next` closure, so a second generic-`for` over the *same* query object yields nothing; build the query where it is used or call `world:query(...)` again for a fresh iterator. Cached queries restart each iteration. Treat any library iterator as single-use unless documented otherwise, and write a test that iterates the same query twice.
 - **`:with()`/`:without()` replace, not accumulate.** In source, each call overwrites the filter field, so chaining `:without(A):without(B)` excludes only B. Combine terms in one call.
+
+- **Field-observed with change hooks and a replicator:** never mutate a table component in place. Copy it, change the copy and `world:set` it, or changed hooks and the replicator never see the change. Declare every component at the top level of one Components module before the first world exists. Give replicated components a stable name and a buffer codec, because a name-matching replicator sends values without a codec as an untyped blob. In Lune test runners, a test file that creates a world at load time breaks every later suite.
 
 Generalizable: query/filter/iterator APIs differ per library and per version. Never assume accumulate-or-reuse semantics from another ECS or from memory of a tutorial — check the pinned version's source or docs.
 

@@ -2,7 +2,7 @@
 name: roblox-npc-ai
 description: "Use when creating or fixing Roblox NPCs, bots or enemies: pathfinding, state machines, line of sight, spawns, AI update loops."
 when_to_use: "Also when NPCs get stuck, walk through walls, chase wrongly, lag the server, or bots need to fill empty servers."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/characters/pathfinding.md
   - https://create.roblox.com/docs/projects/server-authority
@@ -55,10 +55,12 @@ end
 - If the design includes hearing or proximity detection, make it a separate configured signal rather than a universal FOV bypass.
 
 ### Network Ownership
-- Classic projects may use `SetNetworkOwner(nil)` for physics-sensitive NPCs, but it is not complete security. In Server Authority projects, configure the authority model instead of treating network ownership as the security boundary.
+- Classic: `SetNetworkOwner(nil)` for physics-sensitive NPCs (not full security). Server Authority: configure the authority model; ownership isn't the boundary.
 
 ### Update Loop
 
 - Throttle and stagger AI based on NPC count, path cost, and profiler evidence, not a universal tick rate. Keep NPC decisions and movement server-side; client code may handle presentation.
+- Split bots into Sense (phased raycasts), a pure Think function (unit-testable, no Roblox calls) and Act (player movement numbers). Tune difficulty by reaction and aim error, not walk speed.
+- Client pathfinding sees only streamed-in geometry: recompute on blocked paths; target parts in `Persistent` models.
 
 For spawners, lifecycle cleanup, timeout handling, and performance budgets, load `references/full.md`.

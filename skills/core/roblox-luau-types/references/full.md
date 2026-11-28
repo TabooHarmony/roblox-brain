@@ -474,6 +474,51 @@ Roblox-only compiler feature: server-side scripts compile to machine code instea
 - Server scoping: documented for server-side scripts. Do not add `--!native` to client scripts expecting the same benefit.
 - Roblox publishes no official speedup number; measure with the Script Profiler instead of claiming a ratio.
 
+## Pitfalls reported on the DevForum (2026)
+
+Each item below is labeled with how far it was checked. Items marked "local check" were reproduced with the standalone `luau-analyze` (2026-11; new solver by default, `--solver=old` for the old one), which can differ from the version shipped in Studio.
+
+### A path that falls off the end returns nothing, not `nil`
+
+Reported on the DevForum (2026-10-17, [thread](https://devforum.roblox.com/t/sudden-return-type-error/4939413/2)); local check: both solvers flag it. A function typed to return an optional value must say `return nil` on its empty path. Falling off the end returns zero values, and the checker reports `Not all codepaths in this function return '...'`.
+
+```luau
+--!strict
+local function pickHandler(enabled: boolean): (() -> ())?
+    if enabled then
+        return function() end
+    end
+    return nil -- required: falling off the end is "no values"
+end
+
+return pickHandler
+```
+
+### A solver rollout can surface an error that was already there
+
+Reported on the DevForum (2026-10-17, [thread](https://devforum.roblox.com/t/sudden-return-type-error/4939413/10)). A type error that appears "suddenly" in unchanged code can come from the solver switching, not from a runtime change: `Workspace.UseNewLuauTypeSolver` is a `RolloutState`, and its `Default` value follows the engine-wide rollout ([Workspace reference](https://create.roblox.com/docs/reference/engine/classes/Workspace)). Check which solver is active, then reduce the failure to a standalone snippet and test it under both solvers before treating it as a bug in your logic. Runtime behavior does not change with the solver.
+
+### Array literals of strings may widen to `string`
+
+Reported on the DevForum (2026-07-02 and 2026-07-06, [thread](https://devforum.roblox.com/t/how-to-make-array-return-a-union-type/4549941/33)). Local check: the old solver widens `{ "apple", "banana" }` to `{ string }`, so assigning an element to `"apple" | "banana"` fails. The standalone new solver accepted the same assignment. Don't rely on either: declare the union once and annotate the array with it, or assert each element as the thread suggests (`"apple" :: "apple"`). Pick one source of truth so the values aren't listed twice. A small fixed list like this needs no `type function`; reserve type functions for types derived from larger structures.
+
+```luau
+--!strict
+export type Fruit = "apple" | "banana" | "cherry"
+
+local FRUITS: { Fruit } = { "apple", "banana", "cherry" }
+
+local function isFruit(value: string): boolean
+    return table.find(FRUITS, value :: any) ~= nil
+end
+
+return { FRUITS = FRUITS, isFruit = isFruit }
+```
+
+### `self` through inherited `:` methods
+
+Reported on the DevForum (2026-08-13, [thread](https://devforum.roblox.com/t/type-does-not-have-key-error-after-applying-table-inheritance/4808799/3)); open, not reproduced here. A method that type-checks alone can fail with "type does not have key" once metatable inheritance is added, because the checker may not resolve `self` through `:`-defined methods on the inherited table. Write the class with an explicit data type and an annotated `self` (see [Typing Object-Like Modules](#typing-object-like-modules)), or prefer composition. To report it, make a minimal strict-mode script that separates the method syntax from the inheritance.
+
 ## Common Mistakes
 
 - Using `keyof`, `setmetatable<T, M>`, type functions, or `read` members in an old-solver project and "fixing" the resulting errors by deleting them; they need the new solver (`UseNewLuauTypeSolver`)
@@ -483,6 +528,7 @@ Roblox-only compiler feature: server-side scripts compile to machine code instea
 - Replacing useful generic relationships with `any` or overly broad unions
 - Sealing a table too early with an annotation, then expecting to add fields later
 - Expecting `:` method definitions to automatically share precise `self` type across the class
+- Leaving an optional-return function to fall off the end instead of `return nil`
 - Using `::` to force unrelated conversions instead of fixing underlying type design
 - Building unions without a discriminant, making downstream refinement difficult
 - Indexer dictionaries typed `{ [K]: V }` while missing keys are indexed at runtime; type the value `V?` where absence is expected (see Table Types)

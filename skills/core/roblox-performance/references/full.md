@@ -74,6 +74,87 @@ Pair `begin`/`finish` around each measured region (per-system updates, expensive
 - Per-script CPU usage and heap allocations
 - Identifies which scripts are hot
 
+### MicroProfiler search and Assistant analysis (2026-11)
+
+On the desktop client, the MicroProfiler **Detailed** view has a search box (Ctrl+F; F3/Enter next, Shift+F3 previous) that dims non-matching labels and highlights frames containing a match, which is the fastest way to find your own `debug.profilebegin` label in a long capture. Studio's Assistant, and agents connected through the Studio MCP server, can read a **paused** capture and report likely bottlenecks. Treat that report as a lead and confirm it with an A/B run. The full tag list lives in the LibMP `ALL-SCOPES` document linked from the MicroProfiler docs page. <!-- temporal: 2026-11 -->
+
+### Server memory pressure: `DataModel.ServerLowMemoryWarning`
+
+`DataModel.ServerLowMemoryWarning` fires on the server when Roblox detects memory pressure. The docs call it a best-effort chance to drop nonessential memory, say it can fire more than once while pressure lasts, and say it guarantees neither a shutdown nor its avoidance. Make the handler idempotent and cheap:
+
+```luau
+-- Illustrative: free caches you can rebuild; never allocate heavily here.
+local caches: { [string]: { [any]: any } } = {}
+
+game.ServerLowMemoryWarning:Connect(function()
+    for _, cache in caches do
+        table.clear(cache) -- idempotent: safe to run on every firing
+    end
+end)
+```
+
+If heartbeat stays low after optimization, the performance docs point to Extended Services for Compute for reserving more server CPU. <!-- temporal: 2026-11 -->
+
+### Load (join) time
+
+The docs give the join order: `ReplicatedFirst` (loading screen) replicates first, then the rest of the DataModel (all of `ReplicatedStorage`, and with streaming only the area near spawn), then the avatar loads. There is no built-in load-time tool; a stopwatch is enough for a baseline. Documented causes: streaming disabled, bulky `ReplicatedStorage` (free models add hidden bulk), heavy `ReplicatedFirst`, `ContentProvider:PreloadAsync` over large sets (preloading all of Workspace, or waiting on `RequestQueueSize`), and expensive startup LocalScripts. Preload only loading-screen images, key menu art and spawn-area assets, offer a Skip button for long preloads, and defer UI panels until first opened. An unexpected jump in load time can be an obfuscated free-model script generating thousands of instances.
+
+### Graphics quality levels (2026-11)
+
+The engine scales rendering quality per device; even at the lowest level, draw distance is at least 500 studs. Preview levels in Studio with Studio Settings → Rendering → **Editor Quality Level**. The docs now advise **against** changing visual effects from scripts based on `UserGameSettings.SavedQualityLevel`, because it fights the engine's automatic scaling. If you need your own budgets for debris, effects or physics (which the engine's scaling does not reduce), key them to measured frame time rather than the saved quality slider. <!-- temporal: 2026-11 -->
+
+## Measuring correctly in Studio (field-measured)
+
+These process lessons were measured across several projects. Numbers are examples, not targets.
+
+- **Studio throttles an unfocused playtest client.** Measured cap: about 15 FPS (idle frame p50 near 66.7 ms), even when the window looks foregrounded. Total frame time from an unattended or agent-driven session is meaningless. Detect the cap from inside the game by counting simulation steps per drawn frame (about 4 when capped, about 1 when focused), void captures whose idle p50 is not near 16.7 ms, and compare per-action CPU instead: client-target Script Profiler, `Stats.RenderCPUFrameTime`, `SceneDrawcallCount`, `SceneTriangleCount`. Show the window-focus state and graphics level in any debug HUD. Don't steal window focus on someone else's machine without permission.
+- **Studio solo mixes server and client in one process.** Before chasing a label, run a local server with one client (Test tab, or an MCP multiplayer playtest) and profile each process. In one run this showed server p99 18 ms against client p99 46-51 ms, which settled where to look.
+- **The Studio playtest server can tick at about 20 Hz.** Per-frame costs measured there hold about three times the work of a 60 Hz live frame. Report per-second cost next to per-frame cost and re-measure on a live server before raising counts.
+- **Studio require time is mostly compile time.** Live clients receive bytecode, so a large data module that took 234-518 ms in Studio took about 40 ms on phones, while a UI build was slower on phones than in Studio. Rank startup costs from live-device timings, section by section.
+- **`Stats:GetTotalMemoryUsageMb()` in Studio includes the editor** (2+ GB). It says nothing about phones.
+- **Check stat units on a live client before charting.** Measured: `Stats.RenderCPUFrameTime` and `RenderGPUFrameTime` read in seconds (0.0085 = 8.5 ms), while `PhysicsStepTimeMs` is milliseconds; `RenderGPUFrameTime` reads about 0 in Studio. The reference pages don't state the render units, so confirm before trusting a pipeline.
+- **`Stats.PhysicsStepTimeMs` is smoothed.** After a burst it ramped from 2 to 43 over about 2.5 s while frames were already 100-120 ms. Time physics yourself from `RunService.PreSimulation` to `PostSimulation`. On the server it reads near 0 when the costly bodies are client-simulated, so log the client too.
+- **Labels only see their own scopes.** To localize an unexplained stall, timestamp each frame stage (`PreRender`, `PreAnimation`, `PreSimulation`, `PostSimulation`, `Heartbeat`) and log `gcinfo()` and total memory beside frame time. A gap between stages with flat memory rules out Luau allocation; a one-frame jump of tens of MB points at script work. Set the timestamp before anything that can throw, read logs and probes before stopping the playtest, and keep logging past the trigger: the worst frame can come seconds later.
+- **Split a big label before trusting a saving.** Ten verified "removed real work" fixes moved p99 only from 91 to 76 ms in one project. Measure sub-labels, and check that diagnostics (a per-frame debug scan) are not running inside a measured label.
+- **A "last slow frame" label explains that frame, not a low average.** Fixing a 54 ms label changed nothing in an A/B because it was a single attach frame. If a tuning knob changes nothing about the worst frame across a whole sweep, the worst frame comes from elsewhere.
+- **Keep harness work out of the measured window.** Screenshots, large instance scans and target-picking walks (one scan of about 450k parts made 250-320 ms server frames) read as feature cost. After marking a capture, wait a couple of Heartbeats on both peers before acting. Verify what a test actually hit; a ray can hit foliage instead of the wall you meant.
+- **Benchmark in the reporter's state.** A fix that won on a fresh-map bench did nothing for the player who reported lag: their state (hundreds of settled debris pieces) cost 3x the bench. Eliminate causes with identical scripted input, one switch per variant, then confirm in the live session at the reporter's position. Per-item cost also rose under load (0.1 ms quiet vs 0.3-0.4 ms mid-event).
+- **A/B the harness assumption before building a harder harness.** A server-driven bench cannot see client-only fixes (lazy work during a wind-up), so measure those through the real client path.
+- **Time what the player sees.** For action latency, detect the visible result (for example a ray from the camera through the expected change every Heartbeat) instead of timing when the work ends. This exposed a newest-first queue serving the first request last. A per-frame ms budget also makes latency scale with frame time, so slow devices lose twice.
+- **Studio has no real round trip.** Effects that wait for the server look instant in Studio and late on phones. `Player:GetNetworkPing()` returns round-trip time. Add per-leg timing (server reply, effect arriving, effect shown) and run network-dependent features once under a Studio network profile before calling them done.
+- **For "clean up performance" requests, total each system's ms per frame across idle, action and heavy scenarios** on separate server and client. The biggest waste found was idle polling. Price a cache by switching it off: one warm-up spent 150-520 ms to save 15-100 ms. At 60 FPS, frame time minus labels is mostly vsync wait.
+- **Engine-internal instances.** A running peer holds tens of thousands of instances in hidden services; a large `Stats.InstanceCount` jump with no visible arrivals can be engine work, not a missing root in your probe.
+
+## Field-measured costs and patterns
+
+Measured in Studio on PC unless noted; reproduce on your own target devices.
+
+| Pattern | Measured | Practice |
+|---------|----------|----------|
+| Parent many new Parts one by one into Workspace | 1,657 Parts: 12.3 ms vs 0.6 ms into a detached Folder plus one attach | Build under an unparented Folder in time-budgeted slices (about 3 ms a frame), attach once, remove with one `Folder:Destroy()` |
+| Per-frame work capped by count | 523 ms of work fell to 19 ms after a time cap plus a grid | Cap by elapsed `os.clock()` time (for example 4 ms), because each operation gets dearer as the world grows |
+| `FindFirstChildWhichIsA`/`FindFirstChildOfClass` per Part in one big folder | 13k parts: 198 ms on that check alone | They scan children linearly. Memoise per parent within one loop; bench on realistic folder sizes |
+| Property reads vs spatial queries | `part.Parent` ~0.10 us; Instance-keyed insert ~0.11 us; `GetPartBoundsInBox` 6-15 us | Engine calls dominate loops, and `--!native` won't help them. Cache facts an anchored part never changes in a weak-keyed table (about 40% cut once) |
+| New Part vs pooled Part | ~37 us vs ~7 us | Pool hot spawns |
+| Clone+parent under physics load | ~30 us quiet vs ~500 us with thousands of moving parts | Benchmark spawns under the feature's real physics load; avoid copying parts at the moment of a big physics event |
+| Lazy acceleration structure | BVH raycast 0.13 ms warm, 2-13 ms building on first shot | Build indexes at load or bake time, not on first gameplay use |
+| "All X as data" helper on lazy data | 1,415 ms and 68 MB requiring 1,601 modules; 1.4 ms filtering first | Filter before forcing lazy loads |
+| Lazy load inside one action | Worst frame 87-96 ms down to 34-47 ms | Do lazy work during the action's wind-up on a per-frame budget. If a lazy load sits in a replicated handler, hold that and later events (keep order) until it finishes, with a cap that forces completion |
+| Loop walks every item to find actionable ones | ~1.5 ms a frame on ~2,700 items that could never act | Keep a separate actionable set, updated where its condition changes. A recheck over an unchanged world can rest after a clean pass if every event that could change the answer wakes it |
+| Destroy a 145k-part map in one call | 2.5 s frame; 2 s build slices froze the server 4-7 s | Destroy and build in ~30 ms slices with `task.wait()` between; drive the loading bar from real built progress (a replicated attribute) |
+| Reset a data-built map | Full rebuild 8.8 s server / 12.9 s client; dirty-only 0.3 s | Find changed chunks before wiping state that tracks untouched originals; rebuild only those |
+| Grid look via `Texture` on six faces vs `MaterialVariant` | 1,600 parts: 139 vs 25 draw calls, 31,981 vs 16,177 triangles | Use a greyscale `MaterialVariant` ColorMap tinted by `Part.Color`; build on a lattice matching the tile size so lines meet |
+| Part memory | ~3.3 KB per Part regardless of collision flags | Turning off collision does not make a dense map cheaper; bake far chunks (see below) |
+| Destroying runtime meshes on a large map | ~12.5k meshes from `CreateMeshPartAsync`: destroying 30 caused delayed (~16 s) stalls of 1-17 s; unparent-and-hold caused none (Studio solo) | On large runtime-mesh maps, retire baked meshes by unparenting and keeping a reference; profile destruction on a full-size map. When a stall comes after a delay with nothing in your labels, suspect engine background work |
+
+**Runtime baking.** `AssetService:CreateDataModelContentAsync` can bake far chunks into cheaper meshes with the same look; one measured layout kept Parts within about 40-60 studs and baked meshes beyond. See `roblox-building` for the mesh APIs.
+
+**Scriptless interactive props.** Many props need no script, connection or loop each. Keep their state as replicated data (a hit counter, a dead tag), let one server system at a fixed rate (for example 20 Hz) stand up what is due, and let one client system visit only props that are moving and move them in one `workspace:BulkMoveTo`. Measured with 18 targets: 1.4 microseconds per idle tick and 0.22% of server time under 20 shots a second.
+
+**Dirty-mark systems for cosmetics.** For skins, paint or outfits on many models, change hooks only mark affected models (entity added, a late mesh arriving inside it, equipped item changed), and one scheduled system repaints only marked models. Route every model through one apply function that resets each part to its base first, then applies layers in order, so idle frames cost nothing and reskins start clean.
+
+**Sum the budgets.** Separately reasonable per-system budgets can add up past the frame. Keep a table of every system's budget and its measured p99.
+
 ## What Luau actually charges for (hot-loop cost model)
 
 The Scripts table above lists fixes; this section explains why they work so agents can generalize
@@ -289,7 +370,7 @@ Notes:
 
 | Problem | Symptom | Fix |
 |---------|---------|-----|
-| High part count | Low FPS, draw call bound | Merge static geometry, use MeshParts |
+| High draw calls | Low FPS when looking at dense areas | Reduce *unique* meshes and materials, not raw part count. The engine instances identical meshes with the same `MeshContent` and identical `SurfaceAppearance`/`TextureContent` (or material) into one draw call; decals, textures and particles batch poorly (performance docs, "Draw calls"). Field-measured in one project: about 20.8k anchored Parts drew in about 31 draw calls, while the same build converted to about 331 unique meshes took about 295. MeshParts are not an automatic fix; measure draw calls (Render Stats, Shift+F2) and frame time before and after any conversion |
 | Transparent part stacking | Overdraw, GPU bound | Reduce layers, use CanvasGroup for UI |
 | Excessive particles | Mobile FPS death | Cap ParticleEmitter.Rate, reduce on mobile |
 | Too many dynamic lights | Frame time spike | Documented guidance is simply "use fewer dynamic lights"; the 4-6 per area figure is a practitioner heuristic, not an engine limit. Measure before enforcing |
@@ -345,11 +426,88 @@ representative devices; do not assume a smaller radius is automatically better. 
 
 **Gotcha**: `workspace:FindFirstChild("DistantPart")` returns nil if the part is streamed out. Use `WaitForChild` with timeout, or design systems that don't depend on distant parts existing on the client.
 
+**Remotes and streamed instances.** A remote signal and the instance it references travel independently: the signal can arrive before the instance, or the instance may never stream in, and an instance path sent as a string has the same problem. Address world objects by a stable id (attribute or number) and resolve it on arrival with a nil check, pre-fetch with `Player:RequestStreamAroundAsync()` on the server before firing, or skip the work for clients that lack the instance.
+
+**Client copies.** Locally cloning a server instance into Workspace makes a client-only copy that no longer gets property updates; locally reparenting from `ReplicatedStorage` into Workspace can make it eligible to stream out; a client `Destroy()` of a server object only removes it locally, and it streams back with its original state. Client physics, including server-authority prediction, runs only in streamed areas, even for locally created instances; add a replication focus near anything that must keep simulating.
+
 ### Predictive Streaming (2026-07)
 
 `Workspace.PredictiveStreamingMode` is set in Studio (or from a plugin or Open Cloud Luau execution, per its `PluginOrOpenCloud` capability); runtime game scripts can't change it. `Default` currently behaves like `Disabled`; `Enabled` lets the engine prefetch likely destinations for streaming-enabled experiences.
 
-Spawn prefetching creates small temporary streaming foci at possible respawn locations after a player dies. CFrame return optimization keeps the area a player just left streamed in for a likely near-term return. Predictions are additive and temporary, so remeasure memory and bandwidth on representative devices.
+Spawn prefetching creates small temporary streaming foci at possible respawn locations after a player dies. CFrame return optimization keeps the area a player just left streamed in for a likely near-term return. Predictions are additive and temporary, so remeasure memory and bandwidth on representative devices. Predictive streaming leaves your own `RequestStreamAroundAsync` pre-fetches and `AddReplicationFocus` foci in place. Watch the effect in the **Network Stats** overlay (Shift+F3 live, Shift+Ctrl+F3 in a Studio playtest).
+
+### Frustum streaming (2026-10)
+
+`Player.FrustumStreaming` (`Enum.FrustumStreamingMode`: `Default` = `Disabled`, `Disabled`, `Automatic`, `Enabled`) adds the player's camera frustum to the streamed area, beyond the normal radius, for scopes, racing and free cameras. It is per player and **server-only**: a client that needs it fires a remote, and the server validates the request and sets the property. `Automatic` turns it on for a narrow field of view, high speed while looking where you move, or a camera far from the replication focus, after a short activation delay; set `Enabled` during an equip animation if the scope must be ready when it opens. It is additive (radius, frustum and replication foci are unioned), so it raises memory and possibly CPU, and normal quotas still apply. Stream-out: with `Opportunistic`, content that leaves the view and lies outside the radius and foci lingers 1.5 s; with `LowMemory`, it stays until memory runs low. <!-- temporal: 2026-11 -->
+
+```luau
+-- Illustrative server Script: scope requests from the client.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local scopeEvent = ReplicatedStorage:WaitForChild("ScopeEvent") :: RemoteEvent
+
+Players.PlayerAdded:Connect(function(player)
+    player.FrustumStreaming = Enum.FrustumStreamingMode.Automatic
+end)
+
+scopeEvent.OnServerEvent:Connect(function(player, wantsScope)
+    if typeof(wantsScope) ~= "boolean" then
+        return
+    end
+    -- Also check that the player actually has a scoped weapon equipped.
+    player.FrustumStreaming = if wantsScope
+        then Enum.FrustumStreamingMode.Enabled
+        else Enum.FrustumStreamingMode.Automatic
+end)
+```
+
+**Limits from the [frustum streaming guide](https://create.roblox.com/docs/workspace/streaming/frustum):**
+
+- It adds cost and never reduces the streaming workload. The frustum gets the same instance and bandwidth budget as a replication focus.
+- There is no occlusion: walls and terrain don't block the frustum, so everything inside it is a candidate.
+- During fast camera turns the engine restarts from the center, and the effective frustum narrows to a beam.
+- It needs a draw distance beyond the streaming target radius, and the engine may turn it off on low-quality or low-frame-rate devices.
+- It has no effect in games without instance streaming.
+
+**Staff replies on the DevForum (2026-09-30, [thread](https://devforum.roblox.com/t/frustum-streaming-stream-what-your-players-see/4904553/15)):**
+
+- The camera's field of view is used directly as the frustum, so a wider FOV streams more and takes longer. Benchmark at the widest FOV you allow.
+- Streaming selected instances by frustum was not offered (post 16), so treat the setting as per player, not per model.
+- There's no API to announce where the camera will be. Pre-stream fast camera moves with `Player:RequestStreamAroundAsync` (post 13).
+
+### SLIM level of detail (2026-11)
+
+SLIM (Scalable Lightweight Interactive Models) cloud-transcodes models into composite meshes with multiple detail levels, so distant and streamed-out models stay visible with fewer draw calls, triangles and memory. Requirements: `StreamingEnabled`, a place **saved to Roblox** (not a local file), and Team Create on. Set `Model.LevelOfDetail = Enum.ModelLevelOfDetail.SLIM` on models of **static** parts and meshes; runtime-modified or animated models, and models containing a `Humanoid`, are not supported. `Workspace.EnableSLIMAvatars` (set in Properties; not scriptable) renders standard or advanced R15 player avatars as animated SLIM stand-ins and can swap them even inside the streaming radius; R6 avatars and NPCs are excluded, and avatars must be transcoded once before they show (rejoin after a minute or two). Debug with the Developer Console's DebugVisualizations → `SlimTintMode` (`LOD`, `DataModelState`; Studio also has `TranscoderStatus`). Known issues from the docs: unions can render wrong in SLIM (split them into their own model), coplanar faces z-fight (move them 0.01 studs apart), and UVs are regenerated so default-material tiling can shift. Studio's AI skill `rbx-convert-to-streaming` can convert a non-streaming game, including setting SLIM; back up the place first. <!-- temporal: 2026-11 -->
+
+### Streaming and rendering issues reported on the DevForum (2026)
+
+These are community reports with their dates and threads, not documented engine behavior. Use them to rule out the engine or Studio before rewriting game code or assets, and recheck their status, because several were open when last checked.
+
+- **Server Authority cost at scale** (2026-07-09, [thread](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993/40)): developers raised bandwidth and CPU concerns at high player counts. Profile at your target player count and latency before enabling it on large servers.
+- **SLIM vs StreamingMesh** (2026-07-04, [thread](https://devforum.roblox.com/t/streaming-enabled-not-working/4715800/3)): one developer saw `StreamingMesh` displayed while SLIM-like behavior was active. Switching modes and raising the target radius helped, and distant models showed as low-poly impostors. Check the effective mode in a test session, and expect impostors at range rather than assuming a corrupt asset.
+- **Streaming timing races** (2026-10-13, [thread](https://devforum.roblox.com/t/rendering-bug-unknown-if-it-is-my-programing-roblox-or-both/4931215/11)): a "rendering bug" was a race between streaming and client code that moved locally rendered instances. Wait for the instances you expect, and make cull and move operations idempotent so a late arrival can't leave them wrong.
+- **Textures and mesh LODs unloading in long Studio sessions** (2026-06, [thread](https://devforum.roblox.com/t/studio-memory-issue-causing-textures-to-unload/4639996/7), 800+ likes):
+  - World textures disappeared after Studio stayed open or after several playtests (reports of about every 5), while UI images stayed.
+  - Reopening Studio restored them temporarily.
+  - In a related report, resetting Studio settings helped; a reply suspected setting the graphics API to Automatic ([thread](https://devforum.roblox.com/t/huge-issue-concerning-textures-is-currently-ruining-all-meshes-decals-and-spawnpoints-in-the-game/4678044/24)).
+  - Compare a fresh Studio process and a live client before blaming asset permissions or re-uploading.
+- **Parts that stop rendering after repeated far-away moves** (2026-06-10, [thread](https://devforum.roblox.com/t/part-refusing-to-render-after-moving-it-far-away-a-few-times/4677068/1)):
+  - Parts moved millions of studs away and back a few times sometimes stopped rendering. Shorter delays between spawns changed how often it happened.
+  - A staff reply (2026-08-20) reproduced it on Windows but not on Mac.
+  - If your pool parks parts far away, park them at a moderate distance or unparent them (`Parent = nil`) instead, and stress-test burst reuse on Windows.
+- **Periodic micro-stutters in an empty place** (2026-06, [thread](https://devforum.roblox.com/t/consistent-micro-stutters-frame-spikes-via-write-marshalled-and-dynamic-flag-reloader/4669424/1)):
+  - Regular frame spikes appeared in a blank published baseplate with no scripts.
+  - Checking the client update channel, reinstalling and updating drivers did not reliably fix them.
+  - Reproduce in an empty place and compare MicroProfiler captures before blaming game code.
+- **Faint green artifacts** in Studio and the client (2026-06-22, [thread](https://devforum.roblox.com/t/faint-green-artifacting-effect-on-roblox-studio/4698572/1)):
+  - Deleting the client settings folder helped only until the next reboot.
+  - Users still reported it after the thread was marked fixed.
+  - Check other graphics workloads before suspecting hardware, and treat a "fixed" label as unconfirmed for your configuration.
+
+### Transparent batching of web-backed calls
+
+Some web-backed APIs batch concurrent calls into fewer HTTP requests automatically. Per the scripting docs, these currently include `MarketplaceService:GetProductInfoAsync` (Product, GamePass and Bundle info types), `MarketplaceService:UserOwnsGamePassAsync`, `AvatarEditorService:GetItemDetailsAsync` and `AssetService:GetBundleDetailsAsync`. Batching only happens when calls start close together, so start them concurrently with `task.spawn` (each in `pcall`) instead of awaiting one at a time, and don't hand-roll batching on top. <!-- temporal: 2026-11 -->
 
 ### Detect Platform
 

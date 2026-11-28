@@ -2,10 +2,11 @@
 name: roblox-luau-patterns
 description: "Use when writing or refactoring Roblox Luau modules, object lifecycles, signals, task scheduling, pcall, and cleanup."
 when_to_use: "Also for memory leaks, connections never disconnected, duplicate handlers after respawn, task.spawn/defer/delay misuse, retries, and reviewing module structure."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://luau-lang.org/
   - https://luau.org/library
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/libraries/coroutine.yaml
   - https://create.roblox.com/docs/reference/engine/classes/ObjectValue
   - https://create.roblox.com/docs/reference/engine/classes/StringValue
   - https://create.roblox.com/docs/reference/engine/classes/CFrameValue
@@ -18,24 +19,24 @@ sources:
 
 ## When to Load
 
-Load for module shapes, resource ownership, scheduling, and failure contracts. See `roblox-luau-core` for semantics, `roblox-luau-types` for types, `roblox-architecture` for startup.
+Module shapes, ownership, scheduling, failure contracts. Semantics: `roblox-luau-core`; types: `roblox-luau-types`; startup: `roblox-architecture`.
 
 ## Quick Reference
 
 ### Choose a shape
 
 - **Plain functions:** default for stateless transformation or validation.
-- **Module with private state:** one explicit subsystem owner. Do not create a manager class merely to namespace functions.
-- **Object with metatable:** multiple independent values need shared behavior and lifecycle.
-- **Existing library abstraction:** follow it when the project already uses it consistently. Do not add Promise, signal, cleanup, or framework dependencies for one call site.
+- **Module with private state:** one subsystem owner, not a manager class for namespacing.
+- **Object with metatable:** many independent values share behavior and lifecycle.
+- **Existing library:** follow the project's; don't add Promise, signal or framework dependencies for one call site.
 
-Constructors use `.`, instance methods use `:`, and mutable fields belong on the instance, not the class table.
+Constructors use `.`, methods `:`; mutable fields live on the instance.
 
 ### Make ownership visible
 
-Signal connections, instances, and tasks need cleanup owners. Disconnect/cancel at teardown. Export typed custom signal payloads (`Signal<T...>`).
+Connections, instances and tasks need cleanup owners; disconnect or cancel at teardown. Type signal payloads (`Signal<T...>`).
 
-Configure before parenting to hide partial state. Parent earlier only when ancestry is required; explain why. This does not guarantee replication ordering.
+Configure before parenting to hide partial state; this does not order replication. `coroutine.finally` (2026-10 reference) runs cleanup when a thread finishes, errors or is cancelled.
 
 ### Preserve failure semantics
 
@@ -47,18 +48,25 @@ end
 return value, nil -- value may legitimately be nil
 ```
 
-Do not collapse "call succeeded and returned nil" into "call failed." Retry only when the domain operation is safe to repeat. Persistence, HTTP, purchases, and remotes belong to their domain skills.
+Keep "returned nil" distinct from "failed". Retry only operations safe to repeat.
 
 ### Naming and return contracts
 
-Practitioner conventions: mark yielding functions `Async`, keep return counts consistent, and prefer named module exports. Respect existing project contracts; details in full.md.
+Mark yielding functions `Async`, keep return counts consistent, prefer named module exports; respect existing contracts.
 
 ### Schedule deliberately
 
-Use `task.defer`, `task.spawn`, `task.delay`, and `task.cancel` deliberately. Avoid legacy `wait()` and unjustified polling. Prefer a real state-change signal; otherwise choose and measure an explicit cadence.
+Use `task.*`, never `wait()`. Prefer a state-change signal to polling.
+
+### Spread work across frames (field-measured)
+
+- Start a budgeted worker with `task.defer` so it sees the whole batch; check the budget inside each step.
+- Clamp `dt` in timers. Watch the peak: one atomic swap ignores any budget.
+- Count completions: a budget can hide an infinite loop. Add a no-progress guard.
+- Sliced walks need inputs that don't change between slices; invalidate caches narrowly.
 
 ### Review
 
-Clear owner, narrow public API, no circular require, no accidental concurrent startup, success and missing-data states remain distinct, connections/tasks cleaned up, client input routed to `roblox-networking`.
+Clear owner, narrow API, no require cycle, success distinct from missing data, connections and tasks cleaned up, client input via `roblox-networking`.
 
 > Details: [references/full.md](references/full.md)

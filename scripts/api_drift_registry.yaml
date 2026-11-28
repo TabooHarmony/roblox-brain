@@ -1691,4 +1691,339 @@ entries:
     type: enum_item_exists
     enum: EngagementLevel
     item: High
+# --- B1 November 2026 refresh ---
+- id: b1-player-frustum-streaming
+  claim: Player.FrustumStreaming controls frustum-based streaming per player
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: property_exists
+    class: Player
+    property: FrustumStreaming
+  verified: 2026-11-27
+- id: b1-frustum-streaming-mode-automatic
+  claim: FrustumStreamingMode has an Automatic item
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  teaching_needles:
+  - FrustumStreaming
+  check:
+    type: enum_item_exists
+    enum: FrustumStreamingMode
+    item: Automatic
+  verified: 2026-11-27
+- id: b1-workspace-predictive-streaming-mode
+  claim: Workspace.PredictiveStreamingMode exists
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: property_exists
+    class: Workspace
+    property: PredictiveStreamingMode
+  verified: 2026-11-27
+- id: b1-model-level-of-detail-slim
+  claim: ModelLevelOfDetail has a SLIM item
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: enum_item_exists
+    enum: ModelLevelOfDetail
+    item: SLIM
+  verified: 2026-11-27
+- id: b1-datamodel-server-low-memory-warning
+  claim: DataModel.ServerLowMemoryWarning fires when the server runs low on memory
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: member_exists
+    class: DataModel
+    member: ServerLowMemoryWarning
+  verified: 2026-11-27
+- id: b1-basepart-bind-to-collision-summaries
+  claim: BasePart:BindToCollisionSummaries exists
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: member_exists
+    class: BasePart
+    member: BindToCollisionSummaries
+  verified: 2026-11-27
+- id: b1-collision-fidelity-tunable
+  claim: CollisionFidelity has a Tunable item
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: enum_item_exists
+    enum: CollisionFidelity
+    item: Tunable
+  verified: 2026-11-27
+- id: b1-trianglemeshpart-collision-precision
+  claim: TriangleMeshPart.CollisionPrecision exists
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: property_exists
+    class: TriangleMeshPart
+    property: CollisionPrecision
+  verified: 2026-11-27
+- id: b1-animationconstraint-is-kinematic
+  claim: AnimationConstraint.IsKinematic toggles kinematic vs simulated joints
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: property_exists
+    class: AnimationConstraint
+    property: IsKinematic
+  verified: 2026-11-27
+- id: b1-animationconstraint-angular-strength
+  claim: AnimationConstraint.AngularStrength sets rotational tracking strength
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: property_exists
+    class: AnimationConstraint
+    property: AngularStrength
+  verified: 2026-11-27
+- id: b1-animationconstraint-transform-writable
+  claim: AnimationConstraint.Transform is script-writable
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: property_write_security
+    class: AnimationConstraint
+    property: Transform
+    expected: None
+  verified: 2026-11-27
+- id: b1-starterplayer-avatar-joint-upgrade-security
+  claim: StarterPlayer.AvatarJointUpgrade is not script-writable
+  files:
+  - path: skills/gameplay/roblox-physics/references/full.md
+  check:
+    type: property_write_security
+    class: StarterPlayer
+    property: AvatarJointUpgrade
+    expected: RobloxScriptSecurity
+  verified: 2026-11-27
+- id: b1-editablemesh-batch-add
+  claim: EditableMesh:BatchAdd exists
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: EditableMesh
+    member: BatchAdd
+  verified: 2026-11-27
+- id: b1-editablemesh-batch-set-values
+  claim: EditableMesh:BatchSetValues exists
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: EditableMesh
+    member: BatchSetValues
+  verified: 2026-11-27
+- id: b1-terrain-set-material-slot
+  claim: Terrain:SetMaterialSlot assigns custom terrain material slots
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: Terrain
+    member: SetMaterialSlot
+  verified: 2026-11-27
+- id: b1-assetservice-create-decal-async
+  claim: AssetService:CreateDecalAsync exists
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: AssetService
+    member: CreateDecalAsync
+  verified: 2026-11-27
+- id: b1-assetservice-prompt-create-platform-content
+  claim: AssetService:PromptCreatePlatformContentAsync exists
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: member_exists
+    class: AssetService
+    member: PromptCreatePlatformContentAsync
+  verified: 2026-11-27
+- id: b1-animationtrack-set-parameter
+  claim: AnimationTrack:SetParameter drives Animation Graph parameters
+  files:
+  - path: skills/gameplay/roblox-animation-vfx/references/full.md
+  check:
+    type: member_exists
+    class: AnimationTrack
+    member: SetParameter
+  verified: 2026-11-27
+- id: b1-animation-node-blend-mode-add
+  claim: AnimationNodeBlendMode has an Add item
+  files:
+  - path: skills/gameplay/roblox-animation-vfx/references/full.md
+  teaching_needles:
+  - AnimationNodeBlendMode
+  check:
+    type: enum_item_exists
+    enum: AnimationNodeBlendMode
+    item: Add
+  verified: 2026-11-27
+- id: b1-lighting-lighting-style
+  claim: Lighting.LightingStyle exists
+  files:
+  - path: skills/gameplay/roblox-lighting/references/full.md
+  check:
+    type: property_exists
+    class: Lighting
+    property: LightingStyle
+  verified: 2026-11-27
+- id: b1-lighting-prioritize-quality-writable
+  claim: Lighting.PrioritizeLightingQuality is script-writable
+  files:
+  - path: skills/gameplay/roblox-lighting/references/full.md
+  check:
+    type: property_write_security
+    class: Lighting
+    property: PrioritizeLightingQuality
+    expected: None
+  verified: 2026-11-27
+- id: b1-lighting-technology-deprecated
+  claim: Lighting.Technology is deprecated
+  files:
+  - path: skills/gameplay/roblox-lighting/references/full.md
+  check:
+    type: property_deprecation_status
+    class: Lighting
+    property: Technology
+    expected: deprecated
+  verified: 2026-11-27
+- id: b1-decal-emissive-mask-content
+  claim: Decal.EmissiveMaskContent makes decals glow
+  files:
+  - path: skills/gameplay/roblox-lighting/references/full.md
+  check:
+    type: property_exists
+    class: Decal
+    property: EmissiveMaskContent
+  verified: 2026-11-27
+- id: b1-buffer-readvectorf32x3
+  claim: buffer.readvectorf32x3 reads a Vector3
+  files:
+  - path: skills/core/roblox-luau-core/references/full.md
+  check:
+    type: library_member_exists
+    library: buffer
+    member: readvectorf32x3
+  verified: 2026-11-27
+- id: b1-buffer-writevectorf32x2
+  claim: buffer.writevectorf32x2 writes X and Y only
+  files:
+  - path: skills/core/roblox-luau-core/references/full.md
+  check:
+    type: library_member_exists
+    library: buffer
+    member: writevectorf32x2
+  verified: 2026-11-27
+- id: b1-coroutine-finally
+  claim: coroutine.finally registers a callback for when a coroutine ends
+  files:
+  - path: skills/core/roblox-luau-patterns/references/full.md
+  teaching_needles:
+  - coroutine.finally
+  check:
+    type: library_member_exists
+    library: coroutine
+    member: finally
+  verified: 2026-11-27
+- id: b1-workspace-use-new-luau-type-solver
+  claim: Workspace.UseNewLuauTypeSolver selects the type solver
+  files:
+  - path: skills/core/roblox-luau-types/references/full.md
+  check:
+    type: property_exists
+    class: Workspace
+    property: UseNewLuauTypeSolver
+  verified: 2026-11-27
+- id: b1-runservice-get-prediction-status
+  claim: RunService:GetPredictionStatus reports whether an instance is predicted
+  files:
+  - path: skills/core/roblox-architecture/references/full.md
+  check:
+    type: member_exists
+    class: RunService
+    member: GetPredictionStatus
+  verified: 2026-11-27
+- id: b1-collectionservice-get-tagged-datamodel
+  claim: CollectionService:GetTagged returns tagged DataModel descendants
+  files:
+  - path: skills/core/roblox-architecture/references/full.md
+  teaching_needles:
+  - GetTagged
+  check:
+    type: method_description_contains
+    class: CollectionService
+    method: GetTagged
+    contains: descendants of the `Class.DataModel`
+  verified: 2026-11-27
+- id: b1-serialization-service-serialize
+  claim: SerializationService:SerializeInstancesAsync returns an rbxm buffer
+  files:
+  - path: skills/core/roblox-architecture/references/full.md
+  check:
+    type: member_exists
+    class: SerializationService
+    member: SerializeInstancesAsync
+  verified: 2026-11-27
+- id: b1-serialization-service-deserialize
+  claim: SerializationService:DeserializeInstancesAsync restores instances
+  files:
+  - path: skills/core/roblox-architecture/references/full.md
+  check:
+    type: member_exists
+    class: SerializationService
+    member: DeserializeInstancesAsync
+  verified: 2026-11-27
+- id: b1-player-load-character-deprecated
+  claim: Player:LoadCharacter is deprecated in favor of LoadCharacterAsync
+  files:
+  - path: skills/core/roblox-architecture/SKILL.md
+  - path: skills/core/roblox-architecture/references/full.md
+  teaching_needles:
+  - LoadCharacter
+  - LoadCharacterAsync
+  check:
+    type: method_deprecation_status
+    class: Player
+    member: LoadCharacter
+    expected: deprecated
+  verified: 2026-11-27
+- id: b1-player-load-character-async-exists
+  claim: Player:LoadCharacterAsync spawns a character
+  files:
+  - path: skills/core/roblox-architecture/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: LoadCharacterAsync
+  verified: 2026-11-27
+- id: b1-editablemesh-add-face-tuple
+  claim: EditableMesh:AddFace takes vertex IDs as a tuple (triangles or quads)
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: method_parameter_type
+    class: EditableMesh
+    method: AddFace
+    parameter: vertexIds
+    expected: Tuple
+  verified: 2026-11-27
+- id: b1-player-request-stream-around-async
+  claim: Player:RequestStreamAroundAsync pre-streams an area
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: RequestStreamAroundAsync
   verified: 2026-11-27

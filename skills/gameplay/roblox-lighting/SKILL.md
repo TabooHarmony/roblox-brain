@@ -2,18 +2,20 @@
 name: roblox-lighting
 description: "Use when setting up or changing Roblox lighting, atmosphere, day/night cycles, or post-processing effects."
 when_to_use: "Also when a scene looks flat, too dark or washed out, shadows are wrong, or lighting hurts mobile performance."
-last_reviewed: 2026-07-26
+last_reviewed: 2026-11-27
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/lighting.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/atmosphere.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/environment/post-processing-effects.md
+  - https://create.roblox.com/docs/reference/engine/classes/Lighting
+  - original
 ---
 
 # Roblox Lighting & Atmosphere
 
 ## When to Load
 
-Load for Roblox lighting, atmosphere, day/night, or post-processing (Bloom, ColorCorrection, DepthOfField).
+Lighting, atmosphere, day/night, post-processing.
 
 ## Quick Reference
 
@@ -25,8 +27,8 @@ Lighting.Ambient = Color3.fromRGB(70, 70, 70)        -- shadow fill
 Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 Lighting.GlobalShadows = true
 Lighting.ShadowSoftness = 0.2      -- 0=sharp, 1=soft
--- Configure tech/style/quality in Studio; these properties are not script-writable.
--- Verify enum values and device behavior against current Creator Hub docs before setting them.
+-- LightingStyle/PrioritizeLightingQuality are script-writable; Technology is deprecated.
+-- Light Range caps at 120 studs. Roofed interiors: tune Ambient, not ClockTime.
 ```
 
 ### Atmosphere
@@ -69,11 +71,11 @@ end)
 
 **Perf:** Limit shadow-casting lights to 4-6 visible. Use `Shadows=false` on most. Neon material = cheap glow.
 
-**MCP:** Inspect, change minimally, capture, check performance.
+**MCP:** inspect, change minimally, capture in game.
 
 ### Common Pitfalls
 - Brightness >3 washes out. Density >0.5 = soup. Max 2-3 post effects.
-- Avoid black Ambient. Technology is deprecated; it and its replacements are Studio-only.
+- Avoid black Ambient. Neon blooms to white: use dark tones. Lamp pools stack: dim each light.
 
 ### References
-- Mood presets (Day, Golden Hour, Night, Horror, Underwater, Sci-Fi), zone tweens, full examples: `references/full.md`
+- Mood presets, zone tweens, field lessons: `references/full.md`

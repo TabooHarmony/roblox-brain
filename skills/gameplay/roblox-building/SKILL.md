@@ -2,7 +2,7 @@
 name: roblox-building
 description: "Use when building or editing geometry, maps, props, or generated assets with MCP or standalone Luau."
 when_to_use: "Also for fixing map gaps, z-fighting, scale, collisions or players escaping the map, placing store assets, and reviewing a map layout."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - original
   - https://create.roblox.com/docs/en-us/projects/assets/privacy.md
@@ -16,44 +16,47 @@ sources:
   - https://create.roblox.com/docs/projects/assets/toolbox
   - https://create.roblox.com/docs/scripting/security/third-party-vulnerabilities
   - https://create.roblox.com/docs/assistant/guide
+  - https://create.roblox.com/docs/parts/custom-terrain-materials
+  - https://create.roblox.com/docs/reference/engine/classes/EditableMesh
+  - https://create.roblox.com/docs/art/modeling/cage-meshes
 ---
 
 # Roblox Building
 
 ## When to Load
 
-Load for geometry, props, maps, and spatial onboarding via MCP or Luau.
+Geometry, props, maps and spatial onboarding via MCP or Luau.
 
 ## Quick Reference
 
 ### MCP Build Mode
-1-2. Inspect Studio/Workspace/assets; name root, origin, dimensions, assets.
-3-4. Build in phases with readback; verify tree, view, traversal.
+Inspect Workspace/assets; name root, origin, dimensions. Build in phases with readback; verify tree, view, traversal.
 
 ### Asset Choice
-- Search project assets and Toolbox first; check type, creator, price, scripts, fit.
-- Paid/cross-owner insertion: disclose creator, ID, price, rights first. Inspect scripts/dependencies; remove unneeded code. See `roblox-security`.
-- MCP: `generate_procedural_model`, `generate_mesh`, `generate_material`.
-- Check mesh bounds, collision, PBR, and quality levels.
-- Use permitted images; wait for jobs to finish.
-- `EditableImage`/`EditableMesh`: permission + memory limits.
-- Native Parts/CSG when reuse/generation is unsuitable.
-- **Asset privacy:** new accounts/groups create Images/Decals/Meshes Restricted — blank texture/invisible mesh usually means a missing grant, not corruption. Read the Output error; grant the experience in Creator Dashboard. See `roblox-studio-mcp`.
+- Search project and Toolbox first; check creator, price, fit. Read script counts, not descriptions.
+- Paid/cross-owner: disclose creator, ID, price, rights first. See `roblox-security`.
+- MCP: `generate_procedural_model`, `generate_mesh`, `generate_material`; wait for jobs.
+- Blank texture/invisible mesh: usually a missing experience grant. See `roblox-studio-mcp`.
+
+### Meshes and terrain
+- A MeshPart from an `EditableMesh` keeps using it: destroy the mesh only after that MeshPart. Budget is per device: share meshes, upload static ones.
+- Batch APIs (`BatchAdd`, `BatchSetValues`); `AddFace(v1, v2, v3[, v4])`, 60k verts/20k tris. Centre on the origin.
+- Expanded Terrain: `Terrain:SetMaterialSlot` (slots 2-63).
 
 ### Player Scale
 Player ~5 studs | Door 4w×7h | Ceiling 10-14 | Counter 3.5-4 | Seat 1.5 | Path 6+
 
 ### Spatial Rules
-- Name dimensions; offset sub-parts from anchor CFrames, never guessed world coordinates.
+- Name dimensions; offset sub-parts from anchor CFrames, never guessed coordinates.
 - Snap to 0.125/0.25/0.5 studs. Build complex CSG near origin, then `PivotTo` the destination.
-- Set anchoring, collision, shadows, color, material explicitly.
+- Set anchoring, collision, shadows, material explicitly.
 
 ### Acceptance
-**Prop:** named model, pivot, scale, bounds, materials, collision, anchoring, no loose parts, provenance.
-**Map:** root/origin, zones, landmarks, spawns/return paths, traversal, bounds excluding Baseplate/Terrain/SpawnLocation.
+**Prop:** named model, pivot, scale, bounds, materials, collision, anchoring, provenance.
+**Map:** root/origin, zones, landmarks, spawns, traversal, bounds.
 **Evidence:** readback, view when supported, playtest results.
 
 ### Anti-Patterns
-Guessing coordinates | unanchored/duplicate parts | hardcoded world positions | silent CSG failure | oversized batches | claims without readback
+Guessing coordinates | unanchored props | coplanar overlaps (inset 0.01) | silent CSG failure | claims without readback
 
-**Details:** `references/full.md` (maps, validation, assets).
+**Details:** `references/full.md`.

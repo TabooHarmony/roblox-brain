@@ -2,13 +2,17 @@
 name: roblox-luau-core
 description: "Use when writing, editing, or debugging any Luau: tables, control flow, string patterns, scope, closures, and errors ported from JS/Python."
 when_to_use: "Also for Luau syntax errors, nil indexing, wrong loop or table behavior, string formatting, and reviewing Luau code for correctness."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://luau.org/syntax
-  - https://create.roblox.com/docs/luau/control-structures
   - https://luau.org/library
+  - https://create.roblox.com/docs/luau/control-structures
+  - https://create.roblox.com/docs/luau/metatables
+  - https://create.roblox.com/docs/luau/native-code-gen
   - https://raw.githubusercontent.com/Kampfkarren/kampfkarren-luau-guidelines/main/README.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/libraries/vector.yaml
+  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/libraries/buffer.yaml
+  - original
 ---
 
 # Luau Core Language
@@ -19,42 +23,35 @@ Load for Luau semantics and JS/Python translation. Types: `roblox-luau-types`; l
 
 ## Quick Reference
 
-- Only `false` and `nil` are falsy. `0`, `""`, and `{}` are truthy.
-- Equality does not coerce types. `0 == "0"` is false. Inequality is `~=`.
-- Array conventions are 1-based. `#array` is meaningful only for a sequence without nil gaps.
-- Assigning `nil` removes a table key; assigning a table copies the reference; `table.clone` is shallow.
-- Dictionary iteration order is unspecified. Do not make behavior depend on it.
-- Dynamic keys require brackets: `record[field]`. Dot syntax uses a literal identifier.
-- Missing arguments become `nil`; extra results and arguments can be discarded.
-- Prefer an `if` expression over `condition and a or b` when `a` may be falsy.
-- Locals start at their declaration; `repeat` locals reach `until`. Forward-declare mutual recursion.
-- Luau string patterns are not regular expressions. Their syntax and capabilities differ.
-- Backtick interpolation and `..` are valid. Join many fragments once in hot loops.
-- NaN does not equal itself and defeats `<`/`>`; test with `x ~= x`.
-- Binary data uses the `buffer` library: fixed size, 0-based offsets, explicit-width reads/writes. Avoid `buffer.readinteger`/`writeinteger` (stubs, not released runtime).
-- For Base64, hashing, or compression use `EncodingService` (buffers, not strings; JSON via `HttpService`). Details: see full reference.
+- Only `false` and `nil` are falsy; `0`, `""`, `{}` are truthy. No coercion: `0 == "0"` is false; inequality is `~=`.
+- Arrays are 1-based; `#array` is meaningful only without nil gaps. Dictionary order is unspecified.
+- Assigning `nil` removes a key; tables are references; `table.clone` is shallow.
+- Dynamic keys need brackets: `record[field]`.
+- A call expands to all its values only as the last argument or item: `f(g(), x)` keeps one value of `g()`. Unpack into locals.
+- Never start a line with `(`: it continues the previous statement as a call.
+- Prefer an `if` expression over `cond and a or b` when `a` may be falsy.
+- Locals start at their declaration; `repeat` locals reach `until`. `const` freezes the binding, not the table.
+- `table.freeze` is shallow and errors on an already frozen table; guard with `table.isfrozen`.
+- Weak tables (`__mode`) can drop Instance keys while the Instance lives; never track existence with them.
+- `Vector3` table keys match by value; `Vector2` keys by identity (field-measured). Use `Vector3.new(x, 0, z)` for 2D cells.
+- String patterns are not regular expressions. Join many fragments once in hot loops.
+- NaN does not equal itself; test with `x ~= x`.
+- `buffer`: fixed size, 0-based offsets, explicit widths; `readvectorf32x3`/`writevectorf32x3` move a `Vector3`. Avoid `readinteger`/`writeinteger`.
+- `--!native` runs on servers and Android clients only.
+- Base64, hashing, compression: `EncodingService` (buffers).
 
 ```luau
 local label = if enabled then "On" else "Off"
 local message = `{name}: {score}`
-
-local byId: {[number]: string} = {}
-byId[userId] = name
-
-for index, value in values do
-    print(index, value)
-end
+local size, center = sizeAndCenter()
+place(size, center, owner)
 ```
 
 ### Translation traps
 
-- JavaScript `===`, `!==`, `null`, optional chaining, spread, arrow functions, and array methods are not Luau syntax.
-- Python `None`, zero-based list assumptions, list comprehensions, exceptions, and implicit tuple behavior do not translate directly.
-- `x or fallback` tests truthiness, not only absence. It replaces a valid `false` value.
-- `typeof(value)` recognizes Roblox datatypes; `type(value)` reports the underlying Luau type category.
+- JS `===`, `null`, `?.`, spread, arrow functions and array methods are not Luau.
+- Python `None`, 0-based lists, comprehensions and exceptions don't translate.
+- `x or fallback` replaces a valid `false`.
+- `typeof` knows Roblox datatypes; `type` reports the Luau category.
 
-### Review
-
-Valid Luau, no nil gaps, no assumed dictionary order, no accidental aliases, no cross-language syntax, no fallbacks hiding `false` or `nil`.
-
-> Detailed language traps and translation examples: [references/full.md](references/full.md)
+> Language traps and translation examples: [references/full.md](references/full.md)

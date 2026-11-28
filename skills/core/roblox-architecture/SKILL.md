@@ -2,13 +2,15 @@
 name: roblox-architecture
 description: "Use when adding, moving, refactoring, or reviewing Roblox feature ownership, code layout, dependencies, startup, or client-server boundaries."
 when_to_use: "Also when deciding where code goes, splitting a large script, fixing load-order or require cycles, untangling services/controllers, or auditing project structure."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://create.roblox.com/docs/projects/data-model
   - https://create.roblox.com/docs/projects/client-server
   - https://create.roblox.com/docs/scripting/locations
   - https://create.roblox.com/docs/scripting/security/access-control
   - https://create.roblox.com/docs/reference/engine/classes/CollectionService
+  - https://create.roblox.com/docs/projects/server-authority
+  - https://create.roblox.com/docs/projects/file-based-workflows
   - https://raw.githubusercontent.com/Ukendio/jecs/v0.11.0/README.md
   - original
 ---
@@ -21,42 +23,44 @@ Load for ownership, integration, boundaries, startup, or module splits.
 
 ## Quick Reference
 
-Reuse proven project modules before rebuilding; inspect contracts and failure/cleanup paths. Integration workflow: full.md.
+Reuse proven project modules first; inspect their contracts and cleanup paths.
 
 ### Start from one owner
 
-For each behavior, name:
+For each behavior, name its authoritative state and mutators, public operations, owned instances/connections/tasks, persistence or network boundary, and startup/teardown.
 
-- authoritative state and who may mutate it;
-- public operations and callers;
-- Roblox instances, connections, and tasks it owns;
-- persistence or network boundary;
-- startup and teardown conditions.
-
-Group by feature when that keeps one change together. Split server, client, and shared code only where the runtime boundary requires it. Shared code has no secrets or authoritative mutable state.
+Group by feature; split server/client/shared only at runtime boundaries. Shared code has no secrets.
 
 ### Use the smallest dependency shape
 
-Direct module calls are the default. Use a signal only when one publisher has genuinely independent observers. Do not add an event bus, dependency container, manager class, or `Init`/`Start` ceremony to hide an ordinary dependency.
+Direct module calls by default; a signal only for genuinely independent observers. No event bus, container or `Init`/`Start` ceremony for an ordinary dependency.
 
-Keep module top-level work cheap and non-yielding. A small bootstrap owns startup that needs ordering; call it sequentially and fail visibly. Concurrency must be explicit and safe, not automatic `task.spawn` everywhere.
+Keep module top level cheap and non-yielding. A small bootstrap owns ordered startup and fails visibly.
 
-Bound `WaitForChild` when a dependency arrives through replication; an unbounded wait turns a missing instance into a silent hang.
+Bound `WaitForChild`; unbounded waits hang silently.
+
+### Join and boot order (field-tested)
+
+- Admission decides before any other join hook; wire `PlayerAdded` once, in order, and loop `Players:GetPlayers()`.
+- Spawn with `LoadCharacterAsync()` (`LoadCharacter()` is deprecated).
+- Long non-yielding boot work hits `Script timeout`; a `task.spawn` in `Init` dies with it. Defer warm-up.
+- Live clients often find everything already replicated, so start-up lands in one frame. Test with `task.wait(8)` first.
+- `GetTagged` searches the whole DataModel, including `ServerStorage` copies.
 
 ### Enforce runtime authority
 
-The client presents and predicts; the server validates and decides. Remotes are APIs with types, bounds, ownership, abuse controls, and failure behavior. Route details to `roblox-networking` and `roblox-security`.
+The client presents and predicts; the server decides. Under Server Authority, gameplay is one shared module bound with `BindToSimulation`; destroy instances outside the simulation. Remotes: `roblox-networking`, `roblox-security`.
 
 ### Split only for evidence
 
-Split when there is a separate lifecycle or authority boundary, a distinct persistence contract, an independently testable pure core, or unrelated reasons to change.
+Split for a separate lifecycle or authority boundary, persistence contract, testable pure core, or unrelated reasons to change.
 
 ### Data-oriented alternative: only on evidence
 
-An ECS earns its cost only when many similar entities update every frame by order-independent logic, or cross-cutting queries replace tangled per-entity scripts; hooks enforce invariants, ordered systems decide. Version-specific pitfalls: full.md "ECS on Roblox".
+An ECS earns its cost only for many similar entities updated every frame by order-independent logic; hooks enforce invariants, ordered systems decide. Pitfalls: full.md.
 
 ### Review
 
-One canonical owner per mutation, no hidden startup yield or replicated trust decision, explicit cleanup, smallest traceable structure. Tags are discovery, attributes configuration, one owner for attach/remove cleanup.
+One owner per mutation, no hidden startup yield, explicit cleanup, smallest traceable structure. Tags discover, attributes configure.
 
 > Details: [references/full.md](references/full.md)
