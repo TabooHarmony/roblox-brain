@@ -44,6 +44,8 @@ Some tooling improves agent and developer productivity but is not essential to a
 
 ### Test-runner doctrine: what each backend can actually prove
 
+Writing the tests themselves (TestService, Jest Lua, multi-client, Luau Execution CI): `roblox-testing`.
+
 Before wiring any test runner (lest, Lune scripts, or a bespoke harness), split suites by what the runtime provides — not by convenience. lest's docs state the transferable rule directly: "**No backend fakes an environment.** Nothing mocks Instances, and nothing reimplements a runtime's standard library. If a test needs an environment, Lest runs it in that environment — partial mocks produce confident wrong tests." (lest `docs/backends.md`, verified 2026-10.)
 
 | Suite type | Where it runs | Can prove | Cannot prove |
