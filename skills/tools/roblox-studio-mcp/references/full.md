@@ -22,6 +22,8 @@ Two Studio MCP bridges are in active use. The official Roblox Studio MCP server 
 |------|-------------|
 | `generate_mesh` | Generate a textured 3D mesh from a description. Inspect the returned result before placement. |
 | `generate_material` | Generate a material variant; apply the returned base material and variant name to parts. |
+| `generate_animation` | Generate an R15 animation from a prompt, or convert an R6 animation to R15 by asset ID; target a rig, up to 10 s. |
+| `generate_avatar` | Generate a rigged, animatable R15 avatar (body, head, clothing) from a prompt. |
 | `generate_procedural_model` | Generate a configurable primitive-part model, optionally from a reference image URI per the official procedural-models docs. |
 | `wait_job_finished` | Wait on a returned generation ID when a dependent action needs completion. |
 | `search_asset` | Search Creator Store and Creator Inventory (user, group, or universe) with type, price, tag, and scope filters. |
@@ -51,7 +53,7 @@ Two Studio MCP bridges are in active use. The official Roblox Studio MCP server 
 | `get_studio_state` | Get Studio play state and available data-model contexts. |
 | `start_stop_play` | Start or stop playtesting. |
 | `get_console_output` | Retrieve output logs while the game is running. |
-| `screen_capture` | Capture a Studio viewport. Edit-mode capture was verified on the connected bridge; some bridges may hang or time out in Play mode, so keep a CUA screenshot fallback. |
+| `screen_capture` | Capture a Studio viewport, optionally from a given camera position and target. During a playtest it can also record video to check motion and timing (stutter, flicker, event timing); screenshots stay the default because they are much cheaper. Some bridges hang in Play mode, so keep an OS-level screenshot fallback. |
 
 ### Player Input Simulation
 
@@ -101,8 +103,48 @@ These were verified against the connected Studio server and must be rechecked wh
 
 | Tool | What it does |
 |------|-------------|
-| `http_get` | Fetch allowed Roblox documentation pages. |
-| `skill` | Retrieve detailed guidance for supported Roblox skills. |
+| `http_get` | Fetch allowed Roblox documentation pages, with keyword search inside the page. |
+| `skill` | Retrieve Roblox's built-in skills (debugging, device simulation, docs search, and more). |
+
+### Place management and feedback
+
+| Tool | What it does |
+|------|-------------|
+| `save_place` | Save like **File > Save**: a new place version for places opened from Roblox, or the file for local places. Works in Team Create, opens no dialog and **never publishes**. The agent can attach a note that appears in version history. A never-saved place must be saved once by the user first. |
+| `submit_feedback` | Send Roblox a short report when a tool fails or a workflow takes too many steps. Reports never include source, personal data or credentials; the agent may send one without asking but tells the user each time and stops if asked. |
+| `open_cloud_invoke` | Call Open Cloud through Studio with per-game permissions and no API key (see below). |
+
+<!-- temporal: 2026-11 --> A live official server checked on 2026-11-27 also listed `generate_scene`, `generate_texture`, `segment_mesh`, `auto_setup_avatar`, `video_capture`, `open_plugin`, `list_plugin_actions`, `create_skill`/`edit_skill`, and `list_roblox_skills`/`get_roblox_skill` in place of a single `skill` tool. Tool names move between releases: route on `tools/list`, not on this table.
+
+Playtest automation works across teleports: during a playtest an agent can teleport a player to another place in the same experience, read that server's output and fix what it finds, without publishing (`projects/teleport` lists supported methods).
+
+## Built-in Roblox Skills: Use Them, Don't Duplicate Them
+
+<!-- temporal: 2026-11 --> Studio's Assistant and the official MCP server ship Roblox-maintained skills: `rbx-configs-experimentation`, `rbx-create-skill`, `rbx-debug`, `rbx-device-simulator-lua`, `rbx-docs-search`, `rbx-instrument-analytics`, `rbx-perf-profiling`, `rbx-scene-analysis` and `rbx-unit-test`; a live server also listed `rbx-network-simulator`, `rbx-import-asset`, `rbx-open-cloud-usage` and `rbx-permissions`.
+
+- **Load the matching built-in skill before acting** in its area (for example `rbx-debug` before breakpoints, `rbx-perf-profiling` before MicroProfiler work, `rbx-permissions` on a 403). They track Studio's current tools more closely than any external skill.
+- **Don't copy or shadow them.** The `rbx-` prefix is reserved. A custom skill with the same name as a built-in one disables the original, so give project skills distinct names. Project skills hold project conventions; Roblox's skills hold the Studio procedures.
+- This repo's skills add design, architecture and field-tested pitfalls around those procedures.
+
+## Open Cloud Through the Studio MCP
+
+<!-- temporal: 2026-11 --> `open_cloud_invoke` calls Open Cloud APIs from the official server without an API key: `method`, `endpoint` (path under `https://apis.roblox.com`), `body` (JSON), optional `scopes` (gives a clear error when one isn't enabled) and `files` (multipart uploads, only from approved upload folders).
+
+- **Prerequisites:** a place belonging to a published game, and permission to manage it (group roles must allow the actions).
+- **Permissions are per person and per game,** set by the user under **MCP > MCP Permissions** (or Assistant **Settings > MCP Permissions**). The client can't enable them itself. Access levels: **Safe**, **Balanced** (the default), **Full access** (scopes that can cost Robux, affect players or publish live) and **Custom**. Each collaborator sets their own. They apply to external MCP clients only, not Assistant.
+- **Live data.** Data store and memory store calls from `execute_luau` also need **Enable Studio Access to API Services** and hit live data. HTTP from scripts needs the network permission plus a domain allowlist.
+- **Permanent effects.** Uploads are permanent and owned by the game's owner. Some scopes aren't available through MCP at all (for example badges, `datastores.control` and legacy scopes); use a normal API key for those (`roblox-cloud`).
+- Load `rbx-open-cloud-usage`, `rbx-permissions` and `rbx-import-asset` before these calls, and treat every write as a release-level action that needs the user's yes (`roblox-collaboration-mode`).
+
+## Studio Test Tools Around MCP
+
+<!-- temporal: 2026-11 -->
+- **Studio CLI.** `--task` runs `EditPlace`, `EditPlaceRevision`, `EditFile`, `RunScript` (with `--runScriptFile`, `--outputFile`, `--quitAfterExecution`) and `TryAsset`; `--api`/`--fullApi`/`--apiV2` dump the API; `--background` is Mac-only; verbose logs go to stdout. Use `RunScript` for headless checks instead of driving a visible Studio.
+- **Network Simulator (beta).** Sets inbound and outbound latency, jitter and packet loss separately and applies immediately; it maps to `NetworkSettings`. The default **Ideal Fiber** preset already adds 8 ms each way, so zero every field for a true baseline. Packet loss is a percentage (0.50% is half of one percent). Values are lost on a full Studio restart, but carried into the next playtest in one project: zero them and read them back before handing Studio back. Built-in skill: `rbx-network-simulator`.
+- **Device Simulator (beta toolbar; formerly Device Emulator).** Flagship, mid-range and entry phones, custom devices, physical-size display scaling, and touch shortcuts (Alt+drag to pinch). Built-in skill: `rbx-device-simulator-lua`.
+- **Controller Emulator.** Gamepads, VR controllers, handhelds and a TV remote; it follows the simulated device and keeps edited mappings.
+- **Party Simulator** (`studio/testing-modes`) tests party flows without real friends.
+- **Script Sync (beta)** syncs scripts with files on disk; `InstanceFileSyncService:GetStatus` reports its state. Projects on Rojo keep Rojo as the source of truth (`roblox-tooling`).
 
 ## MCP Reliability Patterns
 
@@ -265,21 +307,9 @@ Asset privacy is a permissions system, not DRM; it does not block copying by som
 - **Map:** root/origin, zones, floors, landmarks, spawns, path widths, connected traversal, and excluded Baseplate/Terrain/SpawnLocation filters in bounds checks.
 - **Runtime:** start play, navigate or interact, inspect console output, then stop play. Do not leave a test session running.
 
-### Debugging
+### Debugging and playtesting
 
-1. **Reproduce**: `start_stop_play` to enter play mode
-2. **Observe**: `get_console_output` to read errors/warnings
-3. **Inspect**: `inspect_instance` or `execute_luau` to check runtime state
-4. **Fix**: `multi_edit` to patch the script
-5. **Retest**: `start_stop_play` again
-
-### Playtesting
-
-1. Start play mode with `start_stop_play`
-2. Navigate with `character_navigation`
-3. Interact with `user_keyboard_input` / `user_mouse_input`
-4. Observe with `get_console_output` and capture before or after Play when supported. If Play-mode capture times out, use the CUA screenshot fallback.
-5. Stop with `start_stop_play`
+Reproduce with a named assertion, read the console, inspect runtime state, patch with `multi_edit`, and retest; see the Structured Playtest Pattern below and the method in `roblox-debugging`. If a Play-mode capture times out, fall back to an OS-level screenshot.
 
 ## Bridge Detection
 
@@ -350,20 +380,56 @@ The strongest playtest workflow uses a visible test artifact, not just "start pl
 - **Treat a stuck playtest as a known failure state:** if a stop command does not take effect, report it, do not silently continue. Restarting Studio or the MCP client may be required.
 - **Timeout + cleanup:** always bound a test with a timeout and always remove injected scripts, so no test residue survives.
 
-## [chrrxs Bridge](https://github.com/Chrrxs/robloxstudio-mcp): Underutilized Tools Worth Surfacing
+## chrrxs Bridge: Tools Worth Using
 
-The chrrxs bridge ships much more than the official core. Weighted by what actually helps real work:
+When the open-source bridge is connected, prefer its stronger paths: `eval_server_runtime`/`eval_client_runtime` (Luau in the live playtest VM, with the game's require cache) over guessing state; `multiplayer_playtest` (1–8 players) for anything involving remotes, replication or co-op; `get_runtime_logs` per peer over one console; `breakpoints` for "did this line run?" without pausing; `capture_script_profiler`/`capture_micro_profiler`, `get_memory_breakdown` and `get_scene_analysis` for performance; `manage_instance` for per-place windows; `get_roblox_docs`/`get_roblox_skills` instead of web search.
 
-- **`eval_server_runtime` / `eval_client_runtime`**: run Luau inside a live playtest's VM with the same `require` cache as game scripts; only after the intended playtest VM is confirmed running. This is the single best way to inspect live state (module state, runtime values) without restarting.
-- **`multiplayer_playtest`**: start/inspect/stop multi-client playtests (1-8 players). Use when the question is "is this actually working with 2+ players" (co-op, remotes, replication). This is the biggest capability gap vs the official bridge.
-- **`get_runtime_logs`**: per-peer logs (server, client-N), including boot-time output and structured `LogService` data. Better than a single console scrollback for finding which peer emitted an error.
-- **`breakpoints`**: instrument live code and record execution without pausing the playtest. Use for "did this line run?" questions.
-- **`capture_script_profiler` / `capture_micro_profiler`**: CPU timings on server or client. Use when the user asks "why is this slow" in a specific context.
-- **`get_memory_breakdown` / `get_scene_analysis`**: memory and scene attribution per peer.
-- **`manage_instance`**: launch/inspect/close Studio windows per place; the enabler for scripted multi-place workflows.
-- **`get_roblox_docs` / `get_roblox_skills`**: fetch official engine API docs and Roblox-authored skills as Markdown. Use instead of web search when the question is "what does this API do."
+## Field Notes: Capture, Evaluation and Input
 
-When these are available, prefer them over weaker fallbacks: per-peer logs over a single console, runtime eval over guessing state, multiplayer playtest over a solo-only check.
+Observed on one or both bridges across several projects; recheck after bridge updates.
+
+### Captures
+
+- **Window state decides what you get.** Captures come back black, grey or as a placeholder when Studio is minimised, behind other windows, the 3D view is hidden by another tab, or the host display is off or locked. With the display off, `PreRender`/`RenderStepped` stop firing in playtest clients while `Heartbeat` keeps 60 Hz, ProximityPrompts never show, and the Device Simulator reads a 1x1 viewport. Test logic then, and leave visual, prompt and layout checks for when it renders. Simulated input also needs a rendering Studio; report such paths as unverified.
+- **Size.** A small docked viewport gives a small image. For true 1920x1080, set the Device Simulator to an HD preset with ActualResolution scaling and an explicit resolution; FitToWindow shrank it.
+- **What captures leave out.** `BillboardGui`s with `AlwaysOnTop` are not drawn (CaptureService-based tools; set it false for the capture, then restore). CoreGui (default hotbar, chat, prompts' core UI) is absent, and runtime eval can't read CoreGui. FaceCamera beams render wrong under a script-forced Scriptable camera. New images can be blank in the first capture until downloaded. Never report a missing element from a capture alone; check state (`PromptShown`, GUI children) too.
+- **Latency.** A capture lands about 1 s after it is requested and stalled the playtest about 0.4 s on client and server in one project, which reads like a feature stall in frame logs. Log `os.clock()` before each capture, or capture in a separate run from the one you measure.
+- **Short effects** (under about 0.2 s) need staging: freeze the effect's time scale, set emitters' `TimeScale` to 0 a few frames after emitting, pin the camera with `BindToRenderStep` at `Enum.RenderPriority.Last.Value + 5`, anchor debris. Trails age in real time; use a constant spawner. Freezing from `task.delay` inside an eval is too late. Prefer `screen_capture` video where available.
+- **Which DataModel renders.** A capture shows whatever is rendering: during someone else's Play session it showed their client, not your edit-mode preview.
+- **Map detail streams around the character,** not the camera: move the character near a Scriptable camera before capturing distant views.
+- **Code-driven ScreenGuis in edit mode:** clone into `StarterGui`, fill and capture, then destroy the clone (disable the original meanwhile). Right after switching device presets, `CurrentCamera.ViewportSize` can still read the old size, so read it in a later call.
+
+### Runtime evaluation
+
+- **Time limit.** Runtime evals on the open-source bridge failed with a bare `Unknown error` around 30–45 s even though part ran; keep calls under about 15 s and arm long work with `task.spawn`, then read a workspace attribute in a later call. `task.wait` inside a client eval did not let the client advance; wait between calls.
+- **`Unknown error` has many causes and may have run.** Seen causes: yielding inside an async API, reading `Lighting.Technology` in `execute_luau`, starting a solo playtest without `mode = "play"`, a custom device resolution, some tablet device ids, and reading `Source` from a runtime eval (needs plugin security). One such call had still started a map-wide rebuild. Read any state it could have changed before trusting the next measurement.
+- **Separate module caches.** The official `execute_luau` in a Server or Client context runs with its own require cache: requiring a started service returns a fresh, unstarted copy, so calls on it change nothing. Read state through instances and attributes and fire existing remotes. In edit mode, Studio caches require results for the session, so after a re-sync `require(module:Clone())` to get the new code.
+- **No shared state between evals.** `_G` isn't shared, a `task.spawn` loop dies when the official call returns, and with deferred signals a Connect and Disconnect inside one eval see nothing. To watch server work from a client, schedule it with a server `task.delay`, then observe from a client eval.
+- **Security limits.** `ContextActionService:CallFunction` fails from a runtime eval (it needs the RobloxScript capability); simulate real input or call the handler. `simulate_keyboard_input` with `One` failed because the key is bound to a CoreGui action; equip from the server instead.
+- **Script size.** Studio refuses a `Source` longer than 200,000 characters, and an MCP call reports only `Unknown error`. Split generated data into child ModuleScripts of about 180 KB.
+- **Paths.** A module named with a dot (`Play.story`) needs bracket indexing in tool paths: `game.ReplicatedStorage.Stories["Play.story"]`.
+
+### Input and the Device Simulator
+
+- **The simulator persists** into new playtests. Under it, simulated mouse clicks arrive as touch and never reach `MouseButton1` bindings, and in one project they stopped starting gameplay actions until the simulation was stopped. Stop it before testing PC input. Set the device **before** Play, because UI that reads `TouchEnabled` at load keeps its first layout. Touch controls appear several seconds after a switch.
+- **Taps under phone presets don't map screenshot pixels.** Offsets of the 58 px top-bar inset, a fixed landing spot whatever was sent, and about 15% errors were all seen. Click at real coordinates (`AbsolutePosition + AbsoluteSize / 2` plus `GetGuiInset`), print `InputBegan` positions to confirm, or call the handler and verify layout from `AbsolutePosition`/`AbsoluteSize`.
+- **Locked first person.** A simulated press away from screen centre spins the camera for as long as it is held (about 180°/s in one test). `duplicate button state` means a button is still down from an earlier call. Moving the character doesn't turn a locked camera; frame targets with a temporary Scriptable camera at a late render priority, then restore `Custom`.
+
+### Multiplayer, logs and heavy tests
+
+- **Client captures and evals.** In multiplayer playtests on the open-source bridge, client captures returned the place icon and both client ids reached the same first client in one project. Take visuals in solo playtests and verify per-player state from logs that print each client's `LocalPlayer`.
+- **`get_runtime_logs` may return only the edit peer.** In at least one multiplayer session (after a start that registered the peers under a second instance id), it returned the edit peer's output and not the server's or clients'. This is a verification warning, not proof the tool is broken: print a unique marker on each peer and confirm the returned entries include the peer you need; otherwise read that peer's Studio log file.
+- **Orphaned sessions.** `multiplayer_playtest` start can return an error while windows still open under another instance id. List instances, end the session there, and check the process list before retrying. Leftover local-server windows (still simulating) skewed a performance capture unnoticed; ambiguous-target errors were the hint.
+- **Solo Play is one process.** Edit, server and client share a process, so a heavy server rebuild can stall everything with `Script timeout` in code that yields often. Test heavy server work in a multiplayer playtest, which splits server and client like live.
+- **Summary lines only.** Have tests print per-phase summary lines and filter logs for them; pulling every per-second line costs far more context than it is worth.
+
+### Edits and assets
+
+- **No scripted undo.** `ChangeHistoryService:Undo()` from an MCP script removed created instances but didn't restore destroyed ones. Keep backups (renamed copies or exported models). Before destroying a big model, export it to `.rbxm`, import the export and compare descendant, part and tag counts, then destroy the imported copy (tagged instances still answer `GetTagged`).
+- **Store assets.** Search results can include paid assets; inserting one fails with a bare "not authorized". In a group-owned place, loading a free store model from MCP returned "not authorized" until the user dragged it in from the Toolbox. Store descriptions aren't reliable about scripts; check the details' script flag and strip scripts and sounds first. Brute-forcing asset id ranges hit HTTP 429 after a few hundred ids; search exact titles.
+- **Version mismatch.** If a Studio MCP plugin updates while its bridge stays older, the bridge reports the plugin disconnected (HTTP 426). Compare versions before debugging further. After one Studio update, Roblox staff advised restarting Studio (once or twice) when MCP reported Studio unreachable (DevForum, 2026-06-04: https://devforum.roblox.com/t/assistant-updates-multiple-chats-and-chat-history/4668130).
+
+Shared-machine rules (ask before focus, input or Play; never disturb a live session; batch playtests) live in `roblox-collaboration-mode`. Generic bug-hunting method lives in `roblox-debugging`.
 
 ## Multiplayer Testing Awareness
 
@@ -383,13 +449,7 @@ For a prompt or menu intended for just the interacting player, use a local test 
 
 ## MCP Mode Detection
 
-Different MCP servers expose different names and schemas. Call `tools/list` and route by capability:
-
-- **Official docs baseline:** session selection, tree/script inspection, `multi_edit`, `execute_luau`, play control, console/visual evidence, input simulation, and generated/searchable assets.
-- **Observed connected server (2026-07-12):** `search_asset`/`insert_asset`; chrrxs exposes `search_assets`/`get_asset_details`/`preview_asset` alongside `insert_asset` (older builds: `search_creator_store`/`insert_from_creator_store`).
-- **No MCP or missing capability:** generate complete offline Luau, identify the intended insertion path, and state exactly what was not inspected or tested.
-
-If a call fails with "not found", an invalid context, a stale session, or an unavailable generation job, stop assuming the workflow succeeded. Re-discover state, choose a supported fallback, or report the blocker with the tool response.
+Call `tools/list` and route by capability. With no MCP or a missing capability, generate complete offline Luau, name the intended insertion path, and state exactly what was not inspected or tested. If a call fails with "not found", an invalid context, a stale session or an unavailable generation job, stop assuming the workflow succeeded: re-discover state, choose a supported fallback, or report the blocker with the tool response.
 
 ## Setup Reference
 
