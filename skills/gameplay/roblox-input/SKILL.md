@@ -31,15 +31,15 @@ Touch, gamepad, keyboard, mouse or motion input, on-screen action buttons, cross
 ## Quick Reference
 
 - **Events:** `InputBegan/Changed/Ended` give `(input, gameProcessedEvent)`; filter it for gameplay. Wheel fires only `InputChanged`.
-- **Bindings:** new work uses the Input Action System (`InputContext` > `InputAction` > `InputBinding`); CAS `BindAction` is planned for deprecation, so migrate when touched. Server Authority: `RunService:BindToSimulation()`.
+- **Bindings:** new work uses the Input Action System (`InputContext` > `InputAction` > `InputBinding`); CAS binding is planned for deprecation. Server Authority: `BindToSimulation()` (needs `UseFixedSimulation`).
 - **Hybrid aware:** show controls from `UserInputService.PreferredInput`, observed live, not `TouchEnabled` cached once.
 - **Touch buttons:** fire only for touches that began on the button. Place from the measured jump button in `PlayerGui.TouchGui`.
 - **Gate gameplay:** block attacks while a game window is open, a `TextBox` is focused, `GuiService.MenuIsOpen`, or `GuiService.SelectedObject` is set.
 - **Cancel is not release:** holds cancel on window open, `Cancel`, unequip, focus loss, input switch or pad disconnect.
-- **Gamepad tools:** R2 activates tools; `Tool.ManualActivationOnly = true` disables it. Aim from screen center, not `GetMouseLocation()`.
+- **Gamepad tools:** R2 activates tools via `BindActivate`; `Tool.ManualActivationOnly = true` disables it. Aim from screen center, not `GetMouseLocation()`.
 - **Hints:** `InputActionLabel`, `GetStringForKeyCode(key, Abbreviated)`, `GetImageForKeyCode`; never hardcode Xbox names.
 - **TV remote:** D-pad, centre (`ButtonA`), back (`ButtonB`); `PreferredInput.MicroGamepad` isn't set yet, so detect a pad without thumbsticks.
 - **Locked mouse:** popups need a key; click windows show `Modal` + `MouseIconEnabled`; `ClickablePrompt = false`.
-- **Test:** Device Simulator + Controller Emulator; focus: `roblox-gui`.
+- **Test:** Device Simulator + Controller Emulator.
 
 > Details: [references/full.md](references/full.md)

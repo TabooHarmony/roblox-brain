@@ -456,7 +456,7 @@ entries:
   claim: UIPageLayout.JumpTo exists (page-step methods are Next/Previous; 'JumpToPage'
     is not a real member)
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   check:
     type: member_exists
     class: UIPageLayout
@@ -466,7 +466,7 @@ entries:
   claim: SelectionBox.Adornee is inherited from InstanceAdornment (defined there,
     not on SelectionBox itself)
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   check:
     type: property_exists
     class: InstanceAdornment
@@ -475,7 +475,7 @@ entries:
 - id: gui-decal-texture
   claim: Decal.Texture exists (ContentId; deprecated in favor of ColorMap/ColorMapContent)
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   check:
     type: property_exists
     class: Decal
@@ -485,7 +485,7 @@ entries:
   claim: VideoPlayer.VideoContent exists (Content); VideoPlayer has no 'Video' property
     (that is VideoFrame)
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   check:
     type: property_exists
     class: VideoPlayer
@@ -962,7 +962,7 @@ entries:
 - id: gui-mobile-submit
   claim: TextBox.ReturnPressedFromOnScreenKeyboard supports the documented workflow
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   teaching_needles: [ReturnPressedFromOnScreenKeyboard]
   check:
     type: member_exists
@@ -972,7 +972,7 @@ entries:
 - id: gui-grid-layout
   claim: UIGridLayout.FillDirectionMaxCells supports the documented workflow
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   teaching_needles: [FillDirectionMaxCells]
   check:
     type: member_exists
@@ -1002,7 +1002,7 @@ entries:
 - id: gui-legacy-position-tween-deprecated
   claim: GuiObject.TweenPosition is deprecated in favor of TweenService
   files:
-  - path: skills/gameplay/roblox-gui/references/full.md
+  - path: skills/gameplay/roblox-gui-components/references/full.md
   check:
     type: method_deprecation_status
     class: GuiObject

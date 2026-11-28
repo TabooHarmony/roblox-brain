@@ -385,7 +385,7 @@ end
 - **Detection:** `Enum.PreferredInput.MicroGamepad` exists but is not currently set for these devices. Until it is, the docs' check is: `Gamepad1` is connected and supports neither `Thumbstick1` nor `Thumbstick2` (`GamepadSupports`). `Gamepad1` is always the most preferred connected pad, so a full controller plugged in alongside takes it. A TV remote additionally supports `Enum.KeyCode.ButtonCenter`.
 - **Legacy keycodes:** remote buttons currently arrive as legacy gamepad keycodes. `ButtonCenter` maps to `ButtonA` and `ButtonBack` to `ButtonB` in all contexts. The arrows map to `DPadUp/Down/Left/Right` in menus and selection mode, but to `Thumbstick1` (movement) and `Thumbstick2` (camera, with the Classic or Follow camera) during gameplay. Never identify a TV remote from these keycodes alone: a full gamepad sends the same ones.
 - **Bind once, branch on capability.** Bind `ButtonA`/`ButtonB` actions and branch inside the handler: on a micro gamepad `ButtonA` activates the focused item, otherwise it may jump. Use separate input contexts for navigation and gameplay so one press never triggers both.
-- **UI:** visible focus, everything reachable with four directions, centre for the primary action, back to close, focus preserved across open and close, large controls (`roblox-gui` §6).
+- **UI:** visible focus, everything reachable with four directions, centre for the primary action, back to close, focus preserved across open and close, large controls (`roblox-gui` §8).
 - **Test:** in Device Simulator pick the Android TV device, then choose **TV Remote** in Controller Emulator; it is driven from the keyboard or mouse.
 
 ```luau
@@ -543,7 +543,7 @@ Use Studio's Device Simulator with Controller Emulator: emulate Xbox, then PlayS
 
 1. Controller-only cold join: move, look, jump with no mouse or keyboard touched.
 2. Every action: tap, hold, release, and cancel by opening a window, opening the Roblox menu and disconnecting the pad mid-hold. Nothing should fire on cancel.
-3. Every window: enter, navigate in all four directions to the last row, act, Back, and confirm focus lands somewhere visible each time (`roblox-gui` §8).
+3. Every window: enter, navigate in all four directions to the last row, act, Back, and confirm focus lands somewhere visible each time (`roblox-gui` §6).
 4. Touch: drag the camera across every on-screen button (nothing fires), and move, jump, look and attack at the same time on the smallest phone.
 5. Hybrid: on a touch device, use a controller, then touch again. Buttons, reticle and hints follow the active input.
 

@@ -530,7 +530,7 @@ At minimum check:
 - localization expansion and bidirectional layout where relevant;
 - lower-end mobile memory, thermal load, frame rate, and network conditions.
 
-Cross-reference `roblox-input`, `roblox-gui`, `roblox-localization`, `roblox-performance`, `roblox-audio`, and `roblox-animation-vfx` for implementation.
+Cross-reference `roblox-input`, `roblox-gui`, `roblox-gui-components`, `roblox-localization`, `roblox-performance`, `roblox-audio`, and `roblox-animation-vfx` for implementation.
 
 ## 6. Packaging and Metadata
 
