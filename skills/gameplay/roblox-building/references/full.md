@@ -240,7 +240,7 @@ Cage meshes are invisible low-resolution surfaces that let one mesh deform over 
 - **Recolorable patterns without SurfaceAppearance:** a MeshPart's `Color` shows through transparent pixels of its `TextureID`, and scripts can set `TextureID` at runtime. Box-project UVs at a fixed studs-per-tile on every model so one texture tiles the same everywhere, and scale tiling by `Size / MeshSize` when scaling a model.
 - **`MaterialVariant.ColorMap` is plugin-only** (PluginSecurity read and write); keep texture ids your runtime code needs in your own data module.
 - **Creator Store descriptions are not evidence.** Packs that said "No scripts" contained 6-8 scripts and audio. Read the asset's script flag and instance counts before inserting.
-- **Inspect generated or imported art from top, bottom and the facing side** before calling it fixed; triangle counts don't show a wrong shape. For world imports end to end, see `roblox-world-import-pipeline`.
+- **Inspect generated or imported art from top, bottom and the facing side** before calling it fixed; triangle counts don't show a wrong shape.
 
 ## Build Process
 

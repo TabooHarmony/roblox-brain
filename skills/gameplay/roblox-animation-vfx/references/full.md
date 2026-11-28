@@ -112,7 +112,7 @@ Prefer a graph state machine over hand-written track switching when transitions 
 
 ## Avatar joints and procedural poses
 
-New R15 player rigs (with `StarterPlayer.AvatarJointUpgrade`, the default for new experiences) use `AnimationConstraint` joints instead of `Motor6D`; a default R15 checked in Studio in November 2026 had no `Motor6D`s at all. `IsA("Motor6D")` is false for them, and their `C0`/`C1` are read-only aliases. See `roblox-physics` for the full migration table and `roblox-characters` for character lifecycle. <!-- temporal: 2026-11 -->
+New R15 player rigs (with `StarterPlayer.AvatarJointUpgrade`, the default for new experiences) use `AnimationConstraint` joints instead of `Motor6D`; a default R15 checked in Studio in November 2026 had no `Motor6D`s at all. `IsA("Motor6D")` is false for them, and their `C0`/`C1` are read-only aliases. See `roblox-physics` for the full migration table. <!-- temporal: 2026-11 -->
 
 - **Layer procedural motion in `Transform` during `RunService.PreSimulation`.** The `Animator` writes `Transform` between `PreAnimation` and `PreSimulation`, so multiplying in afterwards stacks with playing tracks. Skip frames where `Animator.EvaluationThrottled` is true. Never edit rig attachment CFrames.
 - **Look joints up lazily and accept both classes.** `CharacterAdded` can fire before parts stream in; an eager lookup finds nothing and no pose ever applies (field-measured).

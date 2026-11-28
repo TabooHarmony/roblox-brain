@@ -375,6 +375,8 @@ Networking and validation details stay in `roblox-networking`.
 <!-- temporal: 2026-11 -->
 Roblox now documents three code workflows ([compare file-based workflows](https://create.roblox.com/docs/projects/file-based-workflows), [Rojo](https://create.roblox.com/docs/projects/rojo)): **Studio-native** (the place is the source of truth, and Script Sync keeps a copy of the scripts in Git); **partially managed** Rojo (Git owns the code and the place owns models, terrain and UI, which Roblox recommends for most teams that use Git); and **fully managed** Rojo (Git owns everything, and CI builds and publishes places). Decide which side owns each kind of content before you design the folder layout. Rojo is a community tool and its docs are the reference; tool setup lives in `roblox-tooling`.
 
+`SerializationService` ([reference](https://create.roblox.com/docs/reference/engine/classes/SerializationService)) converts instances to `.rbxm` data and back for build tooling: `SerializeInstancesAsync({ Instance })` returns a buffer and `DeserializeInstancesAsync(buffer)` returns the instances. It works only from Studio plugins and Open Cloud Luau Execution sessions, not from game scripts, and it errors on instances or services that can't be created. Roblox gives no stability contract for the `.rbxm` format, so round-trip the bytes through the API instead of parsing them. <!-- temporal: 2026-11 -->
+
 ## Community ecosystem (leads, not sources)
 
 Open-source study codebases ranked by DevForum likes. Read before architecting similar genres:

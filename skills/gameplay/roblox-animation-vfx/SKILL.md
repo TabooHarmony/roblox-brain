@@ -26,7 +26,7 @@ sources:
 
 ## When to Load
 
-Animation, graphs, procedural poses, particles, beams, tweens, effect cleanup. Rigs: `roblox-physics`, `roblox-characters`.
+Animation, graphs, procedural poses, particles, beams, tweens, effect cleanup. Rigs: `roblox-physics`.
 
 ## Quick Reference
 
@@ -34,7 +34,7 @@ Animation, graphs, procedural poses, particles, beams, tweens, effect cleanup. R
 - `Animator` under the `Humanoid` (`AnimationController` for other rigs); set `Priority`; cue effects from `GetMarkerReachedSignal()`. `Ended` = post-fade; `Stopped` includes `Stop()`.
 - Animation Graphs: load like an `Animation`, drive with `track:SetParameter()`. Give competing state-machine transitions distinct priorities (ties are random).
 - New R15 rigs use `AnimationConstraint`, not `Motor6D`. Multiply poses into `.Transform` in `PreSimulation`; find joints lazily, accept both.
-- Server Authority: `BindToSimulation()`; query tracks (`GetTrackByAnimationId`), don't cache; key predicted effects, make them reversible.
+- Server Authority: `BindToSimulation()` (needs `Workspace.UseFixedSimulation`); query tracks (`GetTrackByAnimationId`), don't cache; key predicted effects, make them reversible.
 
 **Effects**
 - Bursts: `Rate = 0` + `:Emit(n)`, timed by `EmitCount`/`EmitDelay` attributes; clean up after the longest lifetime (max 20 s).

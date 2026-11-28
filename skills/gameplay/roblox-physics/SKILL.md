@@ -18,7 +18,7 @@ sources:
 
 ## When to Load
 
-Physics gameplay: vehicles, ragdolls, projectiles, contraptions, elevators, constraints and forces. Characters: `roblox-characters`. Breakables: `roblox-destruction`.
+Physics gameplay: vehicles, ragdolls, projectiles, contraptions, elevators, constraints and forces.
 
 ## Quick Reference
 

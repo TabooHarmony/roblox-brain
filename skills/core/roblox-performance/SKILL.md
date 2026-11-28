@@ -29,7 +29,7 @@ Use for profiling and performance budgets. Pooling and lifecycle: `roblox-luau-p
 
 ### Profiling Tools
 - MicroProfiler (Ctrl+F6), Developer Console (F9), Script Profiler (Ctrl+Alt+F5).
-- `debug.profilebegin`/`profileend` labels; `debug.setmemorycategory`. Gate behind a flag.
+- `debug.profilebegin`/`debug.profileend` labels; `debug.setmemorycategory`. Gate behind a flag.
 
 ### Targets
 Server heartbeat < 16ms (investigate > 33ms); client 60 FPS desktop, 45 mobile (investigate < 30); no sustained memory growth.

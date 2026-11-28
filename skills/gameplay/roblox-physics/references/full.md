@@ -610,7 +610,7 @@ Measured in individual projects; numbers are examples, verify on your own conten
 - **At high speed a slow frame can skip a short "about to touch" window.** Detect impacts by the segment from the previous to the current position as well as by distance, and cast ahead by the expected delay when a server change lands a round trip later.
 - **Drop thousands of parts with proxies.** Simulate one invisible proxy box per chunk and move the anchored, non-colliding visuals with one `workspace:BulkMoveTo` per frame. Measured: 5.5k real physics parts cost 60-70 ms per step; `BulkMoveTo` of 5k parts cost 6-11 ms. Let proxies collide only with the ground or a catch slab.
 - **Side-only barriers:** a per-side collision group colliding only with the other side's character groups keeps players out of a spawn while shots and sight rays pass; back it with a server position check.
-- **Foliage and props need an interaction matrix.** For each kind (bush, tree, prop), decide whether projectiles, explosions, melee, characters and the camera pass, hit or break, and test every pair. Imported plants cut or merged for performance silently lose collision and query behavior. See `roblox-destruction` for breakable props.
+- **Foliage and props need an interaction matrix.** For each kind (bush, tree, prop), decide whether projectiles, explosions, melee, characters and the camera pass, hit or break, and test every pair. Imported plants cut or merged for performance silently lose collision and query behavior.
 
 ## Collision groups: PhysicsService
 
