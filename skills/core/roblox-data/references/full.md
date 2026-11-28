@@ -468,6 +468,53 @@ end
 
 Interaction with soft delete: `RemoveAsync` does not erase anything by itself. It appends a tombstone version, so subsequent `GetAsync` calls return `nil`, while older versions stay readable via `ListVersionsAsync` and `GetVersionAsync` until they expire. Two consequences: data thought deleted can still be retrievable (relevant to erasure obligations, section 1b), and an accidental `RemoveAsync` is recoverable by reading the prior version and rewriting it. Only the latest version counts toward the storage limit (section 10).
 
+## 8b. Claim-once rewards and numbered items
+
+These patterns come from one project's save code. They aren't official guidance: test each one with unit tests in your own schema.
+
+**Offline earnings.** Compute the claim while the save loads, from the stored last-seen time:
+
+- Cap the claim at the allowed hours.
+- Stamp last-seen in the same update, so a fast rejoin can't claim the same time twice.
+- Ignore absences under a minimum, so a server hop pays nothing.
+- Pay nothing before the save's first real save.
+- Derive the rate from durable progress (rank, owned upgrades), not from one recent match, so a lucky run can't be farmed.
+
+```luau
+-- Illustrative: pure claim function, unit-testable without DataStores.
+local AWAY_MIN = 120 -- seconds
+local CAP_SECONDS = 8 * 3600
+
+local function claimOffline(save: { lastSeen: number?, firstSavedAt: number? }, now: number, ratePerSecond: number): number
+	local lastSeen = save.lastSeen
+	save.lastSeen = now -- stamp before paying, in the same update
+	if lastSeen == nil or save.firstSavedAt == nil then
+		return 0
+	end
+	local away = now - lastSeen
+	if away < AWAY_MIN then
+		return 0
+	end
+	return math.floor(math.min(away, CAP_SECONDS) * ratePerSecond)
+end
+```
+
+**Serial-numbered items.**
+
+- Take each serial from `UpdateAsync` on a per-item counter key before writing the copy. A failed grant then leaves a gap in the numbering, never a repeat.
+- Add copies only through one function keyed by a grant id recorded in the save, so a repeated grant returns the existing copy.
+- Run one grant or opening at a time per player, so a yield can't interleave two changes.
+- Sell only a held container for Robux, never a specific copy, and acknowledge the receipt only after the save is stored (§5b).
+- If you'll add trading later, prepare for it now: a stable copy uid, a tradable flag set by source, a trade lock that restarts on each transfer, an owner history, and a market escrow keyed by uid with each step keyed by sale id.
+
+## 8c. Recent DataStore behavior (official)
+
+<!-- temporal: 2026-11 -->
+
+- **`InvalidJson`.** Writes now fail with this error when JSON nesting depth exceeds 400. Flatten deep trees, such as recursive inventories or graphs, before saving.
+- **Deletion is cached.** After a data store is scheduled for deletion in the Data Stores Manager, reads can still succeed for up to 24 hours and writes for several minutes. Don't treat "delete" as instant when you migrate or reset test data.
+- **Request queues.** The error-codes page now groups limits in one section. Each queue holds 30 requests, and requests dropped from a full queue return codes 301–306 (§10).
+
 ## 9. Data safety checklist
 
 - [ ] A failed load cannot overwrite an existing record with defaults.

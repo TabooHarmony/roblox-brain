@@ -373,6 +373,146 @@ are lost observations, not successful sessions; report coverage before conclusio
 > key limit, RTBF templates, Cloud v2 endpoints and scopes) are sourced in the skill's
 > frontmatter and verified against current creator docs.
 
+## 9. Journeys, segments, and dashboards (official)
+
+<!-- temporal: 2026-11 -->
+
+### Journey events
+
+Use journeys for branching, non-linear paths. Funnels fit ordered steps.
+
+**Configure** journeys in Creator Hub > Analytics > Journeys, or as the Creator Config type `JourneysConfig` (`universe:write`).
+
+- 2–10 stages, with 1–10 nodes per stage.
+- Names are up to 50 characters, and node names can't start with `__`.
+- `__entry__` is the automatic stage 0.
+
+**Log** a node from the server:
+
+```luau
+-- Illustrative: journey and node names must match the Creator Hub config.
+local AnalyticsService = game:GetService("AnalyticsService")
+
+local function onShopOpened(player: Player)
+	AnalyticsService:LogJourneyEvent(player, "FirstPurchase", "OpenedShop")
+end
+```
+
+The optional fourth and fifth arguments are a journey session id and custom fields.
+
+How progress is tracked:
+
+- Progress only moves forward. Skipped stages are recorded.
+- Progress expires after 180 days.
+- Cohorts are grouped by first entry and followed for 90 days.
+- A new journey version doesn't migrate existing progress.
+- Custom fields allow 8,000 unique combinations.
+
+### Player segments
+
+`AnalyticsService:GetPlayerSegmentsAsync(player)` returns these fields, cached per player for the server session:
+
+| Field | Values |
+|---|---|
+| `ExperienceActivationStatus` | — |
+| `EngagementLevel` | Inactive; Low (1 of the last 7 days); Medium (2–3); High (4–7); Unknown |
+| `PlatformActivationStatus` | — |
+| `UserNewReturningStatus` | — |
+| `UserAcquisitionSource` | `HomeRecommendation`, `ContinueToPlay`, `Curation`, `Friends`, `Search`, `Teleport`, `Ads`, `HomeOther`, `Other`, `PendingAttribution`, `Unknown` |
+
+Use segments to **measure**, not to reorder the store per player. A personalized store hides the catalog and teaches you nothing. Measured in one project:
+
+- **One table per segment.** Count every session at leave under each segment value: minutes played, share with 10+ minutes, store opened, Robux prompt shown, buyer. One table then shows which traffic stays and pays.
+- **Read each result property in its own `pcall`.** A missing property errors on index and loses the rest.
+
+### Custom dashboards and deprecations
+
+- **Custom dashboards:** up to 20 per experience. They're saved only when published, and they support summary cards and sidebar pinning.
+- **Deprecated:** `AnalyticsService.ApiKey` and the `Fire*` methods (`FireCustomEvent`, `FireEvent`, `FireInGameEconomyEvent`, `FireLogEvent`, `FirePlayerProgressionEvent`). Migrate to the `Log*` methods.
+
+### Reading data back
+
+- **The Analytics Query API** returns dashboard metrics, including forward D1/D7/D30 retention by acquisition source. In-game code can't see ad or Home attribution. A "came with a friend" proxy can come from `Player.FollowUserId`, the `ReferredByPlayerId` join-data field, and `IsFriendsWithAsync`; label it a proxy.
+- **Custom field names differ.** Breakdown and filter dimensions are named `CustomField1`..`CustomField3`, while the engine enum uses `CustomField01`..`CustomField03`.
+- **Data point status.** Each point is `Valid`, `Projected`, or `NotStatisticallySignificant`. Report the last as imprecise, not as zero.
+- Benchmarks, Alerts, and Error Reporting APIs: `roblox-cloud` §8.8.
+
+## 10. Measurement discipline (measured)
+
+These lessons come from first-session tracing in individual projects. Treat the numbers as examples, not benchmarks.
+
+**One analytics module.** Exactly one server module calls `AnalyticsService`, and everything else calls that module, which can mirror each call into your own telemetry. Its calls never error or yield, so instrumentation can't break gameplay.
+
+- Keep event arguments positional and never reorder them. To change a meaning, add a new event kind.
+- Whitelist client-sent event kinds on the server and drop the rest.
+- Never record typed text.
+- Tag sessions with environment (from `game.GameId`), place role, build id, and a developer flag.
+
+**Funnel steps fire once.** Log each onboarding step once per player per server. Key the steps off a saved count (for example, finished matches) so they fire only in a real first session, and print them in Studio output.
+
+- The dashboard shows events about a day later. Verify instrumentation from your own logs first.
+
+**Count sales from server receipts.** Client-reported "bought" events showed up with no matching grant, so a client event is at most an intent signal. Report prompts, closes, and server grants as separate rows (`roblox-monetization` §8b).
+
+**Version your counters.** Custom events carry no place version. For per-build comparisons, keep your own counters keyed by `game.PlaceVersion`, and print every key the store holds when you audit.
+
+**Capture client errors.** Server logs miss UI breakage that happens only on phones.
+
+- Listen to `ScriptContext.Error` on the client, deduplicate by message and stack, rate-limit the remote, and store counts per device class.
+- Audit what the store actually holds, rather than trusting what the code sends.
+
+**Sample client performance yourself.** The dashboard may show crash and FPS metrics as unavailable for small games.
+
+- Count `RenderStepped` frames per window (average and worst second), and read `Stats:GetTotalMemoryUsageMb()` about once a minute.
+- Send through a rate-limited remote, and range-check values on the server before counting them per device type.
+
+**Plan power before a verdict.** State the baseline, the smallest effect that would change the decision, and the sample needed. In one game, the same build's early retention swung between 18% and 41% by hour of day.
+
+- About 350 new players per arm detected a 10-point change; about 1,340 detected 5 points.
+- Below that, say "not enough data" (`roblox-growth-design` §2).
+
+**Test the assignment hash.** Plain FNV-1a on a UserId isn't enough: its low bit depends only on how many odd digits the id has, and neighboring ids shared an arm 88% of the time.
+
+- Add a finalizer such as murmur3's `fmix32`, and keep an offline twin of the same function for analysis.
+- Before shipping, check parity on fixed ids and about 50% agreement between neighbors.
+
+```luau
+-- Illustrative: FNV-1a over "testId:userId", then the murmur3 fmix32 finalizer.
+local function mul32(a: number, b: number): number
+	-- 32-bit multiply without exceeding double precision
+	local aLo, aHi = a % 65536, a // 65536
+	return (aLo * b + ((aHi * b) % 65536) * 65536) % 4294967296
+end
+
+local function armHash(testId: string, userId: number): number
+	local s = testId .. ":" .. tostring(userId)
+	local h = 2166136261
+	for i = 1, #s do
+		h = mul32(bit32.bxor(h, string.byte(s, i)), 16777619)
+	end
+	h = mul32(bit32.bxor(h, bit32.rshift(h, 16)), 0x85EBCA6B)
+	h = mul32(bit32.bxor(h, bit32.rshift(h, 13)), 0xC2B2AE35)
+	return bit32.bxor(h, bit32.rshift(h, 16))
+end
+
+-- Arm: armHash(testId, player.UserId) % 10000 < splitBasisPoints
+```
+
+Mirror the same function offline and compare outputs on fixed ids before you ship.
+
+**State the comparison base.**
+
+- "Players left after buying X" needs the leave rate after *other* purchases at the same point. In one check, both were 25% within five minutes.
+- Average FPS can be reverse-confounded with session length.
+
+**Check metric definitions.** Write each metric as a precise rule and test it on a hand-checked trace. A second review found an "ever affordable" measure that checked only the last sample, and a reaction time that clamped negative delays to zero.
+
+**Plan the window.** Before a measurement session:
+
+- Write down the time horizon and the variables needed to read each outcome. Missing history can't be backfilled.
+- Estimate storage from the busiest trace rate times the window, and test the cap on dense periods.
+- List the model's assumptions (base payouts, owned upgrades, bonuses), and log dimensions that tell them apart.
+
 ## Analysis and observability integrity
 
 ### Establish what the data can observe

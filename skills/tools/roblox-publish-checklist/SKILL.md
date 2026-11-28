@@ -2,14 +2,14 @@
 name: roblox-publish-checklist
 description: "Use before publishing or updating a Roblox experience to run evidence-backed release gates and a pre-release audit."
 when_to_use: "Also when asked to ship, release, push an update, restart servers, or check whether a build is ready, safe or tested enough."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/publish-games-and-places.md
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/adaptive-design.md
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/accessibility.md
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/publishing/descriptions.md
+  - https://create.roblox.com/docs/production/publishing/publish-games-and-places
+  - https://create.roblox.com/docs/production/promotion/content-ratings
+  - https://create.roblox.com/docs/production/publishing/ip-guidelines
+  - https://create.roblox.com/docs/production/publishing/accessibility
   - original
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/DataModel.yaml
+  - https://create.roblox.com/docs/reference/engine/classes/DataModel
 ---
 
 # Roblox Publish Checklist
@@ -32,6 +32,8 @@ Record the changed places, scripts, assets, configuration, schemas, products, su
 - **Cloud auth or webhooks changed:** verify secrets, scopes, callback state, retries, signatures, and deduplication. Load `roblox-cloud`.
 
 A failed high-consequence gate means NOT READY. Do not average it into a percentage. Precedence: user approval authorizes an otherwise permitted action; it does not satisfy a mandatory policy and does not turn a failed or unverified gate into PASS.
+
+- **Content and live build:** answer the Content Ratings questionnaire accurately, strip real-world brands from text, and prove the serving build matches the commit (build stamp, no stale Studio window). full.md §7a–7b.
 
 ### 3. Exercise the shipped surface
 

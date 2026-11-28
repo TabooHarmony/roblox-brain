@@ -223,6 +223,114 @@ latency, never grants damage because a timestamp "looks right", and never punish
 failure — an expired swing id from a laggy client is indistinguishable from a forged one, so both
 just get a `false`.
 
+## 3b. Prediction that stays honest
+
+<!-- temporal: 2026-11 -->
+
+These patterns come from custom prediction layers (not Server Authority). Unless marked otherwise, each was **measured in one project**: verify it in your own game under the Studio network simulator.
+
+**Ack every predicted command.** Suppose the client applies a hit locally and the server silently drops it. That client keeps the change forever, and a later snapshot can wipe hits still in flight.
+
+- Give each command a small sequence number. The server acks every one, accepted or refused, and with a refusal also sends the authoritative state.
+- The client keeps unacked commands and replays them over each snapshot.
+- Remote sends to one player arrive in order. So an ack for N means older unacked commands were dropped (by a rate limiter, for example) and must be resynced.
+- Sequence numbers only move forward; a u16 that wraps needs a wrap-aware compare.
+
+**Rate limits that fit real latency.**
+
+- At 100 ms ping with jitter, a fixed per-hit cooldown rejected about half of normal swings. A small token bucket fixed it: bank 2 hits and refill at the tool's rate. One working set used 1.15x the weapon rate with a burst of 3.
+- A timer that runs on both sides drifts by the message delay. The server's reload starts when the message arrives, so the client's ends a frame or two sooner.
+  - Accept messages within a small window of the timer's end (0.1 s held up to 80 ms jitter).
+  - Always reply to refusals.
+  - Test from the timer's last frame, not just from a fresh weapon.
+- For melee, a server cooldown longer than the client's full swing silently eats every other swing (count wind-up through recovery, including the miss path). Give slow weapons a long swing, not a long cooldown.
+- Some networking libraries drop rate-limited requests before the handler and send no reply. The client's call then returns its timeout value only after the full response timeout.
+  - Debounce buttons so normal use never hits the limit.
+  - Raise the timeout for requests that wait on a save.
+
+**Predict cosmetics, not consequences.** An effect that plays only on the server's message waits a full round trip: 190–290 ms, even point blank on a phone. Switching between reliable and unreliable sends made no difference.
+
+- Predict the shooter's own effect locally, keyed by the attack sequence the server echoes back.
+- Skip the server's copy for the same shooter and sequence, cancel on a refused ack, and expire unconfirmed guesses.
+- Keep anything that changes the world (destruction, currency, score) on the server's message.
+- Treat a hit, absorbed damage, and a confirmed death as distinct outcomes. A shield or a remaining life must never trigger death UI, death camera, or broadcasts.
+
+**Make thrown and spawned objects feel immediate.**
+
+- **Hitscan shown as a projectile.** The server waits the flight time before applying the blast, every client draws the same flight, and the instant impact puff is skipped.
+- **Server-spawned debris.** Run the same deterministic split on the client and show a local stand-in under a temporary id.
+  - Fly the stand-in with the server's launch velocity and gravity, then adopt the real id by a deterministic key (seed and size).
+  - Never ease straight onto the replicated body: it lags by a round trip plus interpolation. A 0.3 s blend threw pieces back upward at 240 ms ping.
+  - Keep the local flight until both copies land (cap it at about 1.2 s), then ease across.
+  - Expire unconfirmed guesses after about 2 s with a resync.
+- **Slow server-side destruction.** At the blast, hide doomed parts on the client with `LocalTransparencyModifier = 1`. Reset it when they become debris.
+
+**Clock-driven movers.** For objects on fixed paths (moving targets, platforms, patrols), make position a pure function of `workspace:GetServerTimeNow()` and the path data.
+
+- Clients draw the position every frame from that function, so the server sends no positions.
+- The server moves the body only right before a hit check or a raycast that crosses the path. It also sets `AssemblyLinearVelocity`, so lag-tolerant checks account for the mover's speed.
+
+```luau
+-- Illustrative: verify against your own path data.
+local function moverPosition(origin: Vector3, axis: Vector3, amplitude: number, period: number): Vector3
+	local t = workspace:GetServerTimeNow()
+	return origin + axis * (math.sin(t * 2 * math.pi / period) * amplitude)
+end
+```
+
+**One shared rules module.** Put weapon state in one pure module that the client runs to predict and the server runs to check: magazine, cooldown, a short press buffer, and reload start, finish, and cancel. Fold stats through one shared function on both sides.
+
+- Refill ammo on the shared timer, not an animation marker. Then a faster-reload upgrade only changes clip playback speed.
+- Scalable hitboxes follow the same rule: one module serves the client pick, the server check, NPC shooters, and debug drawing (`roblox-security`).
+
+**State as data, not remotes.** Replicate match state as one match folder or entity with attributes:
+
+- mode, phase, and round
+- phase end time as `GetServerTimeNow()` (0 for no clock)
+- results
+
+Clients compute timers locally. Only the start and leave requests need client events, and the server re-validates both.
+
+**Look pitch for third-person views.** Put the actor's look pitch in the action packet the server relays, instead of replicating the camera: one signed byte in degrees, clamped to ±90 and NaN-checked.
+
+**Server Authority reports.** From the [release thread](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993):
+
+- Staff clarified (2026-07-09) that the default PlayerScripts use `BindToSimulation` for avatar movement, while a sample shooting flow still uses RemoteEvents. Choose the sync path per mechanic.
+- Developers reported (2026-08-25) visible correction jitter under latency. Test collisions and prediction under the network simulator before you ship.
+- The `StreamingEnabled` requirement is documented (§0).
+
+## 3c. Packets, payloads, and ids
+
+- **One-byte length prefixes wrap.** Buffer packet libraries may encode short strings with a u8 length, so a string over 255 bytes silently wraps (401 became 145).
+  - In one case the client read truncated JSON, parsed the leftover bytes as the next packet id, and dropped every packet in each batch. Controls gated on "state ready" then did nothing.
+  - Use the library's long-string type (u16 length) for JSON and any user text, and assert payload sizes on the sender.
+  - The symptom is a repeating nil-index error inside the library's read code.
+- **Typed decoding checks types, not ranges.** Numbers can still be NaN, infinite, or negative, so keep the §2 poison checks even after an IDL.
+- **Self-describing blobs.** A replicated data blob must carry everything needed to decode it: scale, version, and grid cell size belong in the header. A client that looked up the cell size by template name drew an unknown piece at 1/8 size.
+- **Entity ids from clients.** When remotes name ECS entities by server id, check three things: the id is a whole number, the entity is alive, and it has the components the remote expects. Map ids through the replicator's lookup.
+- **Tool actions right after an equip.** Send the tool identifier and check that it's in the player's inventory or character. Don't count on a replicated equipped-state property arriving first.
+- **Instance arguments.** An instance-shaped table, or a path string such as `GetFullName()`, is neither an instance nor an authorization. Check `typeof(x) == "Instance"`, the class, the ancestry, and that this player may act on it ([DevForum thread on instance safety](https://devforum.roblox.com/t/instance-safety-in-remote-events-functions/4700771), 2026-06-24).
+- **Effect broadcasts.** For combat VFX, the server validates the action first: movement, cooldown, ownership. Then it broadcasts a small effect id, and clients render a local template. A debounce alone doesn't prove the action was legitimate ([thread](https://devforum.roblox.com/t/how-should-i-prevent-exploiters-spamming-my-remoteevent-for-vfx-replication/4749010), 2026-07-21).
+- **Remotes are server-owned.** Create and parent RemoteEvents from server code before clients wait on them; on the client, use `WaitForChild` with a timeout. Recreating or reparenting remotes because a client asks, or once per joining player, is unsafe and disconnects listeners. Diagnose replication timing instead ([thread](https://devforum.roblox.com/t/replicatedstorage-failing-to-replicate-remoteeventsfunctions/4830130), 2026-08-28).
+- **Map-loaded gate.** When the server clones a map in at runtime, stamp the map model with its descendant count. A client holding that many descendants has the whole map, so the match can wait for every client before starting. Under streaming, this only works for models that stream atomically or persistently.
+
+## 3d. First-person and character ownership
+
+The client controls its own character, so changes it makes there can replicate.
+
+- In first person, hide the local character with `LocalTransparencyModifier`, never by removing parts. A client that removes parts of its own character can delete them on the server too.
+- Animation tracks the owning client plays on its own character replicate to everyone, so don't play local-only cosmetic tracks there.
+- On characters that are combat targets, turn `CanQuery` off for accessories. Raycasts then reach the head instead of hats and hair (`roblox-security`).
+
+## 3e. Server facts and social queries (official)
+
+<!-- temporal: 2026-11 -->
+
+- `DataModel.ServerRegion` is the server's three-letter IATA airport code, for example `IAD`, `LHR`, or `NRT`. It's empty in Studio, on the client, or when the region is unknown. Use it for logs, region labels, and analytics, never for trust.
+- `Player:GetFriendsInServerAsync()` yields and returns the player's friends in the current server, excluding the player.
+- `Player:GetFriendsInUniverseAsync()` returns the local player's friends across the universe, with each friend's place and server, for "join friend" UI. Routing still goes through `TeleportService` options (`roblox-cloud`).
+- Wrap both calls in `pcall`, since they're network requests.
+
 ## 4. Per-player throttling
 
 Use a monotonic clock and clean entries when players leave. A limiter should reject bursts without turning normal network jitter into a ban.

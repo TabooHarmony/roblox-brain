@@ -28,7 +28,7 @@ Start with **Core** for general development work. Add the others when the task c
 
 ## Install
 
-**All 29 skills:**
+**All 31 skills:**
 
 ```bash
 npx skills add TabooHarmony/roblox-brain
@@ -49,7 +49,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Manual install: copy the **whole skill directory**, including `references/full.md`, into your agent's skills folder. For example: `cp -r skills/design/roblox-growth-design ~/.claude/skills/`. This also works with `.codex/skills/` and `.cursor/skills/`. Copying only `SKILL.md` leaves the reference missing.
 
-## Skills (29)
+## Skills (31)
 
 Expand a library to see its skills. The full-repo install includes all four.
 
@@ -90,25 +90,27 @@ Expand a library to see its skills. The full-repo install includes all four.
 </details>
 
 <details>
-<summary><strong>🎨 Design</strong> · 5 skills · Play, retention, and economy</summary>
+<summary><strong>🎨 Design</strong> · 6 skills · Play, retention, and economy</summary>
 
 | Skill | Covers |
 | :-- | :-- |
 | `roblox-game-design` | Core loops, tutorials, levels, economy structure, and game feel |
 | `roblox-player-psychology` | First-minute psychology, reward schedules, pricing, RNG/pity, and community loops |
-| `roblox-growth-design` | Discovery, positioning, retention, experiments, packaging, and LiveOps |
+| `roblox-growth-design` | Diagnosing stats, discovery, Home recommendations, retention, experiments, and Kids & Select |
+| `roblox-liveops` | LiveOps cadence, events, season passes, sponsored ads, and packaging (icons, thumbnails, titles) |
 | `roblox-analytics` | Custom events, economy tracking, funnels, first-session traces, and event taxonomy |
 | `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, and policy checks |
 
 </details>
 
 <details>
-<summary><strong>🛠️ Tools</strong> · 4 skills · Studio and shipping</summary>
+<summary><strong>🛠️ Tools</strong> · 5 skills · Studio and shipping</summary>
 
 | Skill | Covers |
 | :-- | :-- |
 | `roblox-studio-mcp` | Studio MCP capabilities, reliability, building, and testing workflows |
 | `roblox-tooling` | External third-party tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, and CI |
+| `roblox-testing` | Testable code, the native TestService framework, Jest Lua and Lune, multi-client playtests, and CI tests |
 | `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth, webhooks, and token lifecycle |
 | `roblox-publish-checklist` | Change-scoped release gates, evidence, dashboard checks, and rollback readiness |
 
