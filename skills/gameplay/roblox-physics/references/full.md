@@ -197,15 +197,27 @@ end
 
 The upgraded rig is already a ragdoll rig: its `BallSocketConstraint`s are present and enabled, and force-based simulation is one property away. **Don't add a `BallSocketConstraint` per joint on top.** Measured in one project: hand-building sockets on a rig that already carried 14 `BallSocketConstraint`s and 19 `NoCollisionConstraint` pairs doubled the sockets to 28, and the rig fought itself and shook. Before building any rig, list the character's existing constraints by class.
 
-Method (illustrative; verify the exact limp feel in Studio):
+Studio-measured 2026-11 (one run, default R15 rig, server-owned parts, `Humanoid` in `Physics`, `BreakJointsOnDeath = false`, dropped tilted 80 degrees with angular impulses on the limbs; mean joint deviation from pose after 4 s):
+
+| AnimationConstraint setting | Mean deviation | Result |
+|-----------------------------|----------------|--------|
+| `IsKinematic = true` (default) | 0.0° | Rigid |
+| `IsKinematic = false`, default strengths (`AngularStrength = 1`, `LinearStrength = 1`, `MaxTorque = 3000`) | 2.1° | Holds the pose: a powered ragdoll, not a limp one |
+| `IsKinematic = false`, `AngularStrength = 0` | 44.5° | Limp |
+| `IsKinematic = false`, `AngularStrength = 0`, `LinearStrength = 0` | 49.0° | Limp |
+| `Enabled = false` (built-in BallSockets only) | 44.3° | Limp |
+
+Rig defaults read in that run: `IsKinematic = true`, `MaxForce = 0`, `MaxTorque = 3000`, `AngularStrength = 1`, `LinearStrength = 1`, with 14 enabled `BallSocketConstraint`s. So `IsKinematic = false` alone keeps the character stiff; a limp ragdoll needs `AngularStrength = 0` as well, or simply `Enabled = false` on the AnimationConstraints. Recover by restoring the saved values, not by rebuilding joints.
+
+Method:
 
 1. Set `Humanoid.BreakJointsOnDeath = false` for a death ragdoll; it defaults to `true`, and broken joints leave nothing to simulate.
 2. Put the Humanoid in `Enum.HumanoidStateType.Physics` (or let your death flow do it) so it stops driving the limbs.
-3. For each `AnimationConstraint`, record its properties, then set `IsKinematic = false`. For a limp body set `AngularStrength = 0` (no torque toward the pose) and let the built-in ball sockets hold the limbs. For a powered or struggling ragdoll, keep some strength and cap `MaxTorque`.
+3. For each `AnimationConstraint`, record its properties, then set `IsKinematic = false` and `AngularStrength = 0` (or `Enabled = false`); the built-in ball sockets hold the limbs. For a powered or struggling ragdoll, keep `IsKinematic = false` with some strength and cap `MaxTorque`.
 4. To recover, restore the recorded values (`IsKinematic = true`) and move the Humanoid to `GettingUp`.
 
 ```luau
--- Illustrative: limp ragdoll on an AnimationConstraint rig. Verify in Studio.
+-- Illustrative: limp ragdoll on an AnimationConstraint rig (settings Studio-measured above).
 type Saved = { joint: AnimationConstraint, kinematic: boolean, angular: number }
 local ragdolled: { [Model]: { Saved } } = {}
 
