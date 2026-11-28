@@ -26,7 +26,7 @@ Load when adding a remote, handling untrusted input, cooldowns, prediction, or a
 - Prices, damage, rewards, permissions come from server-owned definitions.
 - Choose the authority model first: Server Authority uses client prediction + server rollback, and is not `SetNetworkOwner`.
 - Under Server Authority, simulation input uses `InputAction`/`BindToSimulation()` + `UseFixedSimulation`, not a remote.
-- Events for most requests; keep `RemoteFunction` calls short.
+- Events for most requests; short `RemoteFunction` calls.
 - `RemoteEvent` for reliable state; not ordered vs property/attribute replication — one explicit channel or version state. `UnreliableRemoteEvent` only for replaceable data; droppable, 1000-byte cap.
 - Engine ceiling: each remote type has ~500 FireServer req/s/client, pooled across same-type remotes — a ceiling, not a target.
 - Budget rate × bytes × recipients under load; snapshot on join, diffs after.
@@ -37,7 +37,7 @@ Load when adding a remote, handling untrusted input, cooldowns, prediction, or a
 - Server Authority needs `AuthorityMode = Server` + its bundle; misprediction/rollback are normal (full.md).
 - Rate limits protect the server; validation still rejects invalid requests. Bindables are same-side only: tables copied, metatables stripped, `Invoke` yields until `OnInvoke` returns.
 - Record suspicion with thresholds; don't punish one bad packet.
-- Predicting? Ack every command (accepted or refused); predict cosmetics only; u8-length strings wrap past 255 bytes (full.md §3b–3c).
+- Predicting? Ack every command (accepted or refused); predict cosmetics only; u8-length strings wrap past 255 bytes (§3b–3c).
 - Edit-mode play: wrap the network layer so `RunContext:IsEdit()` gets a loopback mock (full.md).
 
 **Need details?** `references/full.md`: validation, throttling, prediction, `ServerRegion`, mocks.
