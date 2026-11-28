@@ -2,7 +2,7 @@
 name: roblox-data
 description: "Use when writing, changing, debugging, or auditing Roblox player saves: DataStore, ProfileStore, session locks, schemas, migrations."
 when_to_use: "Also when data is lost, rolled back, duplicated or not saving, when adding a field to the save, changing currency or inventory storage, or reviewing save code."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://create.roblox.com/docs/reference/engine/classes/DataModel
   - https://create.roblox.com/docs/cloud-services/data-stores
@@ -14,7 +14,6 @@ sources:
   - https://create.roblox.com/docs/cloud-services/data-stores/versioning-listing-and-caching
   - https://create.roblox.com/docs/reference/engine/classes/DataStoreService
   - https://raw.githubusercontent.com/MadStudioRoblox/ProfileStore/main/README.md
-  - https://madstudioroblox.github.io/ProfileStore/api/
   - https://devforum.roblox.com/t/profilestore/3190543
   - original
 ---
@@ -37,6 +36,6 @@ Load for player saves, migrations, retries, shutdowns, or session ownership. Lea
 - `GetAsync` serves a 4-second local cache (`DataStoreGetOptions.UseCache`, default `true`); verify writes with `UseCache = false`.
 - Poll `DataStoreService:GetRequestBudgetForRequestType` for live headroom; quotas scale with concurrent users (experience reads: 300 + CCU x 40/min).
 - New code identifies users with `player.User` (`User.Id`, `DomainType`, `DomainId`); `UserId` remains valid, but never mix the two IDs in one key scheme.
-- First-session traces: `roblox-analytics` §8.
+- `InvalidJson` = nesting >400. Offline earnings, serials: full.md §8b. Traces: `roblox-analytics` §8.
 
 > Persistence workflows: [references/full.md](references/full.md)

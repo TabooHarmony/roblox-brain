@@ -54,4 +54,4 @@ Load for authority, remote abuse, economy, saves, bans, or sandboxing audits. Re
 
 Don't obfuscate client code, use `_G` for security, kick without logging, over-validate movement, or rely on client anti-cheat. Lag-aware hit tolerances and shared hitboxes: full.md.
 
-Examples: `references/full.md`.
+Examples: full.md.
