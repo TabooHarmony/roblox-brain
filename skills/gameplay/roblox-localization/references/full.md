@@ -99,6 +99,22 @@ welcomeLabel.Text = "Welcome to the game!" -- engine replaces with translation
 - Does NOT work on chat messages, toasts, or any non-GUI text
 - For non-GUI text, use manual `Translator:Translate()`
 
+## Image Translation (beta)
+
+<!-- temporal: 2026-11 --> Roblox can translate images that contain text (signs, UI graphics), matching the original font size, style and colour and leaving non-text pixels unchanged. Supported languages are currently French, German, Indonesian, Italian, Korean, Portuguese and Spanish. It is off by default; in the experience's localization settings on Creator Hub:
+
+1. **Languages** tab: enable image translation per language.
+2. **Settings** tab: enable **Automatic Image Capture**. Eligible images are added to the localization table as players encounter them; capture and translation can take up to a few days.
+3. **Settings** tab: enable **Use Translated Content** to show translated images live. Leave it off to review translations first in the **Images** tab of the Translate page.
+
+Reject a bad translation by setting `GuiBase2d.AutoLocalize = false` on that image in Studio, or leave feedback from the Images tab. Images still need source art that reads well with text swapped: leave room around text, keep text off busy backgrounds, and prefer live `TextLabel`s over baked text for anything that changes. Languages outside the list still see the source image.
+
+## Other Translated Surfaces
+
+- **Text-to-speech:** `AudioTextToSpeech.AutoLocalize` defaults to `true`, translating `Text` and routing to a matching voice in its supported languages (`roblox-audio`). Turn it off for names or lines that must stay verbatim.
+- **Chat:** `TextChatService.ChatTranslationEnabled` controls chat translation; Quick Words are entered in English and auto-translated after review (`roblox-text-chat`).
+- **Translated text can grow.** Size text containers for the longest supported language and test with the locale switched (`roblox-gui`).
+
 ## Manual Translation
 
 ### Getting a Translator

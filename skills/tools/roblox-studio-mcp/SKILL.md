@@ -35,7 +35,7 @@ discover → select Studio/context → inspect → mutate in bounded batches
 Edit-time writes never target a running playtest; live evaluation needs a confirmed running VM.
 
 ### Official tools (Nov 2026)
-`search_game_tree`, `script_read`/`script_grep`, `multi_edit`, `execute_luau`, `generate_*` (mesh, material, animation, avatar), `insert_asset`, `start_stop_play`, `get_console_output`, `screen_capture` (video in playtests), `save_place` (never publishes), `open_cloud_invoke` (per-game permissions, no API key), `submit_feedback`. Trust `tools/list`.
+`search_game_tree`, `script_read`/`script_grep`, `multi_edit`, `execute_luau`, `generate_*` (mesh, material, animation, avatar; `wait_job_finished` before dependent edits), `insert_asset`, `start_stop_play`, `get_console_output`, `screen_capture` (video in playtests), `save_place` (never publishes), `open_cloud_invoke` (per-game permissions, no API key), `submit_feedback`. Trust `tools/list`.
 
 ### Rules
 - Load the built-in `rbx-*` skill for its area; never shadow it.
