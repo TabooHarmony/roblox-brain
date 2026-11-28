@@ -18,12 +18,12 @@ sources:
 
 ## When to Load
 
-Load when adding a remote, handling untrusted input, adding cooldowns, or assigning authority.
+Load when adding a remote, handling untrusted input, cooldowns, prediction, or authority.
 
 ## Quick Reference
 
 - Every client argument is attacker-controlled; validate type, size, ownership, state, distance, cooldown on the server.
-- Look up prices, damage, rewards, permissions from server-owned definitions.
+- Prices, damage, rewards, permissions come from server-owned definitions.
 - Choose the authority model first: Server Authority uses client prediction + server rollback, and is not `SetNetworkOwner`.
 - Under Server Authority, simulation input uses `InputAction`/`BindToSimulation()` + `UseFixedSimulation`, not a remote.
 - Events for most requests; keep `RemoteFunction` calls short.
@@ -36,7 +36,7 @@ Load when adding a remote, handling untrusted input, adding cooldowns, or assign
 - Serialization: functions arrive `nil`, metatables stripped, mixed keys mangled, `nil` truncates tables, tables are copies — validate field by field, share state via server-owned snapshots/ids.
 - Server Authority needs `AuthorityMode = Server` + its bundle; misprediction/rollback are normal (full.md).
 - Rate limits protect the server; validation still rejects invalid requests. Bindables are same-side only: tables copied, metatables stripped, `Invoke` yields until `OnInvoke` returns.
-- Record suspicion with thresholds; never punish one malformed packet.
+- Record suspicion with thresholds; don't punish one bad packet.
 - Predicting? Ack every command (accepted or refused); predict cosmetics only; u8-length strings wrap past 255 bytes (full.md §3b–3c).
 - Edit-mode play: wrap the network layer so `RunContext:IsEdit()` gets a loopback mock (full.md).
 
