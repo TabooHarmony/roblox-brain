@@ -340,7 +340,7 @@ When enabled:
 - `ChatWindowConfiguration` properties don't apply to it; it has its own `FontFace` and `UseDefaultFont`.
 - It accepts only `UICorner`, `UIAspectRatioConstraint`, `UISizeConstraint` and scripts as children.
 - To show several channels, make one window per channel and switch between them yourself.
-- By default the main window also shows every channel. To keep a custom channel only in its own window, set `ChatWindowConfiguration.TextChannelDisplayMode` to `DefaultTextChannels` (Studio or plugin only; scripts can read it). Default channels created at runtime, such as team and whisper, still appear in the main window.
+- By default the main window also shows every channel. To keep a custom channel only in its own window, set `ChatWindowConfiguration.TextChannelDisplayMode` to `DefaultTextChannels` (Studio or plugin only; scripts can read it). The platform-integrated chat guide documents this property, but it was not yet in the API reference on 2026-11-27, so confirm it in your Studio's Properties panel. Default channels created at runtime, such as team and whisper, still appear in the main window.
 
 ```luau
 -- Client (LocalScript in StarterPlayerScripts): a squad radio window.
