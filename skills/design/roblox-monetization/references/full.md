@@ -82,7 +82,7 @@ local function grantPermanentRewardIfOwned(player: Player, passId: number)
 end
 ```
 
-Test existing ownership on join, a trial start and its session end, purchase during a trial, purchase/cancel in-session, a query failure, repeated refresh, character respawn, player leave during the query, and two passes contributing to one benefit. Centralization removes duplicate plumbing, not product-specific rules or server validation.
+Test existing ownership on join, a trial start and its session end, a crash and rejoin within the hour (the trial continues) versus a normal leave, purchase during a trial, purchase/cancel in-session, a query failure, repeated refresh, character respawn, player leave during the query, and two passes contributing to one benefit. Centralization removes duplicate plumbing, not product-specific rules or server validation. Repeated trials through alternate accounts were raised in the [free trials thread](https://devforum.roblox.com/t/introducing-pass-free-trials/4995943) (2026-11-25): never tie irreversible rewards to a trial-time ownership check.
 
 ## 3. Centralize Developer Product receipts
 
@@ -231,6 +231,137 @@ Monetization changes the economy even when the product is cosmetic:
 - limited offers can concentrate demand and support load.
 
 Model the ordinary player path before choosing prices. Track purchases and grants separately so an analytics event cannot become the source of truth for inventory.
+
+## 8a. Built-in Shop, outside-the-game sales, and refunds (official)
+
+<!-- temporal: 2026-11 -->
+
+**The Roblox Shop.** `MarketplaceService:OpenShop(player)` opens the personalized in-game Shop overlay.
+
+- Call it from a server Script, or from a LocalScript for the local player only, in response to a user action.
+- Configure it in Creator Hub > Monetization > Shop:
+  - Passes are always listed.
+  - Developer products can be Listed or Unlisted. Unlisted products can still be bought through your own flows.
+- Hide the menu entry with `StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.ExperienceShop, false)`. A global Shop button exists and is off by default.
+- Standard earnings apply.
+- Pass free trials start from the Shop's Try button. There's no API to start a trial from your own UI (staff reply, [free trials thread](https://devforum.roblox.com/t/introducing-pass-free-trials/4995943), 2026-11-18). Don't invent one; the trial rules are in §2a.
+
+**Selling outside the game.** Listed developer products and passes can appear on Home, in search, and on the page after a Robux purchase. The buyer may not be in your game when they pay.
+
+- Roblox continuously checks that `ProcessReceipt` grants correctly. A flagged product loses only its outside-the-game eligibility, and a Creator Hub banner and report lead to "Mark as fixed".
+- Never grant from `PromptProductPurchaseFinished`. A receipt handler only fires while the user is on a server, so grant on their next join through the receipt path (§3).
+- Developer product icons: at most 512×512, with important detail inside the circle crop. Prices range from 1 to 1 billion Robux.
+- Passes can only be prompted in their own game.
+
+**Refunds.** The **Transaction Refunded** webhook covers developer products, passes, private servers, and paid access. It doesn't cover subscriptions, which have their own **Subscription Refunded** trigger.
+
+- Roblox revokes passes and avatar items automatically.
+- Developer product benefits are yours to remove. Key the reversal on the transaction id, and make it idempotent.
+- Setup details: `roblox-cloud` §8.9.
+
+## 8b. Offer integrity (measured across reviewed kits)
+
+Teardowns of 59 simulator games and kits found the same defects again and again. Audit for them before every release:
+
+- **More than one script assigning `ProcessReceipt`.** Only the last assignment wins. Grep the whole place for every assignment and every product id, keep one receipt router keyed by product id, and never reuse one id for two products.
+- **Client-granted rewards.** Watch for code that grants on the client's purchase-success signal, or spin rewards chosen on the client. Choose every random reward on the server. Opening animations wait for the server's result, then build the reel around the actual pull.
+- **Labels that disagree with grants.** Examples: "+300 storage" added 30, a "2x cash" flag was ignored by the server multiplier, and a "FREE" button opened a purchase prompt. Keep one server-backed product definition that drives the offer text, price, handler, and grant, and test each purchase end to end against its label.
+- **Displayed odds that disagree with the roll.** One kit showed 40/60/80% while it rolled 25/33/50%, weights summed to 102%, and "guaranteed in 12" had no server pity counter. Generate displayed odds from the server table, and assert in a test that they sum to 100% and match each weight.
+- **Off-sale passes still shown.** A shop built from local data keeps showing passes that are off sale, and Roblox then refuses the prompt. Read live `IsForSale` and price with `GetProductInfo`, and hide off-sale items. Developer products can't be deleted, so retire them off sale and never re-create one under the same name.
+
+**Policy coverage (official).**
+
+- Random items bought with a currency that players can also buy with Robux are paid random items. That includes keys, rerolls, and spin tickets. Show every outcome's actual odds before the spend.
+- Where `ArePaidRandomItemsRestricted` is true, apply the restricted treatment to both purchase paths. If the policy lookup fails, refuse the paid path.
+- Containers earned only through play need no odds disclosure. Keep opening them working everywhere, and replace only the buy row with a note.
+- If paid items can be traded, also gate trading on `IsPaidItemTradingAllowed`.
+
+**Gifting.** Never take the recipient's UserId from the client with the purchase.
+
+- Store the chosen recipient on the server, keyed to the buyer, before you prompt. Read it back in the receipt handler.
+- Validate that the recipient exists and is eligible.
+- Record the grant against the receipt.
+- Keep a pending-gift record so offline recipients get the gift when they next join.
+
+**Paid effects outside the save.** A receipt grant must not yield, prompt, or wait on the player.
+
+- For timed effects (a server boost, a revive), have the grant queue a durable delivery record in the profile.
+- Mark the record started when the effect begins, and completed or refunded when it ends.
+- After a crash, the record refunds instead of replaying.
+
+**Server-wide paid effects.** Of the 59 reviewed games, 23 sold one. The pro-social form is a timed luck or XP boost (often 15 minutes) that helps everyone in the server and names the buyer. Avoid selling disruption to other players, such as a paid "nuke" or a lethal hazard, and keep paid effects out of competitive rounds (`roblox-player-psychology`).
+
+**Prompt placement (measured in one game).** Prompts that opened when a player tried something, such as equipping a locked item at a stand, were closed by reflex. Over three days, 647 prompts closed a median 1.7 s after opening, with no sales. Open a Robux prompt only from a deliberate priced button, and give the "try" action a preview. Log the time from prompt to close per placement.
+
+Where offers appeared across the same 59 reviews (counts overlap, and prevalence isn't conversion):
+
+| Offer | Games |
+|---|---|
+| Physical in-world shop or pad | 47 |
+| Paid skip, rebirth, or instant-finish family | 34 |
+| Limited or countdown indicator | 25 |
+| Paid server-wide effect | 23 |
+| Paid gifting | 14 |
+| Prompt when the player can't afford something | 12 |
+| Join, timer, or return offers | 10 |
+
+The stronger triggers followed a milestone, such as a starter pack after the first big deposit or a double-cash offer after the second rebirth. Shortfall prompts carry dark-pattern risk.
+
+**Social rewards.**
+
+- `AvatarEditorService:PromptSetFavorite` can't prove that a player favorited the game. Pay a favorite reward once ever.
+- Games can't read likes.
+- For group-join rewards, re-check a negative `IsInGroup` with `GroupService:GetGroupsAsync(userId)`. Server lookups were observed to cache for about a minute.
+- Gate these rewards on account age, and rate-limit the remote.
+
+**Environments.** A developer product can only be bought in the universe that owns it (observed), so keep one generated id module per universe. Managed regional pricing was refused on a dev universe (`InvalidManagedPricing`), so offers there sell at list price. Add a test that fails when offer-config prices and catalog prices disagree.
+
+**Price tests.** Create a second "slot" product at the test price that grants exactly like the original.
+
+- Assign arms with a stable hash of the test id and UserId.
+- Keep past buyers in the control arm.
+- Read prices with `GetProductInfo`, and show a placeholder until it answers.
+- Roblox Experiments can drive the split instead (`roblox-growth-design`).
+
+## 8c. Rewarded video (official)
+
+Rewarded video is a full-screen ad of 6–30 s that grants a reward. Roblox's playbook recommends:
+
+- **Opt-in.** Show the reward first, then offer opt in, skip, or pay.
+- **Moments of need.** Use natural breaks: after a defeat, at the end of a level, on wait screens.
+- **Length.** Aim for 15–30 s for in-game ads.
+- **Rewards.** Meaningful, consumable, repeatable: boosters, currency, extra lives.
+
+Types: Join with Reward (before entering), the Rewarded Video Billboard template, and in-game prompts in the HUD or menus.
+
+- Protect purchase revenue by hiding ads from likely spenders.
+- Estimate earnings in Creator Hub > Ads > Eligibility.
+- Test the effect on retention and spend with an experiment.
+
+Self-audit before launch:
+
+- Is the prompt visible soon after its trigger?
+- Is there more than one reward type?
+- Is the frequency cap at least 2–3 prompts per session?
+- Are the rewards consumable?
+- Is the prompt near the core loop?
+
+## 8d. Earnings, DevEx, and tax (official)
+
+<!-- temporal: 2026-11 -->
+
+- **Standard DevEx rate:** 0.0038 USD per Earned Robux ($114 per 30,000). It was 0.0035 before September 5, 2025.
+- **U.S. 18+ rate: 0.0054**, effective June 8, 2026. It applies to developer products, passes, subscriptions, and private servers bought by age-verified U.S. adults.
+  - Player characters must be R15 (standard or advanced) or a qualifying custom form for 100% of active playtime, with R15 animation packs.
+  - Any R6 at any point disqualifies the game, so set Avatar Settings to R15 Only. Games without a visible character count as nonhuman, and NPCs are exempt.
+  - A background compliance check enforces this. Group payouts respect the rate.
+- **Tax:** DevEx payments are royalties.
+  - U.S. creators without a valid W-9 face 24% backup withholding.
+  - Non-U.S. creators file W-8BEN or W-8BEN-E and see 0–30% withholding on payments tied to U.S. sales, depending on treaty, or 24% backup withholding if their tax information is invalid.
+  - Payouts arrive net through Tipalti. Forms 1099-MISC, 1099-NEC, and 1042-S are downloadable.
+  - This isn't tax advice; consult a professional.
+
+Sources for §8a–8d: [Shop](https://create.roblox.com/docs/production/monetization/shop), [Developer products](https://create.roblox.com/docs/production/monetization/developer-products), [Webhook notifications](https://create.roblox.com/docs/cloud/webhooks/webhook-notifications), [Rewarded video playbook](https://create.roblox.com/docs/production/promotion/rewarded-video-playbook), [Developer Exchange](https://create.roblox.com/docs/production/monetization/developer-exchange), [U.S. 18+ DevEx rate](https://create.roblox.com/docs/production/monetization/18-plus-devex-rate), [Tax information](https://create.roblox.com/docs/production/monetization/tax-information), [Paid random items](https://create.roblox.com/docs/production/monetization/paid-random-items).
 
 ## 9. Testing matrix
 
