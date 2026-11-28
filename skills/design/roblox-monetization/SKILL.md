@@ -9,7 +9,8 @@ sources:
   - https://create.roblox.com/docs/production/monetization/passes
   - https://create.roblox.com/docs/production/monetization/developer-products
   - https://create.roblox.com/docs/production/monetization/subscriptions
-  - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/production/monetization/regional-pricing.md
+  - https://create.roblox.com/docs/production/monetization/regional-pricing
+  - https://create.roblox.com/docs/production/monetization/shop
   - https://create.roblox.com/docs/production/monetization/robux-transfers
   - https://create.roblox.com/docs/production/monetization/paid-random-items
   - https://create.roblox.com/docs/reference/engine/classes/PolicyService
@@ -30,9 +31,12 @@ Load when adding a Game Pass, Developer Product, subscription, private server, C
 - Passes: one server ID→benefit registry; check ownership live, never save it. Free trials: permanent grants only if `GetPassOwnershipAsync` `.Owned`. §2a.
 - Developer Products: repeatable consumables. Grant through a server-owned receipt handler, either `ProcessReceipt` or `BindReceiptHandler` with `Enum.ReceiptType.DeveloperProduct`. `PromptProductPurchaseFinished` is not purchase confirmation.
 - Failed receipts remain `NotProcessedYet`; retries depend on the chosen receipt API, not an invented timer. See full.md.
-- For eligibility-sensitive purchases, check `PolicyService` and current Roblox guidance. If a paid-random-item restriction applies, offer the user the documented choices, including earnable rewards, a known non-random sequence, or direct purchase. Do not default to hiding or blocking the feature; handle the affected purchase path without stopping unrelated work.
+- Paid random items (incl. Robux-bought currency): show actual odds from the server table; if `PolicyService` restricts them, offer the documented alternatives on that path only.
 - Creator Rewards is a platform program, not a grant API. Track eligibility, attribution, engagement, and dashboard reporting separately from purchases and inventory.
 - Test failed/duplicate grants, absent players, and interrupted saves. Transfers, subscription changes, and dynamic pricing: full.md.
 - A receipt handler's presence is not proof of correctness; inspect its ownership, durable idempotent grant, and retry paths for unknown products or absent players.
 
-**Need the details?** Load `references/full.md` for purchase flows and failure handling.
+- Shop overlay: `MarketplaceService:OpenShop(player)`. Listed products also sell outside the game, so grant only via receipts. Refunds of dev products are yours to reverse (full.md §8a).
+- Audit: one `ProcessReceipt` assignment, labels match grants, odds match the roll (§8b). DevEx 0.0038; U.S. 18+ 0.0054 needs R15-only (§8d).
+
+**Details:** `references/full.md`.

@@ -354,6 +354,74 @@ local function onKillStreak(player, BADGE_ID)
 end
 ```
 
+## 8.8 Analytics, alerts, and experiments APIs (official)
+
+<!-- temporal: 2026-11 -->
+
+Before asking anyone to paste dashboard numbers, check whether an API returns them.
+
+| API | Scope | What it gives you |
+|---|---|---|
+| Analytics Query | `universe.analytics:read` | Dashboard metrics with breakdowns. Long queries return 202 and must be polled. Each data point has a status: `Valid`, `Projected`, or `NotStatisticallySignificant`. A 429 with code 3000 means the data-point budget is spent. |
+| Sponsored Ads metrics (via Analytics Query) | same | `SponsoredAdsImpressions`, `SponsoredAdsClicks`, `SponsoredAdsSpendUsd` at `OneHour`, `OneDay`, or `None`, broken down by `AdId`, `CampaignId`, `Platform`, `AgeGroup`, and more. |
+| Benchmarks (experimental) | see guide | `analytics-benchmark/v1/universes/{id}/benchmarks`: genre, similar-experience, and top-experience percentiles (10, 50, 90 only). Check `availableTypes` first. |
+| Alerts | `universe.analytics.alert:read` / `:write` | Up to 20 alerts per experience, in Absolute or PeriodOverPeriod mode. Intervals are OneMinute (6–30 consecutive occurrences), HalfHour, OneHour, or OneDay (1–10). Webhooks are supported, incidents are kept 30 days, and alert ids are strings. |
+| Error Reporting | `universe.analytics:read` / `:write` | Client and server error groups plus Group/Ignore regex rules: first match wins, at most 100 creator rules, not retroactive. 60 requests per minute. |
+| Experiments | `universe:read` / `universe:write` | `creator-configs-public-api/v1/experimentation/universes/{id}/experiments`. Create a draft, then `:start` or schedule it (the config becomes immutable), then `:complete` with a `variantId`. Omit the id to stop with no winner. |
+
+Breakdown and filter dimensions use the names `CustomField1`..`CustomField3`, while the engine enum uses `CustomField01`..`CustomField03`. Map them explicitly (`roblox-analytics`). Ads Manager campaign management (§8.5) doesn't cover onboarding, payment methods, or buying credit.
+
+## 8.9 Refund and safety webhooks (official)
+
+- **Transaction Refunded** covers developer products, passes, private servers, and paid access, but not subscriptions. The payload includes the buyer, product type and id, the Robux amount (original price), universe and place, transaction id, and time.
+  - Roblox revokes passes and avatar items itself.
+  - Your code must remove developer product benefits (`roblox-monetization`).
+- **Subscription Refunded** is a separate trigger.
+- **Right to Erasure Request** fires for RTBF. Prefer data store deletion templates where they fit (`roblox-data`).
+- **Early Harm Detection** fires when an experiment shows critical harm early (`roblox-growth-design`).
+
+Verify the signature and make each handler idempotent on the transaction id (§6).
+
+## 8.10 Operational gotchas
+
+**Check the exact operation scope.** A broad-looking key can still lack one operation's scope (badge creation, for example) and fail with "Scope not authorized". Read the operation's required scopes from the published OpenAPI spec, and introspect the key before the call. Tokens used by Studio's MCP are limited to the open place's universe and to the permissions granted in Assistant settings (observed).
+
+**Badges (official limits).**
+
+- Each game can create 5 badges free per 24 hours (GMT). Each extra badge costs 100 Robux, so automation should refuse to pay.
+- Badges can't be deleted; disable retired ones and keep them in config.
+- Icons are cropped to a circle and moderated.
+- Award only in the production universe (check `game.GameId`) and skip badges the player owns (§8.7).
+
+**Asset use across universes (observed).**
+
+- Meshes and models uploaded by one owner may not load in another private universe until that universe is granted use. The Asset Permissions API (`asset-permissions-api/v1/assets/permissions`) does this.
+- Grants are permanent, so a new universe needs one grant run. Automate grants for every universe in your environment config (dev and production) after each upload.
+- Uploading under the group that owns the universes avoids most grants.
+
+**Secrets.**
+
+- Running servers picked up a changed experience secret only after a restart (observed). Plan secret rotation with a server restart.
+- For Studio, use Local Secrets (Experience Settings > Security). A hand-rolled local credential module must be gitignored and read only under `RunService:IsStudio()`. Rojo builds everything in a mapped folder, so a local build or publish from a checkout that has the module ships the key in the place file. Publish from CI (`roblox-tooling`).
+- Code that depends on a secret should record to memory and warn once, never error, when the secret or HTTP is unavailable.
+
+**Messaging from outside.** Open Cloud `publishMessage` reaches live servers, not Studio playtests (observed). Test on a private live server, and announce what you'll send first (`roblox-server-data`).
+
+**Social slots and invites (measured with two accounts in one private universe).**
+
+- Setup: server size 4 with 3 reserved social slots (Customize). Two strangers on different public IPs who press Play land in separate servers.
+  - Friends still land together, and so do players behind one public IP (siblings on one router): matchmaking treats both as preferred.
+  - With "Fill completely", everyone shares servers.
+- `TeleportAsync` with `TeleportOptions.ServerInstanceId` still moves a non-friend into a specific `JobId` past reserved slots, so an invite can be a teleport to the host's `JobId`. A closed `JobId` fails with `TeleportInitFailed` `GameEnded`.
+- Publishing doesn't change the social slot setting; set it per place in Creator Hub. See `roblox-growth-design` §2 for how solo servers hid a social design.
+
+**Private and VIP teleports: open reports.** These come from the [announcement thread](https://devforum.roblox.com/t/teleports-to-private-vip-servers-are-now-allowed/4963250) and aren't confirmed in the docs:
+
+- (2026-10-29) `TeleportResult.PrivateServerId` appeared to hold an access code rather than the destination's `game.PrivateServerId`. Log both sides before relying on the §8.6 equality.
+- (2026-10-30) A full or invalid VIP destination sent players to a public server. Check where players landed, and keep a safe fallback.
+- (2026-10-31) Players reached a private start place but were routed to a public sub-place when they weren't friends with the host. Test every place and every join mode in the route.
+- Staff clarified (2026-11-02) that VIP continuity uses `VipServerId`, as §8.6 shows. Match the option to the server type.
+
 ## 9. Completion checklist
 
 - Caller and authority model are explicit.

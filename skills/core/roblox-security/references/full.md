@@ -105,6 +105,98 @@ For the rate limiter and argument validation implementations, see `roblox-networ
 
 Practitioner lead: a public gist documents these rollback vectors found in major titles. Treat as community research, not official documentation.
 
+## Device Trust and account signals (official)
+
+<!-- temporal: 2026-11 -->
+
+Device Trust reports how much the platform can vouch for a player's device. It's a risk signal, not proof of cheating.
+
+- `Player.DeviceTrustLevel` (`Enum.PlayerDeviceTrustLevel`) is one of `Pending`, `Unknown`, `None`, `Standard`, or `Full`.
+  - It starts at `Pending` and changes once, but it may stay `Pending`.
+  - It's always `Pending` in Studio, and other clients see `Pending`.
+  - Don't compare levels numerically, because `Unknown` sorts before `None`. Use an explicit set of accepted levels.
+- **Platform coverage** at review time: Android, Chromebook, and Quest are supported. Web browsers report `None`. iOS, macOS, Windows, Xbox, and PlayStation report `Unknown` ("coming soon").
+  - So most players today return `Unknown`. That's a normal state, not a red flag.
+- `IntegrityService.EvaluatePlayerDeviceTrust = function(player, measures)` lets a place accept or reject a joining player by returning `{ Action = Enum.PlayerDeviceTrustDecision.Accept | Reject, Message = "..." }`.
+  - Server-only. One callback per place; the last assignment wins. It runs after `PlayerAdded`.
+  - It may yield, but it times out after about 10 s and then accepts.
+  - An error, a nil or invalid return, or no assigned callback all mean **accept**.
+  - It isn't called in Studio, or if the player leaves first.
+- `measures` (`IsPlatformVersionSecure`, `IsPlatformBootSecure`, `IsAppSecure`) reads `true` when a measure is unavailable, so only act on an explicit `false`.
+- Estimate the impact in Creator Hub > Safety > Anti-cheat before enforcing anything.
+
+**How to use it.** Gate high-stakes modes (ranked, trading, tournaments) on an accepted set such as `{ Standard, Full }` with a clear message, and keep casual play open to everyone.
+
+```luau
+-- Illustrative ranked-place gate; adapt the accepted set and message.
+local IntegrityService = game:GetService("IntegrityService")
+
+local RANKED_LEVELS = {
+	[Enum.PlayerDeviceTrustLevel.Standard] = true,
+	[Enum.PlayerDeviceTrustLevel.Full] = true,
+}
+
+IntegrityService.EvaluatePlayerDeviceTrust = function(player, _measures)
+	if RANKED_LEVELS[player.DeviceTrustLevel] then
+		return { Action = Enum.PlayerDeviceTrustDecision.Accept }
+	end
+	return {
+		Action = Enum.PlayerDeviceTrustDecision.Reject,
+		Message = "Ranked play isn't available on this device yet.",
+	}
+end
+```
+
+Field reports from the [announcement thread](https://devforum.roblox.com/t/improve-your-game-security-with-the-device-trust-api/4961129):
+
+- (2026-10-27) Compatibility layers without integrity signals may get a lower level. Don't treat a low level as evidence of cheating, and don't kick every `Unknown` player.
+- (2026-11-02) The callback intermittently failed to register on long-lived servers, and a reply said it should be fixed. Log when you assign it, and retest on both fresh and long-running servers.
+
+**Account signals.**
+
+- `Player:IsVerified(level?)` returns whether the player meets an `Enum.VerifiedLevel` (default `Low`) based on real-world signals such as phone or ID verification. It's distinct from the verified badge.
+- `Player:PromptAgeCheck()` asks a player to complete an age check.
+  - From a LocalScript it must target the LocalPlayer. From the server it can target any player.
+  - Repeated calls within a cooldown are ignored.
+- `Player.AgeChecked` (`Enum.AgeCheckStatus`: `Unchecked` or `Checked`) is read-only and set by the server. Gate age-appropriate features on it server-side.
+
+## Lag-aware hit validation (measured)
+
+Client-called hits cut melee hit latency in one project from about 200 ms (through the server) to 67 ms. They are only safe with bounded, lag-aware server checks.
+
+One working tolerance set, measured in one project (tune your own):
+
+- **Ordering and rate.** Sequence numbers only move forward (wrap-aware for u16). Fire rate is a token bucket at 1.15x the weapon rate with a burst of 3.
+- **Shooter position.** The claimed eye is within 6 studs of the head, plus a lag allowance.
+- **Hit point.** Each hit point is within 4 studs of the target, plus lag: speed × 0.35 s, capped at 60 studs.
+- **Range and cone.** Distance is within range + 3, and the shot is inside the weapon cone + 5° (25° for melee).
+- **Line of sight.** Nothing solid lies between the eye and the hit point. Count only colliding parts, and skip players and the target's own body.
+
+Fixed origin tolerances alone reject legitimate fast movers. Pair this with `roblox-networking` §3a.
+
+**One hitbox module for every reader.** When power-ups or upgrades scale hitboxes, use one shared hitbox module for the client hit pick, the server check, server-side shooters, and debug drawing, so they never disagree.
+
+- Resolve overlaps deterministically: a head zone beats a grown body zone, and the nearest box of the same zone wins.
+- Use an attribute to exempt objects such as practice targets from scaling.
+
+**Accessories.** On characters that are combat targets, turn `CanQuery` off for accessories (hair, hats, glasses). Otherwise large accessories absorb headshots, and the client and server can disagree about what was hit. Treat a Humanoid death your combat code didn't cause (falling off the map, a reset) as a death of the gameplay entity too.
+
+**Synchronized state is still client input.** Under Server Authority or any synced simulation, client-authored attributes and predicted values aren't authoritative. Keep validation and irreversible decisions (damage, currency, saves) on the server ([release thread](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993), 2026-07-09).
+
+**Path strings aren't authorization.** A client-sent instance path or `GetFullName()` string proves nothing. Resolve the identifier against server-owned state, and check that this player may act on the target.
+
+**Never recreate remotes on request.** Don't recreate missing remotes because a client asks. That's unsafe, and it can disconnect existing listeners (`roblox-networking` §3c).
+
+## Multi-place client exposure
+
+Anything a client can see in any place can be dumped with save-instance tools. A lobby that everyone can join is the easiest place to dump.
+
+- Give each place its own Rojo project that maps only the modules that place needs, listing shared modules file by file instead of mapping whole shared folders.
+- Keep gameplay code for later places out of the lobby.
+- Pin each project to its place with `servePlaceIds` so a plugin connected to the wrong place is refused (`roblox-tooling`).
+
+This is reported by one team, not measured. Verify it with `rojo build` and by inspecting the lobby's `ReplicatedStorage`.
+
 ## Security Audit Checklist
 
 Run through this for every game before publish:

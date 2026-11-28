@@ -299,6 +299,26 @@ class ValidatorRegressionTests(unittest.TestCase):
             self.assertTrue(any("found ```lua" in error for error in errors))
             self.assertFalse(any("'## Full Reference' found" in error for error in errors))
 
+    def test_size_caps_apply_to_every_skill_including_growth_design(self):
+        # roblox-growth-design used to sit on an exemption list and passed at
+        # roughly twice the reference cap. No skill name may skip the caps.
+        self.assertFalse(hasattr(validate_skills, "CHAR_CAP_EXEMPT"))
+        with tempfile.TemporaryDirectory() as tmp:
+            skill_dir = Path(tmp) / "roblox-growth-design"
+            (skill_dir / "references").mkdir(parents=True)
+            body = "## When to Load\nNow.\n\n## Quick Reference\n" + "x" * 3100 + "\n"
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: roblox-growth-design\ndescription: example\n"
+                "last_reviewed: 2026-07-26\nsources: [original]\n---\n# Example\n\n" + body,
+                encoding="utf-8",
+            )
+            (skill_dir / "references" / "full.md").write_text(
+                "# Full\n" + "y" * (validate_skills.MAX_REF_CHARS + 1), encoding="utf-8"
+            )
+            errors = validate_skills.validate_skill(str(skill_dir))
+            self.assertTrue(any("SKILL.md is" in error for error in errors))
+            self.assertTrue(any("references/full.md is" in error for error in errors))
+
     def test_skill_schema_rejects_name_date_and_sources_mutations(self):
         with tempfile.TemporaryDirectory() as tmp:
             skill_dir = Path(tmp) / "roblox-example"
