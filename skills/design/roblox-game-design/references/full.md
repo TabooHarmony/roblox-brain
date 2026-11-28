@@ -5,7 +5,7 @@ Structural craft: core loops, tutorials/FTUE, level design, economies, retention
 Sections 1–8 are design guidance; sections 9 and 10 link to Roblox's Today's Picks and Moments posts.
 
 **Scope boundaries (cross-references):**
-- Funnel metrics, discovery algorithms, experiments, LiveOps cadence, monetization packaging → `roblox-growth-design`
+- Funnel metrics, discovery algorithms, experiments → `roblox-growth-design`; LiveOps cadence, events, packaging → `roblox-liveops`
 - Persuasion mechanics: first-minute timelines, cognitive effects, reward-schedule detail, pricing psychology, RNG/pity, community loops → `roblox-player-psychology` (reinforcement schedules are covered there; one-line summary in §6 here)
 - Juice/particle implementation in Luau → `roblox-animation-vfx`
 - Economy telemetry and dashboards → `roblox-analytics`
@@ -48,7 +48,7 @@ Published by Department of Play on Unity LevelUp. Core thesis: as a game matures
 
 ### Long-term (D30–D90)
 - **Social comparison**: players stay to see how they stack up: PvP, leaderboards, power rankings.
-- **LiveOps**: fresh content, timed events, seasons to prevent boredom. (Cadence and planning → `roblox-growth-design`.)
+- **LiveOps**: fresh content, timed events, seasons to prevent boredom. (Cadence and planning → `roblox-liveops`.)
 
 ### Terminal (D90+)
 - **Meaningful social interaction**: friendships, clan allegiance, rivalries, not gameplay.

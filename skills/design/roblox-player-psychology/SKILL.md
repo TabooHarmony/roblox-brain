@@ -12,7 +12,7 @@ sources:
 
 ## When to Load
 
-Load for behavior/persuasion questions: what happens in the first 60 seconds, why players return, reward schedules, streaks, pricing psychology, gamepass ladders, crate/RNG odds and pity, or turning players into a community. For structural craft (core loop, FTUE structure, level design, economy sources/sinks) load `roblox-game-design`; for dashboard diagnosis, discovery, and the algorithm load `roblox-growth-design`; for purchase implementation load `roblox-monetization`.
+Load for behavior/persuasion questions: what happens in the first 60 seconds, why players return, reward schedules, streaks, pricing psychology, gamepass ladders, crate/RNG odds and pity, or turning players into a community. For structural craft (core loop, FTUE structure, level design, economy sources/sinks) load `roblox-game-design`; for dashboard diagnosis, discovery, and the algorithm load `roblox-growth-design`; for events and season cadence load `roblox-liveops`; for purchase implementation load `roblox-monetization`.
 
 ## Quick Reference
 

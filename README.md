@@ -28,7 +28,7 @@ Start with **Core** for general development work. Add the others when the task c
 
 ## Install
 
-**All 29 skills:**
+**All 30 skills:**
 
 ```bash
 npx skills add TabooHarmony/roblox-brain
@@ -49,7 +49,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Manual install: copy the **whole skill directory**, including `references/full.md`, into your agent's skills folder. For example: `cp -r skills/design/roblox-growth-design ~/.claude/skills/`. This also works with `.codex/skills/` and `.cursor/skills/`. Copying only `SKILL.md` leaves the reference missing.
 
-## Skills (29)
+## Skills (30)
 
 Expand a library to see its skills. The full-repo install includes all four.
 
@@ -96,7 +96,8 @@ Expand a library to see its skills. The full-repo install includes all four.
 | :-- | :-- |
 | `roblox-game-design` | Core loops, tutorials, levels, economy structure, and game feel |
 | `roblox-player-psychology` | First-minute psychology, reward schedules, pricing, RNG/pity, and community loops |
-| `roblox-growth-design` | Discovery, positioning, retention, experiments, packaging, and LiveOps |
+| `roblox-growth-design` | Diagnosing stats, discovery, Home recommendations, retention, experiments, and Kids & Select |
+| `roblox-liveops` | LiveOps cadence, events, season passes, sponsored ads, and packaging (icons, thumbnails, titles) |
 | `roblox-analytics` | Custom events, economy tracking, funnels, first-session traces, and event taxonomy |
 | `roblox-monetization` | Game Passes, Developer Products, receipts, subscriptions, and policy checks |
 

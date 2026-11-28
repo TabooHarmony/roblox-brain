@@ -46,6 +46,6 @@ Key rules:
 - Health signals: sink/source ratio, inflation, whale concentration, elasticity, sink sufficiency, D1/D7 cohorts. Thresholds are heuristics.
 - Economy breaks: verify events, read narrowest broken signal, change ONE lever, re-check.
 
-**Cross-refs:** `roblox-growth-design` (audit workflow); `roblox-monetization` (purchase funnel).
+**Cross-refs:** `roblox-growth-design` (audit workflow); `roblox-liveops` (event KPIs); `roblox-monetization` (purchase funnel).
 
 **Need more detail?** `references/full.md`: code examples, API tables, edge cases.

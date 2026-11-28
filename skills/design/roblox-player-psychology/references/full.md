@@ -265,5 +265,5 @@ Build in this order:
 ### Deliberate scope boundaries (see SKILL.md)
 
 - Core loop, FTUE/tutorial structure, level design, economy sources/sinks, retention phases, juice, Bartle types → `roblox-game-design`.
-- Dashboard diagnosis, discovery/packaging, algorithm mechanics, experiments, LiveOps cadence → `roblox-growth-design`.
+- Dashboard diagnosis, algorithm mechanics, experiments → `roblox-growth-design`; LiveOps cadence, events, packaging → `roblox-liveops`.
 - Purchase implementation, PolicyService code, regional pricing, price optimization → `roblox-monetization`.

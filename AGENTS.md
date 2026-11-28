@@ -2,7 +2,7 @@
 
 ## What This Repo Is
 
-`roblox-brain` is a skills-only repository for AI coding agents working with Roblox Studio. 29 curated skills in four libraries (`core`, `gameplay`, `design`, `tools`), covering Luau, Roblox engine APIs, architecture, game design, security, monetization, localization, and workflow. Distributed via `npx skills add TabooHarmony/roblox-brain`; install a single library with `npx skills add TabooHarmony/roblox-brain/skills/core` (or another library path).
+`roblox-brain` is a skills-only repository for AI coding agents working with Roblox Studio. 30 curated skills in four libraries (`core`, `gameplay`, `design`, `tools`), covering Luau, Roblox engine APIs, architecture, game design, security, monetization, localization, and workflow. Distributed via `npx skills add TabooHarmony/roblox-brain`; install a single library with `npx skills add TabooHarmony/roblox-brain/skills/core` (or another library path).
 
 No plugin code. No build system. No npm package. Just SKILL.md files.
 
