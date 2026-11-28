@@ -244,7 +244,7 @@ Every interactive control needs:
 
 ### Reliable hover (MouseEnter/MouseLeave pitfalls)
 
-`GuiObject.MouseEnter`/`MouseLeave` only re-check hover when the mouse moves, so they can miss when content scrolls under a stationary cursor or occasionally fail to fire `MouseLeave`. For reliable hover, poll the cursor each frame and fire your own enter/leave on transitions (practitioner pattern; DevForum lead "REAL MouseEnter/MouseLeave for GuiObjects", https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310). Prefer `PlayerGui:GetGuiObjectsAtPosition()` over hardcoded offsets, and disconnect with the owning UI's lifetime.
+Developers have reported on the DevForum that `GuiObject.MouseEnter`/`MouseLeave` can miss transitions, for example when content scrolls under a stationary cursor, and that `MouseLeave` sometimes doesn't fire ("REAL MouseEnter/MouseLeave for GuiObjects", https://devforum.roblox.com/t/real-mouseentermouseleave-for-guiobjects-they-actually-fire/3980310). The API docs don't describe this, so reproduce it on the current client first. If you hit it, an optional workaround is to poll the cursor each frame while the window is open and fire your own enter/leave on transitions. Prefer `PlayerGui:GetGuiObjectsAtPosition()` over hardcoded offsets, and disconnect with the owning UI's lifetime.
 
 `UserInputService:GetMouseLocation()` returns raw pixels that do not account for the GUI inset, while `GetGuiObjectsAtPosition()` expects coordinates after the inset (see `GuiService:GetGuiInset()`). Subtract the top-left inset before the hit test. This conversion follows the docs but has not been live-verified with every `IgnoreGuiInset`/`ScreenInsets` combination; measure on the real layout.
 

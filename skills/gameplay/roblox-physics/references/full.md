@@ -207,19 +207,30 @@ Studio-measured 2026-11 (one run, default R15 rig, server-owned parts, `Humanoid
 | `IsKinematic = false`, `AngularStrength = 0`, `LinearStrength = 0` | 49.0° | Limp |
 | `Enabled = false` (built-in BallSockets only) | 44.3° | Limp |
 
-Rig defaults read in that run: `IsKinematic = true`, `MaxForce = 0`, `MaxTorque = 3000`, `AngularStrength = 1`, `LinearStrength = 1`, with 14 enabled `BallSocketConstraint`s. So `IsKinematic = false` alone keeps the character stiff; a limp ragdoll needs `AngularStrength = 0` as well, or simply `Enabled = false` on the AnimationConstraints. Recover by restoring the saved values, not by rebuilding joints.
+Rig defaults read in that run: `IsKinematic = true`, `MaxForce = 0`, `MaxTorque = 3000`, `AngularStrength = 1`, `LinearStrength = 1`, with 14 enabled `BallSocketConstraint`s. So `IsKinematic = false` alone keeps the character stiff; a limp ragdoll needs `AngularStrength = 0` as well, or simply `Enabled = false` on the AnimationConstraints.
 
 Method:
 
 1. Set `Humanoid.BreakJointsOnDeath = false` for a death ragdoll; it defaults to `true`, and broken joints leave nothing to simulate.
-2. Put the Humanoid in `Enum.HumanoidStateType.Physics` (or let your death flow do it) so it stops driving the limbs.
-3. For each `AnimationConstraint`, record its properties, then set `IsKinematic = false` and `AngularStrength = 0` (or `Enabled = false`); the built-in ball sockets hold the limbs. For a powered or struggling ragdoll, keep `IsKinematic = false` with some strength and cap `MaxTorque`.
-4. To recover, restore the recorded values (`IsKinematic = true`) and move the Humanoid to `GettingUp`.
+2. `Humanoid:ChangeState` works only from the side that owns the character (the owning client's LocalScript, or the server after taking ownership). The example runs on the server and hands ownership back on recovery.
+3. Put the Humanoid in `Enum.HumanoidStateType.Physics` (or let your death flow do it) so it stops driving the limbs.
+4. For each `AnimationConstraint`, record its properties, then set `IsKinematic = false` and `AngularStrength = 0` (or `Enabled = false`); the built-in ball sockets hold the limbs. For a powered or struggling ragdoll, keep `IsKinematic = false` with some strength and cap `MaxTorque`.
+5. To recover, restore the recorded values (`IsKinematic = true`; don't rebuild joints), move the Humanoid to `GettingUp`, then return ownership to the player.
 
 ```luau
--- Illustrative: limp ragdoll on an AnimationConstraint rig (settings Studio-measured above).
+-- Illustrative server Script: limp ragdoll on an AnimationConstraint rig (settings Studio-measured above).
+local Players = game:GetService("Players")
+
 type Saved = { joint: AnimationConstraint, kinematic: boolean, angular: number }
 local ragdolled: { [Model]: { Saved } } = {}
+
+local function setOwner(character: Model, owner: Player?)
+    for _, part in character:GetDescendants() do
+        if part:IsA("BasePart") and part:CanSetNetworkOwnership() then
+            part:SetNetworkOwner(owner)
+        end
+    end
+end
 
 local function enableRagdoll(character: Model)
     if ragdolled[character] then
@@ -241,6 +252,7 @@ local function enableRagdoll(character: Model)
         return -- legacy Motor6D rig: see the legacy note below
     end
     ragdolled[character] = saved
+    setOwner(character, nil) -- server owns the body while it's limp
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 end
 
@@ -260,8 +272,14 @@ local function disableRagdoll(character: Model)
     if humanoid then
         humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
     end
+    local player = Players:GetPlayerFromCharacter(character)
+    if player then
+        setOwner(character, player) -- give movement back to the owning client
+    end
 end
 ```
+
+Verify ragdoll and recovery with two clients (the ragdolled player and a watcher). Under Server Authority, use that mode's ownership model (see below) instead of `SetNetworkOwner`.
 
 Store the record in the character's cleanup object so it can't outlive the character, and restore only what this cycle changed. The sleep-system docs list `AnimationConstraint` with `IsKinematic = false` among constraints whose `MaxForce`/`MaxTorque` matter, and the performance docs recommend joint limits or no-collision constraints so ragdoll limbs don't collide with each other.
 
@@ -580,7 +598,7 @@ Field note from before this API: a client-owned body's velocity reached the serv
 Measured in individual projects; numbers are examples, verify on your own content.
 
 ### Contacts and resting bodies
-- **A free part keeps contacts within roughly 5 studs, not only parts it touches.** About 300 contacts while touching about 2 in a dense map of small parts; about 100 free debris pieces made 30k contacts and 30-45 ms of physics. Put tiny map parts in a collision group the debris ignores (cut contacts from 239 to 41 per piece). Read `Stats.ContactsCount` per free object before optimizing anything else; `GetTouchingParts` doesn't show this cost.
+- **Field-measured, not documented: free parts can hold far more contacts than they touch** (in one project, apparently with parts within ~5 studs): about 300 contacts while touching about 2 in a dense map of small parts; about 100 free debris pieces made 30k contacts and 30-45 ms of physics. Put tiny map parts in a collision group the debris ignores (cut contacts from 239 to 41 per piece). `Stats.ContactsCount` is scene-wide: price one object by reading it before and after adding it. `GetTouchingParts` won't show this.
 - **Large resting unanchored assemblies keep costing physics.** A 1,750-part fallen piece cost about 11 ms per step at zero velocity (17 ms step vs 6 ms anchored). Anchor big debris after about one second still. For client debris piles: anchor below about 0.5 studs/s and 0.3 rad/s held for 0.5 s of clamped dt, unanchor on a nearby hit, and spread anchor and weld work across frames.
 - **Settle loot only when slow and grounded.** Anchoring the first frame speed drops caught 9 of 22 pieces at the top of a bounce. Require a short slow run (about 0.15 s) and the box's lowest point within about 0.25 studs of a downward ray hit. Lowest point of a rotated box: `|Right.Y|*hx + |Up.Y|*hy + |Look.Y|*hz` below the center. Anchored loot outlives its support, so periodically unanchor pieces with nothing under them.
 - **Resting bodies drift.** Sub-millimetre motion every step and non-orthonormal rotation made a 0.05-degree check fire every frame. Use roughly 0.002 studs and 0.2 degrees, and sweep an awake set a slice per frame.

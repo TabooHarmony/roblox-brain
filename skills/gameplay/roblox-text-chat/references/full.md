@@ -61,6 +61,25 @@ local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 
 local channels: { [string]: TextChannel } = {}
+local generation: { [Player]: number } = {}
+
+local function currentSquad(userId: number): string?
+	local player = Players:GetPlayerByUserId(userId)
+	local squad = player and player:GetAttribute("Squad")
+	return if typeof(squad) == "string" and squad ~= "" then squad else nil
+end
+
+local function removeFrom(player: Player, keep: TextChannel?)
+	for _, channel in channels do
+		if channel ~= keep then
+			for _, source in channel:GetChildren() do
+				if source:IsA("TextSource") and source.UserId == player.UserId then
+					source:Destroy()
+				end
+			end
+		end
+	end
+end
 
 local function getChannel(squad: string): TextChannel
 	local existing = channels[squad]
@@ -69,44 +88,65 @@ local function getChannel(squad: string): TextChannel
 	end
 	local channel = Instance.new("TextChannel")
 	channel.Name = "Squad_" .. squad
+	-- Second line of defence: deliver only to users whose squad still matches,
+	-- even if a stale TextSource survives a race. Non-yielding.
+	channel.ShouldDeliverCallback = function(_message: TextChatMessage, target: TextSource)
+		return currentSquad(target.UserId) == squad
+	end
 	channel.Parent = TextChatService
 	channels[squad] = channel
 	return channel
 end
 
-local function removeFromAll(player: Player)
-	for _, channel in channels do
-		for _, source in channel:GetChildren() do
-			if source:IsA("TextSource") and source.UserId == player.UserId then
+local function assign(player: Player)
+	-- AddUserAsync yields, so a newer attribute change can arrive mid-join.
+	-- Each call takes a generation number; only the latest one may finish.
+	local myGeneration = (generation[player] or 0) + 1
+	generation[player] = myGeneration
+
+	local squad = currentSquad(player.UserId)
+	local target = squad and getChannel(squad)
+	removeFrom(player, target)
+	if not target then
+		return
+	end
+
+	local ok, err = pcall(function()
+		target:AddUserAsync(player.UserId)
+	end)
+	if generation[player] ~= myGeneration or player.Parent == nil then
+		-- A newer assignment (or the player leaving) superseded this join:
+		-- undo it, then let the newer call own membership.
+		for _, source in target:GetChildren() do
+			if source:IsA("TextSource") and source.UserId == player.UserId and currentSquad(player.UserId) ~= squad then
 				source:Destroy()
 			end
 		end
+		return
+	end
+	if not ok then
+		warn("Squad chat join failed:", err)
 	end
 end
 
-local function assign(player: Player)
-	removeFromAll(player)
-	local squad = player:GetAttribute("Squad")
-	if typeof(squad) == "string" and squad ~= "" then
-		local ok, err = pcall(function()
-			getChannel(squad):AddUserAsync(player.UserId)
-		end)
-		if not ok then
-			warn("Squad chat join failed:", err)
-		end
-	end
-end
-
-Players.PlayerAdded:Connect(function(player)
+local function track(player: Player)
 	player:GetAttributeChangedSignal("Squad"):Connect(function()
 		assign(player)
 	end)
-	assign(player)
+	task.spawn(assign, player)
+end
+
+Players.PlayerAdded:Connect(track)
+for _, player in Players:GetPlayers() do
+	track(player) -- players who joined before this script ran
+end
+Players.PlayerRemoving:Connect(function(player)
+	generation[player] = nil
+	removeFrom(player, nil)
 end)
-Players.PlayerRemoving:Connect(removeFromAll)
 ```
 
-`AddUserAsync` yields and can fail; call it outside chat callbacks and handle the failure. Users can only chat in a channel if their own settings and age-based rules allow it, which `TextChatService` applies on top of your membership.
+`AddUserAsync` yields and can fail; call it outside chat callbacks, handle the failure, and re-check state after it returns, because the game state may have changed during the yield. `ShouldDeliverCallback` is the safety net for private channels: it decides delivery per message from current state, so a stale membership can't leak messages. Users can only chat in a channel if their own settings and age-based rules allow it, which `TextChatService` applies on top of your membership.
 
 ### Conditional delivery (proximity, dead players, spectators)
 
@@ -287,7 +327,7 @@ end)
 return setSignText
 ```
 
-- Filter on the server with the author's user id. `GetNonChatStringForBroadcastAsync` suits text everyone sees; `GetNonChatStringForUserAsync(toUserId)` filters for one viewer; `GetChatForUserAsync` is for chat-like messages to a specific user.
+- Filter on the server with the author's user id. `GetNonChatStringForBroadcastAsync` suits text everyone sees; `GetNonChatStringForUserAsync(toUserId)` filters for one viewer. `GetChatForUserAsync` is deprecated and returns an empty string; anything conversational belongs in `TextChatService`.
 - When filtering fails, show nothing or a placeholder, never the raw text.
 - Validate the remote (type, length, rate) before calling the filter (`roblox-networking`).
 - Players can edit freely in their own text box; only the submission others see is limited. The one-minute rule frustrates fast-iteration features (one DevForum thread from 2026-10 objected to it: https://devforum.roblox.com/t/important-textchatservice-updates-how-to-test-and-what%E2%80%99s-next/4948433), so design around it: preview locally, submit once.
