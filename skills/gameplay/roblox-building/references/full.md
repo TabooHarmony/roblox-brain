@@ -521,6 +521,18 @@ Use the report to choose the next bounded inspection or playtest. Static counts 
 - **Runtime:** start play, navigate to the spawn and a representative landmark, exercise the relevant interaction, collect console output, and stop play. A clean console is evidence of no observed errors, not proof of all behavior.
 - **Recovery:** if a phase fails, preserve the last verified phase, remove only the disposable failed output, and retry with a smaller batch or native fallback.
 
+## Image Assets for Builds and UI
+
+<!-- temporal: 2026-11 --> Generic rules for textures, decals and UI images, whatever tool makes them.
+
+- **Size limits.** Separately uploaded textures can be `.png`, `.jpg`, `.tga` or `.bmp`. The texture specification says Roblox supports textures up to 4096×4096 and streams lower-quality versions first, ramping up with device resources; the Open Cloud asset guide says uploaded images must be smaller than 8000×8000. Avatar and accessory texture budgets and UV texture maps cap at 1024×1024, and Roblox may downsample when many textures render at once. Size to the job rather than the maximum: about 256 px for a 5-stud face, 512 for 10 studs and 1024 for 20 studs (the spec's guidance); UI icons rarely need more than their largest on-screen size on a high-density screen.
+- **Memory scales with pixel count.** A 1024×1024 image costs four times a 512×512 one. Reuse one image across many objects and atlas small icons where your UI code allows.
+- **Alpha and padding.** UI art, icons and sprites need a fully transparent background and a little padding so outlines and glows aren't clipped. Tiling surfaces need a seamless, evenly lit, top-down texture with no baked shadows.
+- **Text in images.** Baked text only localizes through image translation (beta, limited languages; `roblox-localization`). Prefer live `TextLabel`s over baked words for UI.
+- **Moderation.** Uploaded images are moderated; brands, real people, gore and suggestive content fail. Keep a versioned copy of every source image instead of overwriting, so uploaded ids stay traceable.
+- **A brief before generating or commissioning.** Check first whether an existing asset or a CC0 library fits, and record source and license. Otherwise write a short labeled spec: asset type and use, subject, style matched to the game's existing art, background and alpha, size, and exclusions. Open the result and check subject, alpha, padding and tiling; change one element per retry.
+- **New images can be blank in the first capture** while they download; preload and look again before calling an upload broken (`roblox-studio-mcp`).
+
 ## Community ecosystem (leads, not sources)
 
 ### Interaction prompts: ProximityPrompt and ProximityPromptService

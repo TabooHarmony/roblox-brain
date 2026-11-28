@@ -2,7 +2,7 @@
 name: roblox-input
 description: "Use when handling Roblox touch, gamepad, keyboard, mouse or motion input, on-screen action buttons, or cross-platform action binding."
 when_to_use: "Also when a button fires by accident, controls don't work on mobile or console, a controller gets stuck in a menu, or button prompts show the wrong key."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://devforum.roblox.com/t/the-correct-way-to-design-mobile-buttons/2494558
   - https://create.roblox.com/docs/reference/engine/classes/UserInputService
@@ -12,6 +12,10 @@ sources:
   - https://create.roblox.com/docs/reference/engine/classes/ContextActionService
   - https://create.roblox.com/docs/reference/engine/classes/Tool
   - https://create.roblox.com/docs/studio/controller-emulator
+  - https://create.roblox.com/docs/input/input-action-system
+  - https://create.roblox.com/docs/input/micro-gamepad
+  - https://create.roblox.com/docs/reference/engine/classes/InputActionLabel
+  - https://create.roblox.com/docs/reference/engine/classes/ProximityPrompt
   - original
   - https://create.roblox.com/docs/projects/server-authority
   - https://create.roblox.com/docs/ui/3D-drag-detectors
@@ -27,13 +31,15 @@ Touch, gamepad, keyboard, mouse or motion input, on-screen action buttons, cross
 ## Quick Reference
 
 - **Events:** `InputBegan/Changed/Ended` give `(input, gameProcessedEvent)`; filter it for gameplay. Wheel fires only `InputChanged`.
-- **Bindings:** prefer `ContextActionService:BindAction(name, handler, touchButton, ...keys)`; gate on `state` (touch is `KeyCode.Unknown`); stack order, so `BindActionAtPriority`. Server Authority: `InputAction`/`InputContext` + `RunService:BindToSimulation()` (needs `Workspace.UseFixedSimulation`).
-- **Mobile first, hybrid aware:** show controls from `UserInputService.PreferredInput` (`Enum.PreferredInput`), observed with `GetPropertyChangedSignal`, not from `TouchEnabled` cached once.
-- **Touch action buttons:** fire only for touches that began on the button; camera drags across it never fire. Place from the measured jump button under `PlayerGui.TouchGui`; clear the thumbstick zone.
+- **Bindings:** new work uses the Input Action System (`InputContext` > `InputAction` > `InputBinding`); CAS binding is planned for deprecation. Server Authority: `BindToSimulation()` (needs `UseFixedSimulation`).
+- **Hybrid aware:** show controls from `UserInputService.PreferredInput`, observed live, not `TouchEnabled` cached once.
+- **Touch buttons:** fire only for touches that began on the button. Place from the measured jump button in `PlayerGui.TouchGui`.
 - **Gate gameplay:** block attacks while a game window is open, a `TextBox` is focused, `GuiService.MenuIsOpen`, or `GuiService.SelectedObject` is set.
 - **Cancel is not release:** holds cancel on window open, `Cancel`, unequip, focus loss, input switch or pad disconnect.
-- **Gamepad tools:** default controls bind `ButtonR2` through `BindActivate`; `Tool.ManualActivationOnly = true` disables it. Aim from the screen center on gamepad, not `GetMouseLocation()`.
-- **Hints:** `GetStringForKeyCode(key, Enum.KeyCodeStringFormat.Abbreviated)`, `GetImageForKeyCode`, or `InputActionLabel`; never hardcode Xbox names.
-- **Test:** Device Simulator + Controller Emulator; menu focus is in `roblox-gui`.
+- **Gamepad tools:** R2 activates tools via `BindActivate`; `Tool.ManualActivationOnly = true` disables it. Aim from screen center, not `GetMouseLocation()`.
+- **Hints:** `InputActionLabel`, `GetStringForKeyCode(key, Abbreviated)`, `GetImageForKeyCode`; never hardcode Xbox names.
+- **TV remote:** D-pad, centre (`ButtonA`), back (`ButtonB`); `PreferredInput.MicroGamepad` isn't set yet, so detect a pad without thumbsticks.
+- **Locked mouse:** popups need a key; click windows show `Modal` + `MouseIconEnabled`; `ClickablePrompt = false`.
+- **Test:** Device Simulator + Controller Emulator.
 
 > Details: [references/full.md](references/full.md)

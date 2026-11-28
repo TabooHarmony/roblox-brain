@@ -71,3 +71,21 @@ alternatives once and proceed with a compliant treatment or stop and report.
 - After repeated subjective misses, validate one representative implementation against the owner's references before spreading it to related screens or rooms. Record the approved pattern and then check every adapted flow.
 - Honor a requested preview checkpoint before upload or replacement. Stop editing a design surface when the owner disapproves it; resume that surface when new direction authorizes work. Continue independently authorized tasks.
 - Verify delegated work against the brief and actual installed result. A worker's report or a clean diff cannot establish that the right screen, state, device, or behavior was tested. Keep unmet checks visible instead of reopening approved work or silently dropping observations.
+
+### Shared Studio etiquette
+
+The Studio an agent reaches is often the user's own, in use. These rules apply on any bridge (`roblox-studio-mcp`).
+
+- **Ask before taking over the machine.** Bringing Studio to the front, sending simulated keys or clicks, and starting or stopping Play take over the user's computer. Ask for that specific run and say how long it takes; a one-line heads-up is not consent. Without a yes, measure what focus doesn't affect (script time, profiler data, logs), state that frame times are capped in the background, or hand the test to the user with what to look for.
+- **Read the session before acting.** Check play state before running scripts, moving the character or starting a test. A playtest you didn't start belongs to the user; stopping it or sending input interrupts them. The user may also start playing inside a session you started: before and between scripted runs, look for input you didn't send (an equipped tool, position changes, logs from places you never went) and read odd numbers with that in mind.
+- **Hand back clean.** Stop debug sessions you started, zero network simulation, restore time scales, cameras and device simulation, and say if anything was left in a debug state.
+- **Verify by looking, then say fixed.** A passing test that skips the real client path proves little: one runtime error early in a client action can drop every later effect while server-side tests pass. After any change (yours or a worker's), run one action of each affected kind through the real client, read the client error log grouped by message, and look at the result before calling it done.
+- **Test from the state a real player reaches.** A change on a shared path broke a slow weapon's refire only after stowing, and fresh-state tests missed it. Script the real sequence (use, stow, return, use), and list which approved items a shared-path change touches before shipping it.
+- **Batch playtests.** Playtests and captures are the most expensive part of a session and often answer nothing. Before starting one, name the question it answers that reading the code can't; batch every runtime check for a change set into one session; read code first for feel bugs (in one project about 15 scripted playtests failed to reproduce a bug that reading the code found in minutes); when the user already reports a system as weak, build the fix instead of gathering evidence of how bad it is.
+
+### Design decisions stay with the owner
+
+- "Make a fresh HUD" or "redo the shop" is still a design decision: what is always on screen, where currency lives, the phone layout. Bring the open questions with two rough layouts and a recommendation, get answers, then build.
+- Before a plan goes for approval, check that its numbers can produce the picture it promises (counts and sizes against the approved concept). If a budget can't reach it, say so first. When the owner pushes back twice on the same thing, stop, measure the cause, and lead with what the numbers say.
+- When asked to analyze or "think it through", deliver the real questions, the strongest case each way, the unknowns and what would resolve them, and the questions only the owner can answer. Don't end with a verdict unless asked.
+

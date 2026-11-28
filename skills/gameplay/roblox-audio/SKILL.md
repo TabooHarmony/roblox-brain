@@ -9,6 +9,9 @@ sources:
   - https://create.roblox.com/docs/audio/effects
   - https://create.roblox.com/docs/sound/groups
   - https://create.roblox.com/docs/sound/dynamic-effects
+  - https://create.roblox.com/docs/reference/engine/classes/AudioEmitter
+  - https://create.roblox.com/docs/reference/engine/classes/AudioTextToSpeech
+  - https://create.roblox.com/docs/audio/assets
   - original
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/Sound.yaml
 ---
@@ -17,7 +20,7 @@ sources:
 
 ## When to Load
 
-Load when implementing audio playback, spatial/3D sound, background music, sound effects, audio mixing (SoundGroups), or dynamic effects. Covers both legacy Sound objects and the newer modular AudioPlayer/Wire system.
+Audio playback, spatial sound, music, SFX, mixing (SoundGroups), effects, leveling and cue timing. Covers legacy `Sound` and the modular AudioPlayer/Wire system.
 
 ## Quick Reference
 
@@ -38,19 +41,12 @@ s.Parent = SoundService; s:Play()
 
 **New Modular**: 2D: `AudioPlayer → Wire → AudioDeviceOutput`. 3D: `AudioPlayer → Wire → AudioEmitter` (on Part). Studio/plugin-only `SoundService.DefaultListenerLocation` controls the default listener; wire an explicit `AudioListener` for runtime control.
 
-**One-Shot SFX**:
-```luau
-local function playSFX(parent, id)
-    local s = Instance.new("Sound"); s.SoundId = id
-    s.RollOffMode = Enum.RollOffMode.InverseTapered
-    s.RollOffMinDistance = 10; s.RollOffMaxDistance = 80
-    s.Parent = parent; s:Play()
-    s.Ended:Once(function() s:Destroy() end)
-end
-```
+**One-shots**: create, `Play()`, `Ended:Once(Destroy)` (full.md).
 
-**Preload**: `ContentProvider:PreloadAsync({sound1, sound2})`. **Client SFX**: `FireClient` → `OnClientEvent` creates invisible Part + `playSFX`.
+**Preload**: `PreloadAsync({sound1, sound2})` with instances; confirm with `IsLoaded`/`TimeLength`. **Client SFX**: positioned cues on a temp part; positionless cues (UI, own weapon) flat in `SoundService`.
 
-**Pitfalls**: Server sounds have latency → play feedback on client. Default `RollOffMaxDistance`=10000 studs → set explicitly. Volume > 1 clips. Rapid-fire → check `IsPlaying`. Always `Destroy()` one-shots after `Ended`.
+**New APIs**: acoustic simulation (`SoundService.AcousticSimulationEnabled` + emitter/listener; verify in live servers), `DistanceAttenuationMode` presets, `AudioTextToSpeech.AutoLocalize`.
+
+**Pitfalls**: play feedback on the client. Set `RollOffMaxDistance` (default 10000) and per-cue `RollOffMinDistance` before raising Volume; Volume > 1 clips. Cooldowns must not drop real events. Stop loops when their source is destroyed.
 
 See `references/full.md` for detailed examples, effect table, and client-side patterns.

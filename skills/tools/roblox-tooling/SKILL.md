@@ -2,13 +2,14 @@
 name: roblox-tooling
 description: "Use when setting up or fixing Roblox tooling: Rojo, Wally, pesde, Selene, StyLua, Lune, Rokit, luau-lsp, tests, or CI/CD."
 when_to_use: "Also when sync or builds break, packages won't install, lint or format errors appear, or reviewing the project's toolchain."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/ScriptEditorService.yaml
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/ChangeHistoryService.yaml
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/InstanceFileSyncService.yaml
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/scripting/sync.md
   - https://raw.githubusercontent.com/Roblox/creator-docs/main/content/en-us/reference/engine/classes/Players.yaml
+  - https://create.roblox.com/docs/projects/rojo
   - https://rojo.space/docs/
   - https://wally.run/
   - https://kampfkarren.github.io/selene/
@@ -20,7 +21,6 @@ sources:
   - https://docs.pesde.dev/reference/manifest/
   - https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/README.md
   - https://raw.githubusercontent.com/lest-luau/lest/main/docs/backends.md
-  - https://raw.githubusercontent.com/lest-luau/lest/main/docs/continuous-integration.md
   - https://raw.githubusercontent.com/UpliftGames/wally/main/src/resolution.rs
   - https://create.roblox.com/docs/llms.txt
   - https://devforum.roblox.com/t/evolving-luau-oss-community-contributions-more/4566806
@@ -31,7 +31,7 @@ sources:
 
 ## When to Load
 
-Load for filesystem workflows, tool/package pins, linting, sourcemaps, and CI.
+Load for filesystem workflows, tool pins, linting, sourcemaps, and CI.
 
 ## Quick Reference
 
@@ -43,4 +43,6 @@ Load for filesystem workflows, tool/package pins, linting, sourcemaps, and CI.
 
 **Script writes from plugin/MCP** go through `ScriptEditorService:UpdateSourceAsync` (raw `.Source` writes can clobber an open editor) + one `ChangeHistoryService` recording per bounded mutation. Script Sync conflicts resolve as Keep Studio vs Keep Disk — never assume either side wins. See full.md §§1b–1d.
 
-**Details:** `references/full.md` (setup, file layout, CI examples).
+**Silent breakage:** Windows `autocrlf` fails format gates (use `* text eol=lf`); restart `rojo serve` after project-file edits or package installs; `servePlaceIds` pins a place (full.md §1f–1g).
+
+**Details:** `references/full.md`.

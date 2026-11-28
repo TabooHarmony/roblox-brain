@@ -2,7 +2,7 @@
 name: roblox-player-psychology
 description: "Use when designing or reviewing player-behavior mechanics: first minute, rewards, streaks, daily rewards, pricing, RNG/pity, community."
 when_to_use: "Also for why players don't come back, reward timing, offer placement, crate odds, and auditing a feature for manipulative or dark patterns."
-last_reviewed: 2026-09-20
+last_reviewed: 2026-11-27
 sources:
   - original
   - https://create.roblox.com/docs/production/monetization/paid-random-items
@@ -12,7 +12,7 @@ sources:
 
 ## When to Load
 
-Load for behavior/persuasion questions: what happens in the first 60 seconds, why players return, reward schedules, streaks, pricing psychology, gamepass ladders, crate/RNG odds and pity, or turning players into a community. For structural craft (core loop, FTUE structure, level design, economy sources/sinks) load `roblox-game-design`; for dashboard diagnosis, discovery, and the algorithm load `roblox-growth-design`; for purchase implementation load `roblox-monetization`.
+Load for behavior/persuasion questions: what happens in the first 60 seconds, why players return, reward schedules, streaks, pricing psychology, gamepass ladders, crate/RNG odds and pity, or turning players into a community. For structural craft (core loop, FTUE structure, level design, economy sources/sinks) load `roblox-game-design`; for dashboard diagnosis, discovery, and the algorithm load `roblox-growth-design`; for events and season cadence load `roblox-liveops`; for purchase implementation load `roblox-monetization`.
 
 ## Quick Reference
 
@@ -27,5 +27,7 @@ D1 20/30/40% · D7 8/15/20% · D30 3/7/10% (good/great/excellent; compounds; 40%
 ### Hooks, pricing, RNG
 
 Four reward schedules (fixed/variable × ratio/interval); layer all four. Hooks: appointments, streaks with one forgiven day, rotation, shared clan goals, hook model, specific timers ("Back in 4h 32m"). Ladder: 49–99 break threshold · 199–399 convenience · 499–799 luck+power · 999+ identity. RNG: 5 tiers (55/27/12/5/1%), show the pool and pity counter. For paid RNG implementation, check current Roblox guidance in `roblox-monetization`.
+
+Genre data from 59 teardowns (6–18 rarity tiers with sub-1% tails, observed price labels, first-minute timings) and a dark-pattern audit table: full.md §7a–7b.
 
 > Full detail, tables, and community loop: [references/full.md](references/full.md)
