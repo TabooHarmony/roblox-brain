@@ -69,6 +69,10 @@ Two consequences:
 - Inside `__newindex`, write with `rawset` or to a separate table. A plain `tbl[key] = value` on an absent key re-enters the hook recursively.
 - A hook that must observe *every* write cannot let the exposed table ever hold the data. Keep the exposed table permanently empty and store the value elsewhere (`store[key] = value` inside the hook); every write then hits the hook because no raw key ever becomes present.
 
+### Datatype table keys: Vector3 by value, Vector2 by identity
+
+`Vector3` is the VM's native vector value type, so `t[Vector3.new(1, 2, 3)]` and a later `t[Vector3.new(1, 2, 3)]` hit the same entry. That makes a floored `Vector3` a cheap spatial-grid key (see `roblox-luau-patterns`). Field-measured in Studio: `Vector2` keys hash by identity, so `t[Vector2.new(1, 2)] = 5` followed by `t[Vector2.new(1, 2)]` reads `nil` with no error, and linters do not warn. Treat other userdata datatypes (`CFrame`, `Color3`, `UDim2`) the same way until you have checked them. For 2D grid cells use `Vector3.new(x, 0, z)` or a string key.
+
 ## 3. Reference and copy semantics
 
 Tables are references. Assignment aliases the same table.
@@ -91,6 +95,30 @@ copy.nested.enabled = false -- also changes original.nested.enabled
 Do not add a generic recursive deep-copy helper without defining how it handles metatables, cycles, shared subgraphs, Instances, and unsupported keys. Copy only the data shape the caller owns.
 
 `table.freeze` prevents writes to that table, not recursively to all nested tables. Treat it as one boundary, not deep immutability.
+
+Freezing an already frozen table raises an error (`table is already frozen`; checked with the standalone Luau CLI). When the call runs at module require time, for example several config entries that share one frozen list, the whole requiring script dies even though static checks pass. Freeze a shared table once where it is created, or guard with `table.isfrozen(t)`.
+
+### Weak tables and Instance keys
+
+A metatable's `__mode` makes keys (`"k"`), values (`"v"`) or both (`"kv"`) weak, so the collector can reclaim an object referenced only from that table; collection is nondeterministic. For Instances, collection applies to the Luau reference, not the object: the engine keeps instance data outside the VM, so an instance still in the data model does **not** keep its Luau reference alive. The docs warn not to use a weak table to track whether an Instance still exists ([metatables](https://create.roblox.com/docs/luau/metatables#use-weak-tables)). In one project a weak-keyed "fallen parts" set read 0 entries while every part was still in the world.
+
+- Use weak Instance-keyed tables only as caches where a lost entry is a harmless miss.
+- For sets you must keep, use a plain table and remove entries on `Instance.Destroying` or `AncestryChanged`; for tagged instances use `CollectionService` signals.
+
+```luau
+-- Illustrative: a strong set that cleans itself up.
+local tracked: { [Instance]: true } = {}
+
+local function track(instance: Instance)
+    if tracked[instance] then
+        return
+    end
+    tracked[instance] = true
+    instance.Destroying:Once(function()
+        tracked[instance] = nil
+    end)
+end
+```
 
 ### Immutable updates via path copying
 
@@ -169,6 +197,31 @@ local quotient, problem = divide(6, 2)
 ```
 
 Parentheses and table constructors affect multiple-value expansion. When this matters, assign the values explicitly rather than relying on terse expression behavior.
+
+A call expands to all its values only as the **last** argument or list item; anywhere else it is cut to its first value (`select("#", g(), 3)` is 2 for a two-value `g`, `select("#", 3, g())` is 3). Passing a multi-return helper into the middle of an argument list shifts every later argument. In one project a player arrived as a `Vector3` and the server errored on every use, unnoticed because the callee was untyped. Unpack into locals first, annotate the callee, and read the server error log after one use, not only the client's.
+
+```luau
+local function sizeAndCenter(): (Vector3, Vector3)
+    return Vector3.one, Vector3.zero
+end
+
+local function place(size: Vector3, center: Vector3, owner: Player?) end
+
+local size, center = sizeAndCenter()
+place(size, center, nil) -- explicit; place(sizeAndCenter(), nil) would drop center
+```
+
+### A line that starts with `(` continues the previous statement
+
+Luau has no statement terminator, so `part:Destroy()` followed by a line `(boxes :: any)[i] = nil` parses as calling the result of the previous line. The same happens after an assignment such as `x.Parent = folder`. Never start a line with `(`: assign through a local first, or reorder the statements.
+
+```luau
+local function clear(boxes: { BasePart }, i: number)
+    boxes[i]:Destroy()
+    local list = boxes :: any -- cast through a local instead of a leading "("
+    list[i] = nil
+end
+```
 
 Missing arguments are `nil`; extra arguments can be ignored. A function that requires arity or non-nil inputs must validate or express that contract through types and call structure.
 
@@ -286,6 +339,19 @@ Floor division `//` truncates toward negative infinity (`-7 // 2 == -4`). `0/0` 
 - The function name selects width and numeric representation (`readu8`/`readi16`/`readf32` family); byte order is fixed, not a selectable argument.
 - Multibyte numeric reads/writes are little-endian; signed integers use two's complement ([luau.org/library](https://luau.org/library)); matters whenever buffer contents cross to an external format.
 - `buffer.readinteger`/`buffer.writeinteger` are 64-bit integer APIs behind the upstream `LuauIntegerLibrary` flag ([runtime source](https://raw.githubusercontent.com/luau-lang/luau/master/VM/src/lbuflib.cpp)). They are present in the local standalone CLI used for these probes, but are not listed in the Roblox buffer reference checked in 2026-10. Do not infer Roblox availability from a standalone CLI or from missing web documentation; verify the target runtime before using them.
+
+- **Vector read/write** (added to the Roblox buffer reference by 2026-11): `buffer.readvectorf32x3(b, offset)` and `buffer.writevectorf32x3(b, offset, v)` move a whole `Vector3` as three `f32` values (12 bytes). The `x2` forms read or write 8 bytes: `readvectorf32x2` returns a vector with Z set to 0, and `writevectorf32x2` writes only X and Y. Values are stored as `f32`, so expect float rounding on the way back. <!-- temporal: 2026-11 -->
+
+```luau
+local POSITION = 0 -- 12 bytes
+local FACING = 12 -- 8 bytes (X, Y only)
+
+local b = buffer.create(20)
+buffer.writevectorf32x3(b, POSITION, Vector3.new(10, 4, -2))
+buffer.writevectorf32x2(b, FACING, Vector3.new(0.6, 0.8, 0))
+local position = buffer.readvectorf32x3(b, POSITION)
+local facing = buffer.readvectorf32x2(b, FACING) -- Z reads as 0
+```
 
 Two failure modes behave oppositely — this is the part agents get wrong:
 
@@ -442,7 +508,7 @@ The acronym rule has two cases: an acronym like `JSON` or `HTTP` becomes `Json`/
 
 ## 14. Native codegen (--!native / @native)
 
-Roblox compiler feature: server-side Luau compiles to machine code instead of VM bytecode. Best for numeric, table, and `buffer` heavy code with few library or API calls. Sources: [native code generation](https://create.roblox.com/docs/luau/native-code-gen), [Luau comments](https://create.roblox.com/docs/luau/comments). <!-- temporal: 2026-09 -->
+Roblox compiler feature: supported Luau compiles to machine code instead of VM bytecode. Best for numeric, table, and `buffer` heavy code with few library or API calls. Sources: [native code generation](https://create.roblox.com/docs/luau/native-code-gen), [Luau comments](https://create.roblox.com/docs/luau/comments). <!-- temporal: 2026-09 -->
 
 ```luau
 --!native
@@ -457,7 +523,7 @@ local function kernel(v: Vector3, n: number): number
 end
 ```
 
-- **Scoping: server-side.** The docs describe `--!native` for server-side scripts; do not add it to client scripts expecting the documented behavior.
+- **Scoping: server scripts and Android clients.** As of 2026-11 the docs say native code generation runs for server-side scripts and for client-side scripts on Android devices only; on other clients `--!native` has no effect, so benchmark client gains on an Android device. <!-- temporal: 2026-11 -->
 - `--!native` on a Script compiles all of its functions (and the top-level scope only if deemed profitable). `@native` above an individual function narrows it to that function.
 - **Pair with `--!optimize 2`.** Level 2 enables optimizations that harm debuggability (Studio test default is 1, live games default to 2); the pairing is the standard native idiom.
 - **Instruction ceilings** (hit = Output window error, fix by splitting functions):
