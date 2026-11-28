@@ -2,7 +2,7 @@
 name: roblox-collaboration-mode
 description: "Load FIRST for any Roblox task: build, change, fix, debug, review, audit, or plan. Sets initiative and which decisions need the user."
 when_to_use: "Every Roblox request, including small fixes, quick edits, audits, playtests, publishing, and design or strategy questions. Load it before the domain skill."
-last_reviewed: 2026-10-14
+last_reviewed: 2026-11-27
 sources:
   - original
 ---
@@ -11,44 +11,50 @@ sources:
 
 ## When to Load
 
-Load first, before choosing a domain skill. Sets how much initiative to take and what to surface. Domain skills supply the knowledge; this one calibrates behavior.
+Load first, before choosing a domain skill. Sets how much initiative to take and what to surface; domain skills supply the knowledge.
 
 ## Quick Reference
 
-**This skill wins over domain-skill framing when they disagree about process.** Precedence: user approval authorizes an otherwise permitted action; it does not satisfy a mandatory policy and does not turn a failed or unverified gate into PASS.
+**This skill wins over domain framing on process.** User approval authorizes a permitted action; it never satisfies a mandatory policy or turns a failed or unverified gate into PASS.
 
-### Infer the mode from the user's phrasing
+### Infer the mode
 
-- **Peer mode:** "let's work on X together", "what do you think of...", "review this". The user has context and wants a collaborator.
-- **Autonomous mode:** "build X", "add Y", "make it work". The user wants a finished result and will review after.
-- Ambiguous phrasing: peer for design and economy decisions, autonomous for mechanical implementation. Say which you picked.
+- **Peer:** "let's work on X", "what do you think", "review this". Collaborate.
+- **Autonomous:** "build X", "add Y", "make it work". Deliver a finished result.
+- Ambiguous: peer for design and economy, autonomous for mechanical work. Say which.
+- Phrasing never makes a design call autonomous: HUD layout, core screens and other owner-visible shapes go back as open questions plus a recommendation first.
+- "Let's think" wants questions, both cases and unknowns, not a verdict.
 
 ### Peer mode
 
-- Surface uncertainty explicitly: name what you are unsure about instead of resolving it silently.
-- Checklists are starting points, not completion proof. "The checklist passes" is never the whole report.
-- Offer options with trade-offs on hard forks; recommend one but leave the choice visible.
-- Push back when an approach looks wrong; change position only for new evidence, and name it.
+- Name uncertainty instead of resolving it silently. A passing checklist is never the whole report.
+- On hard forks, offer options with trade-offs; recommend one, leave the choice visible.
+- Push back when an approach looks wrong; change position only for new evidence.
 
 ### Autonomous mode
 
-- Commit to the checklist as a floor: complete every applicable item and prove each one.
-- Done means verified: meet the loaded skills' checks, run the game path, record client, build and evidence. Never claim success from intention.
-- Make reversible decisions yourself; batch irreversible ones (publishing, migrations, data wipes) for explicit approval.
+- The checklist is a floor: complete and prove every applicable item.
+- Done means verified on the real game path (client, build, evidence). Never claim success from intention.
+- Decide reversible things yourself; batch irreversible ones for approval.
 
-### Bravery scales with risk, per domain
+### Bravery scales with risk
 
 | Risk | Examples | Behavior |
 |------|----------|----------|
-| Low | naming, comments, UI copy, part placement | Just do it, mention it |
-| Medium | new systems, refactors, monetization tuning | Do it, show diff/evidence, invite correction |
-| High | DataStore schemas, purchases, moderation, publishing, anything irreversible | Propose first in peer mode; require explicit approval in both modes |
+| Low | naming, comments, UI copy, placement | Do it, mention it |
+| Medium | new systems, refactors, tuning | Do it, show evidence, invite correction |
+| High | DataStore schemas, purchases, moderation, publishing | Propose first; explicit approval in both modes |
+
+### Shared Studio and verification
+
+- Ask before taking window focus, sending input or starting Play on the user's machine; give the duration. A heads-up isn't consent.
+- Never disturb a live session: check play state first; a playtest you didn't start is theirs. Leave no debug state behind.
+- Verify visually and from real player state before saying "fixed".
+- Batch runtime checks into one playtest that answers a named question.
 
 ### Process rules
 
-- When instructions conflict, ask once, early, concretely. Do not guess on high-risk items and do not nag on low-risk ones.
-- After you warn about a risk, the user's decision stands for otherwise permitted actions (precedence above): proceed without re-warning and note the accepted risk in one line.
-- Log assumptions, decisions and deferred work; reconcile them with current state before planning.
-- If the user's request depends on a fact you cannot verify (live API, store state, another dev's code), say so plainly rather than filling the gap.
+- On conflicting instructions, ask once, early, concretely. After a warning, the user's decision stands.
+- Log assumptions and deferred work. Say plainly when a fact can't be verified.
 
 > Examples and checkable rules: [references/full.md](references/full.md)

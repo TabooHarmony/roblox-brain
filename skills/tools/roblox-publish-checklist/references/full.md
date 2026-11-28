@@ -114,7 +114,7 @@ Run only supported combinations, but state the support matrix explicitly.
 - Localized strings fit representative long locales; missing keys and fallback behavior are visible.
 - Audio-dependent information has a non-audio route where required.
 
-Load `roblox-input`, `roblox-gui`, and `roblox-localization` for the relevant surfaces.
+Load `roblox-input`, `roblox-gui`, `roblox-gui-components`, and `roblox-localization` for the relevant surfaces.
 
 ## 7. Creator Dashboard and publication configuration
 

@@ -420,6 +420,38 @@ RunService.PreRender:Connect(function()
 end)
 ```
 
+The example above is safe for **translation** offsets under the default camera: in a Studio check, three runs left 0° of drift. **Rotational kicks are different.** With a rotation offset (`CFrame.Angles`, about ±4°) re-based on the same frame's camera CFrame, the view drifted 1.7° to 17.8° in pitch and 2.7° to 17.7° in yaw over a few runs. The default camera reads its own CFrame back as input, so a rotation that is still baked in when it updates becomes part of where the player is looking (measured in one project).
+
+For recoil, head bob or any rotational kick under the default camera, take the kick off before the camera updates and put it back after:
+
+```luau
+-- Illustrative: rotational kick that never leaks into the default camera's aim.
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+local CAMERA_PRIORITY = Enum.RenderPriority.Camera.Value
+
+local kick = CFrame.identity -- your recoil code writes this each frame
+local applied: CFrame? = nil
+
+RunService:BindToRenderStep("KickRemove", CAMERA_PRIORITY - 2, function()
+	if applied then
+		camera.CFrame = camera.CFrame * applied:Inverse()
+		applied = nil
+	end
+end)
+
+RunService:BindToRenderStep("KickApply", CAMERA_PRIORITY + 3, function()
+	if kick ~= CFrame.identity then
+		camera.CFrame = camera.CFrame * kick
+		applied = kick
+	end
+end)
+```
+
+- **Several kickers nest last-on-first-off.** If kicker A applies at `Camera + 3` and kicker B at `Camera + 4`, B must come off first (`Camera - 3`) and A after it (`Camera - 2`). Removing in any other order leaves a residue.
+- **Verify by pitch, not by eye.** Record the camera's pitch and yaw before a burst and after the last kick settles; they must return exactly to the start. Repeat several bursts, because the drift accumulates.
+- **A Scriptable camera has no reset.** Nothing rewrites a Scriptable camera's CFrame each frame, so an additive offset applied after `Enum.RenderPriority.Camera` piles up and drifts. Skip additive kicks while `CameraType` is `Scriptable`, or apply them to a stored base CFrame your camera code owns (observed in one project).
+
 ## World ↔ Screen Conversion
 
 ```luau
@@ -467,6 +499,38 @@ camera.CFrame = CFrame.lookAt(Vector3.new(0, 50, 50), Vector3.zero)
 
 For non-Play testing (Edit mode), `CurrentCamera` exists but the perspective doesn't render the way gameplay does; Scriptable camera changes won't be visible until Play.
 
+## Projection, ViewportCamera and Server Authority camera state
+
+<!-- temporal: 2026-11 -->
+- **`Camera.ProjectionType`** is `Perspective` (default) or `Orthographic`. With `Orthographic`, `Camera.OrthographicSize` sets the visible size in studs and `Camera.OrthographicMode` (`Vertical`, `Horizontal`, `Diagonal`, `MaxAxis`) picks which screen axis that size spans. Use it for top-down, isometric and map views; `FieldOfView` no longer sets the framing there. Recheck screen raycasts and world-to-screen math after switching: rays are parallel in orthographic views.
+- **`ViewportCamera`** is a `Camera` subclass that replicates and saves, made for `ViewportFrame.CurrentCamera` (and thumbnail cameras). Unlike a plain `Camera`, it replicates from the server to clients and works in Team Create; keep a plain `Camera` for `Workspace.CurrentCamera`. Pasted cameras are upgraded to `ViewportCamera` automatically.
+- **`Player:GetCameraState()`** needs Server Authority and returns a table with `CFrame`, `FieldOfView` and `ViewportSize`. The client can call it only for `LocalPlayer`; the server can call it for any player. The CFrame arrives through the input stream, while FOV and viewport size use ordinary property replication, so they can lag behind each other. Use it for server-side aim validation in Server Authority games instead of a custom "my camera is here" remote, and still treat it as player-supplied data (`roblox-security`).
+- **`Camera.ViewportSize`** is the device safe area, not the full screen (`roblox-gui`).
+- **Free camera (freecam)** is a built-in debug mode for owners and editors: **Left Shift + P** in playtests and live servers, with keyboard or gamepad controls once active. Its configuration menu and cinematic post-processing need `Workspace.PlayerScriptsUseInputActionSystem` enabled. Use it to inspect hard-to-reach spots and capture footage; do not build a gameplay spectator on it.
+
+## Render order and default camera cooperation
+
+- **Bind relative to the camera.** `BindToRenderStep` at `Enum.RenderPriority.Camera.Value - 1` runs before the default camera updates; `+ 1` runs after. Aim assist that turns the view belongs just before the camera, so the camera builds this frame's view from it. Overlays drawn from the view (target boxes, rings) belong just after, so they don't lag a frame. Share one target scan between every overlay and pool the overlay objects (observed in one project).
+- **A project camera can win over your Scriptable camera.** A game's own camera controller may keep writing `Camera.CFrame` after you set `Scriptable`, so a test or cutscene camera snaps back. Bind the override at `Enum.RenderPriority.Last.Value`, disable the project's first-person and viewmodel controllers for the shot, and confirm the CFrame held on the next frame (observed).
+- **Fly a remote object with the default camera.** For a drone or guided missile in first person on every device, keep the default camera, set `CameraMode = LockFirstPerson`, make `CameraSubject` an invisible anchored Part that you move to the object at `Camera.Value - 1`, and steer the object from `Camera.CFrame.LookVector`. Mouse, touch and gamepad look then work with no input code. In one project the camera sat about 0.5 studs from the subject; test on a phone and a gamepad.
+- **Occlusion ghosting.** In the default `PlayerModule`'s Poppercam source, parts whose total transparency is 0.25 or more don't block the camera (observed; check the current source). To stop a hiding spot, locker or vehicle shell from pushing the camera in, ghost it locally with `LocalTransparencyModifier` instead of changing collision.
+
+## Follow cameras for fast subjects
+
+A plain exponential follow (`Lerp` toward the target by `dt * rate`) trails a moving subject by about `speed / rate`: roughly 6 studs at 80 studs/s with rate 14. For fast subjects (ragdolls, vehicles, launched players), lead with velocity: first advance the follow point by the body's velocity times `dt`, then lerp to the body, so only sudden stops get smoothed. In one project this cut a launch's average follow error to about 0.3 studs (worst 0.95). Point the camera at an invisible anchored proxy Part moved at `Camera.Value - 1` rather than the Head, whose tumble shakes the view.
+
+```luau
+-- Illustrative: velocity-led follow point for a fast-moving body.
+local function stepFollow(follow: Vector3, body: BasePart, dt: number, rate: number): Vector3
+	local led = follow + body.AssemblyLinearVelocity * dt
+	return led:Lerp(body.Position, math.min(dt * rate, 1))
+end
+```
+
+**Animated zoom bounds.** When you tween `Player.CameraMinZoomDistance` and `CameraMaxZoomDistance` (to pull in for a cutscene, then release), hold the final bounds through at least one native camera update before reopening free zoom, or the final target is lost (about 0.2 studs per cycle in one test). If you store zoom across transitions, compare with a small tolerance (about 0.1 studs) so the native settling error doesn't accumulate.
+
+**Projected size for a HUD hand-off.** To size a screen icon that replaces a world object, its on-screen height in pixels is `size / (2 * depth * math.tan(math.rad(fov) / 2)) * viewportHeight`, with `depth` the distance along the camera's look vector.
+
 ## Common Mistakes
 
 - **Camera work on the server.** Silently dropped. Must be in `LocalScript` or client `RunContext`.
@@ -481,6 +545,8 @@ For non-Play testing (Edit mode), `CurrentCamera` exists but the perspective doe
 - **Trying to `Raycast` with the unit Ray directly.** It's only 1 stud long. Multiply `Direction` by the actual distance.
 - **Modifying the local head in first-person without `LocalTransparencyModifier`.** Players see their own head blocking the view. Use `LocalTransparencyModifier = 1`, not `Transparency` (Transparency replicates).
 - **Setting `Humanoid.JumpPower = 0` to disable jump in a cutscene.** Remember to restore it. Or use `Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)`.
+- **Rotational shake re-based on the default camera.** Its CFrame is read back as input, so the aim drifts. Remove the kick before the camera step and re-apply after it.
+- **Additive offsets on a Scriptable camera.** Nothing resets it; offsets accumulate.
 - **Trying to set Camera.CFrame every frame without clearing the render connection on player respawn.** Stale references after respawn. Reconnect in `CharacterAdded`.
 
 ## Temporary camera ownership and collision checks

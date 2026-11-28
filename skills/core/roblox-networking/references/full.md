@@ -569,6 +569,8 @@ The mock implements the same surface (`Event`, `Function`, or your project's equ
 
 ## 10. Text chat: TextChatService (modern) and legacy Chat
 
+> For chat features (channels, commands, bubble chat, filtering and compliance), load `roblox-text-chat`. This section keeps the replication and server-authority summary.
+
 [TextChatService](https://create.roblox.com/docs/reference/engine/classes/TextChatService) is the current chat system. The legacy chat system was retired April 30, 2025: Roblox auto-migrates experiences still on `ChatVersion.LegacyChatService`, and custom integrations that bypass TextChatService break or get moderated ([migration announcement](https://devforum.roblox.com/t/migrate-to-textchatservice-removing-support-for-legacy-chat-and-custom-chat-systems/3237100), [status update](https://devforum.roblox.com/t/update-on-legacy-chat-deprecation-and-textchatservice-migration/3376880)). <!-- temporal: 2025-05 --> `TextChatService.ChatVersion` is not scriptable; set it in Studio. Never build new chat features on the legacy `Chat` service.
 
 ### Instance tree

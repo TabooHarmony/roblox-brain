@@ -19,16 +19,16 @@
 | | Library | Skills | For |
 | :-- | :-- | --: | :-- |
 | 🧱 | **Core** | 10 | Luau, architecture, networking, security, data, performance |
-| 🎮 | **Gameplay** | 10 | Building, physics, NPCs, camera, input, GUI, and presentation |
-| 🎨 | **Design** | 5 | Game design, player behavior, growth, analytics, monetization |
-| 🛠️ | **Tools** | 4 | Studio MCP, project tooling, Open Cloud, publishing |
+| 🎮 | **Gameplay** | 12 | Building, physics, NPCs, camera, input, GUI, and presentation |
+| 🎨 | **Design** | 6 | Game design, player behavior, growth, analytics, monetization |
+| 🛠️ | **Tools** | 6 | Studio MCP, project tooling, Open Cloud, publishing |
 
 Each skill has a short entry point and a deeper reference with examples and API details.
 Start with **Core** for general development work. Add the others when the task calls for them.
 
 ## Install
 
-**All 31 skills:**
+**All 34 skills:**
 
 ```bash
 npx skills add TabooHarmony/roblox-brain
@@ -49,7 +49,7 @@ npx skills add TabooHarmony/roblox-brain --skill roblox-building
 
 Manual install: copy the **whole skill directory**, including `references/full.md`, into your agent's skills folder. For example: `cp -r skills/design/roblox-growth-design ~/.claude/skills/`. This also works with `.codex/skills/` and `.cursor/skills/`. Copying only `SKILL.md` leaves the reference missing.
 
-## Skills (31)
+## Skills (34)
 
 Expand a library to see its skills. The full-repo install includes all four.
 
@@ -72,7 +72,7 @@ Expand a library to see its skills. The full-repo install includes all four.
 </details>
 
 <details>
-<summary><strong>🎮 Gameplay</strong> · 10 skills · What players see and do</summary>
+<summary><strong>🎮 Gameplay</strong> · 12 skills · What players see and do</summary>
 
 | Skill | Covers |
 | :-- | :-- |
@@ -81,11 +81,13 @@ Expand a library to see its skills. The full-repo install includes all four.
 | `roblox-npc-ai` | Pathfinding, state machines, detection, spawning, and network ownership |
 | `roblox-camera` | Camera types, CFrame math, custom controllers, cutscenes, and screen shake |
 | `roblox-input` | Keyboard, mouse, gamepad, touch, and action binding |
-| `roblox-gui` | Screen, surface, and world UI; layout, responsiveness, input, state, and visual verification |
+| `roblox-gui` | UI layout: containers, scale, safe areas, mobile-first, console and TV, gamepad focus, cross-device checks |
+| `roblox-gui-components` | Menus, shops, dialogs, HUD widgets, text entry, lists, UI effects, reactive UI, and open/close lifecycle |
 | `roblox-animation-vfx` | Animations, particles, beams, trails, tweens, and camera feedback |
 | `roblox-lighting` | Lighting, atmosphere, post-processing, and day/night cycles |
 | `roblox-audio` | SoundService, spatial audio, music systems, and SFX |
 | `roblox-localization` | Translation tables, locale handling, and auto-translation |
+| `roblox-text-chat` | TextChatService channels, commands, bubble chat, filtering, platform-integrated chat, and legacy migration |
 
 </details>
 
@@ -104,7 +106,7 @@ Expand a library to see its skills. The full-repo install includes all four.
 </details>
 
 <details>
-<summary><strong>🛠️ Tools</strong> · 5 skills · Studio and shipping</summary>
+<summary><strong>🛠️ Tools</strong> · 6 skills · Studio and shipping</summary>
 
 | Skill | Covers |
 | :-- | :-- |
@@ -112,6 +114,7 @@ Expand a library to see its skills. The full-repo install includes all four.
 | `roblox-tooling` | External third-party tooling such as Rojo, Wally, Selene, StyLua, Lune, Aftman, and CI |
 | `roblox-testing` | Testable code, the native TestService framework, Jest Lua and Lune, multi-client playtests, and CI tests |
 | `roblox-cloud` | Open Cloud REST APIs, API keys, OAuth, webhooks, and token lifecycle |
+| `roblox-debugging` | Systematic bug hunting: reproduce, isolate client and server, logs, debugger, profilers, verify fixes |
 | `roblox-publish-checklist` | Change-scoped release gates, evidence, dashboard checks, and rollback readiness |
 
 </details>

@@ -299,7 +299,7 @@ Field benchmarks (community-reported, n often small): a 16-step tutorial convert
 
 ### Accessibility and device coverage
 
-Check touch targets and thumb reach; gamepad focus and keyboard/mouse; readable text; contrast and symbols beyond color; captions or visual cues for sound-only information; reduced motion; localization expansion; lower-end memory, thermal load, frame rate, and network. Console players often play long sessions; don't skip a gamepad pass. Implementation: `roblox-input`, `roblox-gui`, `roblox-localization`, `roblox-performance`, `roblox-audio`, `roblox-animation-vfx`.
+Check touch targets and thumb reach; gamepad focus and keyboard/mouse; readable text; contrast and symbols beyond color; captions or visual cues for sound-only information; reduced motion; localization expansion; lower-end memory, thermal load, frame rate, and network. Console players often play long sessions; don't skip a gamepad pass. Implementation: `roblox-input`, `roblox-gui`, `roblox-gui-components`, `roblox-localization`, `roblox-performance`, `roblox-audio`, `roblox-animation-vfx`.
 
 ## 7. Monetization With Trust
 
