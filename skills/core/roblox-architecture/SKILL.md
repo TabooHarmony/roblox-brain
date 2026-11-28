@@ -37,12 +37,13 @@ Direct module calls by default; a signal only for genuinely independent observer
 
 Keep module top level cheap and non-yielding. A small bootstrap owns ordered startup and fails visibly.
 
-Bound `WaitForChild`; an unbounded wait hangs silently.
+Bound `WaitForChild`; unbounded waits hang silently.
 
 ### Join and boot order (field-tested)
 
 - Admission decides before any other join hook; wire `PlayerAdded` once, in order, and loop `Players:GetPlayers()`.
-- Long non-yielding boot work hits `Script timeout`; a `task.spawn` inside `Init` dies with it. Defer warm-up.
+- Spawn with `LoadCharacterAsync()` (`LoadCharacter()` is deprecated).
+- Long non-yielding boot work hits `Script timeout`; a `task.spawn` in `Init` dies with it. Defer warm-up.
 - Live clients often find everything already replicated, so start-up lands in one frame. Test with `task.wait(8)` first.
 - `GetTagged` searches the whole DataModel, including `ServerStorage` copies.
 

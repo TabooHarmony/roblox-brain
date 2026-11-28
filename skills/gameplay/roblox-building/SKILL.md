@@ -40,7 +40,7 @@ Inspect Workspace/assets; name root, origin, dimensions. Build in phases with re
 
 ### Meshes and terrain
 - A MeshPart from an `EditableMesh` keeps using it: destroy the mesh only after that MeshPart. Budget is per device: share meshes, upload static ones.
-- Use `EditableMesh` batch APIs (`BatchAdd`, `BatchSetValues`). Centre vertices on the part origin.
+- Batch APIs (`BatchAdd`, `BatchSetValues`); `AddFace(v1, v2, v3[, v4])`, 60k verts/20k tris. Centre on the origin.
 - Expanded Terrain: `Terrain:SetMaterialSlot` (slots 2-63).
 
 ### Player Scale

@@ -276,6 +276,8 @@ end
 - **`Lighting.LightingChanged(skyChanged)`:** `skyChanged` is true when a `Sky` is added or removed or a Sky property other than `SkyboxOrientation` changes; false for Lighting, Atmosphere and `SkyboxOrientation` changes.
 - **Decal and Texture emissive masks:** `Decal.EmissiveMaskContent` (a grayscale mask), `EmissiveStrength` (multiplier, default 1, 0 turns glow off, large values clamp to white) and `EmissiveTint` make a decal or texture glow without a light. `Texture` inherits them from `Decal`. <!-- temporal: 2026-11 -->
 
+- **Reported on the DevForum (2026-10-21, [thread](https://devforum.roblox.com/t/surfaceappearance-textures-appear-glitched-after-roblox-studio-update/4948194/2)):** `SurfaceAppearance` textures looked glitched in Studio and in the client after an update, with results varying by GPU and driver. Before changing source textures, compare renderer settings on a second machine and note the driver version.
+
 ## Field-tested lighting lessons
 
 From individual projects; judge every change from an in-game screenshot at play distance under the final lighting stack.

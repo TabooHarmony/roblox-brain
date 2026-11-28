@@ -612,6 +612,22 @@ Measured in individual projects; numbers are examples, verify on your own conten
 - **Side-only barriers:** a per-side collision group colliding only with the other side's character groups keeps players out of a spawn while shots and sight rays pass; back it with a server position check.
 - **Foliage and props need an interaction matrix.** For each kind (bush, tree, prop), decide whether projectiles, explosions, melee, characters and the camera pass, hit or break, and test every pair. Imported plants cut or merged for performance silently lose collision and query behavior.
 
+### Reported on the DevForum (2026)
+
+These are community reports with their dates and threads; reproduce them before relying on them.
+
+- **Check for a nil result before using a fallback point.** `WorldRoot:Raycast` returns `nil` when nothing is hit (documented). In one thread (2026-09-26, [thread](https://devforum.roblox.com/t/raycast-works-when-there-is-a-debug-part-but-doesnt-work-when-there-isnt/4896068/9)), a fallback position made a miss look like a hit. The ray was exactly as long as the distance to the target and stopped just short, and the debug part placed at the end was what it hit. Exclude visualization parts from the cast and extend the ray by a small margin past the target.
+- **Impulses that only work the first time are usually ownership** (2026-09-22, [thread](https://devforum.roblox.com/t/applyimpulse-and-applyangularimpulse-only-working-properly-the-first-time-they-are-called-on-a-basepart/4887247/17)): the accepted fix was network ownership. Apply impulses on the machine that owns the assembly. The same thread found that velocity survived anchoring and unanchoring, so reset `AssemblyLinearVelocity` and `AssemblyAngularVelocity` when you re-release a part.
+- **Ragdolls** (2026-09, [thread](https://devforum.roblox.com/t/ragdoll-freezes-character-in-its-last-animator-frame-position-without-actually-ragdolling/4876539/2)):
+  - Don't destroy the `Humanoid` to start a temporary ragdoll. That removes the character controller and changes accessory behavior; use the Physics state instead. (Removing it from finished corpses is a separate case.)
+  - In the same thread, a freeze at the last animation pose was fixed by creating the ragdoll constraints on the server, in a setup without Server Authority. Verify ownership and replication with several clients.
+- **Server Authority and movers** (2026-07-09, [thread](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993/5)): constraint movers and legacy `BodyMover`s may need rework. Audit who applies each force, and move force code into the bound simulation.
+- **Collision changes can break precision movement** (2026-09 to 2026-11, [thread](https://devforum.roblox.com/t/new-physics-change-made-widely-used-obby-techniques-impossible/4862195/45)):
+  - A collision change broke established obby techniques (corner clips, wedge glides).
+  - A staff reply said the character-clipping part was unintended and had been reverted, and that wedge gliding is a bug that stops working when the fix returns.
+  - A November report says a later wedge fix also changed block and other non-wedge collisions ([thread](https://devforum.roblox.com/t/wedge-collision-fix-alters-block-parts-and-other-non-wedge-collisions-breaking-high-level-obbies/4997906/1)).
+  - Don't build routes on unintended physics behavior, treat rollback notices as temporary, and re-test every collision shape your routes use after engine updates.
+
 ## Collision groups: PhysicsService
 
 `PhysicsService` manages collision groups: named sets of `BasePart`s whose mutual collision rules you control. Assign a part by setting `part.CollisionGroup = "GroupName"` (the name, not an object).

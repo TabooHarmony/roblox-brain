@@ -462,9 +462,48 @@ scopeEvent.OnServerEvent:Connect(function(player, wantsScope)
 end)
 ```
 
+**Limits from the [frustum streaming guide](https://create.roblox.com/docs/workspace/streaming/frustum):**
+
+- It adds cost and never reduces the streaming workload. The frustum gets the same instance and bandwidth budget as a replication focus.
+- There is no occlusion: walls and terrain don't block the frustum, so everything inside it is a candidate.
+- During fast camera turns the engine restarts from the center, and the effective frustum narrows to a beam.
+- It needs a draw distance beyond the streaming target radius, and the engine may turn it off on low-quality or low-frame-rate devices.
+- It has no effect in games without instance streaming.
+
+**Staff replies on the DevForum (2026-09-30, [thread](https://devforum.roblox.com/t/frustum-streaming-stream-what-your-players-see/4904553/15)):**
+
+- The camera's field of view is used directly as the frustum, so a wider FOV streams more and takes longer. Benchmark at the widest FOV you allow.
+- Streaming selected instances by frustum was not offered (post 16), so treat the setting as per player, not per model.
+- There's no API to announce where the camera will be. Pre-stream fast camera moves with `Player:RequestStreamAroundAsync` (post 13).
+
 ### SLIM level of detail (2026-11)
 
 SLIM (Scalable Lightweight Interactive Models) cloud-transcodes models into composite meshes with multiple detail levels, so distant and streamed-out models stay visible with fewer draw calls, triangles and memory. Requirements: `StreamingEnabled`, a place **saved to Roblox** (not a local file), and Team Create on. Set `Model.LevelOfDetail = Enum.ModelLevelOfDetail.SLIM` on models of **static** parts and meshes; runtime-modified or animated models, and models containing a `Humanoid`, are not supported. `Workspace.EnableSLIMAvatars` (set in Properties; not scriptable) renders standard or advanced R15 player avatars as animated SLIM stand-ins and can swap them even inside the streaming radius; R6 avatars and NPCs are excluded, and avatars must be transcoded once before they show (rejoin after a minute or two). Debug with the Developer Console's DebugVisualizations → `SlimTintMode` (`LOD`, `DataModelState`; Studio also has `TranscoderStatus`). Known issues from the docs: unions can render wrong in SLIM (split them into their own model), coplanar faces z-fight (move them 0.01 studs apart), and UVs are regenerated so default-material tiling can shift. Studio's AI skill `rbx-convert-to-streaming` can convert a non-streaming game, including setting SLIM; back up the place first. <!-- temporal: 2026-11 -->
+
+### Streaming and rendering issues reported on the DevForum (2026)
+
+These are community reports with their dates and threads, not documented engine behavior. Use them to rule out the engine or Studio before rewriting game code or assets, and recheck their status, because several were open when last checked.
+
+- **Server Authority cost at scale** (2026-07-09, [thread](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993/40)): developers raised bandwidth and CPU concerns at high player counts. Profile at your target player count and latency before enabling it on large servers.
+- **SLIM vs StreamingMesh** (2026-07-04, [thread](https://devforum.roblox.com/t/streaming-enabled-not-working/4715800/3)): one developer saw `StreamingMesh` displayed while SLIM-like behavior was active. Switching modes and raising the target radius helped, and distant models showed as low-poly impostors. Check the effective mode in a test session, and expect impostors at range rather than assuming a corrupt asset.
+- **Streaming timing races** (2026-10-13, [thread](https://devforum.roblox.com/t/rendering-bug-unknown-if-it-is-my-programing-roblox-or-both/4931215/11)): a "rendering bug" was a race between streaming and client code that moved locally rendered instances. Wait for the instances you expect, and make cull and move operations idempotent so a late arrival can't leave them wrong.
+- **Textures and mesh LODs unloading in long Studio sessions** (2026-06, [thread](https://devforum.roblox.com/t/studio-memory-issue-causing-textures-to-unload/4639996/7), 800+ likes):
+  - World textures disappeared after Studio stayed open or after several playtests (reports of about every 5), while UI images stayed.
+  - Reopening Studio restored them temporarily.
+  - In a related report, resetting Studio settings helped; a reply suspected setting the graphics API to Automatic ([thread](https://devforum.roblox.com/t/huge-issue-concerning-textures-is-currently-ruining-all-meshes-decals-and-spawnpoints-in-the-game/4678044/24)).
+  - Compare a fresh Studio process and a live client before blaming asset permissions or re-uploading.
+- **Parts that stop rendering after repeated far-away moves** (2026-06-10, [thread](https://devforum.roblox.com/t/part-refusing-to-render-after-moving-it-far-away-a-few-times/4677068/1)):
+  - Parts moved millions of studs away and back a few times sometimes stopped rendering. Shorter delays between spawns changed how often it happened.
+  - A staff reply (2026-08-20) reproduced it on Windows but not on Mac.
+  - If your pool parks parts far away, park them at a moderate distance or unparent them (`Parent = nil`) instead, and stress-test burst reuse on Windows.
+- **Periodic micro-stutters in an empty place** (2026-06, [thread](https://devforum.roblox.com/t/consistent-micro-stutters-frame-spikes-via-write-marshalled-and-dynamic-flag-reloader/4669424/1)):
+  - Regular frame spikes appeared in a blank published baseplate with no scripts.
+  - Checking the client update channel, reinstalling and updating drivers did not reliably fix them.
+  - Reproduce in an empty place and compare MicroProfiler captures before blaming game code.
+- **Faint green artifacts** in Studio and the client (2026-06-22, [thread](https://devforum.roblox.com/t/faint-green-artifacting-effect-on-roblox-studio/4698572/1)):
+  - Deleting the client settings folder helped only until the next reboot.
+  - Users still reported it after the thread was marked fixed.
+  - Check other graphics workloads before suspecting hardware, and treat a "fixed" label as unconfirmed for your configuration.
 
 ### Transparent batching of web-backed calls
 

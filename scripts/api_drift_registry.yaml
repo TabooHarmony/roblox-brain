@@ -1462,3 +1462,46 @@ entries:
     class: SerializationService
     member: DeserializeInstancesAsync
   verified: 2026-11-27
+- id: b1-player-load-character-deprecated
+  claim: Player:LoadCharacter is deprecated in favor of LoadCharacterAsync
+  files:
+  - path: skills/core/roblox-architecture/SKILL.md
+  - path: skills/core/roblox-architecture/references/full.md
+  teaching_needles:
+  - LoadCharacter
+  - LoadCharacterAsync
+  check:
+    type: method_deprecation_status
+    class: Player
+    member: LoadCharacter
+    expected: deprecated
+  verified: 2026-11-27
+- id: b1-player-load-character-async-exists
+  claim: Player:LoadCharacterAsync spawns a character
+  files:
+  - path: skills/core/roblox-architecture/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: LoadCharacterAsync
+  verified: 2026-11-27
+- id: b1-editablemesh-add-face-tuple
+  claim: EditableMesh:AddFace takes vertex IDs as a tuple (triangles or quads)
+  files:
+  - path: skills/gameplay/roblox-building/references/full.md
+  check:
+    type: method_parameter_type
+    class: EditableMesh
+    method: AddFace
+    parameter: vertexIds
+    expected: Tuple
+  verified: 2026-11-27
+- id: b1-player-request-stream-around-async
+  claim: Player:RequestStreamAroundAsync pre-streams an area
+  files:
+  - path: skills/core/roblox-performance/references/full.md
+  check:
+    type: member_exists
+    class: Player
+    member: RequestStreamAroundAsync
+  verified: 2026-11-27
