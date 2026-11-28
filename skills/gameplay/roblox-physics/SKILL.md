@@ -39,7 +39,7 @@ Classic: `SetNetworkOwner(nil)` keeps it server-owned; player-owned physics is u
 - `RaycastParams.Margin`/`SizeGradient`; `Shapecast` pose/size overrides.
 - `CanQuery = false` works only with `CanCollide = false`; use `RespectCanCollide` or exclude helpers.
 - `BasePart:BindToCollisionSummaries`: point, normal, relative velocity; local only.
-- A free part holds contacts within ~5 studs; check `Stats.ContactsCount`. Anchor resting debris.
+- Free parts can hold more contacts than they touch (field-measured): compare scene-wide `Stats.ContactsCount` before/after. Anchor resting debris.
 
 ### Common Gotchas
 - Constraints do nothing on Anchored parts; both attachments required
