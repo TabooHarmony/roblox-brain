@@ -213,6 +213,35 @@ print(ok2, second)   -- true  HiHi
 - A coroutine that errored reads `coroutine.status(co) == "dead"`, the same status as one that returned. `resume`'s `false` flag (or `wrap` raising) is the only signal that distinguishes an errored thread from a finished one.
 - Yielding is prohibited inside metamethods regardless of the current thread; see `roblox-luau-core` §11 for the exact boundary behavior.
 
+### `coroutine.finally`: cleanup when a thread ends
+
+<!-- temporal: 2026-11 -->
+Added to the Roblox `coroutine` reference in October 2026; the standalone Luau CLI used for the other probes here does not have it yet, so check it in Studio before relying on it. `coroutine.finally(co, callback)` registers a callback that runs once when `co` reaches a terminal state:
+
+- `callback("finished", ...results)` when the body returned;
+- `callback("error", err)` when it errored;
+- `callback("cancelled")` when `coroutine.close` or `task.cancel` stopped it.
+
+Callbacks run in reverse registration order and may yield. If one errors, the rest are skipped. Registering on a dead coroutine raises an error, and a coroutine driven through `coroutine.wrap` that ends with callbacks registered raises `cannot run finalizers from a wrapped coroutine`. When the engine resumes the thread or `task.cancel` closes it, the callbacks run on a separate thread and their errors surface as script errors. This gives a cancel-on-leave task one place to release what it holds, whichever way it ends.
+
+```luau
+-- Illustrative: release a claimed resource however the task ends.
+local function runClaimed(claim: () -> (), release: () -> (), body: () -> ()): thread
+    local co = coroutine.create(body)
+    claim()
+    coroutine.finally(co, function(status: string)
+        if status == "error" then
+            warn("claimed task failed")
+        end
+        release()
+    end)
+    task.spawn(co)
+    return co -- task.cancel(co) also triggers release()
+end
+
+return runClaimed
+```
+
 ## 7. Fallible calls without semantic collapse
 
 `pcall` returns a transport/execution success flag followed by the function's results. A successful function may legitimately return `nil`.
@@ -439,6 +468,147 @@ workspace.CurrentGame.Changed:Connect(function(newName: string)
     statusLabel.Text = newName
 end)
 ```
+
+## 12. Spreading work across frames
+
+Field-measured lessons from several projects about time-sliced work. Profile your own worst frame before and after every change; a budget that lowers the total can leave the peak where it was.
+
+### Start a budgeted worker deferred
+
+If `Enqueue` starts its worker with `task.spawn`, the worker runs at once and finishes the first job before the caller enqueues the second, so a loop of enqueues produces one job per worker run and the per-frame budget never trips. Start the worker with `task.defer` so it wakes after the caller's loop and sees the whole batch. Spread per-object setup over frames the same way, biggest jobs first.
+
+### Clamp dt in accumulating timers
+
+A "still for N seconds" settle check that adds raw `dt` settled every body at once after one long setup frame. Clamp `dt` (for example to 0.1 s) in every timer that accumulates. When a MicroProfiler capture won't show which work landed in a long frame, wrap the callbacks with `os.clock()` and log the frame index. Heartbeat's `deltaTime` is the time since the previous frame, so the long frame shows up in the value the next frame receives.
+
+### A start-up budget only sees time since its own resume
+
+When start-up systems are paced by a per-frame budget (`task.wait()` once this frame's systems pass it), work that one system pushed with `task.delay(0, ...)` resumes before the pacer next frame and stacks on top of the next system unseen. Push loads that can wait clearly past start-up (for example `task.delay(1, ...)`).
+
+### Make the overflow path cheap and the budget check inside the step
+
+A limiter whose overflow path rebuilt and re-queried the remaining work every step was worse than no limit (310 ms frames). So was a time budget checked only between large steps. Take a fixed amount per step, keep the remainder of the query on the operation, and check the budget inside the step. That cut worst frames from 310 to 57 ms at the price of a slower overall operation.
+
+### Total versus peak
+
+Count limits per worker multiply: 5 workers at 250 items each is 1,250 items a frame. A loop with no yield, or a bulk swap or reparent done all at once, ignores any limit. If a shared time budget halves a system's total but barely moves its peak, look for one atomic step and spread that; in one case only spreading the swap cut the peak from 81 to 29 ms.
+
+### A budget can hide an infinite loop
+
+A worker whose end condition could never be met spent exactly its 2 ms budget every frame, forever, and looked "busy". Another looped forever because a broad-phase query said "overlaps" while the exact test said "miss". When a budgeted system sits at its cap while nothing changes, count completions: a backlog that does not shrink with 0 finished is a stuck loop. Give every operation a no-progress guard that ends it after N steps with no effect and warns.
+
+### Sliced computations need stable inputs
+
+Spreading a graph walk over frames is only safe if nothing it caches changes between slices. A sliced walk that trusted an "entry valid while its parts still have a Parent" cache reported 3x the real result, because another system hid and restored parts between frames. Pause the mutating system during the walk, and test the sliced result against the one-frame result on the same randomized inputs before trusting it.
+
+### Invalidate caches narrowly
+
+A cache cleared wholesale by a frequent event is effectively always cold. One cache reset on every chunk build cost about 43 µs per check instead of 3 µs warm (556 ms total, about 155 ms after invalidating only entries near the change). Invalidate narrowly, print hit, miss and evicted counts, and make sure a measured win did not come from an earlier warm-up that filled the cache. For weak-keyed caches of Instances, see `roblox-luau-core`: entries can vanish while the Instance still exists.
+
+```luau
+-- Illustrative: a deferred, time-budgeted queue with completion counts
+-- and a no-progress guard. Each job does one bounded step per call and
+-- returns "done", "progress" or "idle".
+type Step = () -> "done" | "progress" | "idle"
+
+local BUDGET_SECONDS = 0.002
+local MAX_IDLE_STEPS = 600
+
+local queue: { { step: Step, idle: number } } = {}
+local running = false
+local completed = 0
+
+local function worker()
+    while #queue > 0 do
+        local frameStart = os.clock()
+        while #queue > 0 and os.clock() - frameStart < BUDGET_SECONDS do
+            local job = queue[1]
+            local result = job.step()
+            if result == "done" then
+                table.remove(queue, 1)
+                completed += 1
+            elseif result == "idle" then
+                job.idle += 1
+                if job.idle >= MAX_IDLE_STEPS then
+                    warn("job made no progress; dropping it")
+                    table.remove(queue, 1)
+                end
+            else
+                job.idle = 0
+            end
+        end
+        task.wait()
+    end
+    running = false
+end
+
+local function enqueue(step: Step)
+    table.insert(queue, { step = step, idle = 0 })
+    if not running then
+        running = true
+        task.defer(worker) -- deferred: sees the caller's whole batch
+    end
+end
+
+local function stats(): (number, number)
+    return #queue, completed
+end
+
+return { enqueue = enqueue, stats = stats }
+```
+
+### Spatial grids keyed by Vector3
+
+Luau hashes `Vector3` table keys by value, so a grid can key cells by a floored `Vector3` and read the 27 cells around a point. Replacing a pairwise distance loop this way took 656 lights from 19 ms to about 3 ms in one project. Check the new path against the old loop, with a tolerance for float32-stored properties such as `PointLight.Brightness`. Don't key a grid by `Vector2`: those keys hash by identity.
+
+```luau
+-- Illustrative: neighbour lookup in a uniform grid.
+local CELL = 16
+
+local cells: { [Vector3]: { Vector3 } } = {}
+
+local function cellOf(position: Vector3): Vector3
+    return Vector3.new(
+        math.floor(position.X / CELL),
+        math.floor(position.Y / CELL),
+        math.floor(position.Z / CELL)
+    )
+end
+
+local function insert(position: Vector3)
+    local key = cellOf(position)
+    local list = cells[key]
+    if not list then
+        list = {}
+        cells[key] = list
+    end
+    table.insert(list, position)
+end
+
+local function near(position: Vector3, radius: number): { Vector3 }
+    local found = {}
+    local center = cellOf(position)
+    for dx = -1, 1 do
+        for dy = -1, 1 do
+            for dz = -1, 1 do
+                local list = cells[center + Vector3.new(dx, dy, dz)]
+                if list then
+                    for _, other in list do
+                        if (other - position).Magnitude <= radius then
+                            table.insert(found, other)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return found
+end
+
+return { insert = insert, near = near }
+```
+
+The 27-cell read is correct only while `radius <= CELL`.
 
 ## Community ecosystem (leads, not sources)
 
