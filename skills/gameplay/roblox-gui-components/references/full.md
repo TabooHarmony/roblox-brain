@@ -445,6 +445,8 @@ TweenService:Create(shine, TweenInfo.new(0.6), { Offset = Vector2.new(1, 0) }):P
 
 Fade particles at the start and end of their lifetime to avoid popping. Treat a burst like any other owned effect: emit from the window controller and `Clear()` it on close.
 
+Beta caveats reported on the DevForum (https://devforum.roblox.com/t/studio-beta-ui-particles/4996850), not confirmed in the docs: uploaded 1024×1024 textures looked downscaled as particles while sharp in an `ImageLabel` (2026-11-20); because `Size` and `Speed` are in offset units, an effect sized on a desktop covered about half the UI on a phone (2026-11-23), so scale them from the container's `AbsoluteSize` and check on the smallest phone; and there was no option to align particles with their velocity (2026-11-19).
+
 ## 12. Reactive UI libraries: scope, lifetime and lists
 
 Native instances are the default. Some projects use a reactive library — [Fusion](https://elttob.uk/Fusion/0.3/) (0.3 line), [Vide](https://github.com/centau/vide), [Fluid](https://github.com/ffrostfall/fluid) (Vide-derived, MIT, v0.6.5) or React-Luau. Follow the project's existing choice. The rules below are library-neutral; per-library notes were verified against each repo (2026-10).
