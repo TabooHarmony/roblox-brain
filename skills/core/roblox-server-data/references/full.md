@@ -546,6 +546,71 @@ else
 end
 ```
 
+## Native PlayerList leaderboards (official)
+
+<!-- temporal: 2026-11 -->
+
+The PlayerList has three views:
+
+- **Here** reads `leaderstats` for players in the current server.
+- **Friends** and **Global** (beta) read one OrderedDataStore that you register in Creator Hub.
+
+Rules for the persistent views:
+
+- Each player has one numeric score, keyed by user ID.
+- Your server code writes the scores. The platform never writes them.
+- Each experience can have one active persistent leaderboard. Deactivating it hides the leaderboard but keeps the data.
+
+To use them, keep writing the same OrderedDataStore your own boards use, keyed by `tostring(player.UserId)`, and register it.
+
+You still need your own UI for weekly or seasonal boards.
+
+## Weekly boards keyed by ISO week
+
+This pattern was observed in one project.
+
+- **Key a new OrderedDataStore per ISO week in UTC**, for example `KillsWeek_2026-W48`.
+  - Use the ISO year, not the calendar year: 1 January 2027 falls in week 2026-W53.
+  - Credit each score to the week it happened, even when the flush runs after the reset.
+- **Batch increments per store and player.** Flush on a timer, on `PlayerRemoving`, and in `BindToClose`. Keep failed or over-budget writes in the batch for the next flush.
+- **Read the top pages on a timer into a server cache.** Show a player's own count as the stored value plus their unflushed batch.
+- **In Studio, swap in an in-memory store with the same methods**, so playtests never touch real boards.
+
+```luau
+-- Illustrative ISO-8601 week key (UTC); unit-test the year boundaries.
+local function isoWeekKey(prefix: string, unix: number): string
+	local t = os.date("!*t", unix) :: any
+	local wday = (t.wday + 5) % 7 + 1 -- Monday = 1 ... Sunday = 7
+	-- The Thursday of this week decides the ISO year.
+	local thursday = unix + (4 - wday) * 86400
+	local th = os.date("!*t", thursday) :: any
+	local week = math.floor((th.yday - 1) / 7) + 1
+	return string.format("%s_%d-W%02d", prefix, th.year, week)
+end
+```
+
+Test it against known dates: 2026-12-31 → 2026-W53 and 2027-01-04 → 2027-W01.
+
+## MemoryStore quota recovery and scopes (official)
+
+<!-- temporal: 2026-11 -->
+
+- **At the quota, writes that would increase usage fail.** Set expirations so usage falls on its own.
+- **To recover, flush the scope through Open Cloud**: `POST https://apis.roblox.com/cloud/v2/universes/{universeId}/memory-store:flush?scope=LIVE` (or `TEST`; the default is `LIVE`).
+  - A flush clears **every** queue, sorted map, and hash map in that scope.
+  - It's a long-running operation. Poll Get Memory Store Flush Operation until it's done. The returned operation path already includes `cloud/v2`, so don't prepend it again.
+- **Studio and production use isolated scopes.** Studio tests can't see live data.
+- **Extended Services can raise the quota**, with throttling at the budget.
+- **Return values:**
+  - `MemoryStoreHashMap:SetAsync` returns a boolean: `true` means it overwrote an existing key.
+  - `MemoryStoreSortedMap:GetSizeAsync` returns the item count.
+
+## MessagingService from outside the game (official)
+
+`MessagingService:PublishAsync` has an Open Cloud equivalent: `POST /cloud/v2/universes/{universeId}:publishMessage`.
+
+Messages published that way reach live servers, but not Studio playtests (observed). Test a messaging-driven LiveOps action, such as a compensation grant, on a private live server. Announce it before you send, because it reaches real players. Keys and scopes are in `roblox-cloud`.
+
 ## Pitfalls
 
 - **MessagingService delivery**: not guaranteed. If a server misses a message, it's gone. Design for eventual consistency.
