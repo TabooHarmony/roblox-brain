@@ -28,6 +28,6 @@ D1 20/30/40% · D7 8/15/20% · D30 3/7/10% (good/great/excellent; compounds; 40%
 
 Four reward schedules (fixed/variable × ratio/interval); layer all four. Hooks: appointments, streaks with one forgiven day, rotation, shared clan goals, hook model, specific timers ("Back in 4h 32m"). Ladder: 49–99 break threshold · 199–399 convenience · 499–799 luck+power · 999+ identity. RNG: 5 tiers (55/27/12/5/1%), show the pool and pity counter. For paid RNG implementation, check current Roblox guidance in `roblox-monetization`.
 
-Observed genre data (59 teardowns: kits skew low on tiers; real tables run 6–18 tiers with sub-1% tails, prices vary widely) and a 9-row dark-pattern audit table: full.md §7a–7b.
+Genre data from 59 teardowns (6–18 rarity tiers with sub-1% tails, observed price labels, first-minute timings) and a dark-pattern audit table: full.md §7a–7b.
 
 > Full detail, tables, and community loop: [references/full.md](references/full.md)
