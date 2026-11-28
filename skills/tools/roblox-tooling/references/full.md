@@ -117,6 +117,108 @@ Verified state, August 2026 (npm + GitHub APIs): roblox-ts ~11.4k npm downloads/
 - For **AI agents specifically**, the compiler pipeline adds failure modes that raw Luau does not have: a watch process that must be running, generated files agents can wrongly edit, Studio line numbers that don't map to source without sourcemap work, compiler-inserted runtime asserts, and lint that must run post-compile. Luau runs directly in Studio and every engine-facing tool (luau-lsp, luaudit, Lune, Rojo sourcemap) speaks it natively; `--!strict` plus a live type solver gives agents the same machine-checkable feedback loop that is the actual accuracy lever.
 - Verdict an agent should give: adopt TS where the team already knows TS and wants npm; default to Luau for agent-heavy workflows and where community libraries are the point. This is a tradeoff, not a mistake either way. Platform momentum backs the default: Roblox shipped Studio Script Sync and lists Studio Luau file sync on the 2026 roadmap, i.e. first-party tooling grows around native Luau file workflows. <!-- temporal: 2026-08 -->
 
+## 1f. Roblox's official Rojo guidance (official)
+
+<!-- temporal: 2026-11 -->
+
+Roblox's creator docs now have a Rojo section. It describes three workflows:
+
+- **Studio-native with Script Sync.** Scripts and folders sync to disk, and everything else stays in the place.
+- **Partially managed Rojo.** Rojo owns code, and Studio keeps the world.
+- **Fully managed Rojo.** The repo builds the entire place.
+
+What the docs recommend:
+
+- **Separate environments are separate games** under one group, because data stores and secrets are scoped to the game.
+- **Pin each project to its place** with `servePlaceIds`, so a plugin connected to the wrong place is refused.
+- **Set `$ignoreUnknownInstances: true` on shared services**, so Rojo doesn't delete Studio-made instances it doesn't manage. Use `false` on containers that hold only disk code, so stale copies get cleaned up (§2).
+- **Live sync can't set everything.** It can't set `MeshPart.MeshId`, terrain, or CSG, so rebuild the place for art changes.
+- **Publishing from CI needs a user-owned API key** with `universe:publish`, plus `universe-places:write` to save versions. Group-owned keys can't be granted publish.
+- **`rojo syncback`** pulls Studio edits into files. It needs Rojo 7.7 or later.
+- **Version pins.** The docs' Rokit example pins `rojo-rbx/rojo@7.6.1`; this skill pins 7.7.1 (§4). Either works, as long as everyone on the project uses the same pin.
+- **Tools listed by the docs** include rbx-merge and Tarmac.
+
+**Script Sync with a team.** Script Sync works in Team Create, with these limits:
+
+- Only scripts and folders sync.
+- Concurrent edits to the same script can overwrite each other.
+- Merging a Git branch doesn't update the place.
+
+The settings cover auto resume, resuming after a conflict (default "Do not resume"), keeping files, and the file extension. Suffixes follow the Rojo convention: `.server`, `.client`, `.local`, `.legacy`, `.plugin`, and `init.*`.
+
+## 1g. Field-reported failure modes
+
+Each item below was observed in one or more projects. They're not documented engine behavior, so reproduce them in your own setup.
+
+**Windows line endings.** With `core.autocrlf=true`, a fresh checkout or `git worktree` writes CRLF files while the index stays LF. `stylua --check` and generated-file staleness checks then fail on files nobody touched, and running the formatter rewrites line endings across the repo.
+
+- Add `* text eol=lf` to `.gitattributes`, or set `core.autocrlf false` for Roblox repos.
+- Do this before trusting any format or codegen gate.
+
+**Rojo serve stops syncing silently.**
+
+- A running serve keeps its old tree after `*.project.json` changes. New files never appear, and the next sync can delete instances. Restart serve and reconnect after any project-file edit.
+- Files rewritten by a script were sometimes not applied, while editor writes were.
+- A serve process can hang while still alive.
+- Before any measured playtest, read back a value you just changed from the live peer, for example by requiring the module in a runtime eval.
+
+**Rojo 7.7's file watcher can crash on atomic writes.** This happens when a tool writes through a temporary file that then vanishes: a formatter's `*.tmp` files, or a package manager replacing `Packages/`.
+
+- Format only the files that need it.
+- Never run a package install while serve is running.
+- Restart serve afterward.
+
+**Same-named folders.** Never put a disk folder under a `$path` directory with the same name as an explicit project child.
+
+- In one project, `$path: src/client` plus an explicit `Controllers` node created two `Controllers` folders. `script.Parent.Controllers` then picked the wrong one, and the client died.
+- With `$ignoreUnknownInstances: true`, the stale copy survived crashes. Add a startup warning for same-named siblings.
+
+**Installing into synced folders.** Installing models into Studio while Rojo syncs the same `.rbxm` stacked 3–9 copies per model, and a later patch deleted models. After every install, count instances by name in Studio and in the exported file, keep one copy each, re-export, and count again.
+
+**Studio places hold leftovers.** Rojo only manages mapped paths, so a synced place can keep stale instances the build doesn't have (a leftover Baseplate, for example). When playtest behavior differs from the built place, diff Studio against a fresh `rojo build`.
+
+**Generated UI must have one source of truth.** If a builder script generates ScreenGuis, a hand or MCP edit to StarterGui is invisible to it and gets wiped by the next install.
+
+- Make the installer refuse any install that would drop or retype an existing instance.
+- Back up replaced screens before installing.
+
+**Edit-mode `require` caches.** Studio caches `require` results in Edit mode, so an edit-time builder keeps running stale code after you edit a module it requires. Require a clone instead. luau-lsp rejects `require(x:Clone())`, so cast it:
+
+```luau
+-- Illustrative: fresh copy of a builder module in Edit mode.
+local function requireFresh(m: ModuleScript): any
+	return (require :: any)(m:Clone())
+end
+```
+
+**MaterialVariant on Open Cloud publishes.** A place built by Rojo and published through Open Cloud needed each `MaterialVariant`'s TexturePack asset set explicitly. Without it, every client logged "Failed to load MaterialService.<Name>". A ColorMap also loads only from an uploaded asset id. Script the TexturePack upload, and check that each pack lists the current maps.
+
+**`Content` properties (official plus reports).** New `*Content` properties sit alongside legacy asset properties, which stay readable and writable, so migrate deliberately. `Content.Object` values don't replicate yet: clients get a placeholder (`Content` datatype reference). Reports from the [serialization switch thread](https://devforum.roblox.com/t/changes-to-asset-properties-content-property-serialization-switch/4975546):
+
+- (2026-11-05) A Rojo and Lune deploy broke until Lune was updated. Check serializer support first.
+- (2026-11-04) `Content` doesn't expose the asset type to scripts. `MarketplaceService:GetProductInfo` was suggested as a workaround.
+- (2026-11-08) Explorer search didn't find `Content` values in early builds.
+
+**Configs deploy instantly.** A July 2026 recap says config changes deploy instantly and appear in Script Editor autocomplete ([recap](https://devforum.roblox.com/t/weekly-recap-july-27%E2%80%9331-2026-predictive-streaming-new-music-library/4768779), 2026-08-01). Don't wait for a publish to propagate them, and remember that live keys override code defaults (`roblox-growth-design`).
+
+**Lune quirks** (reported in Lune 0.10.x; retest on your version):
+
+- `CFrame.lookAt(at, target)` faced away from the target. Build facings with `CFrame.fromMatrix(at, look:Cross(up).Unit, up)`, and compare helpers against Studio output.
+- A UTF-8 BOM (written by PowerShell's `Set-Content`) broke file reads.
+- `BasePart.Position` was missing; use `CFrame.Position`. Newer files store `UICorner` radii per corner, and `Image` must be read as `ImageContent`.
+
+**Rokit global manifest.** Tools that call `rojo` or `lune` from outside the project folder use Rokit's global manifest, which fails with "Failed to find tool". Add the tools globally, or run from the project folder.
+
+**luau-lsp output.** Type errors print as `TypeError:` lines, so a filter on lowercase `error` misses them. A combined "0 errors" summary may come from selene alone. Read the luau-lsp section directly.
+
+**Wally types and shims.** Wally link modules pass values through but not exported types, so re-export the types you need from a local wrapper. For the same `require` paths in Roblox and Lune, point a `.luaurc` alias at shim modules that re-export `Packages/_Index`, and update the shims on every version bump.
+
+**Second places from one codebase.** To run part of a large codebase in a sandbox or test place, map new bootstraps over the shared folders in a separate project file, and stub the hooks the kept systems call. Grep for cross-service calls to list the hooks first.
+
+**Asset sync tools.** Asset-sync tools such as Asphalt upload changed images and meshes, write a generated Luau catalog of asset ids, and record hashes in a lockfile, so unchanged files never re-upload. Commit the sources, catalog, and lockfile together.
+
+**Memory-heavy build steps.** Run large offline steps under an OS memory cap. One voxel step held about 11.8 GB until it was rewritten to stream pieces (2.2 GB). Prove the rewrite byte-identical on a small input, and after stopping a background job, check that its child process is gone too.
+
 ## 2. Rojo project mapping
 
 A Rojo project file maps filesystem paths to Roblox services. Keep the mapping small and obvious.
